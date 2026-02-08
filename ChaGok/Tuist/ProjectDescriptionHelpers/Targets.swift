@@ -26,12 +26,12 @@ public let appTarget = ProjectDescription.Target.target(
         "App/Resources",
     ],
     scripts: [
-        .pre(tool: "swiftlint", arguments: [], name: "SwiftLint", basedOnDependencyAnalysis: false),
+        .pre(tool: "swiftlint", arguments: [], name: "SwiftLint", basedOnDependencyAnalysis: true),
         .pre(
             tool: "swiftformat",
             arguments: ["--lint", "."],
             name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
+            basedOnDependencyAnalysis: true
         ),
     ],
     dependencies: [
@@ -105,7 +105,7 @@ public let presentationTarget = ProjectDescription.Target.target(
     dependencies: [
         .target(name: "Domain"),
         .external(name: "ComposableArchitecture"),
-    ]
+    ],
 )
 
 // MARK: - AppTests
