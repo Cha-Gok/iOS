@@ -27,12 +27,6 @@ public let appTarget = ProjectDescription.Target.target(
     ],
     scripts: [
         .pre(tool: "swiftlint", arguments: [], name: "SwiftLint", basedOnDependencyAnalysis: false),
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--lint", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        ),
     ],
     dependencies: [
         .target(name: "Presentation"),
