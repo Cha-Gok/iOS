@@ -2,7 +2,7 @@ import ProjectDescription
 
 // MARK: - Project Configuration
 
-let bundleId = "com.yongms.ChaGok"
+let bundleId = "com.yongms.ChaGokChaGok"
 let displayName = "차곡"
 let version = "1.0.0"
 let build = "1"
@@ -121,10 +121,10 @@ let presentationTarget = ProjectDescription.Target.target(
 )
 
 let appTestsTarget = ProjectDescription.Target.target(
-    name: "ChaGokTests",
+    name: "AppTests",
     destinations: .iOS,
     product: .unitTests,
-    bundleId: "\(bundleId)Tests",
+    bundleId: "\(bundleId).AppTests",
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     buildableFolders: [
