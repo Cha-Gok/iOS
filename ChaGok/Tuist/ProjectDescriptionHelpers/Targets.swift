@@ -26,12 +26,12 @@ public let appTarget = ProjectDescription.Target.target(
         "App/Resources",
     ],
     scripts: [
-        .pre(tool: "swiftlint", arguments: [], name: "SwiftLint", basedOnDependencyAnalysis: true),
+        .pre(tool: "swiftlint", arguments: [], name: "SwiftLint", basedOnDependencyAnalysis: false),
         .pre(
             tool: "swiftformat",
             arguments: ["--lint", "."],
             name: "SwiftFormat",
-            basedOnDependencyAnalysis: true
+            basedOnDependencyAnalysis: false
         ),
     ],
     dependencies: [
