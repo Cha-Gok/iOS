@@ -2,7 +2,7 @@
 # https://github.com/realm/SwiftLint
 
 disabled_rules:
-  - trailing_whitespace  # SwiftFormat에서 처리
+  - trailing_whitespace
   - trailing_comma      # Swift 스타일: 멀티라인에서 trailing comma 허용 (git diff 깔끔)
 
 opt_in_rules:

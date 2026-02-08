@@ -1,4 +1,4 @@
-name: iOS starter workflow
+name: iOS Optimized Workflow
 
 on:
   push:
@@ -8,40 +8,69 @@ on:
 
 jobs:
   build:
-    name: Build and Test (Tuist)
+    name: Build and Test
     runs-on: macos-latest
+    
+    env:
+      TUIST_ROOT_DIR: ${{ github.workspace }}/ChaGok
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cache
+      # 1. Mise/Tuist 설치 경로 캐시 (~ 는 확장 안 됨 → 절대 경로 필수)
+      - name: Cache Mise & Tuist
+        uses: actions/cache@v4
+        with:
+          path: /Users/runner/.local/share/mise
+          key: mise-tuist-${{ runner.os }}
+
+      # 2. Tuist 설치 (mise 사용, 캐시 히트 시 거의 즉시 완료)
+      - name: Install Mise & Tuist
+        uses: jdx/mise-action@v2
+        with:
+          install: false
+
+      - name: Setup Tuist
+        run: |
+          mise use -g tuist@latest
+          tuist version
+
+      # 3. SwiftLint 설치 (tuist generate 시 lint 스크립트에서 필요)
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      # 4. Tuist 의존성/바이너리 캐시 (~ 는 확장 안 됨 → 절대 경로 필수)
+      - name: Cache Tuist Binaries & Dependencies
         uses: actions/cache@v4
         with:
           path: |
-            $HOME/Library/Developer/Xcode/DerivedData
+            /Users/runner/.tuist/Cache
+            /Users/runner/.tuist/Versions
             ChaGok/Tuist/.build
             ChaGok/Tuist/Dependencies
-          key: macos-chagok-${{ runner.os }}-${{ hashFiles('ChaGok/Project.swift', 'ChaGok/Tuist/Package.resolved', 'ChaGok/Tuist/Package.swift', 'ChaGok/Tuist/ProjectDescriptionHelpers/**') }}
+          key: tuist-${{ runner.os }}-${{ hashFiles('ChaGok/Tuist/Package.resolved', 'ChaGok/Tuist/Project.swift') }}
           restore-keys: |
-            macos-chagok-${{ runner.os }}-
+            tuist-${{ runner.os }}-
 
-      - name: Install Tuist
-        run: brew install tuist
-
-      - name: Install SwiftLint and SwiftFormat
-        run: brew install swiftlint swiftformat
-
-      - name: Install dependencies and generate
+      # 5. Tuist 프로젝트 의존성 설치
+      - name: Install Dependencies
         working-directory: ChaGok
-        run: |
-          tuist install
-          tuist generate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tuist install
 
-      - name: Build
+      # 6. 캐시 웜업 (바이너리 다운로드)
+      - name: Warm up Cache
         working-directory: ChaGok
-        run: tuist build
+        run: tuist cache warm
 
-      - name: Test
+      # 7. 프로젝트 생성
+      - name: Generate Project
+        working-directory: ChaGok
+        run: tuist generate
+
+      # 8. 테스트
+      - name: Run Tests
         working-directory: ChaGok
         run: tuist test
