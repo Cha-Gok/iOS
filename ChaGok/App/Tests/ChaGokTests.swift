@@ -1,5 +1,5 @@
 import Testing
-@testable import ChaGok
+@testable import App
 
 struct ChaGokTests {
 
