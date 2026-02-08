@@ -189,6 +189,10 @@ let presentationTestsTarget = ProjectDescription.Target.target(
 
 let project = Project(
     name: "ChaGok",
+    options: .options(
+        defaultKnownRegions: ["ko", "en"],
+        developmentRegion: "ko"
+    ),
     settings: settings,
     targets: [
         appTarget,
