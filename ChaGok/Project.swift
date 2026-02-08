@@ -1,6 +1,7 @@
 import ProjectDescription
 
 // MARK: - Project Configuration
+
 let bundleId = "com.yongms.ChaGok"
 let displayName = "차곡"
 let version = "1.0.0"
@@ -20,6 +21,7 @@ let settings: Settings = .settings(
 )
 
 // MARK: - Targets
+
 let appTarget = ProjectDescription.Target.target(
     name: "App",
     destinations: .iOS,
@@ -31,8 +33,10 @@ let appTarget = ProjectDescription.Target.target(
             "CFBundleDisplayName": Plist.Value(stringLiteral: displayName),
             "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
             "CFBundleVersion": Plist.Value(stringLiteral: build),
-            "UILaunchScreen": Plist.Value(dictionaryLiteral:
-                ("UIColorName", Plist.Value(stringLiteral: "")),
+            "UILaunchScreen": Plist.Value(
+                dictionaryLiteral: (
+                    "UIColorName", Plist.Value(stringLiteral: "")
+                ),
                 ("UIImageName", Plist.Value(stringLiteral: ""))
             ),
         ]
@@ -40,6 +44,15 @@ let appTarget = ProjectDescription.Target.target(
     buildableFolders: [
         "App/Sources",
         "App/Resources",
+    ],
+    scripts: [
+        .pre(tool: "swiftlint", arguments: [], name: "SwiftLint", basedOnDependencyAnalysis: false),
+        .pre(
+            tool: "swiftformat",
+            arguments: ["--lint", "."],
+            name: "SwiftFormat",
+            basedOnDependencyAnalysis: false
+        ),
     ],
     dependencies: [
         .target(name: "Presentation"),
@@ -172,6 +185,7 @@ let presentationTestsTarget = ProjectDescription.Target.target(
 )
 
 // MARK: - Project
+
 let project = Project(
     name: "ChaGok",
     settings: settings,
