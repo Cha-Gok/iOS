@@ -116,6 +116,7 @@ let presentationTarget = ProjectDescription.Target.target(
     ],
     dependencies: [
         .target(name: "Domain"),
+        .external(name: "ComposableArchitecture"),
     ]
 )
 
