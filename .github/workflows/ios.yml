@@ -20,8 +20,9 @@ jobs:
         with:
           path: |
             $HOME/Library/Developer/Xcode/DerivedData
-            ChaGok/.build
-          key: macos-chagok-${{ runner.os }}-${{ hashFiles('ChaGok/Project.swift', 'ChaGok/Tuist/Package.resolved', 'ChaGok/Tuist/ProjectDescriptionHelpers/**') }}
+            ChaGok/Tuist/.build
+            ChaGok/Tuist/Dependencies
+          key: macos-chagok-${{ runner.os }}-${{ hashFiles('ChaGok/Project.swift', 'ChaGok/Tuist/Package.resolved', 'ChaGok/Tuist/Package.swift', 'ChaGok/Tuist/ProjectDescriptionHelpers/**') }}
           restore-keys: |
             macos-chagok-${{ runner.os }}-
 
