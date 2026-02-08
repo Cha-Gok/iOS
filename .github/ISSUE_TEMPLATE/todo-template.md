@@ -1,8 +1,8 @@
 ---
 name: Todo Template
-about: Describe this issue template's purpose here.
-title: ''
-labels: ''
+about: Use this template for tracking a list of tasks or to-dos.
+title: '[TODO] '
+labels: 'todo'
 assignees: ''
 
 ---
