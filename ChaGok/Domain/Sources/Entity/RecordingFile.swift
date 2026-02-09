@@ -7,6 +7,18 @@
 
 import Foundation
 
+/// RecordingFile은 녹음 파일을 나타내는 엔티티입니다.
+/// - id: 녹음 파일의 고유 식별자.
+/// - fileURL: 녹음 파일의 URL.
+/// - createdAt: 녹음 파일의 생성 시간.
+/// - updatedAt: 녹음 파일의 업데이트 시간.
+/// - duration: 녹음 파일의 재생 시간.
+/// - fileFormat: 녹음 파일의 파일 형식.
+/// - fileSize: 녹음 파일의 파일 크기.
+/// - fileName: 녹음 파일의 파일 이름.
+/// - title: 녹음 파일의 제목.
+/// - description: 녹음 파일의 설명.
+/// - tags: 녹음 파일의 태그.
 public struct RecordingFile {
     public let id: UUID
     public let fileURL: URL
@@ -19,7 +31,6 @@ public struct RecordingFile {
     public let title: String
     public let description: String
     public let tags: [String]
-    public let isFavorite: Bool
 
     public init(
         id: UUID,
@@ -33,7 +44,6 @@ public struct RecordingFile {
         title: String,
         description: String,
         tags: [String],
-        isFavorite: Bool
     ) {
         self.id = id
         self.fileURL = fileURL
@@ -46,14 +56,5 @@ public struct RecordingFile {
         self.title = title
         self.description = description
         self.tags = tags
-        self.isFavorite = isFavorite
     }
-}
-
-public enum FileFormat {
-    case mp3
-    case wav
-    case aac
-    case m4a
-    case other(String)
 }
