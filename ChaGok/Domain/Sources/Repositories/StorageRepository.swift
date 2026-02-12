@@ -6,15 +6,4 @@ public protocol StorageRepository: Sendable {
     /// - Returns: 앱·디바이스 저장 공간 정보 (`StorageInfo`)
     /// - Throws: 저장소 접근 실패 시
     func fetchStorageInfo() async throws -> StorageInfo
-
-    /// 녹음 파일 목록을 조회합니다.
-    /// - Returns: 녹음 파일 엔티티 목록 (생성일 등 정렬 방식은 구현체에 따름)
-    /// - Throws: 파일 목록 조회 실패 시
-    func fetchRecordingFiles() async throws -> [VoiceRecord]
-
-    /// 지정한 날짜보다 오래된 녹음 파일을 삭제하고, 삭제된 파일 개수를 반환합니다.
-    /// - Parameter date: 이 날짜보다 이전에 생성된 파일이 삭제됩니다.
-    /// - Returns: 실제로 삭제된 파일 개수
-    /// - Throws: 삭제 중 오류 발생 시
-    func deleteFiles(olderThan date: Date) async throws -> Int
 }
