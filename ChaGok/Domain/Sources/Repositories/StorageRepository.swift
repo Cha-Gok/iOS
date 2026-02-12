@@ -12,9 +12,9 @@ public protocol StorageRepository: Sendable {
     /// - Throws: 파일 목록 조회 실패 시
     func fetchRecordingFiles() async throws -> [VoiceRecord]
 
-    /// 지정한 날짜에 해당하는 녹음 파일을 삭제하고, 삭제된 파일 개수를 반환합니다.
-    /// - Parameter date: 삭제할 파일의 기준 날짜 (예: 해당 날짜에 생성된 파일만 삭제)
+    /// 지정한 날짜보다 오래된 녹음 파일을 삭제하고, 삭제된 파일 개수를 반환합니다.
+    /// - Parameter date: 이 날짜보다 이전에 생성된 파일이 삭제됩니다.
     /// - Returns: 실제로 삭제된 파일 개수
     /// - Throws: 삭제 중 오류 발생 시
-    func deleteFiles(date: Date) async throws -> Int
+    func deleteFiles(olderThan date: Date) async throws -> Int
 }
