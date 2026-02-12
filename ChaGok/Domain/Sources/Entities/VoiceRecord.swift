@@ -5,7 +5,7 @@ public struct VoiceRecord {
     public let createdAt: Date
     public let audioFilePath: URL
     public let duration: Double
-    
+
     public init(
         id: String,
         createdAt: Date,

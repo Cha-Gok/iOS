@@ -10,7 +10,7 @@ public struct VoiceNote {
     public let keywords: [Keyword]
     public var transcript: Transcript?
     public var summary: Summary?
-    
+
     public init(
         id: String,
         title: String,

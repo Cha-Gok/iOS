@@ -5,7 +5,7 @@ public struct Folder {
     public let path: URL
     public let name: String
     public let createdAt: Date
-    
+
     public init(
         id: String,
         path: URL,
