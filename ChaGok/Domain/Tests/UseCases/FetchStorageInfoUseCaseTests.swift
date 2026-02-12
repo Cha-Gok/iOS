@@ -26,15 +26,13 @@ final class FetchStorageInfoUseCaseTests: XCTestCase {
             deviceTotalBytes: 128_000_000_000,
             deviceUsedBytes: 64_000_000_000
         )
-        mockRepository.storageInfoResult = .success(expectedStorageInfo)
+        await mockRepository.putStorageInfo(.success(expectedStorageInfo))
 
         // When
         let result = try await useCase.execute()
 
         // Then
-        XCTAssertEqual(result.appUsedBytes, expectedStorageInfo.appUsedBytes)
-        XCTAssertEqual(result.deviceTotalBytes, expectedStorageInfo.deviceTotalBytes)
-        XCTAssertEqual(result.deviceUsedBytes, expectedStorageInfo.deviceUsedBytes)
+        XCTAssertEqual(result, expectedStorageInfo)
     }
 
     // MARK: - 1.2 실패 시 Repository가 던진 에러가 그대로 전파된다
@@ -43,7 +41,7 @@ final class FetchStorageInfoUseCaseTests: XCTestCase {
         // Given
         struct TestError: Error, Equatable {}
         let expectedError = TestError()
-        mockRepository.storageInfoResult = .failure(expectedError)
+        await mockRepository.putStorageInfo(.failure(expectedError))
 
         // When & Then
         do {
@@ -63,12 +61,13 @@ final class FetchStorageInfoUseCaseTests: XCTestCase {
             deviceTotalBytes: 64_000_000_000,
             deviceUsedBytes: 32_000_000_000
         )
-        mockRepository.storageInfoResult = .success(expectedStorageInfo)
+        await mockRepository.putStorageInfo(.success(expectedStorageInfo))
 
         // When
         _ = try await useCase.execute()
 
         // Then
-        XCTAssertEqual(mockRepository.fetchStorageInfoCallCount, 1, "fetchStorageInfo()가 정확히 1번 호출되어야 합니다")
+        let storageInfoCallCount = await mockRepository.fetchStorageInfoCallCount
+        XCTAssertEqual(storageInfoCallCount, 1, "fetchStorageInfo()가 정확히 1번 호출되어야 합니다")
     }
 }
