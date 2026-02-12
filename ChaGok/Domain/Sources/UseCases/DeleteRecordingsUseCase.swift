@@ -1,13 +1,7 @@
 import Foundation
 
 /// 삭제 대상 녹음을 필터링하고, 레포지토리에 삭제를 요청하는 유스케이스.
-public protocol DeleteOldRecordingsUseCase: Sendable {
-    /// 지정한 날짜보다 오래된 녹음 목록을 조회합니다.
-    /// - Parameter date: 이 날짜보다 이전에 생성된 녹음이 대상입니다.
-    /// - Returns: 삭제 대상 녹음 목록
-    /// - Throws: 목록 조회 실패 시
-    func fetchRecordingsToDelete(olderThan date: Date) async throws -> [VoiceRecord]
-
+public protocol DeleteRecordingsUseCase: Sendable {
     /// 지정한 날짜보다 오래된 녹음을 삭제하고, 삭제된 개수를 반환합니다.
     /// - Parameter date: 이 날짜보다 이전에 생성된 녹음이 삭제됩니다.
     /// - Returns: 실제로 삭제된 녹음 개수
@@ -20,15 +14,11 @@ public protocol DeleteOldRecordingsUseCase: Sendable {
     func deleteRecording(byId id: String) async throws
 }
 
-public struct DefaultDeleteOldRecordingsUseCase: DeleteOldRecordingsUseCase {
+public struct DefaultDeleteRecordingsUseCase: DeleteRecordingsUseCase {
     private let voiceRecordRepository: VoiceRecordRepository
 
     public init(voiceRecordRepository: VoiceRecordRepository) {
         self.voiceRecordRepository = voiceRecordRepository
-    }
-
-    public func fetchRecordingsToDelete(olderThan date: Date) async throws -> [VoiceRecord] {
-        try await voiceRecordRepository.fetchRecordings(olderThan: date)
     }
 
     public func deleteRecordings(olderThan date: Date) async throws -> Int {
