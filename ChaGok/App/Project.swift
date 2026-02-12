@@ -48,6 +48,8 @@ private let appTarget = Target.target(
         .pre(tool: "swiftlint", arguments: [], name: "SwiftLint", basedOnDependencyAnalysis: false)
     ],
     dependencies: [
+        .project(target: "Core", path: "../Core"),
+        .project(target: "Domain", path: "../Domain"),
         .project(target: "Presentation", path: "../Presentation"),
         .project(target: "Data", path: "../Data")
     ],

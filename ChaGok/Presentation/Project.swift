@@ -34,6 +34,7 @@ private let presentationTarget = Target.target(
         .pre(tool: "swiftlint", arguments: [], name: "SwiftLint", basedOnDependencyAnalysis: false)
     ],
     dependencies: [
+        .project(target: "Core", path: "../Core"),
         .project(target: "Domain", path: "../Domain"),
         .external(name: "ComposableArchitecture")
     ]
