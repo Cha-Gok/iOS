@@ -15,3 +15,6 @@ public struct StorageInfo {
         self.deviceUsedBytes = deviceUsedBytes
     }
 }
+
+extension StorageInfo: Sendable {}
+extension StorageInfo: Equatable {}
