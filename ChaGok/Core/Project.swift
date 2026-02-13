@@ -31,7 +31,7 @@ private let coreTarget = Target.target(
     infoPlist: .default,
     sources: ["Sources/**/*.swift"],
     scripts: [
-        .pre(tool: "swiftlint", arguments: [], name: "SwiftLint", basedOnDependencyAnalysis: false)
+        .pre(tool: "swiftlint", arguments: ["--fix"], name: "SwiftLint", basedOnDependencyAnalysis: false)
     ],
     dependencies: []
 )
