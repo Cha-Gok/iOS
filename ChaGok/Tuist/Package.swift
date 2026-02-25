@@ -6,38 +6,10 @@ import PackageDescription
 
     let packageSettings = PackageSettings(
         productTypes: [
-            "CasePaths": .framework,
-            "CasePathsCore": .framework,
-            "Clocks": .framework,
-            "CombineSchedulers": .framework,
-            "ComposableArchitecture": .framework,
-            "ComposableArchitectureMacros": .framework,
-            "ConcurrencyExtras": .framework,
-            "CustomDump": .framework,
-            "Dependencies": .framework,
-            "DependenciesMacros": .framework,
-            "IdentifiedCollections": .framework,
-            "InternalCollectionsUtilities": .framework,
-            "IssueReporting": .framework,
-            "IssueReportingPackageSupport": .framework,
-            "OrderedCollections": .framework,
-            "Perception": .framework,
-            "PerceptionCore": .framework,
-            "PerceptionMacros": .framework,
-            "Sharing": .framework,
-            "SwiftNavigation": .framework,
-            "SwiftUINavigation": .framework,
-            "UIKitNavigation": .framework,
-            "XCTestDynamicOverlay": .framework,
+            // 필요한 경우 여기에 제품 유형을 추가하세요.
         ],
         targetSettings: [
-            "ComposableArchitecture": .settings(base: [
-                "OTHER_SWIFT_FLAGS": ["-module-alias", "Sharing=SwiftSharing"],
-            ]),
-            "Sharing": .settings(base: [
-                "PRODUCT_NAME": "SwiftSharing",
-                "OTHER_SWIFT_FLAGS": ["-module-alias", "Sharing=SwiftSharing"],
-            ]),
+            // 필요한 경우 여기에 타겟 설정을 추가하세요.
         ]
     )
 #endif
@@ -45,6 +17,6 @@ import PackageDescription
 let package = Package(
     name: "ChaGok",
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.23.1"),
+        // .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.23.1"),
     ]
 )
