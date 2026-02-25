@@ -1,14 +1,14 @@
 import Foundation
 
-public struct Folder {
-    public let id: String
+public struct Folder: Sendable {
+    public let id: UUID
     public let path: URL
     public let name: String
     public let createdAt: Date
     public let content: [VoiceNote]
-    
+
     public init(
-        id: String,
+        id: UUID = UUID(),
         path: URL,
         name: String,
         createdAt: Date,

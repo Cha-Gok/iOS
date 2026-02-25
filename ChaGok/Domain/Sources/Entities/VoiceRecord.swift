@@ -1,6 +1,6 @@
 import Foundation
 
-public struct VoiceRecord {
+public struct VoiceRecord: Sendable {
     public let id: String
     public let createdAt: Date
     public let audioFilePath: URL

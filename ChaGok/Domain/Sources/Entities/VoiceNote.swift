@@ -1,22 +1,22 @@
 import Foundation
 
-public struct VoiceNote {
-    public let id: String
+public struct VoiceNote: Sendable {
+    public let id: UUID
     public let title: String
     public let createdAt: Date
     public let updatedAt: Date
-    public let folderID: String
+    public let folderId: UUID
     public let voiceRecord: VoiceRecord
     public let keywords: [Keyword]
     public var transcript: Transcript?
     public var summary: Summary?
 
     public init(
-        id: String,
+        id: UUID = UUID(),
         title: String,
         createdAt: Date,
         updatedAt: Date,
-        folderID: String,
+        folderId: UUID,
         voiceRecord: VoiceRecord,
         keywords: [Keyword],
         transcript: Transcript? = nil,
@@ -26,7 +26,7 @@ public struct VoiceNote {
         self.title = title
         self.createdAt = createdAt
         self.updatedAt = updatedAt
-        self.folderID = folderID
+        self.folderId = folderId
         self.voiceRecord = voiceRecord
         self.keywords = keywords
         self.transcript = transcript

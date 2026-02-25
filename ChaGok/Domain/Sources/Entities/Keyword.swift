@@ -1,12 +1,12 @@
 import Foundation
 
-public struct Keyword {
-    public let id: String
+public struct Keyword: Sendable {
+    public let id: UUID
     public let noteId: String
     public let word: String
 
     public init(
-        id: String,
+        id: UUID = UUID(),
         noteId: String,
         word: String
     ) {

@@ -1,12 +1,12 @@
 import Foundation
 
-public struct Summary {
-    public let id: String
+public struct Summary: Sendable {
+    public let id: UUID
     public let createdAt: Date
     public let text: String
 
     public init(
-        id: String,
+        id: UUID = UUID(),
         createdAt: Date,
         text: String
     ) {
