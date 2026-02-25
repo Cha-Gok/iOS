@@ -45,7 +45,14 @@ private let appTarget = Target.target(
     sources: ["Sources/**/*.swift"],
     resources: ["Resources/**"],
     scripts: [
-        .pre(tool: "swiftlint", arguments: ["--fix"], name: "SwiftLint", basedOnDependencyAnalysis: true)
+        .pre(
+            tool: "swiftlint",
+            arguments: ["--fix"],
+            name: "SwiftLint",
+            inputPaths: ["Sources/**/*.swift"],
+            outputPaths: ["$(DERIVED_FILE_DIR)/swiftlint.stamp"],
+            basedOnDependencyAnalysis: true
+        )
     ],
     dependencies: [
         .project(target: "Core", path: "../Core"),

@@ -31,7 +31,14 @@ private let domainTarget = Target.target(
     infoPlist: .default,
     sources: ["Sources/**/*.swift"],
     scripts: [
-        .pre(tool: "swiftlint", arguments: ["--fix"], name: "SwiftLint", basedOnDependencyAnalysis: true)
+        .pre(
+            tool: "swiftlint",
+            arguments: ["--fix"],
+            name: "SwiftLint",
+            inputPaths: ["Sources/**/*.swift"],
+            outputPaths: ["$(DERIVED_FILE_DIR)/swiftlint.stamp"],
+            basedOnDependencyAnalysis: true
+        )
     ],
     dependencies: [
         .project(target: "Core", path: "../Core")
