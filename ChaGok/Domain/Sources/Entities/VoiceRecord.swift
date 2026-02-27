@@ -18,5 +18,3 @@ public struct VoiceRecord: Sendable {
         self.duration = duration
     }
 }
-
-extension VoiceRecord: Sendable {}
