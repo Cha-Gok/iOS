@@ -12,7 +12,7 @@ struct ChaGokApp: App {
     init() {
         do {
             controller = try .getInstance(method: .preview)
-            let repository: DefaultFolderManager = .init(controller: controller!)
+            let repository: DefaultFolderRepository = .init(controller: controller!)
 
             vm = .init(
                 createFolderUseCase: DefaultCreateFolderUseCase(repository: repository),
