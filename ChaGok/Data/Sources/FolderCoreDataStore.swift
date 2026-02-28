@@ -3,7 +3,7 @@ import Domain
 
 struct FolderCoreDataStore {
     private let container: NSPersistentContainer
-    
+
     // 추후 BackgroundContext 사용 시 교체 용이성을 위한 연산 프로퍼티
     private var context: NSManagedObjectContext {
         container.viewContext
