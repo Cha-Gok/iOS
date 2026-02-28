@@ -10,7 +10,7 @@ private final class BundleInfo {
     static let ExtensionName: String = "momd"
 }
 
-public final class PersistenceController {
+public final class PersistenceController: Sendable {
     nonisolated(unsafe) private static var shared: PersistenceController?
     nonisolated(unsafe) private static var preview: PersistenceController?
     public let container: NSPersistentContainer
@@ -46,18 +46,20 @@ public final class PersistenceController {
     public func saveContext(backgroundContext: NSManagedObjectContext? = nil) throws {
         let context = backgroundContext ?? container.viewContext
 
-        guard context.hasChanges else { return }
+        try context.performAndWait {
+            guard context.hasChanges else { return }
 
-        do {
-            try context.save()
-        } catch let error as NSError {
-            // 용량 부족 에러 처리
-            if error.domain == NSCocoaErrorDomain && error.code == NSFileWriteOutOfSpaceError {
-                throw Domain.ChaGokSystemError.systemStorageIsFull
+            do {
+                try context.save()
+            } catch let error as NSError {
+                // 용량 부족 에러 처리
+                if error.domain == NSCocoaErrorDomain && error.code == NSFileWriteOutOfSpaceError {
+                    throw Domain.ChaGokSystemError.systemStorageIsFull
+                }
+
+                // 일반적인 영속성 커밋 실패
+                throw Domain.FolderError.unknown(error)
             }
-
-            // 일반적인 영속성 커밋 실패
-            throw Domain.FolderError.unknown(error)
         }
     }
 }

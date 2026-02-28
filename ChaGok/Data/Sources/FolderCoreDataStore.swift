@@ -14,7 +14,7 @@ struct FolderCoreDataStore {
     }
 
     /// Create Folder CoreData 구현체
-    func create(_ name: String) async throws -> Folder {
+    func create(_ name: String) async throws -> Domain.Folder {
 
         await context.perform {
             let folder: Folder = .init(context: context)
@@ -26,12 +26,12 @@ struct FolderCoreDataStore {
             folder.name = name
             folder.path = URL.applicationSupportDirectory
 
-            return folder
+            return self.fromOptional(folder)
         }
     }
 
     /// Fetch Folder  CoreData 구현체
-    func fetchAll() async throws -> [Folder] {
+    func fetchAll() async throws -> [Domain.Folder] {
 
         try await context.perform {
             let request: NSFetchRequest<Folder> = Folder.fetchRequest()
@@ -39,7 +39,8 @@ struct FolderCoreDataStore {
                 NSSortDescriptor(keyPath: \Folder.createdAt, ascending: false)
             ]
 
-            return try context.fetch(request)
+            let folders = try context.fetch(request)
+            return folders.map { self.fromOptional($0) }
         }
     }
 
@@ -53,7 +54,7 @@ struct FolderCoreDataStore {
     }
 
     /// Entity 속성 수정 기능
-    func update(with folder: Domain.Folder) async throws -> Folder {
+    func update(with folder: Domain.Folder) async throws -> Domain.Folder {
 
         try await context.perform {
             guard let entity = try self.fetch(byId: folder.id) else {
@@ -63,7 +64,7 @@ struct FolderCoreDataStore {
             entity.path = folder.path
             entity.updatedAt = .now
 
-            return entity
+            return self.fromOptional(entity)
         }
     }
 
