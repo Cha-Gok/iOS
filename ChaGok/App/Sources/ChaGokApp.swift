@@ -47,6 +47,8 @@ struct ChaGokApp: App {
             case nil: // error == nil 이면 vm 또한 존재 함.
                 if let vm = vm {
                     CoreDataTestView(vm: vm)
+                } else {
+                    EmptyView()
                 }
             }
         }
