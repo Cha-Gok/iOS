@@ -77,7 +77,6 @@ public final class MainViewModel: ObservableObject {
     func deleteFolder(id: UUID) async {
         isLoading = true
         do {
-            // UseCase가 String ID를 받으므로 uuidString으로 변환하여 전달
             try await deleteFolderUseCase.execute(byId: id)
             await fetchFolders()
         } catch {
