@@ -41,7 +41,7 @@ final class DefaultDeleteRecordingsUseCaseTests: XCTestCase {
 
     func test_deleteRecording_byId_성공시_Repository_delete가_호출된다() async throws {
         // Given
-        let id = "record-1"
+        let id = UUID()
         await mockRepository.setDeleteByIdError(nil)
 
         // When
@@ -79,16 +79,17 @@ final class DefaultDeleteRecordingsUseCaseTests: XCTestCase {
         XCTAssertEqual(passedDate, boundaryDate)
     }
 
-    func test_deleteRecording_빈_문자열_id_전달_시_Repository에_동일_id가_전달된다() async throws {
+    func test_deleteRecording_UUID_전달_시_Repository에_동일_id가_전달된다() async throws {
         // Given
+        let id = UUID()
         await mockRepository.setDeleteByIdError(nil)
 
         // When
-        try await useCase.deleteRecording(byId: "")
+        try await useCase.deleteRecording(byId: id)
 
-        // Then (Boundary: 빈 ID도 그대로 전달)
+        // Then (Boundary: UUID가 그대로 전달됨)
         let passedId = await mockRepository.lastDeleteById
-        XCTAssertEqual(passedId, "")
+        XCTAssertEqual(passedId, id)
     }
 
     // MARK: - Inverse / Cross-check: 인자·횟수 검증
@@ -110,7 +111,7 @@ final class DefaultDeleteRecordingsUseCaseTests: XCTestCase {
 
     func test_deleteRecording_호출_시_delete_byId_인자와_1회_호출_교차_검증() async throws {
         // Given
-        let id = "target-id"
+        let id = UUID()
         await mockRepository.setDeleteByIdError(nil)
 
         // When
@@ -146,7 +147,7 @@ final class DefaultDeleteRecordingsUseCaseTests: XCTestCase {
 
         // When & Then
         do {
-            try await useCase.deleteRecording(byId: "any")
+            try await useCase.deleteRecording(byId: UUID())
             XCTFail("에러가 전파되어야 합니다")
         } catch {
             XCTAssertTrue(error is TestError, "에러 타입이 일치해야 합니다")
@@ -164,7 +165,7 @@ final class DefaultDeleteRecordingsUseCaseTests: XCTestCase {
 
     func test_deleteRecording_한_번_호출_시_Repository_한_번만_호출된다() async throws {
         await mockRepository.setDeleteByIdError(nil)
-        try await useCase.deleteRecording(byId: "id")
+        try await useCase.deleteRecording(byId: UUID())
         let count = await mockRepository.deleteByIdCallCount
         XCTAssertEqual(count, 1)
     }

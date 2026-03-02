@@ -6,7 +6,7 @@ public protocol DeleteFolderUseCase {
     /// ID로 특정 폴더를 삭제합니다.
     /// - Parameter id: 삭제할 폴더의 ID
     /// - Throws: 폴더 삭제 실패 시
-    func execute(byId id: String) async throws
+    func execute(byId id: UUID) async throws
 }
 
 public struct DefaultDeleteFolderUseCase: DeleteFolderUseCase {
@@ -17,7 +17,7 @@ public struct DefaultDeleteFolderUseCase: DeleteFolderUseCase {
         self.repository = repository
     }
 
-    public func execute(byId id: String) async throws {
+    public func execute(byId id: UUID) async throws {
         try await repository.delete(byId: id)
     }
 }

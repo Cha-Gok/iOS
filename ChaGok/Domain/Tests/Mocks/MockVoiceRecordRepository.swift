@@ -18,7 +18,7 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
 
     var deleteByIdError: Error?
     var deleteByIdCallCount = 0
-    var lastDeleteById: String?
+    var lastDeleteById: UUID?
 
     func setDeleteByIdError(_ error: Error?) {
         deleteByIdError = error
@@ -32,7 +32,7 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
         return try deleteRecordingsResult.get()
     }
 
-    func delete(byId id: String) async throws {
+    func delete(byId id: UUID) async throws {
         deleteByIdCallCount += 1
         lastDeleteById = id
         if let error = deleteByIdError {
@@ -50,7 +50,7 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
         []
     }
 
-    func fetch(byId id: String) async throws -> VoiceRecord? {
+    func fetch(byId id: UUID) async throws -> VoiceRecord? {
         nil
     }
 

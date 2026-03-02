@@ -1,14 +1,14 @@
 import Foundation
 
 public struct VoiceRecord {
-    public let id: String
+    public let id: UUID
     public let createdAt: Date
     public let audioFilePath: URL
     public let duration: Double
 
     public init(
-        id: String,
-        createdAt: Date,
+        id: UUID = UUID(),
+        createdAt: Date = Date.now,
         audioFilePath: URL,
         duration: Double
     ) {

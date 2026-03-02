@@ -18,7 +18,7 @@ public protocol VoiceRecordRepository: Sendable {
     /// - Parameter id: 조회할 녹음의 ID
     /// - Returns: 조회된 녹음 엔티티 (없으면 nil)
     /// - Throws: 조회 실패 시
-    func fetch(byId id: String) async throws -> VoiceRecord?
+    func fetch(byId id: UUID) async throws -> VoiceRecord?
 
     /// 지정한 날짜보다 이전에 생성된 녹음 목록을 조회합니다.
     /// - Parameter date: 이 날짜보다 이전에 생성된 녹음이 대상입니다.
@@ -35,7 +35,7 @@ public protocol VoiceRecordRepository: Sendable {
     /// ID로 특정 녹음을 삭제합니다.
     /// - Parameter id: 삭제할 녹음의 ID
     /// - Throws: 삭제 실패 시
-    func delete(byId id: String) async throws
+    func delete(byId id: UUID) async throws
 
     /// 지정한 날짜보다 오래된 녹음을 삭제하고, 삭제된 개수를 반환합니다.
     /// - Parameter date: 이 날짜보다 오래된 녹음이 삭제 대상입니다.

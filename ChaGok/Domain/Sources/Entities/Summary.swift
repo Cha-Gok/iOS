@@ -1,13 +1,13 @@
 import Foundation
 
 public struct Summary {
-    public let id: String
+    public let id: UUID
     public let createdAt: Date
     public let text: String
 
     public init(
-        id: String,
-        createdAt: Date,
+        id: UUID = UUID(),
+        createdAt: Date = Date.now,
         text: String
     ) {
         self.id = id
@@ -15,3 +15,5 @@ public struct Summary {
         self.text = text
     }
 }
+
+extension Summary: Sendable {}
