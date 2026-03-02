@@ -13,11 +13,11 @@ public protocol UpdateFolderUseCase {
 public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
 
     private let repository: FolderRepository
-    
+
     public init(repository: FolderRepository) {
         self.repository = repository
     }
-    
+
     public func execute(_ folder: Folder) async throws -> Folder {
         try await repository.update(folder)
     }

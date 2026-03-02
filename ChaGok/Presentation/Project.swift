@@ -31,12 +31,11 @@ private let presentationTarget = Target.target(
     infoPlist: .default,
     sources: ["Sources/**/*.swift"],
     scripts: [
-        .pre(tool: "swiftlint", arguments: ["--fix"], name: "SwiftLint", basedOnDependencyAnalysis: false)
+        .pre(tool: "swiftlint", arguments: ["--fix"], name: "SwiftLint", basedOnDependencyAnalysis: true)
     ],
     dependencies: [
         .project(target: "Core", path: "../Core"),
-        .project(target: "Domain", path: "../Domain"),
-        .external(name: "ComposableArchitecture")
+        .project(target: "Domain", path: "../Domain")
     ]
 )
 

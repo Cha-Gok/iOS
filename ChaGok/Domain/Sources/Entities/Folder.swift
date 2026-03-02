@@ -6,7 +6,7 @@ public struct Folder {
     public let name: String
     public let createdAt: Date
     public let content: [VoiceNote]
-    
+
     public init(
         id: String,
         path: URL,
