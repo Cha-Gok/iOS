@@ -1,13 +1,13 @@
 import Foundation
 
 public struct Keyword {
-    public let id: String
-    public let noteId: String
+    public let id: UUID
+    public let noteId: UUID
     public let word: String
 
     public init(
-        id: String,
-        noteId: String,
+        id: UUID = UUID(),
+        noteId: UUID,
         word: String
     ) {
         self.id = id
@@ -15,3 +15,5 @@ public struct Keyword {
         self.word = word
     }
 }
+
+extension Keyword: Sendable {}

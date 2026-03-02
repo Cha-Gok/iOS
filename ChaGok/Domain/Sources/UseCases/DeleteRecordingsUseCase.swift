@@ -11,7 +11,7 @@ public protocol DeleteRecordingsUseCase: Sendable {
     /// ID로 특정 녹음을 삭제합니다.
     /// - Parameter id: 삭제할 녹음의 ID
     /// - Throws: 삭제 실패 시
-    func deleteRecording(byId id: String) async throws
+    func deleteRecording(byId id: UUID) async throws
 }
 
 public struct DefaultDeleteRecordingsUseCase: DeleteRecordingsUseCase {
@@ -25,7 +25,7 @@ public struct DefaultDeleteRecordingsUseCase: DeleteRecordingsUseCase {
         try await voiceRecordRepository.deleteRecordings(olderThan: date)
     }
 
-    public func deleteRecording(byId id: String) async throws {
+    public func deleteRecording(byId id: UUID) async throws {
         try await voiceRecordRepository.delete(byId: id)
     }
 }

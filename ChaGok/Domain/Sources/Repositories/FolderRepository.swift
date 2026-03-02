@@ -11,5 +11,5 @@ public protocol FolderRepository: Sendable {
     func update(_ folder: Folder) async throws -> Folder
 
     /// 폴더를 삭제합니다.
-    func delete(byId id: String) async throws
+    func delete(byId id: UUID) async throws
 }

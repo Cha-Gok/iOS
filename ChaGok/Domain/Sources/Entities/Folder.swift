@@ -1,18 +1,18 @@
 import Foundation
 
 public struct Folder {
-    public let id: String
+    public let id: UUID
     public let path: URL
     public let name: String
     public let createdAt: Date
     public let content: [VoiceNote]
 
     public init(
-        id: String,
+        id: UUID = UUID(),
         path: URL,
         name: String,
-        createdAt: Date,
-        content: [VoiceNote]
+        createdAt: Date = Date.now,
+        content: [VoiceNote] = []
     ) {
         self.id = id
         self.path = path
@@ -21,3 +21,5 @@ public struct Folder {
         self.content = content
     }
 }
+
+extension Folder: Sendable {}
