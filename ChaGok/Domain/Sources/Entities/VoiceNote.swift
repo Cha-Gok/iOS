@@ -10,6 +10,7 @@ public struct VoiceNote {
     public let keywords: [Keyword]
     public var transcript: Transcript?
     public var summary: Summary?
+    public var deletedAt: Date?
 
     public init(
         id: UUID = UUID(),
@@ -20,7 +21,8 @@ public struct VoiceNote {
         voiceRecord: VoiceRecord,
         keywords: [Keyword] = [],
         transcript: Transcript? = nil,
-        summary: Summary? = nil
+        summary: Summary? = nil,
+        deletedAt: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -31,6 +33,7 @@ public struct VoiceNote {
         self.keywords = keywords
         self.transcript = transcript
         self.summary = summary
+        self.deletedAt = deletedAt
     }
 }
 
