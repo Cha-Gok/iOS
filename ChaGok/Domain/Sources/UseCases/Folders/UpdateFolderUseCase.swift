@@ -2,7 +2,7 @@ import Foundation
 
 /// 폴더 정보 업데이트 유스케이스 프로토콜.
 /// 폴더 이름 변경 등 기존 폴더의 정보를 수정합니다.
-public protocol UpdateFolderUseCase {
+public protocol UpdateFolderUseCase: Sendable {
     /// 폴더 정보를 업데이트합니다.
     /// - Parameter folder: 업데이트할 `Folder` 엔티티
     /// - Returns: 업데이트된 `Folder` 엔티티
