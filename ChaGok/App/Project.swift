@@ -42,21 +42,19 @@ private let appTarget = Target.target(
             ),
             "UIApplicationSceneManifest": Plist.Value.dictionary([
                 "UIApplicationSupportsMultipleScenes": .boolean(false)
-            ]),
+            ])
         ]
     ),
     sources: ["Sources/**/*.swift"],
     resources: ["Resources/**"],
     scripts: [
-        .pre(
-            tool: "swiftlint", arguments: ["--fix"], name: "SwiftLint",
-            basedOnDependencyAnalysis: true)
+        .pre(tool: "swiftlint", arguments: ["--fix"], name: "SwiftLint", basedOnDependencyAnalysis: false)
     ],
     dependencies: [
         .project(target: "Core", path: "../Core"),
         .project(target: "Domain", path: "../Domain"),
         .project(target: "Presentation", path: "../Presentation"),
-        .project(target: "Data", path: "../Data"),
+        .project(target: "Data", path: "../Data")
     ],
     settings: settings
 )
@@ -81,10 +79,10 @@ let project = Project(
     settings: settings,
     targets: [
         appTarget,
-        appTestsTarget,
+        appTestsTarget
     ],
     schemes: [
         appScheme,
-        appTestsScheme,
+        appTestsScheme
     ]
 )
