@@ -6,7 +6,7 @@ public protocol DeleteWasteBasketUseCase: Sendable {
     /// - Parameter method: 삭제 방식 및 대상 데이터
     /// - Returns: 성공 여부
     /// - Throws: 삭제 중 오류 발생 시
-    func execute(method: DeleteWasteBasketMethod) async throws -> Bool
+    func execute(method: DeleteWasteBasketMethod) async throws
 }
 
 public struct DefaultDeleteWasteBasketUseCase: DeleteWasteBasketUseCase {
@@ -17,18 +17,15 @@ public struct DefaultDeleteWasteBasketUseCase: DeleteWasteBasketUseCase {
         self.repository = repository
     }
 
-    public func execute(method: DeleteWasteBasketMethod) async throws -> Bool {
-        var result: Bool
+    public func execute(method: DeleteWasteBasketMethod) async throws {
 
         switch method {
             case .all:
-                result = try await repository.allClear()
+                try await repository.allClear()
             case .multiple(let items):
-                result = try await repository.deleteAll(items: items)
+                try await repository.deleteAll(items: items)
             case .single(let item):
-                result = try await repository.delete(item: item)
+                try await repository.delete(item: item)
         }
-
-        return result
     }
 }

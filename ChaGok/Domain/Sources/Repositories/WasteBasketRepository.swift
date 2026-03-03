@@ -7,29 +7,29 @@ public protocol WasteBasketRepository: Sendable {
     /// 휴지통의 모든 항목을 영구적으로 삭제합니다.
     /// - Returns: 삭제 성공 여부
     /// - Throws: 삭제 중 오류 발생 시
-    func allClear() async throws -> Bool
+    func allClear() async throws
 
     /// 특정 항목을 휴지통에서 영구적으로 삭제합니다.
     /// - Parameter item: 삭제할 휴지통 항목 (폴더 또는 VoiceNote)
     /// - Returns: 삭제 성공 여부
     /// - Throws: 삭제 중 오류 발생 시
-    func delete(item: WasteBasketItem) async throws -> Bool
+    func delete(item: WasteBasketItem) async throws
 
     /// 다수의 항목을 휴지통에서 영구적으로 삭제합니다.
     /// - Parameter items: 삭제할 휴지통 항목 리스트
     /// - Returns: 삭제 성공 여부
     /// - Throws: 삭제 중 오류 발생 시
-    func deleteAll(items: [WasteBasketItem]) async throws -> Bool
+    func deleteAll(items: [WasteBasketItem]) async throws
 
     /// 특정 항목을 휴지통으로 이동시킵니다. (Soft Delete)
     /// - Parameter item: 이동시킬 항목 (폴더 또는 VoiceNote)
     /// - Returns: 이동 성공 여부
     /// - Throws: 이동 중 오류 발생 시
-    func moveToWasteBasket(item: WasteBasketItem) async throws -> Bool
+    func moveToWasteBasket(item: WasteBasketItem) async throws
 
     /// 다수의 항목을 휴지통으로 이동시킵니다. (Soft Delete)
     /// - Parameter items: 이동시킬 항목 리스트
     /// - Returns: 이동 성공 여부
     /// - Throws: 이동 중 오류 발생 시
-    func moveAllToWasteBasket(items: [WasteBasketItem]) async throws -> Bool
+    func moveAllToWasteBasket(items: [WasteBasketItem]) async throws
 }

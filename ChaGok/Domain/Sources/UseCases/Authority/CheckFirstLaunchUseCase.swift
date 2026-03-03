@@ -16,7 +16,7 @@ public struct DefaultCheckFirstLaunchUseCase: CheckFirstLaunchUseCase {
     public init(repository: CheckFirstLaunchRepository) {
         self.repository = repository
     }
-    
+
     public func execute() -> Bool {
         repository.checkUser()
     }
