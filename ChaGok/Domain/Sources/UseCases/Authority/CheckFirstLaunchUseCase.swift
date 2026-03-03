@@ -18,6 +18,6 @@ public struct DefaultCheckFirstLaunchUseCase: CheckFirstLaunchUseCase {
     }
 
     public func execute() -> Bool {
-        repository.checkUser()
+        repository.checkAndMarkFirstLaunch()
     }
 }
