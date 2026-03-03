@@ -9,7 +9,7 @@ public protocol CheckMicrophonePermissionUseCase: Sendable {
 public struct DefaultCheckMicrophonePermissionUseCase: CheckMicrophonePermissionUseCase {
     private let repository: VoiceRecordRepository
 
-    init(repository: VoiceRecordRepository) {
+    public init(repository: VoiceRecordRepository) {
         self.repository = repository
     }
 

@@ -11,8 +11,12 @@ public protocol CheckFirstLaunchUseCase: Sendable {
 
 /// 사용자가 신규 사용자인지 판단합니다.
 public struct DefaultCheckFirstLaunchUseCase: CheckFirstLaunchUseCase {
-    let repository: CheckFirstLaunchRepository
+    private let repository: CheckFirstLaunchRepository
 
+    public init(repository: CheckFirstLaunchRepository) {
+        self.repository = repository
+    }
+    
     public func execute() -> Bool {
         repository.checkUser()
     }
