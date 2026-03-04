@@ -2,7 +2,7 @@ import Foundation
 
 /// 파일 시스템 관련 디렉토리 생성 및 조회를 담당하는 리포지토리 프로토콜.
 /// 기본 폴더에 한해서만 Fetch 기능이 있습니다.
-public protocol FileSystemRepository: Sendable {
+public protocol WorkSpaceRepository: Sendable {
 
     /// 루트 디렉토리 URL을 반환하거나, 존재하지 않으면 생성하여 반환합니다.
     /// - Returns: 루트 폴더 URL
@@ -23,7 +23,7 @@ public protocol FileSystemRepository: Sendable {
 }
 
 /// 파일 시스템 내부 조작을 위한 내부 익스텐션 인터페이스.
-internal protocol InternalFileSystemRepository: FileSystemRepository {
+internal protocol InternalWorkSpaceRepository: WorkSpaceRepository {
 
     /// 특정 URL에 디렉토리가 존재하는지 확인합니다.
     /// - Parameter url: 확인할 대상 경로

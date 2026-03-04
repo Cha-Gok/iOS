@@ -11,9 +11,9 @@ public protocol CreateRootFolderUseCase: Sendable {
 
 public struct DefaultCreateRootFolderUseCase: CreateRootFolderUseCase {
 
-    private let repository: FileSystemRepository
+    private let repository: WorkSpaceRepository
 
-    public init(repository: FileSystemRepository) {
+    public init(repository: WorkSpaceRepository) {
         self.repository = repository
     }
 
