@@ -4,7 +4,6 @@ import Foundation
 public protocol MoveWasteBasketUseCase: Sendable {
     /// 개별 Item 또는 다수의 Item을 휴지통으로 이동시킵니다.
     /// - Parameter method: 이동 방식 및 대상 데이터
-    /// - Returns: 성공 여부
     func execute(method: MoveWasteBasketMethod) async throws
 }
 
