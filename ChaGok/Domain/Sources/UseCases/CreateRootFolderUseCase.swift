@@ -1,0 +1,24 @@
+import Foundation
+
+/// Root 폴더의 URL을 반환하는 유즈케이스
+public protocol CreateRootFolderUseCase: Sendable {
+    /// 루트 폴더가 존재하는지 판단하고 반환합니다..
+    /// - Parameter None
+    /// - Returns: 생성된 루트 디렉토리 URL
+    /// - Throws: 루트 폴더 생성 실패 시
+    func execute() async throws -> URL
+}
+
+public struct DefaultCreateRootFolderUseCase: CreateRootFolderUseCase {
+
+    private let repository: WorkSpaceRepository
+
+    public init(repository: WorkSpaceRepository) {
+        self.repository = repository
+    }
+
+    public func execute() async throws -> URL {
+        // root 폴더 생성/확인
+        return try await repository.fetchOrCreateRootDirectory()
+    }
+}
