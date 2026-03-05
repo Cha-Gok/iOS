@@ -21,6 +21,7 @@ public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
         do {
             try await repository.delete(byId: id)
         } catch {
+            AppLogger.error(error)
             throw mapFromRepository(error)
         }
     }
