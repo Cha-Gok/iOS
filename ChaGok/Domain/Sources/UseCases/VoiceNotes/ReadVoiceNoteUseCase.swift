@@ -29,6 +29,7 @@ public struct DefaultReadVoiceNoteUseCase: ReadVoiceNoteUseCase {
             return try await repository.fetchAll(folderID: folderID)
         } catch {
             let useCaseError = mapFromRepository(error)
+            AppLogger.error(error)
             throw useCaseError
         }
     }
@@ -38,6 +39,7 @@ public struct DefaultReadVoiceNoteUseCase: ReadVoiceNoteUseCase {
             return try await repository.fetch(byId: id)
         } catch {
             let useCaseError: ReadVoiceNoteUseCaseError = mapFromRepository(error)
+            AppLogger.error(error)
             throw useCaseError
         }
     }
