@@ -1,3 +1,4 @@
+import Core
 import Foundation
 
 /// 음성 메모 생성 유스케이스 프로토콜.
@@ -17,17 +18,24 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
         self.repository = repository
     }
 
-    public func execute(_ voiceRecord: VoiceRecord) async throws(CreateVoiceNoteUseCaseError) -> VoiceNote {
+    public func execute(_ voiceRecord: VoiceRecord) async throws(CreateVoiceNoteUseCaseError)
+        -> VoiceNote {
         if voiceRecord.duration < 0 {
-            throw CreateVoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
+            let error = CreateVoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
+            AppLogger.error(error)
+            throw error
         }
         if !voiceRecord.audioFilePath.isFileURL || voiceRecord.audioFilePath.path.isEmpty {
-            throw CreateVoiceNoteUseCaseError.invalidAudioFilePath(voiceRecord.audioFilePath)
+            let error = CreateVoiceNoteUseCaseError.invalidAudioFilePath(voiceRecord.audioFilePath)
+            AppLogger.error(error)
+            throw error
         }
         do {
             return try await repository.create(voiceRecord)
         } catch {
-            throw CreateVoiceNoteUseCaseError.repositoryFailed(error)
+            let error = CreateVoiceNoteUseCaseError.unknown(error)
+            AppLogger.error(error)
+            throw error
         }
     }
 }
