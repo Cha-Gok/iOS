@@ -1,3 +1,4 @@
+import Core
 import Foundation
 
 /// 음성 메모 업데이트 유스케이스 프로토콜.
@@ -23,6 +24,7 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
         do {
             return try await repository.update(voiceNote)
         } catch {
+            AppLogger.error(error)
             throw mapFromRepository(error)
         }
     }
