@@ -5,6 +5,6 @@ public protocol STTRepository: Sendable {
     /// 오디오 파일을 전사(Transcription)합니다.
     /// - Parameter audioFileURL: 전사할 오디오 파일의 URL
     /// - Returns: 전사된 텍스트 엔티티
-    /// - Throws: 전사 실패 시
-    func transcribe(audioFileURL: URL) async throws -> Transcript
+    /// - Throws: `STTRepositoryError` (전사 실패)
+    func transcribe(audioFileURL: URL) async throws(STTRepositoryError) -> Transcript
 }
