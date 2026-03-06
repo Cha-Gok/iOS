@@ -6,8 +6,8 @@ public protocol CreateVoiceNoteUseCase: Sendable {
     /// 새로운 음성 메모를 생성합니다.
     /// - Parameter voiceRecord: 녹음 정보 (오디오 경로, 길이 등)
     /// - Returns: 저장된 `VoiceNote` 엔티티
-    /// - Throws: `CreateVoiceNoteUseCaseError` (검증 실패, 리포지토리 생성 실패)
-    func execute(_ voiceRecord: VoiceRecord) async throws(CreateVoiceNoteUseCaseError) -> VoiceNote
+    /// - Throws: `VoiceNoteUseCaseError` (검증 실패, 리포지토리 생성 실패)
+    func execute(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote
 }
 
 public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
@@ -18,24 +18,29 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
         self.repository = repository
     }
 
-    public func execute(_ voiceRecord: VoiceRecord) async throws(CreateVoiceNoteUseCaseError)
-        -> VoiceNote {
+    public func execute(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote {
         if voiceRecord.duration < 0 {
-            let error = CreateVoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
+            let error = VoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
             AppLogger.error(error)
             throw error
         }
         if !voiceRecord.audioFilePath.isFileURL || voiceRecord.audioFilePath.path.isEmpty {
-            let error = CreateVoiceNoteUseCaseError.invalidAudioFilePath(voiceRecord.audioFilePath)
+            let error = VoiceNoteUseCaseError.invalidAudioFilePath(voiceRecord.audioFilePath)
             AppLogger.error(error)
             throw error
         }
         do {
             return try await repository.create(voiceRecord)
         } catch {
-            let error = CreateVoiceNoteUseCaseError.unknown(error)
+            let useCaseError: VoiceNoteUseCaseError
+            switch error {
+            case .createFailed:
+                useCaseError = .createFailed
+            case .fetchAllFailed, .recordNotFound, .fetchFailed, .updateFailed, .deleteFailed, .unknown:
+                useCaseError = .unknown(error)
+            }
             AppLogger.error(error)
-            throw error
+            throw useCaseError
         }
     }
 }

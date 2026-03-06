@@ -6,14 +6,14 @@ public protocol ReadVoiceNoteUseCase: Sendable {
     /// 특정 폴더의 모든 음성 메모를 조회합니다.
     /// - Parameter folderID: 조회할 폴더의 ID
     /// - Returns: 조회된 `VoiceNote` 배열
-    /// - Throws: `ReadVoiceNoteUseCaseError` (목록 조회 실패)
-    func execute(folderID: UUID) async throws(ReadVoiceNoteUseCaseError) -> [VoiceNote]
+    /// - Throws: `VoiceNoteUseCaseError` (목록 조회 실패)
+    func execute(folderID: UUID) async throws(VoiceNoteUseCaseError) -> [VoiceNote]
 
     /// 특정 음성 메모를 조회합니다.
     /// - Parameter id: 조회할 음성 메모의 ID
     /// - Returns: 조회된 `VoiceNote` 엔티티
-    /// - Throws: `ReadVoiceNoteUseCaseError` (레코드 없음, 단건 조회 실패)
-    func execute(byId id: UUID) async throws(ReadVoiceNoteUseCaseError) -> VoiceNote
+    /// - Throws: `VoiceNoteUseCaseError` (레코드 없음, 단건 조회 실패)
+    func execute(byId id: UUID) async throws(VoiceNoteUseCaseError) -> VoiceNote
 }
 
 public struct DefaultReadVoiceNoteUseCase: ReadVoiceNoteUseCase {
@@ -24,27 +24,25 @@ public struct DefaultReadVoiceNoteUseCase: ReadVoiceNoteUseCase {
         self.repository = repository
     }
 
-    public func execute(folderID: UUID) async throws(ReadVoiceNoteUseCaseError) -> [VoiceNote] {
+    public func execute(folderID: UUID) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
         do {
             return try await repository.fetchAll(folderID: folderID)
         } catch {
-            let useCaseError = mapFromRepository(error)
             AppLogger.error(error)
-            throw useCaseError
+            throw mapFromRepository(error)
         }
     }
 
-    public func execute(byId id: UUID) async throws(ReadVoiceNoteUseCaseError) -> VoiceNote {
+    public func execute(byId id: UUID) async throws(VoiceNoteUseCaseError) -> VoiceNote {
         do {
             return try await repository.fetch(byId: id)
         } catch {
-            let useCaseError: ReadVoiceNoteUseCaseError = mapFromRepository(error)
             AppLogger.error(error)
-            throw useCaseError
+            throw mapFromRepository(error)
         }
     }
 
-    private func mapFromRepository(_ error: VoiceNoteRepositoryError) -> ReadVoiceNoteUseCaseError {
+    private func mapFromRepository(_ error: VoiceNoteRepositoryError) -> VoiceNoteUseCaseError {
         switch error {
         case .fetchAllFailed(let folderID):
             return .fetchAllFailed(folderID: folderID)

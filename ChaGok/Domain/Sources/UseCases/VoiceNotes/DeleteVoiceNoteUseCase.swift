@@ -5,8 +5,8 @@ import Foundation
 public protocol DeleteVoiceNoteUseCase: Sendable {
     /// 음성 메모를 삭제합니다.
     /// - Parameter id: 삭제할 음성 메모의 ID
-    /// - Throws: `DeleteVoiceNoteUseCaseError` (삭제 실패)
-    func execute(byId id: UUID) async throws(DeleteVoiceNoteUseCaseError)
+    /// - Throws: `VoiceNoteUseCaseError` (삭제 실패)
+    func execute(byId id: UUID) async throws(VoiceNoteUseCaseError)
 }
 
 public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
@@ -17,7 +17,7 @@ public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
         self.repository = repository
     }
 
-    public func execute(byId id: UUID) async throws(DeleteVoiceNoteUseCaseError) {
+    public func execute(byId id: UUID) async throws(VoiceNoteUseCaseError) {
         do {
             try await repository.delete(byId: id)
         } catch {
@@ -26,13 +26,12 @@ public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
         }
     }
 
-    private func mapFromRepository(_ error: VoiceNoteRepositoryError) -> DeleteVoiceNoteUseCaseError
-    {
+    private func mapFromRepository(_ error: VoiceNoteRepositoryError) -> VoiceNoteUseCaseError {
         switch error {
         case .deleteFailed(let id):
             return .deleteFailed(id: id)
         case .createFailed, .fetchAllFailed, .recordNotFound, .fetchFailed, .updateFailed, .unknown:
-            return .unknown
+            return .unknown(error)
         }
     }
 }

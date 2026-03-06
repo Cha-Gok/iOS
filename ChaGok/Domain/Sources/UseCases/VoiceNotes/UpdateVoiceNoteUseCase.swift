@@ -6,8 +6,8 @@ public protocol UpdateVoiceNoteUseCase: Sendable {
     /// 음성 메모 정보를 업데이트합니다.
     /// - Parameter voiceNote: 업데이트할 `VoiceNote` 엔티티
     /// - Returns: 업데이트된 `VoiceNote` 엔티티
-    /// - Throws: `UpdateVoiceNoteUseCaseError` (업데이트 실패)
-    func execute(_ voiceNote: VoiceNote) async throws(UpdateVoiceNoteUseCaseError) -> VoiceNote
+    /// - Throws: `VoiceNoteUseCaseError` (업데이트 실패)
+    func execute(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote
 }
 
 public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
@@ -18,9 +18,7 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
         self.repository = repository
     }
 
-    public func execute(_ voiceNote: VoiceNote) async throws(UpdateVoiceNoteUseCaseError)
-        -> VoiceNote
-    {
+    public func execute(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote {
         do {
             return try await repository.update(voiceNote)
         } catch {
@@ -29,13 +27,12 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
         }
     }
 
-    private func mapFromRepository(_ error: VoiceNoteRepositoryError) -> UpdateVoiceNoteUseCaseError
-    {
+    private func mapFromRepository(_ error: VoiceNoteRepositoryError) -> VoiceNoteUseCaseError {
         switch error {
         case .updateFailed:
             return .updateFailed
         case .createFailed, .fetchAllFailed, .recordNotFound, .fetchFailed, .deleteFailed, .unknown:
-            return .unknown
+            return .unknown(error)
         }
     }
 }
