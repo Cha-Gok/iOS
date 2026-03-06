@@ -13,8 +13,8 @@ public enum SummaryRepositoryError: Error, LocalizedError, Sendable {
         switch self {
         case .summarizeFailed:
             return "요약 생성에 실패했습니다."
-        case .unknown:
-            return "알 수 없는 에러가 발생했습니다."
+        case .unknown(let error):
+            return error.localizedDescription
         }
     }
 }
