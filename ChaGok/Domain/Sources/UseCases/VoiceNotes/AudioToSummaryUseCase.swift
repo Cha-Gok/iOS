@@ -23,7 +23,8 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
         self.summaryRepository = summaryRepository
     }
 
-    public func execute(audioFileURL: URL) async throws(AudioToSummaryUseCaseError) -> AudioToSummaryResult {
+    public func execute(audioFileURL: URL) async throws(AudioToSummaryUseCaseError)
+        -> AudioToSummaryResult {
         do {
             // 1. 오디오 파일 전사
             let transcript = try await sttRepository.transcribe(audioFileURL: audioFileURL)
@@ -45,9 +46,8 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
             AppLogger.error(useCaseError)
             throw useCaseError
         } catch {
-            let useCaseError = AudioToSummaryUseCaseError.unknown(error)
-            AppLogger.error(useCaseError)
-            throw useCaseError
+            AppLogger.error(error)
+            throw AudioToSummaryUseCaseError.unknown(error)
         }
     }
 }
