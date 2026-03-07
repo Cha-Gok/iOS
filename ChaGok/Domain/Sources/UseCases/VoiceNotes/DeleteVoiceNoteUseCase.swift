@@ -18,6 +18,10 @@ public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
     }
 
     public func execute(byId id: UUID) async throws(VoiceNoteUseCaseError) {
+        if Task.isCancelled {
+            throw VoiceNoteUseCaseError.cancelled
+        }
+
         do {
             try await repository.delete(byId: id)
         } catch {
@@ -30,6 +34,8 @@ public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
         switch error {
         case .deleteFailed(let id):
             return .deleteFailed(id: id)
+        case .cancelled:
+            return .cancelled
         case .createFailed, .fetchAllFailed, .recordNotFound, .fetchFailed, .updateFailed, .unknown:
             return .unknown(error)
         }
