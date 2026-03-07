@@ -1,7 +1,7 @@
 import Foundation
 
 /// 음성 메모 유스케이스(Create/Read/Update/Delete)에서 발생할 수 있는 에러.
-public enum VoiceNoteUseCaseError: Error, LocalizedError, Sendable {
+public enum VoiceNoteUseCaseError: LocalizedError, Sendable {
 
     /// 검증 실패: 녹음 길이가 유효하지 않음 (0 미만).
     case invalidDuration(duration: Double)
