@@ -19,16 +19,22 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
     }
 
     public func execute(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+        if Task.isCancelled {
+            throw VoiceNoteUseCaseError.cancelled
+        }
+
         if voiceRecord.duration < 0 {
             let error = VoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
             AppLogger.error(error)
             throw error
         }
+
         if !voiceRecord.audioFilePath.isFileURL || voiceRecord.audioFilePath.path.isEmpty {
             let error = VoiceNoteUseCaseError.invalidAudioFilePath(voiceRecord.audioFilePath)
             AppLogger.error(error)
             throw error
         }
+
         do {
             return try await repository.create(voiceRecord)
         } catch {
@@ -36,7 +42,10 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
             switch error {
             case .createFailed:
                 useCaseError = .createFailed
-            case .fetchAllFailed, .recordNotFound, .fetchFailed, .updateFailed, .deleteFailed, .unknown:
+            case .cancelled:
+                useCaseError = .cancelled
+            case .fetchAllFailed, .recordNotFound, .fetchFailed, .updateFailed, .deleteFailed,
+                .unknown:
                 useCaseError = .unknown(error)
             }
             AppLogger.error(error)
