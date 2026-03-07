@@ -25,6 +25,10 @@ public struct DefaultReadVoiceNoteUseCase: ReadVoiceNoteUseCase {
     }
 
     public func execute(folderID: UUID) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+        if Task.isCancelled {
+            throw VoiceNoteUseCaseError.cancelled
+        }
+
         do {
             return try await repository.fetchAll(folderID: folderID)
         } catch {
@@ -34,6 +38,10 @@ public struct DefaultReadVoiceNoteUseCase: ReadVoiceNoteUseCase {
     }
 
     public func execute(byId id: UUID) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+        if Task.isCancelled {
+            throw VoiceNoteUseCaseError.cancelled
+        }
+
         do {
             return try await repository.fetch(byId: id)
         } catch {
@@ -50,6 +58,8 @@ public struct DefaultReadVoiceNoteUseCase: ReadVoiceNoteUseCase {
             return .recordNotFound(id: id)
         case .fetchFailed(let id):
             return .fetchFailed(id: id)
+        case .cancelled:
+            return .cancelled
         case .createFailed, .updateFailed, .deleteFailed, .unknown:
             return .unknown(error)
         }
