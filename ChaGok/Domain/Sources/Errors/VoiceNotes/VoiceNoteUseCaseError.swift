@@ -1,7 +1,13 @@
 import Foundation
 
-/// 음성 메모 리포지토리에서 발생할 수 있는 에러.
-public enum VoiceNoteRepositoryError: LocalizedError, Sendable {
+/// 음성 메모 유스케이스(Create/Read/Update/Delete)에서 발생할 수 있는 에러.
+public enum VoiceNoteUseCaseError: LocalizedError, Sendable {
+
+    /// 검증 실패: 녹음 길이가 유효하지 않음 (0 미만).
+    case invalidDuration(duration: Double)
+
+    /// 검증 실패: 오디오 파일 경로가 유효하지 않음 (file URL이 아니거나 path가 비어 있음).
+    case invalidAudioFilePath(URL)
 
     /// 음성 메모 생성 실패 (저장/디스크/권한 등).
     case createFailed
@@ -21,11 +27,18 @@ public enum VoiceNoteRepositoryError: LocalizedError, Sendable {
     /// 음성 메모 삭제 실패.
     case deleteFailed(id: UUID)
 
-    /// 예측할 수 없는 오류 (알 수 없는 실패 시 사용).
-    case unknown
+    /// 취소됨.
+    case cancelled
+
+    /// 예측할 수 없는 오류.
+    case unknown(Error)
 
     public var errorDescription: String? {
         switch self {
+        case .invalidDuration:
+            return "녹음 길이가 올바르지 않습니다."
+        case .invalidAudioFilePath:
+            return "오디오 파일 경로가 올바르지 않습니다."
         case .createFailed:
             return "음성 메모 생성에 실패했습니다."
         case .fetchAllFailed:
@@ -38,8 +51,10 @@ public enum VoiceNoteRepositoryError: LocalizedError, Sendable {
             return "음성 메모 수정에 실패했습니다."
         case .deleteFailed:
             return "음성 메모 삭제에 실패했습니다."
-        case .unknown:
-            return "예기치 않은 오류가 발생했습니다."
+        case .cancelled:
+            return nil
+        case .unknown(let error):
+            return error.localizedDescription
         }
     }
 }

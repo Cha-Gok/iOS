@@ -9,6 +9,9 @@ public enum AudioToSummaryUseCaseError: LocalizedError, Sendable {
     /// 요약 생성 실패.
     case summarizeFailed(SummaryRepositoryError)
 
+    /// 취소됨.
+    case cancelled
+
     /// 알 수 없는 에러.
     case unknown(Error)
 
@@ -18,6 +21,8 @@ public enum AudioToSummaryUseCaseError: LocalizedError, Sendable {
             return error.errorDescription ?? "음성 인식에 실패했습니다."
         case .summarizeFailed(let error):
             return error.errorDescription ?? "요약 생성에 실패했습니다."
+        case .cancelled:
+            return nil
         case .unknown(let error):
             return error.localizedDescription
         }
