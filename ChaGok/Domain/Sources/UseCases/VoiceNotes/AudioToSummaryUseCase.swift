@@ -26,9 +26,11 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
     public func execute(audioFileURL: URL) async throws(AudioToSummaryUseCaseError)
         -> AudioToSummaryResult {
         do {
+            try Task.checkCancellation()
             // 1. 오디오 파일 전사
             let transcript = try await sttRepository.transcribe(audioFileURL: audioFileURL)
 
+            try Task.checkCancellation()
             // 2. 키워드 추출 및 요약
             let (keywords, summary) = try await summaryRepository.summarize(transcript: transcript)
 
@@ -45,8 +47,11 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
             let useCaseError = AudioToSummaryUseCaseError.summarizeFailed(summaryError)
             AppLogger.error(useCaseError)
             throw useCaseError
+        } catch is CancellationError {
+            let useCaseError = AudioToSummaryUseCaseError.cancelled
+            AppLogger.error(useCaseError)
+            throw useCaseError
         } catch {
-            AppLogger.error(error)
             throw AudioToSummaryUseCaseError.unknown(error)
         }
     }
