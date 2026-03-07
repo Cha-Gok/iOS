@@ -19,6 +19,10 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
     }
 
     public func execute(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+        if Task.isCancelled {
+            throw VoiceNoteUseCaseError.cancelled
+        }
+
         do {
             return try await repository.update(voiceNote)
         } catch {
@@ -31,6 +35,8 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
         switch error {
         case .updateFailed:
             return .updateFailed
+        case .cancelled:
+            return .cancelled
         case .createFailed, .fetchAllFailed, .recordNotFound, .fetchFailed, .deleteFailed, .unknown:
             return .unknown(error)
         }
