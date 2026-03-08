@@ -1,3 +1,4 @@
+import Core
 import Foundation
 
 /// 녹음 시작 유스케이스 프로토콜.
@@ -5,8 +6,8 @@ import Foundation
 public protocol StartRecordingUseCase {
     /// 녹음을 시작하고 실시간 파형 데이터 스트림을 반환합니다.
     /// - Returns: 녹음 중 생성되는 파형 샘플 스트림. 호출부에서 `for await`로 소비하여 UI에 파형을 그릴 수 있습니다.
-    /// - Throws: 권한 거부 시 또는 녹음 시작 실패 시
-    func execute() async throws -> AsyncStream<Waveform>
+    /// - Throws: `VoiceRecordUseCaseError` (권한 거부, 녹음 시작 실패)
+    func execute() async throws(VoiceRecordUseCaseError) -> AsyncStream<Waveform>
 }
 
 public struct DefaultStartRecordingUseCase: StartRecordingUseCase {
@@ -17,11 +18,33 @@ public struct DefaultStartRecordingUseCase: StartRecordingUseCase {
         self.recordingRepository = recordingRepository
     }
 
-    public func execute() async throws -> AsyncStream<Waveform> {
-        // 1. 녹음 권한 확인 (미허용 시 throw)
-        try await recordingRepository.checkRecordingPermission()
+    public func execute() async throws(VoiceRecordUseCaseError) -> AsyncStream<Waveform> {
+        do {
+            try Task.checkCancellation()
+            try await recordingRepository.checkRecordingPermission()
+            return try await recordingRepository.startRecording()
+        } catch is CancellationError {
+            let useCaseError = VoiceRecordUseCaseError.cancelled
+            AppLogger.error(useCaseError)
+            throw useCaseError
+        } catch let error as VoiceRecordRepositoryError {
+            AppLogger.error(error)
+            throw mapFromRepository(error)
+        } catch {
+            let useCaseError = VoiceRecordUseCaseError.unknown(error)
+            AppLogger.error(useCaseError)
+            throw useCaseError
+        }
+    }
 
-        // 2. 녹음 시작 후 파형 스트림 반환
-        return try await recordingRepository.startRecording()
+    private func mapFromRepository(_ error: VoiceRecordRepositoryError) -> VoiceRecordUseCaseError {
+        switch error {
+        case .permissionDenied: return .permissionDenied
+        case .startFailed: return .startFailed
+        case .cancelled: return .cancelled
+        case .notRecording, .notPaused, .pauseFailed, .resumeFailed, .finishFailed, .encodingFailed:
+            return .unknown(error)
+        case .unknown(let error): return .unknown(error)
+        }
     }
 }
