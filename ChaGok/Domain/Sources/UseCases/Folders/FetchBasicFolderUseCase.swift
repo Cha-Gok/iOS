@@ -7,7 +7,7 @@ public protocol FetchBasicFolderUseCase: Sendable {
     /// - Returns: 생성된 기본 폴더
     /// - Throws: 기본 폴더 생성 실패 시
     @discardableResult
-    func execute() async throws -> Folder
+    func execute() async throws(FetchBasicFolderUseCaseError) -> Folder
 }
 
 public struct DefaultFetchBasicFolderUseCase: FetchBasicFolderUseCase {
@@ -19,8 +19,23 @@ public struct DefaultFetchBasicFolderUseCase: FetchBasicFolderUseCase {
     }
 
     @discardableResult
-    public func execute() async throws -> Folder {
-        // 기본 폴더 생성/확인
-        return try await repository.fetchOrCreateBasicFolder()
+    public func execute() async throws(FetchBasicFolderUseCaseError) -> Folder {
+        typealias UseCaseError = FetchBasicFolderUseCaseError
+        if Task.isCancelled { throw FetchBasicFolderUseCaseError.cancelled }
+        do {
+            // 기본 폴더 생성/확인
+            return try await repository.fetchOrCreateBasicFolder()
+        } catch let error {
+            switch error {
+                case .cancelled:
+                    throw UseCaseError.cancelled
+                case .createFailed:
+                    throw UseCaseError.createFailed
+                case .notFound:
+                    throw UseCaseError.notFound
+                case .unknown(let error):
+                    throw UseCaseError.unknown(error)
+            }
+        }
     }
 }
