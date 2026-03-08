@@ -18,15 +18,20 @@ public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
     }
 
     public func execute(byId id: UUID) async throws(VoiceNoteUseCaseError) {
-        if Task.isCancelled {
-            throw VoiceNoteUseCaseError.cancelled
-        }
-
         do {
+            try Task.checkCancellation()
             try await repository.delete(byId: id)
-        } catch {
+        } catch is CancellationError {
+            let useCaseError = VoiceNoteUseCaseError.cancelled
+            AppLogger.error(useCaseError)
+            throw useCaseError
+        } catch let error as VoiceNoteRepositoryError {
             AppLogger.error(error)
             throw mapFromRepository(error)
+        } catch {
+            let useCaseError = VoiceNoteUseCaseError.unknown(error)
+            AppLogger.error(useCaseError)
+            throw useCaseError
         }
     }
 

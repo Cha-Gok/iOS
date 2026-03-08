@@ -25,28 +25,38 @@ public struct DefaultReadVoiceNoteUseCase: ReadVoiceNoteUseCase {
     }
 
     public func execute(folderID: UUID) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        if Task.isCancelled {
-            throw VoiceNoteUseCaseError.cancelled
-        }
-
         do {
+            try Task.checkCancellation()
             return try await repository.fetchAll(folderID: folderID)
-        } catch {
+        } catch is CancellationError {
+            let useCaseError = VoiceNoteUseCaseError.cancelled
+            AppLogger.error(useCaseError)
+            throw useCaseError
+        } catch let error as VoiceNoteRepositoryError {
             AppLogger.error(error)
             throw mapFromRepository(error)
+        } catch {
+            let useCaseError = VoiceNoteUseCaseError.unknown(error)
+            AppLogger.error(useCaseError)
+            throw useCaseError
         }
     }
 
     public func execute(byId id: UUID) async throws(VoiceNoteUseCaseError) -> VoiceNote {
-        if Task.isCancelled {
-            throw VoiceNoteUseCaseError.cancelled
-        }
-
         do {
+            try Task.checkCancellation()
             return try await repository.fetch(byId: id)
-        } catch {
+        } catch is CancellationError {
+            let useCaseError = VoiceNoteUseCaseError.cancelled
+            AppLogger.error(useCaseError)
+            throw useCaseError
+        } catch let error as VoiceNoteRepositoryError {
             AppLogger.error(error)
             throw mapFromRepository(error)
+        } catch {
+            let useCaseError = VoiceNoteUseCaseError.unknown(error)
+            AppLogger.error(useCaseError)
+            throw useCaseError
         }
     }
 

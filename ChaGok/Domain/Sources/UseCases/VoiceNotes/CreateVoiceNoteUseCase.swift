@@ -19,25 +19,27 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
     }
 
     public func execute(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote {
-        if Task.isCancelled {
-            throw VoiceNoteUseCaseError.cancelled
-        }
-
-        if voiceRecord.duration < 0 {
-            let error = VoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
-            AppLogger.error(error)
-            throw error
-        }
-
-        if !voiceRecord.audioFilePath.isFileURL || voiceRecord.audioFilePath.path.isEmpty {
-            let error = VoiceNoteUseCaseError.invalidAudioFilePath(voiceRecord.audioFilePath)
-            AppLogger.error(error)
-            throw error
-        }
-
         do {
+            try Task.checkCancellation()
+
+            if voiceRecord.duration < 0 {
+                let error = VoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
+                AppLogger.error(error)
+                throw error
+            }
+
+            if !voiceRecord.audioFilePath.isFileURL || voiceRecord.audioFilePath.path.isEmpty {
+                let error = VoiceNoteUseCaseError.invalidAudioFilePath(voiceRecord.audioFilePath)
+                AppLogger.error(error)
+                throw error
+            }
+
             return try await repository.create(voiceRecord)
-        } catch {
+        } catch is CancellationError {
+            let useCaseError = VoiceNoteUseCaseError.cancelled
+            AppLogger.error(useCaseError)
+            throw useCaseError
+        } catch let error as VoiceNoteRepositoryError {
             let useCaseError: VoiceNoteUseCaseError
             switch error {
             case .createFailed:
@@ -48,7 +50,11 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
                 .unknown:
                 useCaseError = .unknown(error)
             }
-            AppLogger.error(error)
+            AppLogger.error(useCaseError)
+            throw useCaseError
+        } catch {
+            let useCaseError = VoiceNoteUseCaseError.unknown(error)
+            AppLogger.error(useCaseError)
             throw useCaseError
         }
     }

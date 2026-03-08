@@ -19,15 +19,20 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
     }
 
     public func execute(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote {
-        if Task.isCancelled {
-            throw VoiceNoteUseCaseError.cancelled
-        }
-
         do {
+            try Task.checkCancellation()
             return try await repository.update(voiceNote)
-        } catch {
+        } catch is CancellationError {
+            let useCaseError = VoiceNoteUseCaseError.cancelled
+            AppLogger.error(useCaseError)
+            throw useCaseError
+        } catch let error as VoiceNoteRepositoryError {
             AppLogger.error(error)
             throw mapFromRepository(error)
+        } catch {
+            let useCaseError = VoiceNoteUseCaseError.unknown(error)
+            AppLogger.error(useCaseError)
+            throw useCaseError
         }
     }
 
