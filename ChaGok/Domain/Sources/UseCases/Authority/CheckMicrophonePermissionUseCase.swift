@@ -1,19 +1,35 @@
+import Core
 import Foundation
 
 /// 온보딩 과정에서 마이크 권한 확인을 위한 유즈케이스
 public protocol CheckMicrophonePermissionUseCase: Sendable {
-    func execute() async throws
+    /// 마이크 권한을 요청 또는 확인합니다.
+    /// - Throws: `CheckMicrophonePermissionUseCaseError` (권한 거부)
+    func execute() async throws(CheckMicrophonePermissionUseCaseError)
 }
 
 /// 온보딩에서 마이크 권한을 요청 또는 확인 합니다.
 public struct DefaultCheckMicrophonePermissionUseCase: CheckMicrophonePermissionUseCase {
-    private let repository: VoiceRecordRepository
+    private let repository: VoiceRecordPermissionRepository
 
-    public init(repository: VoiceRecordRepository) {
+    public init(repository: VoiceRecordPermissionRepository) {
         self.repository = repository
     }
 
-    public func execute() async throws {
-        try await repository.checkRecordingPermission()
+    public func execute() async throws(CheckMicrophonePermissionUseCaseError) {
+        if Task.isCancelled {
+            throw .cancelled
+        }
+
+        do {
+            try await repository.checkRecordingPermission()
+        } catch {
+            AppLogger.error(error)
+            switch error {
+            case .permissionDenied: throw .permissionDenied
+            case .cancelled: throw .cancelled
+            case .unknown(let error): throw .unknown(error)
+            }
+        }
     }
 }

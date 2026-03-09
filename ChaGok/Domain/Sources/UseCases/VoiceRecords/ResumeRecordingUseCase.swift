@@ -1,22 +1,35 @@
+import Core
 import Foundation
 
 /// 녹음 재시작 유스케이스 프로토콜.
 /// `PauseRecordingUseCase`로 일시 정지한 녹음을 재개할 때 사용합니다.
 public protocol ResumeRecordingUseCase {
     /// 녹음을 재시작합니다.
-    /// - Throws: 일시 정지된 녹음이 없거나, 재시작 처리 실패 시
-    func execute() async throws
+    /// - Throws: `ResumeRecordingUseCaseError` (일시 정지된 녹음 없음, 재시작 실패)
+    func execute() async throws(ResumeRecordingUseCaseError)
 }
 
 public struct DefaultResumeRecordingUseCase: ResumeRecordingUseCase {
 
-    private let recordingRepository: VoiceRecordRepository
+    private let recordingRepository: VoiceRecordResumeRepository
 
-    public init(recordingRepository: VoiceRecordRepository) {
+    public init(recordingRepository: VoiceRecordResumeRepository) {
         self.recordingRepository = recordingRepository
     }
 
-    public func execute() async throws {
-        try await recordingRepository.resumeRecording()
+    public func execute() async throws(ResumeRecordingUseCaseError) {
+        if Task.isCancelled { throw .cancelled }
+
+        do {
+            try await recordingRepository.resumeRecording()
+        } catch {
+            AppLogger.error(error)
+            switch error {
+            case .notPaused: throw .notPaused
+            case .resumeFailed: throw .resumeFailed
+            case .cancelled: throw .cancelled
+            case .unknown(let error): throw .unknown(error)
+            }
+        }
     }
 }
