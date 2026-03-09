@@ -19,21 +19,16 @@ public struct DefaultStartRecordingUseCase: StartRecordingUseCase {
     }
 
     public func execute() async throws(VoiceRecordUseCaseError) -> AsyncStream<Waveform> {
+        if Task.isCancelled {
+            throw VoiceRecordUseCaseError.cancelled
+        }
+
         do {
-            try Task.checkCancellation()
             try await recordingRepository.checkRecordingPermission()
             return try await recordingRepository.startRecording()
-        } catch is CancellationError {
-            let useCaseError = VoiceRecordUseCaseError.cancelled
-            AppLogger.error(useCaseError)
-            throw useCaseError
-        } catch let error as VoiceRecordRepositoryError {
+        } catch {
             AppLogger.error(error)
             throw mapFromRepository(error)
-        } catch {
-            let useCaseError = VoiceRecordUseCaseError.unknown(error)
-            AppLogger.error(useCaseError)
-            throw useCaseError
         }
     }
 

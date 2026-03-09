@@ -18,20 +18,15 @@ public struct DefaultPauseRecordingUseCase: PauseRecordingUseCase {
     }
 
     public func execute() async throws(VoiceRecordUseCaseError) {
+        if Task.isCancelled {
+            throw VoiceRecordUseCaseError.cancelled
+        }
+
         do {
-            try Task.checkCancellation()
             try await recordingRepository.pauseRecording()
-        } catch is CancellationError {
-            let useCaseError = VoiceRecordUseCaseError.cancelled
-            AppLogger.error(useCaseError)
-            throw useCaseError
-        } catch let error as VoiceRecordRepositoryError {
+        } catch {
             AppLogger.error(error)
             throw mapFromRepository(error)
-        } catch {
-            let useCaseError = VoiceRecordUseCaseError.unknown(error)
-            AppLogger.error(useCaseError)
-            throw useCaseError
         }
     }
 
@@ -40,7 +35,8 @@ public struct DefaultPauseRecordingUseCase: PauseRecordingUseCase {
         case .notRecording: return .notRecording
         case .pauseFailed: return .pauseFailed
         case .cancelled: return .cancelled
-        case .permissionDenied, .startFailed, .notPaused, .resumeFailed, .finishFailed, .encodingFailed:
+        case .permissionDenied, .startFailed, .notPaused, .resumeFailed, .finishFailed,
+            .encodingFailed:
             return .unknown(error)
         case .unknown(let error): return .unknown(error)
         }

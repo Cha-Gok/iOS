@@ -19,20 +19,15 @@ public struct DefaultFinishRecordingUseCase: FinishRecordingUseCase {
     }
 
     public func execute() async throws(VoiceRecordUseCaseError) -> VoiceRecord {
+        if Task.isCancelled {
+            throw VoiceRecordUseCaseError.cancelled
+        }
+
         do {
-            try Task.checkCancellation()
             return try await recordingRepository.finishRecording()
-        } catch is CancellationError {
-            let useCaseError = VoiceRecordUseCaseError.cancelled
-            AppLogger.error(useCaseError)
-            throw useCaseError
-        } catch let error as VoiceRecordRepositoryError {
+        } catch {
             AppLogger.error(error)
             throw mapFromRepository(error)
-        } catch {
-            let useCaseError = VoiceRecordUseCaseError.unknown(error)
-            AppLogger.error(useCaseError)
-            throw useCaseError
         }
     }
 
