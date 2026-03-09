@@ -22,9 +22,9 @@ public struct DefaultMoveWasteBasketUseCase: MoveWasteBasketUseCase {
         do {
             switch method {
                 case .multiple(let items):
-                    return try await repository.moveAllToWasteBasket(items: items)
+                    try await repository.moveAllToWasteBasket(items: items)
                 case .single(let item):
-                    return try await repository.moveToWasteBasket(item: item)
+                    try await repository.moveToWasteBasket(item: item)
             }
         } catch {
             AppLogger.error(error)
