@@ -24,9 +24,7 @@ public struct DefaultStartRecordingUseCase: StartRecordingUseCase {
     }
 
     public func execute() async throws(StartRecordingUseCaseError) -> AsyncStream<Waveform> {
-        if Task.isCancelled {
-            throw .cancelled
-        }
+        if Task.isCancelled { throw .cancelled }
 
         do {
             try await permissionRepository.checkRecordingPermission()
