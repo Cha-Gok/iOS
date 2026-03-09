@@ -18,7 +18,9 @@ public protocol VoiceRecordPauseRepository: Sendable {
 }
 
 public protocol VoiceRecordResumeRepository: Sendable {
-    func resumeRecording() async throws(VoiceRecordRepositoryError)
+    /// 일시 정지된 녹음을 다시 이어서 녹음합니다.
+    /// - Throws: `VoiceRecordResumeRepositoryError.notPaused`, `VoiceRecordResumeRepositoryError.resumeFailed`
+    func resumeRecording() async throws(VoiceRecordResumeRepositoryError)
 }
 
 public protocol VoiceRecordFinishRepository: Sendable {
