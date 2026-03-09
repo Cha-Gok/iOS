@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 /// 폴더 목록 조회 유스케이스 프로토콜.
 /// CoreData에 저장된 모든 폴더 정보를 조회합니다.
@@ -6,7 +7,7 @@ public protocol ReadFolderUseCase {
     /// 모든 폴더 목록을 조회합니다.
     /// - Returns: 조회된 `Folder` 배열
     /// - Throws: 조회 실패 시
-    func execute() async throws -> [Folder]
+    func execute() async throws(ReadFolderUseCaseError) -> [Folder]
 }
 
 public struct DefaultReadFolderUseCase: ReadFolderUseCase {
@@ -17,7 +18,20 @@ public struct DefaultReadFolderUseCase: ReadFolderUseCase {
         self.repository = repository
     }
 
-    public func execute() async throws -> [Folder] {
-        try await repository.fetchAll()
+    public func execute() async throws(ReadFolderUseCaseError) -> [Folder] {
+        typealias UseCaseError = ReadFolderUseCaseError
+        if Task.isCancelled { throw UseCaseError.cancelled }
+        do {
+            return try await repository.fetchAll()
+        } catch {
+            AppLogger.error(error)
+            switch error {
+                case .cancelled: throw UseCaseError.cancelled
+                case .notFound: throw UseCaseError.notFound
+                case .fetchFailed: throw UseCaseError.fetchFailed
+                case .unknown, .updateFailed, .createFailed, .duplicateName:
+                    throw UseCaseError.unknown(error)
+            }
+        }
     }
 }
