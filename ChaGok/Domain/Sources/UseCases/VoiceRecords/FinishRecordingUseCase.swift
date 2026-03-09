@@ -6,40 +6,32 @@ import Foundation
 public protocol FinishRecordingUseCase {
     /// 녹음을 완료하고 저장된 녹음 정보를 반환합니다.
     /// - Returns: 저장된 녹음 엔티티 (id, 생성일시, 오디오 파일 경로, 길이 등)
-    /// - Throws: `VoiceRecordUseCaseError` (녹음 진행 중 아님, 저장·인코딩 실패)
-    func execute() async throws(VoiceRecordUseCaseError) -> VoiceRecord
+    /// - Throws: `FinishRecordingUseCaseError` (녹음 진행 중 아님, 저장·인코딩 실패)
+    func execute() async throws(FinishRecordingUseCaseError) -> VoiceRecord
 }
 
 public struct DefaultFinishRecordingUseCase: FinishRecordingUseCase {
 
-    private let recordingRepository: VoiceRecordRepository
+    private let recordingRepository: VoiceRecordFinishRepository
 
-    public init(recordingRepository: VoiceRecordRepository) {
+    public init(recordingRepository: VoiceRecordFinishRepository) {
         self.recordingRepository = recordingRepository
     }
 
-    public func execute() async throws(VoiceRecordUseCaseError) -> VoiceRecord {
-        if Task.isCancelled {
-            throw VoiceRecordUseCaseError.cancelled
-        }
+    public func execute() async throws(FinishRecordingUseCaseError) -> VoiceRecord {
+        if Task.isCancelled { throw .cancelled }
 
         do {
             return try await recordingRepository.finishRecording()
         } catch {
             AppLogger.error(error)
-            throw mapFromRepository(error)
-        }
-    }
-
-    private func mapFromRepository(_ error: VoiceRecordRepositoryError) -> VoiceRecordUseCaseError {
-        switch error {
-        case .notRecording: return .notRecording
-        case .finishFailed: return .finishFailed
-        case .encodingFailed: return .encodingFailed
-        case .cancelled: return .cancelled
-        case .permissionDenied, .startFailed, .notPaused, .pauseFailed, .resumeFailed:
-            return .unknown(error)
-        case .unknown(let error): return .unknown(error)
+            switch error {
+            case .notRecording: throw .notRecording
+            case .finishFailed: throw .finishFailed
+            case .encodingFailed: throw .encodingFailed
+            case .cancelled: throw .cancelled
+            case .unknown(let error): throw .unknown(error)
+            }
         }
     }
 }

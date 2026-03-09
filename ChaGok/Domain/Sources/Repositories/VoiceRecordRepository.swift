@@ -24,7 +24,10 @@ public protocol VoiceRecordResumeRepository: Sendable {
 }
 
 public protocol VoiceRecordFinishRepository: Sendable {
-    func finishRecording() async throws(VoiceRecordRepositoryError) -> VoiceRecord
+    /// 녹음을 종료하고 저장한 뒤, 저장된 녹음 정보를 반환합니다.
+    /// - Returns: 저장된 녹음 엔티티
+    /// - Throws: `VoiceRecordFinishRepositoryError.notRecording`, `VoiceRecordFinishRepositoryError.finishFailed`, `VoiceRecordFinishRepositoryError.encodingFailed`
+    func finishRecording() async throws(VoiceRecordFinishRepositoryError) -> VoiceRecord
 }
 
 public protocol VoiceRecordRepository: VoiceRecordPermissionRepository,
