@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 /// 폴더 정보 업데이트 유스케이스 프로토콜.
 /// 폴더 이름 변경 등 기존 폴더의 정보를 수정합니다.
@@ -7,7 +8,7 @@ public protocol UpdateFolderUseCase: Sendable {
     /// - Parameter folder: 업데이트할 `Folder` 엔티티
     /// - Returns: 업데이트된 `Folder` 엔티티
     /// - Throws: 업데이트 실패 시
-    func execute(_ folder: Folder) async throws -> Folder
+    func execute(_ folder: Folder) async throws(UpdateFolderUseCaseError) -> Folder
 }
 
 public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
@@ -18,7 +19,21 @@ public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
         self.repository = repository
     }
 
-    public func execute(_ folder: Folder) async throws -> Folder {
-        try await repository.update(folder)
+    public func execute(_ folder: Folder) async throws(UpdateFolderUseCaseError) -> Folder {
+        typealias UseCaseError = UpdateFolderUseCaseError
+        if Task.isCancelled { throw UseCaseError.cancelled }
+        do {
+            return try await repository.update(folder)
+        } catch {
+            AppLogger.error(error)
+            switch error {
+                case .cancelled: throw UseCaseError.cancelled
+                case .duplicateName: throw UseCaseError.duplicateName
+                case .notFound: throw UseCaseError.notFound
+                case .updateFailed: throw UseCaseError.updateFailed
+                case .unknown, .fetchFailed, .createFailed:
+                    throw UseCaseError.unknown(error)
+            }
+        }
     }
 }
