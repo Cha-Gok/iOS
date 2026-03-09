@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 /// Root 폴더의 URL을 반환하는 유즈케이스
 public protocol FetchRootUrlUseCase: Sendable {
@@ -24,6 +25,7 @@ public struct DefaultFetchRootUrlUseCase: FetchRootUrlUseCase {
             // root URL 가져오기
             return try await repository.fetchRootURL()
         } catch {
+            AppLogger.error(error)
             switch error {
                 case .cancelled:
                     throw UseCaseError.cancelled

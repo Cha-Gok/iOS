@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 /// 앱에서 사용할 언어를 설정하는 유즈케이스 프로토콜
 public protocol SelectLanguageUseCase: Sendable {
@@ -22,6 +23,7 @@ public struct DefaultSelectLanguageUseCase: SelectLanguageUseCase {
         do {
             return try await repository.saveLanguage(lang)
         } catch {
+            AppLogger.error(error)
             switch error {
                 case .cancelled: throw UseCaseError.cancelled
                 case .saveFailed: throw UseCaseError.saveFailed

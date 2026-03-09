@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 /// 현재 설정된 언어를 가져오는 유즈케이스
 public protocol FetchLanguageUseCase: Sendable {
@@ -21,6 +22,7 @@ public struct DefaultFetchLanguageUseCase: FetchLanguageUseCase {
         do {
             return try await repository.fetchLanguage()
         } catch {
+            AppLogger.error(error)
             switch error {
                 case .cancelled: throw UseCaseError.cancelled
                 case .notFound: throw UseCaseError.notFound

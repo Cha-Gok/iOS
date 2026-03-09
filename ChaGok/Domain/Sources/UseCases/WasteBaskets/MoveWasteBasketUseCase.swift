@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 /// 휴지통으로 폴더 또는 파일을 이동시키는 유즈케이스
 public protocol MoveWasteBasketUseCase: Sendable {
@@ -26,6 +27,7 @@ public struct DefaultMoveWasteBasketUseCase: MoveWasteBasketUseCase {
                     return try await repository.moveToWasteBasket(item: item)
             }
         } catch {
+            AppLogger.error(error)
             switch error {
                 case .cancelled:
                     throw UseCaseError.cancelled

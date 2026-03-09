@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 /// 휴지통 폴더의 Item을 조회하는 유즈케이스
 public protocol FetchWasteBasketFolderUseCase: Sendable {
@@ -23,6 +24,7 @@ public struct DefaultFetchWasteBasketFolderUseCase: FetchWasteBasketFolderUseCas
         do {
             return try await repository.fetchAll()
         } catch {
+            AppLogger.error(error)
             switch error {
                 case .cancelled:
                     throw UseCaseError.cancelled
