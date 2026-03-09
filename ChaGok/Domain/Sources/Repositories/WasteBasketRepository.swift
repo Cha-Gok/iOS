@@ -6,25 +6,30 @@ public protocol WasteBasketRepository: Sendable {
 
     /// 휴지통의 모든 항목을 영구적으로 삭제합니다.
     /// - Throws: 삭제 중 오류 발생 시
-    func allClear() async throws
+    func allClear() async throws(DeleteWasteBasketRepositoryError)
 
     /// 특정 항목을 휴지통에서 영구적으로 삭제합니다.
     /// - Parameter item: 삭제할 휴지통 항목 (폴더 또는 VoiceNote)
     /// - Throws: 삭제 중 오류 발생 시
-    func delete(item: WasteBasketItem) async throws
+    func delete(item: WasteBasketItem) async throws(DeleteWasteBasketRepositoryError)
 
     /// 다수의 항목을 휴지통에서 영구적으로 삭제합니다.
     /// - Parameter items: 삭제할 휴지통 항목 리스트
     /// - Throws: 삭제 중 오류 발생 시
-    func deleteAll(items: [WasteBasketItem]) async throws
+    func deleteAll(items: [WasteBasketItem]) async throws(DeleteWasteBasketRepositoryError)
 
     /// 특정 항목을 휴지통으로 이동시킵니다. (Soft Delete)
     /// - Parameter item: 이동시킬 항목 (폴더 또는 VoiceNote)
     /// - Throws: 이동 중 오류 발생 시
-    func moveToWasteBasket(item: WasteBasketItem) async throws
+    func moveToWasteBasket(item: WasteBasketItem) async throws(MoveWasteBasketRepositoryError)
 
     /// 다수의 항목을 휴지통으로 이동시킵니다. (Soft Delete)
     /// - Parameter items: 이동시킬 항목 리스트
     /// - Throws: 이동 중 오류 발생 시
-    func moveAllToWasteBasket(items: [WasteBasketItem]) async throws
+    func moveAllToWasteBasket(items: [WasteBasketItem]) async throws(MoveWasteBasketRepositoryError)
+
+    /// 전체 WasteBasketItem을 가져옵니다.
+    /// - Returns: (Folder 또는 VoiceNote) 의 배열
+    /// - Throws: 조회 실패 시
+    func fetchAll() async throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem]
 }
