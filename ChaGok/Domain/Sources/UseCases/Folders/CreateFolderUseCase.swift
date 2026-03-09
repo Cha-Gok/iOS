@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 /// 폴더 생성 유스케이스 프로토콜.
 /// FileManager를 통한 실제 디렉토리 생성과 CoreData 모델 저장을 요청합니다.
@@ -7,7 +8,7 @@ public protocol CreateFolderUseCase: Sendable {
     /// - Parameter name: 생성할 폴더의 이름
     /// - Returns: 생성된 `Folder` 엔티티
     /// - Throws: 폴더 생성 실패 시
-    func execute(name: String) async throws -> Folder
+    func execute(name: String) async throws(CreateFolderUseCaseError) -> Folder
 }
 
 public struct DefaultCreateFolderUseCase: CreateFolderUseCase {
@@ -18,7 +19,23 @@ public struct DefaultCreateFolderUseCase: CreateFolderUseCase {
         self.repository = repository
     }
 
-    public func execute(name: String) async throws -> Folder {
-        try await repository.create(name: name)
+    public func execute(name: String) async throws(CreateFolderUseCaseError) -> Folder {
+        typealias UseCaseError = CreateFolderUseCaseError
+        if Task.isCancelled { throw UseCaseError.cancelled }
+        do {
+            return try await repository.create(name: name)
+        } catch {
+            AppLogger.error(error)
+            switch error {
+                case .cancelled:
+                    throw UseCaseError.cancelled
+                case .duplicateName:
+                    throw UseCaseError.duplicateName
+                case .createFailed:
+                    throw UseCaseError.createFailed
+                case .unknown, .notFound, .fetchFailed, .updateFailed:
+                    throw UseCaseError.unknown(error)
+            }
+        }
     }
 }
