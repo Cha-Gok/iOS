@@ -3,7 +3,7 @@ import Foundation
 public enum FolderRepositoryError: LocalizedError, Sendable {
     /// 작업 취소의 경우
     case cancelled
-    /// 폴더를 찾을 수 없는 경우 (조회, 수정, 삭제 시 발생)
+    /// 폴더를 찾을 수 없는 경우 (조회, 수정 시 발생)
     case notFound
     /// 동일한 이름의 폴더가 이미 존재하는 경우 (생성, 수정 시 발생)
     case duplicateName
