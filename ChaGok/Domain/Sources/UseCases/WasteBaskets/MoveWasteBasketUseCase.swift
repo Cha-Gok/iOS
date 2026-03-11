@@ -28,14 +28,7 @@ public struct DefaultMoveWasteBasketUseCase: MoveWasteBasketUseCase {
             }
         } catch {
             AppLogger.error(error)
-            switch error {
-                case .cancelled:
-                    throw UseCaseError.cancelled
-                case .moveFailed(let method):
-                    throw UseCaseError.moveFailed(method)
-                case .unknown(let error):
-                    throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
 }
