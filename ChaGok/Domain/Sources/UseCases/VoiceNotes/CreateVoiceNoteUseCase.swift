@@ -12,15 +12,17 @@ public protocol CreateVoiceNoteUseCase: Sendable {
 
 public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
 
-    private let repository: VoiceNoteRepository
+    private let repository: VoiceNoteCreateRepository
 
-    public init(repository: VoiceNoteRepository) {
+    public init(repository: VoiceNoteCreateRepository) {
         self.repository = repository
     }
 
     public func execute(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote {
         do {
-            try Task.checkCancellation()
+            if Task.isCancelled {
+                throw VoiceNoteUseCaseError.cancelled
+            }
 
             if voiceRecord.duration < 0 {
                 let error = VoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
@@ -35,27 +37,16 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
             }
 
             return try await repository.create(voiceRecord)
-        } catch is CancellationError {
-            let useCaseError = VoiceNoteUseCaseError.cancelled
-            AppLogger.error(useCaseError)
-            throw useCaseError
-        } catch let error as VoiceNoteRepositoryError {
-            let useCaseError: VoiceNoteUseCaseError
-            switch error {
-            case .createFailed:
-                useCaseError = .createFailed
-            case .cancelled:
-                useCaseError = .cancelled
-            case .fetchAllFailed, .recordNotFound, .fetchFailed, .updateFailed, .deleteFailed,
-                .unknown:
-                useCaseError = .unknown(error)
-            }
-            AppLogger.error(useCaseError)
-            throw useCaseError
         } catch {
-            let useCaseError = VoiceNoteUseCaseError.unknown(error)
-            AppLogger.error(useCaseError)
-            throw useCaseError
+            AppLogger.error(error)
+            throw CreateVoiceNoteUseCaseError(error)
+        }
+    }
+}
+
+extension CreateVoiceNoteUseCaseError {
+    init(error: Error) {
+        switch error {
         }
     }
 }

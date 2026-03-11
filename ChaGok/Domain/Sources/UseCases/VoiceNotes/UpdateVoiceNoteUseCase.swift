@@ -12,9 +12,9 @@ public protocol UpdateVoiceNoteUseCase: Sendable {
 
 public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
 
-    private let repository: VoiceNoteRepository
+    private let repository: VoiceNoteUpdateRepository
 
-    public init(repository: VoiceNoteRepository) {
+    public init(repository: VoiceNoteUpdateRepository) {
         self.repository = repository
     }
 

@@ -18,9 +18,9 @@ public protocol ReadVoiceNoteUseCase: Sendable {
 
 public struct DefaultReadVoiceNoteUseCase: ReadVoiceNoteUseCase {
 
-    private let repository: VoiceNoteRepository
+    private let repository: VoiceNoteFetchAllRepository & VoiceNoteFetchRepository
 
-    public init(repository: VoiceNoteRepository) {
+    public init(repository: VoiceNoteFetchAllRepository & VoiceNoteFetchRepository) {
         self.repository = repository
     }
 

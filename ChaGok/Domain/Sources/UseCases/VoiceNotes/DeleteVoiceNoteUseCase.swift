@@ -11,9 +11,9 @@ public protocol DeleteVoiceNoteUseCase: Sendable {
 
 public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
 
-    private let repository: VoiceNoteRepository
+    private let repository: VoiceNoteDeleteRepository
 
-    public init(repository: VoiceNoteRepository) {
+    public init(repository: VoiceNoteDeleteRepository) {
         self.repository = repository
     }
 
