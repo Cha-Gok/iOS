@@ -22,20 +22,17 @@ public struct DefaultCreateFolderUseCase: CreateFolderUseCase {
     public func execute(name: String) async throws(CreateFolderUseCaseError) -> Folder {
         typealias UseCaseError = CreateFolderUseCaseError
         if Task.isCancelled { throw UseCaseError.cancelled }
+
+        // invalidName 유효성 검증
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw UseCaseError.invalidName
+        }
+
         do {
             return try await repository.create(name: name)
         } catch {
             AppLogger.error(error)
-            switch error {
-                case .cancelled:
-                    throw UseCaseError.cancelled
-                case .duplicateName:
-                    throw UseCaseError.duplicateName
-                case .createFailed:
-                    throw UseCaseError.createFailed
-                case .unknown, .notFound, .fetchFailed, .updateFailed:
-                    throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
 }
