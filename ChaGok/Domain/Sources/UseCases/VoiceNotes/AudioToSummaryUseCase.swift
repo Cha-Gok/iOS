@@ -25,34 +25,35 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
 
     public func execute(audioFileURL: URL) async throws(AudioToSummaryUseCaseError)
         -> AudioToSummaryResult {
+        if Task.isCancelled { throw .cancelled }
         do {
-            try Task.checkCancellation()
-            // 1. 오디오 파일 전사
             let transcript = try await sttRepository.transcribe(audioFileURL: audioFileURL)
 
             try Task.checkCancellation()
-            // 2. 키워드 추출 및 요약
-            let (keywords, summary) = try await summaryRepository.summarize(transcript: transcript)
 
+            let (keywords, summary) = try await summaryRepository.summarize(transcript: transcript)
             return AudioToSummaryResult(
                 transcript: transcript,
                 keywords: keywords,
                 summary: summary
             )
-        } catch let sttError as STTRepositoryError {
-            let useCaseError = AudioToSummaryUseCaseError.transcribeFailed(sttError)
-            AppLogger.error(useCaseError)
-            throw useCaseError
-        } catch let summaryError as SummaryRepositoryError {
-            let useCaseError = AudioToSummaryUseCaseError.summarizeFailed(summaryError)
-            AppLogger.error(useCaseError)
-            throw useCaseError
-        } catch is CancellationError {
-            let useCaseError = AudioToSummaryUseCaseError.cancelled
-            AppLogger.error(useCaseError)
-            throw useCaseError
         } catch {
-            throw AudioToSummaryUseCaseError.unknown(error)
+            AppLogger.error(error)
+            throw AudioToSummaryUseCaseError(error)
+        }
+    }
+}
+
+extension AudioToSummaryUseCaseError {
+    public init(_ error: Error) {
+        if let error = error as? CancellationError {
+            self = .cancelled
+        } else if let error = error as? STTRepositoryError {
+            self = .transcribeFailed(error)
+        } else if let error = error as? SummaryRepositoryError {
+            self = .summarizeFailed(error)
+        } else {
+            self = .unknown(error)
         }
     }
 }

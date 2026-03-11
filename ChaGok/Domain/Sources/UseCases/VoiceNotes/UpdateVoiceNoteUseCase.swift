@@ -6,8 +6,8 @@ public protocol UpdateVoiceNoteUseCase: Sendable {
     /// 음성 메모 정보를 업데이트합니다.
     /// - Parameter voiceNote: 업데이트할 `VoiceNote` 엔티티
     /// - Returns: 업데이트된 `VoiceNote` 엔티티
-    /// - Throws: `VoiceNoteUseCaseError` (업데이트 실패)
-    func execute(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote
+    /// - Throws: `UpdateVoiceNoteUseCaseError` (업데이트 실패)
+    func execute(_ voiceNote: VoiceNote) async throws(UpdateVoiceNoteUseCaseError) -> VoiceNote
 }
 
 public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
@@ -18,32 +18,27 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
         self.repository = repository
     }
 
-    public func execute(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+    public func execute(_ voiceNote: VoiceNote) async throws(UpdateVoiceNoteUseCaseError)
+        -> VoiceNote {
+        if Task.isCancelled { throw .cancelled }
         do {
-            try Task.checkCancellation()
             return try await repository.update(voiceNote)
-        } catch is CancellationError {
-            let useCaseError = VoiceNoteUseCaseError.cancelled
-            AppLogger.error(useCaseError)
-            throw useCaseError
-        } catch let error as VoiceNoteRepositoryError {
-            AppLogger.error(error)
-            throw mapFromRepository(error)
         } catch {
-            let useCaseError = VoiceNoteUseCaseError.unknown(error)
-            AppLogger.error(useCaseError)
-            throw useCaseError
+            AppLogger.error(error)
+            throw UpdateVoiceNoteUseCaseError(error)
         }
     }
+}
 
-    private func mapFromRepository(_ error: VoiceNoteRepositoryError) -> VoiceNoteUseCaseError {
+extension UpdateVoiceNoteUseCaseError {
+    public init(_ error: VoiceNoteUpdateRepositoryError) {
         switch error {
         case .updateFailed:
-            return .updateFailed
+            self = .updateFailed
         case .cancelled:
-            return .cancelled
-        case .createFailed, .fetchAllFailed, .recordNotFound, .fetchFailed, .deleteFailed, .unknown:
-            return .unknown(error)
+            self = .cancelled
+        case .unknown(let error):
+            self = .unknown(error)
         }
     }
 }

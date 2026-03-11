@@ -5,8 +5,8 @@ import Foundation
 public protocol DeleteVoiceNoteUseCase: Sendable {
     /// 음성 메모를 삭제합니다.
     /// - Parameter id: 삭제할 음성 메모의 ID
-    /// - Throws: `VoiceNoteUseCaseError` (삭제 실패)
-    func execute(byId id: UUID) async throws(VoiceNoteUseCaseError)
+    /// - Throws: `DeleteVoiceNoteUseCaseError` (삭제 실패)
+    func execute(byId id: UUID) async throws(DeleteVoiceNoteUseCaseError)
 }
 
 public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
@@ -17,32 +17,27 @@ public struct DefaultDeleteVoiceNoteUseCase: DeleteVoiceNoteUseCase {
         self.repository = repository
     }
 
-    public func execute(byId id: UUID) async throws(VoiceNoteUseCaseError) {
+    public func execute(byId id: UUID) async throws(DeleteVoiceNoteUseCaseError) {
+        if Task.isCancelled { throw .cancelled }
+
         do {
-            try Task.checkCancellation()
             try await repository.delete(byId: id)
-        } catch is CancellationError {
-            let useCaseError = VoiceNoteUseCaseError.cancelled
-            AppLogger.error(useCaseError)
-            throw useCaseError
-        } catch let error as VoiceNoteRepositoryError {
-            AppLogger.error(error)
-            throw mapFromRepository(error)
         } catch {
-            let useCaseError = VoiceNoteUseCaseError.unknown(error)
-            AppLogger.error(useCaseError)
-            throw useCaseError
+            AppLogger.error(error)
+            throw DeleteVoiceNoteUseCaseError(error)
         }
     }
+}
 
-    private func mapFromRepository(_ error: VoiceNoteRepositoryError) -> VoiceNoteUseCaseError {
+extension DeleteVoiceNoteUseCaseError {
+    public init(_ error: VoiceNoteDeleteRepositoryError) {
         switch error {
         case .deleteFailed(let id):
-            return .deleteFailed(id: id)
+            self = .deleteFailed(id: id)
         case .cancelled:
-            return .cancelled
-        case .createFailed, .fetchAllFailed, .recordNotFound, .fetchFailed, .updateFailed, .unknown:
-            return .unknown(error)
+            self = .cancelled
+        case .unknown(let err):
+            self = .unknown(err)
         }
     }
 }
