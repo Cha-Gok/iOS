@@ -23,7 +23,7 @@ public enum FetchBasicFolderUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    public init(_ error: WorkSpaceBasicFolderRepositoryError) {
+    init(_ error: WorkSpaceBasicFolderRepositoryError) {
         switch error {
             case .cancelled:
                 self = .cancelled

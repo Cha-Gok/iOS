@@ -27,7 +27,7 @@ public enum CreateFolderUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    public init(_ error: FolderRepositoryError) {
+    init(_ error: FolderRepositoryError) {
         switch error {
             case .cancelled:
                 self = .cancelled

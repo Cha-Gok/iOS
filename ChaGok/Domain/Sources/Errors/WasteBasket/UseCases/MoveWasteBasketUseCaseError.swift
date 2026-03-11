@@ -20,7 +20,7 @@ public enum MoveWasteBasketUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    public init(_ error: MoveWasteBasketRepositoryError) {
+    init(_ error: MoveWasteBasketRepositoryError) {
         switch error {
             case .cancelled:
                 self = .cancelled

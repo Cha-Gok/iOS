@@ -15,7 +15,7 @@ public enum FetchRootUrlUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    public init(_ error: WorkSpaceRootURLRepositoryError) {
+    init(_ error: WorkSpaceRootURLRepositoryError) {
         switch error {
             case .cancelled:
                 self = .cancelled

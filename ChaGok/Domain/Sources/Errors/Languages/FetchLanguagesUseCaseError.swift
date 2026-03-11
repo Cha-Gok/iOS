@@ -19,7 +19,7 @@ public enum FetchLanguagesUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    public init(_ error: FetchLanguagesRepositoryError) {
+    init(_ error: FetchLanguagesRepositoryError) {
         switch error {
             case .cancelled:
                 self = .cancelled

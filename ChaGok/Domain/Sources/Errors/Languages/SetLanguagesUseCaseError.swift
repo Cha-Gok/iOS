@@ -19,7 +19,7 @@ public enum SetLanguagesUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    public init(_ error: SetLanguagesRepositoryError) {
+    init(_ error: SetLanguagesRepositoryError) {
         switch error {
             case .cancelled:
                 self = .cancelled
