@@ -22,4 +22,18 @@ public enum FetchBasicFolderUseCaseError: LocalizedError, Sendable {
                 error.localizedDescription
         }
     }
+
+    init(_ error: WorkSpaceBasicFolderRepositoryError) {
+        switch error {
+            case .cancelled:
+                self = .cancelled
+            case .notFound:
+                self = .notFound
+            case .createFailed:
+                self = .createFailed
+            case .unknown(let err):
+                self = .unknown(err)
+        }
+    }
+
 }

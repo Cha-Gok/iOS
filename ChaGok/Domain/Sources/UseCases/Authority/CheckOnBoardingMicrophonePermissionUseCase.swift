@@ -18,9 +18,8 @@ public struct DefaultCheckOnBoardingMicrophonePermissionUseCase: CheckOnBoarding
     }
 
     public func execute() async throws(CheckOnBoardingMicrophonePermissionUseCaseError) -> MicrophonePermissionStatus {
-        if Task.isCancelled {
-            throw .cancelled
-        }
+        typealias UseCaseError = CheckOnBoardingMicrophonePermissionUseCaseError
+        if Task.isCancelled { throw UseCaseError.cancelled }
 
         do {
             try await repository.checkRecordingPermission()
@@ -28,13 +27,8 @@ public struct DefaultCheckOnBoardingMicrophonePermissionUseCase: CheckOnBoarding
         } catch {
             AppLogger.error(error)
             switch error {
-                case .permissionDenied:
-                    // 온보딩에서는 거부되어도 다음 단계로 넘어갈 수 있도록 상태만 반환
-                    return .denied
-                case .cancelled:
-                    throw .cancelled
-                case .unknown(let error):
-                    throw .unknown(error)
+                case .permissionDenied: return .denied // 권한 없음을 denied
+                default: throw UseCaseError(error)
             }
         }
     }

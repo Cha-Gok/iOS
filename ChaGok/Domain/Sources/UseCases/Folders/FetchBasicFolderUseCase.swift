@@ -22,22 +22,13 @@ public struct DefaultFetchBasicFolderUseCase: FetchBasicFolderUseCase {
     @discardableResult
     public func execute() async throws(FetchBasicFolderUseCaseError) -> Folder {
         typealias UseCaseError = FetchBasicFolderUseCaseError
-        if Task.isCancelled { throw FetchBasicFolderUseCaseError.cancelled }
+        if Task.isCancelled { throw UseCaseError.cancelled }
         do {
             // 기본 폴더 생성/확인
             return try await repository.fetchOrCreateBasicFolder()
         } catch let error {
             AppLogger.error(error)
-            switch error {
-                case .cancelled:
-                    throw UseCaseError.cancelled
-                case .createFailed:
-                    throw UseCaseError.createFailed
-                case .notFound:
-                    throw UseCaseError.notFound
-                case .unknown(let error):
-                    throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
 }

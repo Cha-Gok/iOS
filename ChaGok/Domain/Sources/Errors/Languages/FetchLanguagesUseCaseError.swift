@@ -18,4 +18,15 @@ public enum FetchLanguagesUseCaseError: LocalizedError, Sendable {
                 error.localizedDescription
         }
     }
+
+    init(_ error: FetchLanguagesRepositoryError) {
+        switch error {
+            case .cancelled:
+                self = .cancelled
+            case .notFound:
+                self = .notFound
+            case .unknown(let error):
+                self = .unknown(error)
+        }
+    }
 }

@@ -18,4 +18,15 @@ public enum SetLanguagesUseCaseError: LocalizedError, Sendable {
                 error.localizedDescription
         }
     }
+
+    init(_ error: SetLanguagesRepositoryError) {
+        switch error {
+            case .cancelled:
+                self = .cancelled
+            case .saveFailed:
+                self = .saveFailed
+            case .unknown(let error):
+                self = .unknown(error)
+        }
+    }
 }

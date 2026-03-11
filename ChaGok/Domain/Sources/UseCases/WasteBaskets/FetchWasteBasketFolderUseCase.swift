@@ -25,14 +25,7 @@ public struct DefaultFetchWasteBasketFolderUseCase: FetchWasteBasketFolderUseCas
             return try await repository.fetchAll()
         } catch {
             AppLogger.error(error)
-            switch error {
-                case .cancelled:
-                    throw UseCaseError.cancelled
-                case .fetchFailed:
-                    throw UseCaseError.fetchFailed
-                case .unknown(let error):
-                    throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
 }

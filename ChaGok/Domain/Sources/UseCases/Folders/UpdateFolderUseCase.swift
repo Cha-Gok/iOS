@@ -22,18 +22,18 @@ public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
     public func execute(_ folder: Folder) async throws(UpdateFolderUseCaseError) -> Folder {
         typealias UseCaseError = UpdateFolderUseCaseError
         if Task.isCancelled { throw UseCaseError.cancelled }
+
+        // invalidName 유효성 검증
+        guard !folder.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw UseCaseError.invalidName
+        }
+
         do {
             return try await repository.update(folder)
         } catch {
             AppLogger.error(error)
-            switch error {
-                case .cancelled: throw UseCaseError.cancelled
-                case .duplicateName: throw UseCaseError.duplicateName
-                case .notFound: throw UseCaseError.notFound
-                case .updateFailed: throw UseCaseError.updateFailed
-                case .unknown, .fetchFailed, .createFailed:
-                    throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
+
 }

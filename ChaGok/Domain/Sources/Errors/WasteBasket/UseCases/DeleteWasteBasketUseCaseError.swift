@@ -19,4 +19,15 @@ public enum DeleteWasteBasketUseCaseError: LocalizedError, Sendable {
                 error.localizedDescription
         }
     }
+
+    init(_ error: DeleteWasteBasketRepositoryError) {
+        switch error {
+            case .cancelled:
+                self = .cancelled
+            case .deleteFailed(let method):
+                self = .deleteFailed(method)
+            case .unknown(let error):
+                self = .unknown(error)
+        }
+    }
 }

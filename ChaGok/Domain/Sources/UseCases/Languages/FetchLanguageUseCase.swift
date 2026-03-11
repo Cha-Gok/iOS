@@ -23,11 +23,7 @@ public struct DefaultFetchLanguageUseCase: FetchLanguageUseCase {
             return try await repository.fetchLanguage()
         } catch {
             AppLogger.error(error)
-            switch error {
-                case .cancelled: throw UseCaseError.cancelled
-                case .notFound: throw UseCaseError.notFound
-                case .unknown(let error): throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
 }

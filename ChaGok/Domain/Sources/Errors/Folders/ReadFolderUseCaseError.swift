@@ -22,4 +22,18 @@ public enum ReadFolderUseCaseError: LocalizedError, Sendable {
                 error.localizedDescription
         }
     }
+
+    init(_ error: FolderRepositoryError) {
+        switch error {
+            case .cancelled:
+                self = .cancelled
+            case .notFound:
+                self = .notFound
+            case .fetchFailed:
+                self = .fetchFailed
+            default:
+                self = .unknown(error)
+        }
+    }
+
 }

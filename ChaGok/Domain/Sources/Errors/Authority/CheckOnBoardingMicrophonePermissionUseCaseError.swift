@@ -14,4 +14,13 @@ public enum CheckOnBoardingMicrophonePermissionUseCaseError: LocalizedError, Sen
                 error.localizedDescription
         }
     }
+
+    init(_ error: VoiceRecordPermissionRepositoryError) {
+        switch error {
+            case .cancelled:
+                self = .cancelled
+            default:
+                self = .unknown(error)
+        }
+    }
 }
