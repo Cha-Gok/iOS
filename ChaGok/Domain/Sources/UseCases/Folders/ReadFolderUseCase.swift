@@ -25,13 +25,8 @@ public struct DefaultReadFolderUseCase: ReadFolderUseCase {
             return try await repository.fetchAll()
         } catch {
             AppLogger.error(error)
-            switch error {
-                case .cancelled: throw UseCaseError.cancelled
-                case .notFound: throw UseCaseError.notFound
-                case .fetchFailed: throw UseCaseError.fetchFailed
-                case .unknown, .updateFailed, .createFailed, .duplicateName:
-                    throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
+
 }
