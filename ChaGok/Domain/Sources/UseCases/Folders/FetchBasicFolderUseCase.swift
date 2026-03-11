@@ -28,16 +28,7 @@ public struct DefaultFetchBasicFolderUseCase: FetchBasicFolderUseCase {
             return try await repository.fetchOrCreateBasicFolder()
         } catch let error {
             AppLogger.error(error)
-            switch error {
-                case .cancelled:
-                    throw UseCaseError.cancelled
-                case .createFailed:
-                    throw UseCaseError.createFailed
-                case .notFound:
-                    throw UseCaseError.notFound
-                case .unknown(let error):
-                    throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
 }
