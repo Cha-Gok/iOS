@@ -19,4 +19,15 @@ public enum FetchWasteBasketFolderUseCaseError: LocalizedError, Sendable {
                 error.localizedDescription
         }
     }
+
+    public init(_ error: FetchWasteBasketRepositoryError) {
+        switch error {
+            case .cancelled:
+                self = .cancelled
+            case .fetchFailed:
+                self = .fetchFailed
+            case .unknown(let error):
+                self = .unknown(error)
+        }
+    }
 }
