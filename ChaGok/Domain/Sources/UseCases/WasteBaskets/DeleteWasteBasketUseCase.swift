@@ -31,14 +31,7 @@ public struct DefaultDeleteWasteBasketUseCase: DeleteWasteBasketUseCase {
             }
         } catch {
             AppLogger.error(error)
-            switch error {
-                case .cancelled:
-                    throw UseCaseError.cancelled
-                case .deleteFailed(let method):
-                    throw UseCaseError.deleteFailed(method)
-                case .unknown(let error):
-                    throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
 }
