@@ -14,4 +14,14 @@ public enum FetchRootUrlUseCaseError: LocalizedError, Sendable {
                 error.localizedDescription
         }
     }
+
+    public init(_ error: WorkSpaceRootURLRepositoryError) {
+        switch error {
+            case .cancelled:
+                self = .cancelled
+            case .unknown(let error):
+                self = .unknown(error)
+        }
+    }
+
 }
