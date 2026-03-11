@@ -20,18 +20,12 @@ public struct DefaultFetchRootUrlUseCase: FetchRootUrlUseCase {
 
     public func execute() async throws(FetchRootUrlUseCaseError) -> URL {
         typealias UseCaseError = FetchRootUrlUseCaseError
-        if Task.isCancelled { throw FetchRootUrlUseCaseError.cancelled }
+        if Task.isCancelled { throw UseCaseError.cancelled }
         do {
-            // root URL 가져오기
             return try await repository.fetchRootURL()
         } catch {
             AppLogger.error(error)
-            switch error {
-                case .cancelled:
-                    throw UseCaseError.cancelled
-                case .unknown(let error):
-                    throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
 }
