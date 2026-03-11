@@ -24,11 +24,7 @@ public struct DefaultSelectLanguageUseCase: SelectLanguageUseCase {
             return try await repository.saveLanguage(lang)
         } catch {
             AppLogger.error(error)
-            switch error {
-                case .cancelled: throw UseCaseError.cancelled
-                case .saveFailed: throw UseCaseError.saveFailed
-                case .unknown(let error): throw UseCaseError.unknown(error)
-            }
+            throw UseCaseError(error)
         }
     }
 }
