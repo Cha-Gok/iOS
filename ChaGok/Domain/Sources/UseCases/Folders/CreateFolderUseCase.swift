@@ -23,6 +23,9 @@ public struct DefaultCreateFolderUseCase: CreateFolderUseCase {
         typealias UseCaseError = CreateFolderUseCaseError
         if Task.isCancelled { throw UseCaseError.cancelled }
 
+        // 폴더 이름 제한
+        guard name.count <= 50 else { throw UseCaseError.invailedLengthName }
+
         // invalidName 유효성 검증
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw UseCaseError.invalidName

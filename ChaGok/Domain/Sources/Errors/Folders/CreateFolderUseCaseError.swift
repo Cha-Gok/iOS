@@ -5,6 +5,8 @@ public enum CreateFolderUseCaseError: LocalizedError, Sendable {
     case cancelled
     /// 유효하지 않은 이름의 경우
     case invalidName
+    /// 유효하지 않은 글자 수의 경우
+    case invailedLengthName
     /// 동일한 이름의 폴더가 이미 존재하는 경우 (생성, 수정 시 발생)
     case duplicateName
     /// 폴더 생성이 실패한 경우
@@ -20,6 +22,8 @@ public enum CreateFolderUseCaseError: LocalizedError, Sendable {
                 "폴더 이름을 한 글자 이상 입력해 주세요."
             case .duplicateName:
                 "이미 동일한 이름의 폴더가 존재합니다."
+            case .invailedLengthName:
+                "폴더 이름이 너무 길어요."
             case .createFailed:
                 "폴더 생성에 실패했습니다."
             case .unknown(let error):
