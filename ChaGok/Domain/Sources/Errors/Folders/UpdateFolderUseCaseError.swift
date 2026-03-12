@@ -6,7 +6,7 @@ public enum UpdateFolderUseCaseError: LocalizedError, Sendable {
     /// 유효하지 않음 이름의 경우
     case invalidName
     /// 유효하지 않은 글자 수의 경우
-    case invailedLengthName
+    case invalidLengthName
     /// 폴더를 찾을 수 없는 경우 (조회, 수정 시 발생)
     case notFound
     /// 동일한 이름의 폴더가 이미 존재하는 경우 (생성, 수정 시 발생)
@@ -22,7 +22,7 @@ public enum UpdateFolderUseCaseError: LocalizedError, Sendable {
                 nil
             case .invalidName:
                 "폴더 이름을 한 글자 이상 입력해 주세요."
-            case .invailedLengthName:
+            case .invalidLengthName:
                 "폴더 이름이 너무 길어요."
             case .notFound:
                 "해당 폴더를 찾을 수 없습니다."
