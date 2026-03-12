@@ -57,7 +57,7 @@ extension CreateFolderUseCaseTest {
     }
 
     /// 이름의 길이가 50을 넘어가는 경우 .invailedLength 확인
-    func test_execute_throwInvaildLength_whenNameIsTooLong() async {
+    func test_execute_throwsInvalidLength_whenNameIsTooLong() async {
         let useCase = DefaultCreateFolderUseCase(
             repository: MockFolderRepository()
         )
@@ -66,7 +66,7 @@ extension CreateFolderUseCaseTest {
         do {
             _ = try await useCase.execute(name: tooLongName)
             XCTFail("invailedLengthName이 발생해야 합니다. (input: \(tooLongName))")
-        } catch UseCaseError.invailedLengthName {
+        } catch UseCaseError.invalidLengthName {
             // Success
         } catch {
             XCTFail("Expected .invailedLengthName, got \(error) for name: \(tooLongName)")
