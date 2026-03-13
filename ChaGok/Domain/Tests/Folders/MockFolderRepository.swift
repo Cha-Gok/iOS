@@ -1,85 +1,109 @@
-import Foundation
+import XCTest
 @testable import Domain
 
 actor MockFolderRepository: FolderRepository {
 
-    enum Behavior<T: Sendable>: Sendable {
-        case success(T)         // 성공한 경우
-        case cancelled          // 작업 취소의 경우
-        case notFound           // 폴더를 찾을 수 없는 경우
-        case duplicateName      // 이름이 중복된 경우
-        case createFailed       // 생성에 실패한 경우
-        case fetchFailed        // 조회에 실패한 경우
-        case updateFailed       // 수정에 실패한 경우
-        case unknown(Error)     // 알 수 없는 오류의 경우
+    // Results
+    private var createResult: Result<Folder, FolderRepositoryError>?
+    private var fetchAllResult: Result<[Folder], FolderRepositoryError>?
+    private var updateResult: Result<Folder, FolderRepositoryError>?
+
+    // 호출 검증 Count
+    private(set) var createCallCount = 0
+    private(set) var fetchAllCallCount = 0
+    private(set) var updateCallCount = 0
+
+    // Expected Call Counts
+    private var expectedCreateCallCount: Int?
+    private var expectedFetchAllCallCount: Int?
+    private var expectedUpdateCallCount: Int?
+
+    // MARK: - Setup
+
+    func setCreateResult(_ result: Result<Folder, FolderRepositoryError>) {
+        self.createResult = result
     }
 
-    var createBehavior: Behavior<Folder>?
-    var fetchAllBehavior: Behavior<[Folder]>?
-    var updateBehavior: Behavior<Folder>?
-
-    var delay: UInt64 = 0
-
-    var createCallCount = 0
-    var fetchAllCallCount = 0
-    var updateCallCount = 0
-
-    init(
-        createBehavior: Behavior<Folder>? = nil,
-        fetchAllBehavior: Behavior<[Folder]>? = nil,
-        updateBehavior: Behavior<Folder>? = nil,
-        delay: UInt64 = 0
-    ) {
-        self.createBehavior = createBehavior
-        self.fetchAllBehavior = fetchAllBehavior
-        self.updateBehavior = updateBehavior
-        self.delay = delay
+    func setFetchAllResult(_ result: Result<[Folder], FolderRepositoryError>) {
+        self.fetchAllResult = result
     }
+
+    func setUpdateResult(_ result: Result<Folder, FolderRepositoryError>) {
+        self.updateResult = result
+    }
+
+    // MARK: - Expectations
+
+    func expectCreate(callCount: Int) {
+        expectedCreateCallCount = callCount
+    }
+
+    func expectFetchAll(callCount: Int) {
+        expectedFetchAllCallCount = callCount
+    }
+
+    func expectUpdate(callCount: Int) {
+        expectedUpdateCallCount = callCount
+    }
+
+    // MARK: - Verification
+
+    func verify(file: StaticString = #filePath, line: UInt = #line) {
+        if let expected = expectedCreateCallCount {
+            XCTAssertEqual(createCallCount, expected, "create call count mismatch", file: file, line: line)
+        }
+        if let expected = expectedFetchAllCallCount {
+            XCTAssertEqual(fetchAllCallCount, expected, "fetchAll call count mismatch", file: file, line: line)
+        }
+        if let expected = expectedUpdateCallCount {
+            XCTAssertEqual(updateCallCount, expected, "update call count mismatch", file: file, line: line)
+        }
+    }
+
+    // MARK: - FolderRepository
 
     func create(name: String) async throws(FolderRepositoryError) -> Folder {
         createCallCount += 1
-        return try await handleBehavior(createBehavior, methodName: "create")
+
+        guard let result = createResult else {
+            fatalError("MockFolderRepository.createResult not set")
+        }
+
+        switch result {
+            case .success(let folder):
+                return folder
+            case .failure(let error):
+                throw error
+        }
     }
 
     func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
         fetchAllCallCount += 1
-        return try await handleBehavior(fetchAllBehavior, methodName: "fetchAll")
+
+        guard let result = fetchAllResult else {
+            fatalError("MockFolderRepository.fetchAllResult not set")
+        }
+
+        switch result {
+            case .success(let folders):
+                return folders
+            case .failure(let error):
+                throw error
+        }
     }
 
     func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
         updateCallCount += 1
-        return try await handleBehavior(updateBehavior, methodName: "update")
-    }
-}
 
-// MARK: - Helper Function
-
-extension MockFolderRepository {
-    private func handleBehavior<T>(
-        _ behavior: Behavior<T>?,
-        methodName: String
-    ) async throws(FolderRepositoryError) -> T {
-        if delay > 0 {
-            try? await Task.sleep(nanoseconds: delay)
+        guard let result = updateResult else {
+            fatalError("MockFolderRepository.updateResult not set")
         }
 
-        if Task.isCancelled {
-            throw .cancelled
-        }
-
-        guard let behavior = behavior else {
-            fatalError("\(methodName)의 Behavior가 설정되지 않았습니다.")
-        }
-
-        switch behavior {
-            case .success(let value): return value
-            case .cancelled: throw .cancelled
-            case .notFound: throw .notFound
-            case .duplicateName: throw .duplicateName
-            case .createFailed: throw .createFailed
-            case .fetchFailed: throw .fetchFailed
-            case .updateFailed: throw .updateFailed
-            case .unknown(let error): throw .unknown(error)
+        switch result {
+            case .success(let updatedFolder):
+                return updatedFolder
+            case .failure(let error):
+                throw error
         }
     }
 }
