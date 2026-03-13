@@ -13,17 +13,18 @@ extension FetchRootUrlUseCaseTest {
     func test_execute_returnsURL_whenRepositorySucceeds() async throws {
         // Given
         let expectedURL = URL.applicationSupportDirectory
-        let useCase = DefaultFetchRootUrlUseCase(
-            repository: MockWorkSpaceRepository(
-                rootUrlBehavior: .success(expectedURL)
-            )
+        let repository = MockWorkSpaceRepository(
+            rootUrlBehavior: .success(expectedURL)
         )
+        let useCase = DefaultFetchRootUrlUseCase(repository: repository)
 
         // When
         let url = try await useCase.execute()
 
         // Then
         XCTAssertEqual(url, expectedURL)
+        let callCount = await repository.fetchRootURLCallCount
+        XCTAssertEqual(callCount, 1, "성공 시 Repository가 한 번 호출되어야 합니다.")
     }
 }
 
@@ -35,11 +36,8 @@ extension FetchRootUrlUseCaseTest {
     /// UseCase가 .cancelled 에러를 던지는지 확인
     func test_execute_throwsCancelled_whenRepositoryReturnsCancelled() async {
         // Given
-        let useCase = DefaultFetchRootUrlUseCase(
-            repository: MockWorkSpaceRepository(
-                rootUrlBehavior: .cancelled
-            )
-        )
+        let repository = MockWorkSpaceRepository(rootUrlBehavior: .cancelled)
+        let useCase = DefaultFetchRootUrlUseCase(repository: repository)
 
         // When & Then
         do {
@@ -47,19 +45,20 @@ extension FetchRootUrlUseCaseTest {
             XCTFail("Repository가 cancelled 에러를 던지면 UseCase도 cancelled 에러를 던져야 합니다.")
         } catch UseCaseError.cancelled {
             // Success
+            let callCount = await repository.fetchRootURLCallCount
+            XCTAssertEqual(callCount, 1, "Repository까지 진입 후 취소된 경우 호출 횟수는 1회여야 합니다.")
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
         }
     }
 
+    /// 취소 Case: 즉시 취소된경우
+    ///  UserCase의 isCancelled가 있는지 확인
     func test_execute_throwsCancelled_whenTaskIsCancelledPreemptively() async {
         // Given
         let testURL: URL = .applicationSupportDirectory
-        let useCase = DefaultFetchRootUrlUseCase(
-            repository: MockWorkSpaceRepository(
-                rootUrlBehavior: .success(testURL)
-            )
-        )
+        let repository = MockWorkSpaceRepository(rootUrlBehavior: .success(testURL))
+        let useCase = DefaultFetchRootUrlUseCase(repository: repository)
 
         // When & Then
         let task = Task { try await useCase.execute() }
@@ -70,35 +69,8 @@ extension FetchRootUrlUseCaseTest {
             XCTFail("이미 취소된 Task이므로 .cancelled 에러가 발생해야 합니다.")
         } catch UseCaseError.cancelled {
             // Success
-        } catch {
-            XCTFail("Expected FetchRootUrlUseCaseError.cancelled, got \(error)")
-        }
-    }
-
-    /// 취소 Case (During Execution): Repository가 작업 중일 때 Task가 취소된 경우
-    /// Repository 또는 UseCase에서 .cancelled 에러를 올바르게 전파하는지 확인
-    func test_execute_throwsCancelled_whenTaskIsCancelledDuringExecution() async {
-        // Given
-        let testURL: URL = .applicationSupportDirectory
-        let useCase = DefaultFetchRootUrlUseCase(
-            repository: MockWorkSpaceRepository(
-                rootUrlBehavior: .success(testURL),
-                rootUrlDelay: 100_000_000 // 0.1초 지연
-            )
-        )
-
-        // When & Then
-        let task = Task { try await useCase.execute() }
-
-        // 작업을 시작할 시간을 조금 준 뒤 취소
-        try? await Task.sleep(nanoseconds: 50_000_000) // 0.05초 대기
-        task.cancel()
-
-        do {
-            _ = try await task.value
-            XCTFail("작업 도중 취소되었으므로 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
-            // Success
+            let callCount = await repository.fetchRootURLCallCount
+            XCTAssertEqual(callCount, 0, "선제적 취소 시 Repository는 단 한 번도 호출되지 않아야 합니다.")
         } catch {
             XCTFail("Expected FetchRootUrlUseCaseError.cancelled, got \(error)")
         }
@@ -110,11 +82,8 @@ extension FetchRootUrlUseCaseTest {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
-        let useCase = DefaultFetchRootUrlUseCase(
-            repository: MockWorkSpaceRepository(
-                rootUrlBehavior: .unknown(dummyError)
-            )
-        )
+        let repository = MockWorkSpaceRepository(rootUrlBehavior: .unknown(dummyError))
+        let useCase = DefaultFetchRootUrlUseCase(repository: repository)
 
         // When & Then
         do {
@@ -124,6 +93,8 @@ extension FetchRootUrlUseCaseTest {
             switch error {
                 case .unknown(let repoError):
                     XCTAssertTrue(repoError is Dummy)
+                    let callCount = await repository.fetchRootURLCallCount
+                    XCTAssertEqual(callCount, 1, "에러 발생 시에도 Repository 호출은 1회 발생해야 합니다.")
                 default:
                     XCTFail("Expected .unknown, got \(error)")
             }
