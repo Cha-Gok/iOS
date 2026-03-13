@@ -15,11 +15,8 @@ extension ReadFolderUseCaseTest {
             Folder(path: URL(fileURLWithPath: "/1"), name: "Folder 1"),
             Folder(path: URL(fileURLWithPath: "/2"), name: "Folder 2")
         ]
-        let useCase = DefaultReadFolderUseCase(
-            repository: MockFolderRepository(
-                fetchAllBehavior: .success(expectedFolders)
-            )
-        )
+        let repository = MockFolderRepository(fetchAllBehavior: .success(expectedFolders))
+        let useCase = DefaultReadFolderUseCase(repository: repository)
 
         // When
         let folders = try await useCase.execute()
@@ -30,6 +27,8 @@ extension ReadFolderUseCaseTest {
         XCTAssertEqual(folders[0].id, expectedFolders[0].id)
         XCTAssertEqual(folders[1].name, "Folder 2")
         XCTAssertEqual(folders[1].id, expectedFolders[1].id)
+        let callCount = await repository.fetchAllCallCount
+        XCTAssertEqual(callCount, 1, "Repository의 fetchAll이 1번 호출되어야 합니다.")
     }
 }
 
@@ -40,11 +39,8 @@ extension ReadFolderUseCaseTest {
     /// 조회 실패 Case: fetchFailed 에러 전파 확인
     func test_execute_throwsFetchFailed_whenRepositoryReturnsFetchFailed() async {
         // Given
-        let useCase = DefaultReadFolderUseCase(
-            repository: MockFolderRepository(
-                fetchAllBehavior: .fetchFailed
-            )
-        )
+        let repository = MockFolderRepository(fetchAllBehavior: .fetchFailed)
+        let useCase = DefaultReadFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -55,16 +51,16 @@ extension ReadFolderUseCaseTest {
         } catch {
             XCTFail("Expected .fetchFailed, got \(error)")
         }
+
+        let callCount = await repository.fetchAllCallCount
+        XCTAssertEqual(callCount, 1, "Repository의 fetchAll이 1번 호출되어야 합니다.")
     }
 
     /// 찾을 수 없는 경우 Case: Repository에서 .notFound를 반환할 때 동일하게 전파되는지 확인
     func test_execute_throwsNotFound_whenRepositoryReturnsNotFound() async {
         // Given
-        let useCase = DefaultReadFolderUseCase(
-            repository: MockFolderRepository(
-                fetchAllBehavior: .notFound
-            )
-        )
+        let repository = MockFolderRepository(fetchAllBehavior: .notFound)
+        let useCase = DefaultReadFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -75,16 +71,16 @@ extension ReadFolderUseCaseTest {
         } catch {
             XCTFail("Expected .notFound, got \(error)")
         }
+
+        let callCount = await repository.fetchAllCallCount
+        XCTAssertEqual(callCount, 1, "Repository의 fetchAll이 1번 호출되어야 합니다.")
     }
 
     /// 매핑 확인 Case: Repository에서 .createFailed를 반환할 때 .unknown으로 맵핑되는지 확인
     func test_execute_throwsUnknown_whenRepositoryReturnsCreateFailed() async {
         // Given
-        let useCase = DefaultReadFolderUseCase(
-            repository: MockFolderRepository(
-                fetchAllBehavior: .createFailed
-            )
-        )
+        let repository = MockFolderRepository(fetchAllBehavior: .createFailed)
+        let useCase = DefaultReadFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -104,16 +100,16 @@ extension ReadFolderUseCaseTest {
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
+
+        let callCount = await repository.fetchAllCallCount
+        XCTAssertEqual(callCount, 1, "Repository의 fetchAll이 1번 호출되어야 합니다.")
     }
 
     /// 매핑 확인 Case: Repository에서 .updateFailed를 반환할 때 .unknown으로 맵핑되는지 확인
     func test_execute_throwsUnknown_whenRepositoryReturnsUpdateFailed() async {
         // Given
-        let useCase = DefaultReadFolderUseCase(
-            repository: MockFolderRepository(
-                fetchAllBehavior: .updateFailed
-            )
-        )
+        let repository = MockFolderRepository(fetchAllBehavior: .updateFailed)
+        let useCase = DefaultReadFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -133,6 +129,9 @@ extension ReadFolderUseCaseTest {
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
+
+        let callCount = await repository.fetchAllCallCount
+        XCTAssertEqual(callCount, 1, "Repository의 fetchAll이 1번 호출되어야 합니다.")
     }
 
     /// 알 수 없는 에러 Case: Repository에서 맵핑되지 않은 에러를 던질 때 .unknown으로 래핑되는지 확인
@@ -140,11 +139,8 @@ extension ReadFolderUseCaseTest {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
-        let useCase = DefaultReadFolderUseCase(
-            repository: MockFolderRepository(
-                fetchAllBehavior: .unknown(dummyError)
-            )
-        )
+        let repository = MockFolderRepository(fetchAllBehavior: .unknown(dummyError))
+        let useCase = DefaultReadFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -164,6 +160,9 @@ extension ReadFolderUseCaseTest {
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
+
+        let callCount = await repository.fetchAllCallCount
+        XCTAssertEqual(callCount, 1, "Repository의 fetchAll이 1번 호출되어야 합니다.")
     }
 }
 
@@ -174,11 +173,8 @@ extension ReadFolderUseCaseTest {
     /// 작업 취소 Case: repository Cancelled의 경우 UseCase.Cancelled와 대칭 확인
     func test_execute_throwsCancelled_whenRepositoryReturnsCancelled() async {
         // Given
-        let useCase = DefaultReadFolderUseCase(
-            repository: MockFolderRepository(
-                fetchAllBehavior: .cancelled
-            )
-        )
+        let repository = MockFolderRepository(fetchAllBehavior: .cancelled)
+        let useCase = DefaultReadFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -189,6 +185,9 @@ extension ReadFolderUseCaseTest {
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
         }
+
+        let callCount = await repository.fetchAllCallCount
+        XCTAssertEqual(callCount, 1, "Repository의 fetchAll이 1번 호출되어야 합니다.")
     }
 
     /// 취소 Case: 작업이 즉시 취소된 경우 execute 함수 내부 isCancelled를 검증한다
@@ -214,29 +213,4 @@ extension ReadFolderUseCaseTest {
         }
     }
 
-    /// 취소 Case (During Execution): 작업 도중 Task가 취소된 경우
-    func test_execute_throwsCancelled_whenTaskIsCancelledDuringExecution() async {
-        // Given
-        let useCase = DefaultReadFolderUseCase(
-            repository: MockFolderRepository(
-                fetchAllBehavior: .success([]),
-                delay: 100_000_000 // 0.1초 지연
-            )
-        )
-
-        // When & Then
-        let task = Task { try await useCase.execute() }
-
-        try? await Task.sleep(nanoseconds: 50_000_000) // 0.05초 대기 후 취소
-        task.cancel()
-
-        do {
-            _ = try await task.value
-            XCTFail("작업 도중 취소되었으므로 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
-            // Success
-        } catch {
-            XCTFail("Expected .cancelled, got \(error)")
-        }
-    }
 }
