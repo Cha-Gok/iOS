@@ -1,7 +1,7 @@
 import Foundation
-import Domain
+@testable import Domain
 
-struct MockWorkSpaceRepository: WorkSpaceRepository {
+actor MockWorkSpaceRepository: WorkSpaceRepository {
 
     enum RootURLBehavior: Sendable {
         case success(URL)       // 성공한 경우
@@ -19,7 +19,11 @@ struct MockWorkSpaceRepository: WorkSpaceRepository {
 
     var rootUrlBehavior: RootURLBehavior?
     var basicFolderBehavior: BasicFolderBehavior?
-    var rootUrlDelay: UInt64 = 0
+    var delay: UInt64 = 0
+
+    // 호출 횟수 기록
+    var fetchRootURLCallCount = 0
+    var fetchOrCreateBasicFolderCallCount = 0
 
     typealias RootURLError = Domain.WorkSpaceRootURLRepositoryError
     typealias BasicFolderError = Domain.WorkSpaceBasicFolderRepositoryError
@@ -27,16 +31,18 @@ struct MockWorkSpaceRepository: WorkSpaceRepository {
     init(
         rootUrlBehavior: RootURLBehavior? = nil,
         basicFolderBehavior: BasicFolderBehavior? = nil,
-        rootUrlDelay: UInt64 = 0
+        delay: UInt64 = 0
     ) {
         self.rootUrlBehavior = rootUrlBehavior
         self.basicFolderBehavior = basicFolderBehavior
-        self.rootUrlDelay = rootUrlDelay
+        self.delay = delay
     }
 
     func fetchRootURL() async throws(RootURLError) -> URL {
-        if rootUrlDelay > 0 {
-            try? await Task.sleep(nanoseconds: rootUrlDelay)
+        fetchRootURLCallCount += 1
+
+        if delay > 0 {
+            try? await Task.sleep(nanoseconds: delay)
         }
 
         if Task.isCancelled {
@@ -56,8 +62,10 @@ struct MockWorkSpaceRepository: WorkSpaceRepository {
     }
 
     func fetchOrCreateBasicFolder() async throws(BasicFolderError) -> Domain.Folder {
-        if rootUrlDelay > 0 {
-            try? await Task.sleep(nanoseconds: rootUrlDelay)
+        fetchOrCreateBasicFolderCallCount += 1
+
+        if delay > 0 {
+            try? await Task.sleep(nanoseconds: delay)
         }
 
         if Task.isCancelled {
