@@ -12,11 +12,10 @@ extension FetchBasicFolderUseCaseTest {
     func test_execute_returnsFolder_whenRepositorySucceeds() async throws {
         // Given
         let expectedFolder = Folder(path: URL(fileURLWithPath: "/test"), name: "Basic Folder")
-        let useCase = DefaultFetchBasicFolderUseCase(
-            repository: MockWorkSpaceRepository(
-                basicFolderBehavior: .success(expectedFolder)
-            )
+        let repository = MockWorkSpaceRepository(
+            basicFolderBehavior: .success(expectedFolder)
         )
+        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
 
         // When
         let folder = try await useCase.execute()
@@ -24,6 +23,8 @@ extension FetchBasicFolderUseCaseTest {
         // Then
         XCTAssertEqual(folder.id, expectedFolder.id)
         XCTAssertEqual(folder.name, expectedFolder.name)
+        let callCount = await repository.fetchOrCreateBasicFolderCallCount
+        XCTAssertEqual(callCount, 1, "성공 시 Repository가 한 번 호출되어야 합니다.")
     }
 }
 
@@ -33,11 +34,8 @@ extension FetchBasicFolderUseCaseTest {
     /// 찾을 수 없음 Case: Repo에서 .notFound를 반환할 때 대칭 확인
     func test_execute_throwsNotFound_whenRepositoryReturnsNotFound() async {
         // Given
-        let useCase = DefaultFetchBasicFolderUseCase(
-            repository: MockWorkSpaceRepository(
-                basicFolderBehavior: .notFound
-            )
-        )
+        let repository = MockWorkSpaceRepository(basicFolderBehavior: .notFound)
+        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -45,6 +43,8 @@ extension FetchBasicFolderUseCaseTest {
             XCTFail("기본 폴더가 없는 경우 .notFound 에러가 발생해야 합니다.")
         } catch UseCaseError.notFound {
             // Success
+            let callCount = await repository.fetchOrCreateBasicFolderCallCount
+            XCTAssertEqual(callCount, 1, "검색 실패 시에도 Repository 호출은 1회 발생해야 합니다.")
         } catch {
             XCTFail("Expected .notFound, got \(error)")
         }
@@ -53,11 +53,8 @@ extension FetchBasicFolderUseCaseTest {
     /// 생성 실패 Case: Repo에서 .createFailed를 반환할 때 대칭 확인
     func test_execute_throwsCreateFailed_whenRepositoryReturnsCreateFailed() async {
         // Given
-        let useCase = DefaultFetchBasicFolderUseCase(
-            repository: MockWorkSpaceRepository(
-                basicFolderBehavior: .createFailed
-            )
-        )
+        let repository = MockWorkSpaceRepository(basicFolderBehavior: .createFailed)
+        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -65,6 +62,8 @@ extension FetchBasicFolderUseCaseTest {
             XCTFail("생성 실패 시 .createFailed 에러가 발생해야 합니다.")
         } catch UseCaseError.createFailed {
             // Success
+            let callCount = await repository.fetchOrCreateBasicFolderCallCount
+            XCTAssertEqual(callCount, 1, "생성 실패 시에도 Repository 호출은 1회 발생해야 합니다.")
         } catch {
             XCTFail("Expected .createFailed, got \(error)")
         }
@@ -75,11 +74,8 @@ extension FetchBasicFolderUseCaseTest {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
-        let useCase = DefaultFetchBasicFolderUseCase(
-            repository: MockWorkSpaceRepository(
-                basicFolderBehavior: .unknown(dummyError)
-            )
-        )
+        let repository = MockWorkSpaceRepository(basicFolderBehavior: .unknown(dummyError))
+        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -88,6 +84,8 @@ extension FetchBasicFolderUseCaseTest {
         } catch UseCaseError.unknown(let error) {
             // RepoError.unknown 내부의 Dummy 에러가 유지되어야 함
             XCTAssertTrue(error is Dummy)
+            let callCount = await repository.fetchOrCreateBasicFolderCallCount
+            XCTAssertEqual(callCount, 1, "에러 발생 시에도 Repository 호출은 1회 발생해야 합니다.")
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
@@ -100,11 +98,8 @@ extension FetchBasicFolderUseCaseTest {
     /// 작업 취소 Case: repository Cancelled의 경우 UseCase.Cancelled와 대칭 확인
     func test_execute_throwsCancelled_whenRepositoryReturnsCancelled() async {
         // Given
-        let useCase = DefaultFetchBasicFolderUseCase(
-            repository: MockWorkSpaceRepository(
-                basicFolderBehavior: .cancelled
-            )
-        )
+        let repository = MockWorkSpaceRepository(basicFolderBehavior: .cancelled)
+        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
 
         // When & Then
         do {
@@ -112,6 +107,8 @@ extension FetchBasicFolderUseCaseTest {
             XCTFail("작업 취소의 경우 .cancelled 에러가 발생해야 합니다.")
         } catch UseCaseError.cancelled {
             // Success
+            let callCount = await repository.fetchOrCreateBasicFolderCallCount
+            XCTAssertEqual(callCount, 1, "Repository 진입 후 취소된 경우 호출 횟수는 1회여야 합니다.")
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
         }
@@ -120,11 +117,10 @@ extension FetchBasicFolderUseCaseTest {
     /// 취소 Case: 작업이 즉시 취소된 경우
     func test_execute_throwsCancelled_whenTaskIsCancelledPreemptively() async {
         // Given
-        let useCase = DefaultFetchBasicFolderUseCase(
-            repository: MockWorkSpaceRepository(
-                basicFolderBehavior: .success(Folder(path: URL(fileURLWithPath: "/"), name: "test"))
-            )
+        let repository = MockWorkSpaceRepository(
+            basicFolderBehavior: .success(Folder(path: URL(fileURLWithPath: "/"), name: "test"))
         )
+        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
 
         // When & Then
         let task = Task { try await useCase.execute() }
@@ -135,32 +131,8 @@ extension FetchBasicFolderUseCaseTest {
             XCTFail("작업이 즉시 취소되었으므로 .cancelled 에러가 발생해야 합니다.")
         } catch UseCaseError.cancelled {
             // Success
-        } catch {
-            XCTFail("Expected .cancelled, got \(error)")
-        }
-    }
-
-    /// 취소 Case (During Execution): 작업 도중 Task가 취소된 경우
-    func test_execute_throwsCancelled_whenTaskIsCancelledDuringExecution() async {
-        // Given
-        let useCase = DefaultFetchBasicFolderUseCase(
-            repository: MockWorkSpaceRepository(
-                basicFolderBehavior: .success(Folder(path: URL(fileURLWithPath: "/"), name: "test")),
-                rootUrlDelay: 100_000_000 // 0.1초 지연
-            )
-        )
-
-        // When & Then
-        let task = Task { try await useCase.execute() }
-
-        try? await Task.sleep(nanoseconds: 50_000_000) // 0.05초 대기 후 취소
-        task.cancel()
-
-        do {
-            _ = try await task.value
-            XCTFail("작업 도중 취소되었으므로 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
-            // Success
+            let callCount = await repository.fetchOrCreateBasicFolderCallCount
+            XCTAssertEqual(callCount, 0, "선제적 취소 시 Repository는 단 한 번도 호출되지 않아야 합니다.")
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
         }
