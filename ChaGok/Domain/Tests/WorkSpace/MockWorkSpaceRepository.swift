@@ -1,91 +1,87 @@
-import Foundation
+import XCTest
 @testable import Domain
 
 actor MockWorkSpaceRepository: WorkSpaceRepository {
 
-    enum RootURLBehavior: Sendable {
-        case success(URL)       // 성공한 경우
-        case cancelled          // 작업 취소의 경우
-        case unknown(Error)     // 알수 없는 오류
+    // Results
+    private var rootURLResult: Result<URL, WorkSpaceRootURLRepositoryError>?
+    private var basicFolderResult: Result<Folder, WorkSpaceBasicFolderRepositoryError>?
+
+    // 호출 검증 Count
+    private(set) var fetchRootURLCallCount = 0
+    private(set) var fetchOrCreateBasicFolderCallCount = 0
+
+    // Expected Call Counts
+    private var expectedFetchRootURLCallCount: Int?
+    private var expectedFetchOrCreateBasicFolderCallCount: Int?
+
+    // 작업 도중 취소 테스트를 위한 제어 변수
+    private var shouldWaitUntilCancelled = false
+
+    // MARK: - Setup
+
+    func setRootURLResult(_ result: Result<URL, WorkSpaceRootURLRepositoryError>) {
+        self.rootURLResult = result
     }
 
-    enum BasicFolderBehavior: Sendable {
-        case success(Folder)    // 성공한 경우
-        case cancelled          // 작업 취소 경우
-        case notFound           // 기본 폴더를 찾을 수 없는 경우
-        case createFailed       // 기본 폴더 Entity 생성 실패의 경우
-        case unknown(Error)     // 알수 없는 오류
+    func setBasicFolderResult(_ result: Result<Folder, WorkSpaceBasicFolderRepositoryError>) {
+        self.basicFolderResult = result
     }
 
-    var rootUrlBehavior: RootURLBehavior?
-    var basicFolderBehavior: BasicFolderBehavior?
-    var delay: UInt64 = 0
-
-    // 호출 횟수 기록
-    var fetchRootURLCallCount = 0
-    var fetchOrCreateBasicFolderCallCount = 0
-
-    typealias RootURLError = Domain.WorkSpaceRootURLRepositoryError
-    typealias BasicFolderError = Domain.WorkSpaceBasicFolderRepositoryError
-
-    init(
-        rootUrlBehavior: RootURLBehavior? = nil,
-        basicFolderBehavior: BasicFolderBehavior? = nil,
-        delay: UInt64 = 0
-    ) {
-        self.rootUrlBehavior = rootUrlBehavior
-        self.basicFolderBehavior = basicFolderBehavior
-        self.delay = delay
+    func setWaitUntilCancelled(_ shouldWait: Bool) {
+        self.shouldWaitUntilCancelled = shouldWait
     }
 
-    func fetchRootURL() async throws(RootURLError) -> URL {
+    // MARK: - Expectations
+
+    func expectFetchRootURL(callCount: Int) {
+        expectedFetchRootURLCallCount = callCount
+    }
+
+    func expectFetchOrCreateBasicFolder(callCount: Int) {
+        expectedFetchOrCreateBasicFolderCallCount = callCount
+    }
+
+    // MARK: - Verification
+
+    func verify(file: StaticString = #filePath, line: UInt = #line) {
+        if let expected = expectedFetchRootURLCallCount {
+            XCTAssertEqual(fetchRootURLCallCount, expected, "fetchRootURL call count mismatch", file: file, line: line)
+        }
+        if let expected = expectedFetchOrCreateBasicFolderCallCount {
+            XCTAssertEqual(fetchOrCreateBasicFolderCallCount, expected, "fetchOrCreateBasicFolder call count mismatch", file: file, line: line)
+        }
+    }
+
+    // MARK: - WorkSpaceRepository
+
+    func fetchRootURL() async throws(WorkSpaceRootURLRepositoryError) -> URL {
         fetchRootURLCallCount += 1
 
-        if delay > 0 {
-            try? await Task.sleep(nanoseconds: delay)
+        guard let result = rootURLResult else {
+            fatalError("MockWorkSpaceRepository.rootURLResult not set")
         }
 
-        if Task.isCancelled {
-            throw RootURLError.cancelled
-        }
-
-        switch rootUrlBehavior {
+        switch result {
             case .success(let url):
                 return url
-            case .cancelled:
-                throw RootURLError.cancelled
-            case .unknown(let error):
-                throw RootURLError.unknown(error)
-            case .none:
-                fatalError("RootURLBehavior가 없습니다.")
+            case .failure(let error):
+                throw error
         }
     }
 
-    func fetchOrCreateBasicFolder() async throws(BasicFolderError) -> Domain.Folder {
+    func fetchOrCreateBasicFolder() async throws(WorkSpaceBasicFolderRepositoryError) -> Folder {
         fetchOrCreateBasicFolderCallCount += 1
 
-        if delay > 0 {
-            try? await Task.sleep(nanoseconds: delay)
+        guard let result = basicFolderResult else {
+            fatalError("MockWorkSpaceRepository.basicFolderResult not set")
         }
 
-        if Task.isCancelled {
-            throw BasicFolderError.cancelled
-        }
-
-        switch basicFolderBehavior {
+        switch result {
             case .success(let folder):
                 return folder
-            case .cancelled:
-                throw BasicFolderError.cancelled
-            case .notFound:
-                throw BasicFolderError.notFound
-            case .createFailed:
-                throw BasicFolderError.createFailed
-            case .unknown(let error):
-                throw BasicFolderError.unknown(error)
-            case .none:
-                fatalError("BasicFolderBehavior가 없습니다.")
+            case .failure(let error):
+                throw error
         }
     }
-
 }
