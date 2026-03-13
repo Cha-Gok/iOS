@@ -5,17 +5,18 @@ final class CreateFolderUseCaseTest: XCTestCase {
     typealias UseCaseError = CreateFolderUseCaseError
 }
 
-// MARK: - Success Cases
+// MARK: - 성공 케이스
 
 extension CreateFolderUseCaseTest {
-    /// 성공 Case: Repository가 정상적으로 Folder를 반환할 때
-    func test_execute_returnsFolder_whenRepositorySucceeds() async throws {
+
+    func test_폴더_생성_성공_생성된폴더를반환한다() async throws {
         // Given
         let expectedName = "New Folder"
         let expectedFolder = Folder(path: URL(fileURLWithPath: "/test"), name: expectedName)
-        let repository = MockFolderRepository(
-            createBehavior: .success(expectedFolder)
-        )
+        let repository = MockFolderRepository()
+        await repository.setCreateResult(.success(expectedFolder))
+        await repository.expectCreate(callCount: 1)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
 
         // When
@@ -24,18 +25,19 @@ extension CreateFolderUseCaseTest {
         // Then
         XCTAssertEqual(folder.name, expectedName)
         XCTAssertEqual(folder.id, expectedFolder.id)
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 create가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 }
 
-// MARK: - Error Cases
+// MARK: - 에러 케이스
 
 extension CreateFolderUseCaseTest {
-    /// 유효하지 않은 이름 Case: 폴더 이름이 비어있거나 공백일 때 .invalidName 확인
-    func test_execute_throwsInvalidName_whenNameIsEmpty() async {
+
+    func test_폴더_생성_이름이비어있을때_invalidName에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
+        await repository.expectCreate(callCount: 0)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
         let invalidNames = ["", " ", "  \n  "]
 
@@ -55,35 +57,36 @@ extension CreateFolderUseCaseTest {
             }
         }
 
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 0, "유효하지 않은 이름일 경우 Repository를 호출하지 않아야 합니다.")
+        await repository.verify()
     }
 
-    /// 이름의 길이가 50을 넘어가는 경우 .invailedLength 확인
-    func test_execute_throwsInvalidLength_whenNameIsTooLong() async {
+    func test_폴더_생성_이름이너무길때_invalidLengthName에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
+        await repository.expectCreate(callCount: 0)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
         let tooLongName = String(repeating: "a", count: 51)
 
         // When & Then
         do {
             _ = try await useCase.execute(name: tooLongName)
-            XCTFail("invailedLengthName이 발생해야 합니다. (input: \(tooLongName))")
+            XCTFail("invalidLengthName이 발생해야 합니다. (input: \(tooLongName))")
         } catch UseCaseError.invalidLengthName {
             // Success
         } catch {
-            XCTFail("Expected .invailedLengthName, got \(error) for name: \(tooLongName)")
+            XCTFail("Expected .invalidLengthName, got \(error) for name: \(tooLongName)")
         }
 
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 0, "이름이 너무 길 경우 Repository를 호출하지 않아야 합니다.")
+        await repository.verify()
     }
 
-    /// 이름 중복 Case: 이미 같은 이름의 폴더가 존재할 때 .duplicateName 대칭 확인
-    func test_execute_throwsDuplicateName_whenRepositoryReturnsDuplicateName() async {
+    func test_폴더_생성_리포지토리중복이름에러시_duplicateName에러를던진다() async {
         // Given
-        let repository = MockFolderRepository(createBehavior: .duplicateName)
+        let repository = MockFolderRepository()
+        await repository.setCreateResult(.failure(.duplicateName))
+        await repository.expectCreate(callCount: 1)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
 
         // When & Then
@@ -96,14 +99,15 @@ extension CreateFolderUseCaseTest {
             XCTFail("Expected .duplicateName, got \(error)")
         }
 
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 create가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 생성 실패 Case: repository가 .createFailed를 반환할 때
-    func test_execute_throwsCreateFailed_whenRepositoryReturnsCreateFailed() async {
+    func test_폴더_생성_리포지토리생성실패시_createFailed에러를던진다() async {
         // Given
-        let repository = MockFolderRepository(createBehavior: .createFailed)
+        let repository = MockFolderRepository()
+        await repository.setCreateResult(.failure(.createFailed))
+        await repository.expectCreate(callCount: 1)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
 
         // When & Then
@@ -116,14 +120,15 @@ extension CreateFolderUseCaseTest {
             XCTFail("Expected .createFailed, got \(error)")
         }
 
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 create가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 찾을 수 없는 경우 Case: Repository에서 .notFound를 반환할 때 .unknown으로 맵핑되는지 확인
-    func test_execute_throwsUnknown_whenRepositoryReturnsNotFound() async {
+    func test_폴더_생성_리포지토리찾을수없음시_unknown에러를던진다() async {
         // Given
-        let repository = MockFolderRepository(createBehavior: .notFound)
+        let repository = MockFolderRepository()
+        await repository.setCreateResult(.failure(.notFound))
+        await repository.expectCreate(callCount: 1)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
 
         // When & Then
@@ -132,27 +137,28 @@ extension CreateFolderUseCaseTest {
             XCTFail("찾을 수 없을 시 .unknown으로 래핑되어야 합니다.")
         } catch UseCaseError.unknown(let error) {
             guard let repoError = error as? FolderRepositoryError else {
-                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다. ( Typed Throws )")
+                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다.")
             }
 
             switch repoError {
-                case .notFound:
-                    break // Success
-                default:
-                    XCTFail("Expected .notFound, but got \(repoError)")
+            case .notFound:
+                break // Success
+            default:
+                XCTFail("Expected .notFound, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
 
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 create가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 수정 실패 Case: Repository에서 .updateFailed를 반환할 때 .unknown으로 맵핑되는지 확인
-    func test_execute_throwsUnknown_whenRepositoryReturnsUpdateFailed() async {
+    func test_폴더_생성_리포지토리수정실패시_unknown에러를던진다() async {
         // Given
-        let repository = MockFolderRepository(createBehavior: .updateFailed)
+        let repository = MockFolderRepository()
+        await repository.setCreateResult(.failure(.updateFailed))
+        await repository.expectCreate(callCount: 1)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
 
         // When & Then
@@ -161,27 +167,28 @@ extension CreateFolderUseCaseTest {
             XCTFail("찾을 수 없을 시 .unknown으로 래핑되어야 합니다.")
         } catch UseCaseError.unknown(let error) {
             guard let repoError = error as? FolderRepositoryError else {
-                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다. ( Typed Throws )")
+                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다.")
             }
 
             switch repoError {
-                case .updateFailed:
-                    break // Success
-                default:
-                    XCTFail("Expected .updateFailed, but got \(repoError)")
+            case .updateFailed:
+                break // Success
+            default:
+                XCTFail("Expected .updateFailed, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
 
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 create가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 조회 실패 Case: Repository에서 .fetchFailed를 반환할 때 .unknown으로 맵핑되는지 확인
-    func test_execute_throwsUnknown_whenRepositoryReturnsFetchFailed() async {
+    func test_폴더_생성_리포지토리조회실패시_unknown에러를던진다() async {
         // Given
-        let repository = MockFolderRepository(createBehavior: .fetchFailed)
+        let repository = MockFolderRepository()
+        await repository.setCreateResult(.failure(.fetchFailed))
+        await repository.expectCreate(callCount: 1)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
 
         // When & Then
@@ -190,29 +197,30 @@ extension CreateFolderUseCaseTest {
             XCTFail("찾을 수 없을 시 .unknown으로 래핑되어야 합니다.")
         } catch UseCaseError.unknown(let error) {
             guard let repoError = error as? FolderRepositoryError else {
-                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다. ( Typed Throws )")
+                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다.")
             }
 
             switch repoError {
-                case .fetchFailed:
-                    break // Success
-                default:
-                    XCTFail("Expected .fetchFailed, but got \(repoError)")
+            case .fetchFailed:
+                break // Success
+            default:
+                XCTFail("Expected .fetchFailed, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
 
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 create가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 알 수 없는 에러 Case: Repository에서 맵핑되지 않은 에러를 던질 때 .unknown으로 래핑되는지 확인
-    func test_execute_throwsUnknown_whenRepositoryThrowsUnknown() async {
+    func test_폴더_생성_리포지토리알수없는에러시_unknown에러를던진다() async {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
-        let repository = MockFolderRepository(createBehavior: .unknown(dummyError))
+        let repository = MockFolderRepository()
+        await repository.setCreateResult(.failure(.unknown(dummyError)))
+        await repository.expectCreate(callCount: 1)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
 
         // When & Then
@@ -225,28 +233,29 @@ extension CreateFolderUseCaseTest {
             }
 
             switch repoError {
-                case .unknown(let underlyingError):
-                    XCTAssertTrue(underlyingError is Dummy)
-                default:
-                    XCTFail("Expected .unknown underlying error, but got \(repoError)")
+            case .unknown(let underlyingError):
+                XCTAssertTrue(underlyingError is Dummy)
+            default:
+                XCTFail("Expected .unknown underlying error, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
 
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 create가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 }
 
-// MARK: - Error Cases ( Cancelled )
+// MARK: - 취소 케이스
 
 extension CreateFolderUseCaseTest {
 
-    /// 작업 취소 Case: repository Cancelled의 경우 UseCase.Cancelled와 대칭 확인
-    func test_execute_throwsCancelled_whenRepositoryReturnsCancelled() async {
+    func test_폴더_생성_리포지토리취소시_cancelled에러를던진다() async {
         // Given
-        let repository = MockFolderRepository(createBehavior: .cancelled)
+        let repository = MockFolderRepository()
+        await repository.setCreateResult(.failure(.cancelled))
+        await repository.expectCreate(callCount: 1)
+
         let useCase = DefaultCreateFolderUseCase(repository: repository)
 
         // When & Then
@@ -259,22 +268,22 @@ extension CreateFolderUseCaseTest {
             XCTFail("Expected .cancelled, got \(error)")
         }
 
-        let callCount = await repository.createCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 create가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 취소 Case: 작업이 즉시 취소된 경우 execute 함수 내부 isCancelled를 검증한다
-    func test_execute_throwsCancelled_whenTaskIsCancelledPreemptively() async {
+    func test_폴더_생성_작업이미취소시_즉시cancelled에러를던진다() async {
         // Given
-        let useCase = DefaultCreateFolderUseCase(
-            repository: MockFolderRepository(
-                createBehavior: .success(Folder(path: URL.applicationSupportDirectory, name: "test"))
-            )
-        )
+        let repository = MockFolderRepository()
+        await repository.setCreateResult(.success(Folder(path: URL.applicationSupportDirectory, name: "test")))
+        await repository.expectCreate(callCount: 0)
+
+        let useCase = DefaultCreateFolderUseCase(repository: repository)
 
         // When & Then
-        let task = Task { try await useCase.execute(name: "Cancel Test") }
-        task.cancel()
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            _ = try await useCase.execute(name: "Cancel Test")
+        }
 
         do {
             _ = try await task.value
@@ -284,6 +293,7 @@ extension CreateFolderUseCaseTest {
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
         }
-    }
 
+        await repository.verify()
+    }
 }
