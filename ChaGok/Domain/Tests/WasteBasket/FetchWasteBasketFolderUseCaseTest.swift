@@ -25,7 +25,7 @@ extension FetchWasteBasketFolderUseCaseTest {
         let result = try await useCase.execute()
 
         // Then
-        XCTAssertEqual(result.count, expectedItems.count)
+        XCTAssertEqual(result, expectedItems)
         await repository.verify()
     }
 
