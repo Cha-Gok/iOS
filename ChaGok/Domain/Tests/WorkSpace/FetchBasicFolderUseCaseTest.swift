@@ -9,7 +9,7 @@ final class FetchBasicFolderUseCaseTest: XCTestCase {
 
 extension FetchBasicFolderUseCaseTest {
 
-    func test_execute_리포지토리가성공했을때_Folder를반환한다() async throws {
+    func test_execute_기본폴더조회에성공하면_Folder를반환한다() async throws {
         // Given
         let expectedFolder = Folder(path: URL(fileURLWithPath: "/test"), name: "Basic Folder")
         let repository = MockWorkSpaceRepository()
@@ -32,7 +32,7 @@ extension FetchBasicFolderUseCaseTest {
 
 extension FetchBasicFolderUseCaseTest {
 
-    func test_execute_리포지토리에서찾을수없을때_notFound에러를던진다() async {
+    func test_execute_기본폴더를찾을수없으면_notFound에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.failure(.notFound))
@@ -52,7 +52,7 @@ extension FetchBasicFolderUseCaseTest {
         }
     }
 
-    func test_execute_리포지토리에서생성실패했을때_createFailed에러를던진다() async {
+    func test_execute_기본폴더생성에실패하면_createFailed에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.failure(.createFailed))
@@ -72,7 +72,7 @@ extension FetchBasicFolderUseCaseTest {
         }
     }
 
-    func test_execute_리포지토리에서알수없는에러가발생했을때_unknown에러를던진다() async {
+    func test_execute_기본폴더조회중알수없는에러가발생하면_unknown에러를던진다() async {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
@@ -100,7 +100,7 @@ extension FetchBasicFolderUseCaseTest {
 
 extension FetchBasicFolderUseCaseTest {
 
-    func test_execute_리포지토리에서취소되었을때_cancelled에러를던진다() async {
+    func test_execute_기본폴더조회중취소되면_cancelled에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.failure(.cancelled))
@@ -120,7 +120,7 @@ extension FetchBasicFolderUseCaseTest {
         }
     }
 
-    func test_execute_작업이이미취소되었을때_cancelled에러를던진다() async {
+    func test_execute_기본폴더조회작업이취소되었으면_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.success(Folder(path: URL(fileURLWithPath: "/"), name: "test")))
