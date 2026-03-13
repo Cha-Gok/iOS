@@ -20,6 +20,10 @@ actor MockFolderRepository: FolderRepository {
 
     var delay: UInt64 = 0
 
+    var createCallCount = 0
+    var fetchAllCallCount = 0
+    var updateCallCount = 0
+
     init(
         createBehavior: Behavior<Folder>? = nil,
         fetchAllBehavior: Behavior<[Folder]>? = nil,
@@ -33,15 +37,18 @@ actor MockFolderRepository: FolderRepository {
     }
 
     func create(name: String) async throws(FolderRepositoryError) -> Folder {
-        try await handleBehavior(createBehavior, methodName: "create")
+        createCallCount += 1
+        return try await handleBehavior(createBehavior, methodName: "create")
     }
 
     func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
-        try await handleBehavior(fetchAllBehavior, methodName: "fetchAll")
+        fetchAllCallCount += 1
+        return try await handleBehavior(fetchAllBehavior, methodName: "fetchAll")
     }
 
     func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
-        try await handleBehavior(updateBehavior, methodName: "update")
+        updateCallCount += 1
+        return try await handleBehavior(updateBehavior, methodName: "update")
     }
 }
 
