@@ -5,11 +5,11 @@ final class UpdateFolderUseCaseTest: XCTestCase {
     typealias UseCaseError = UpdateFolderUseCaseError
 }
 
-// MARK: - Success Cases
+// MARK: - 성공 케이스
 
 extension UpdateFolderUseCaseTest {
-    /// 성공 Case: 폴더 정보 업데이트가 정상적으로 완료될 때
-    func test_execute_returnsUpdatedFolder_whenRepositorySucceeds() async throws {
+
+    func test_폴더_수정_성공_업데이트된폴더를반환한다() async throws {
         // Given
         let originalFolder = Folder(path: URL(fileURLWithPath: "/test"), name: "Old Name")
         let updatedFolder = Folder(
@@ -19,7 +19,10 @@ extension UpdateFolderUseCaseTest {
             createdAt: originalFolder.createdAt
         )
 
-        let repository = MockFolderRepository(updateBehavior: .success(updatedFolder))
+        let repository = MockFolderRepository()
+        await repository.setUpdateResult(.success(updatedFolder))
+        await repository.expectUpdate(callCount: 1)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When
@@ -30,19 +33,19 @@ extension UpdateFolderUseCaseTest {
         XCTAssertEqual(result.id, originalFolder.id)
         XCTAssertEqual(result.path, originalFolder.path)
         XCTAssertEqual(result.createdAt, originalFolder.createdAt)
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 update가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 }
 
-// MARK: - Error Cases
+// MARK: - 에러 케이스
 
 extension UpdateFolderUseCaseTest {
 
-    /// 이름의 길이가 50을 넘어가는 경우 .invailedLength 확인
-    func test_execute_throwsInvalidLength_whenNameIsTooLong() async {
+    func test_폴더_수정_이름이너무길때_invalidLengthName에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
+        await repository.expectUpdate(callCount: 0)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
         let tooLongName = String(repeating: "a", count: 51)
         let folder: Folder = .init(path: URL.applicationSupportDirectory, name: tooLongName)
@@ -54,17 +57,17 @@ extension UpdateFolderUseCaseTest {
         } catch UseCaseError.invalidLengthName {
             // Success
         } catch {
-            XCTFail("Expected .invailedLengthName, got \(error) for name: \(tooLongName)")
+            XCTFail("Expected .invalidLengthName, got \(error) for name: \(tooLongName)")
         }
 
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 0, "유효하지 않은 길이일 경우 Repository를 호출하지 않아야 합니다.")
+        await repository.verify()
     }
 
-    /// 유효하지 않은 이름 Case: 폴더 이름이 비어있거나 공백일 때 .invalidName 확인
-    func test_execute_throwsInvalidName_whenNameIsEmpty() async {
+    func test_폴더_수정_이름이비어있을때_invalidName에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
+        await repository.expectUpdate(callCount: 0)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
         let invalidNames = ["", " ", "  \n  "]
 
@@ -86,15 +89,16 @@ extension UpdateFolderUseCaseTest {
             }
         }
 
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 0, "유효하지 않은 이름일 경우 Repository를 호출하지 않아야 합니다.")
+        await repository.verify()
     }
 
-    /// 찾을 수 없음 Case: 수정하려는 폴더가 존재하지 않을 때 .notFound 전파 확인
-    func test_execute_throwsNotFound_whenRepositoryReturnsNotFound() async {
+    func test_폴더_수정_리포지토리찾을수없음시_notFound에러를던진다() async {
         // Given
         let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
-        let repository = MockFolderRepository(updateBehavior: .notFound)
+        let repository = MockFolderRepository()
+        await repository.setUpdateResult(.failure(.notFound))
+        await repository.expectUpdate(callCount: 1)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When & Then
@@ -107,15 +111,16 @@ extension UpdateFolderUseCaseTest {
             XCTFail("Expected .notFound, got \(error)")
         }
 
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 update가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 이름 중복 Case: 수정하려는 이름이 이미 존재할 때 .duplicateName 전파 확인
-    func test_execute_throwsDuplicateName_whenRepositoryReturnsDuplicateName() async {
+    func test_폴더_수정_리포지토리중복이름에러시_duplicateName에러를던진다() async {
         // Given
         let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "New Name")
-        let repository = MockFolderRepository(updateBehavior: .duplicateName)
+        let repository = MockFolderRepository()
+        await repository.setUpdateResult(.failure(.duplicateName))
+        await repository.expectUpdate(callCount: 1)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When & Then
@@ -128,15 +133,16 @@ extension UpdateFolderUseCaseTest {
             XCTFail("Expected .duplicateName, got \(error)")
         }
 
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 update가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 수정 실패 Case: Repository에서 .updateFailed를 반환할 때 동일하게 전파되는지 확인
-    func test_execute_throwsUpdateFailed_whenRepositoryReturnsUpdateFailed() async {
+    func test_폴더_수정_리포지토리수정실패시_updateFailed에러를던진다() async {
         // Given
         let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
-        let repository = MockFolderRepository(updateBehavior: .updateFailed)
+        let repository = MockFolderRepository()
+        await repository.setUpdateResult(.failure(.updateFailed))
+        await repository.expectUpdate(callCount: 1)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When & Then
@@ -149,15 +155,16 @@ extension UpdateFolderUseCaseTest {
             XCTFail("Expected .updateFailed, got \(error)")
         }
 
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 update가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 매핑 확인 Case: Repository에서 .createFailed를 반환할 때 .unknown으로 맵핑되는지 확인
-    func test_execute_throwsUnknown_whenRepositoryReturnsCreateFailed() async {
+    func test_폴더_수정_리포지토리생성실패시_unknown에러를던진다() async {
         // Given
         let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
-        let repository = MockFolderRepository(updateBehavior: .createFailed)
+        let repository = MockFolderRepository()
+        await repository.setUpdateResult(.failure(.createFailed))
+        await repository.expectUpdate(callCount: 1)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When & Then
@@ -166,28 +173,29 @@ extension UpdateFolderUseCaseTest {
             XCTFail("생성 실패 시 .unknown으로 래핑되어야 합니다.")
         } catch UseCaseError.unknown(let error) {
             guard let repoError = error as? FolderRepositoryError else {
-                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다. ( Typed Throws )")
+                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다.")
             }
 
             switch repoError {
-                case .createFailed:
-                    break // Success
-                default:
-                    XCTFail("Expected .createFailed, but got \(repoError)")
+            case .createFailed:
+                break // Success
+            default:
+                XCTFail("Expected .createFailed, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
 
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 update가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 매핑 확인 Case: Repository에서 .fetchFailed를 반환할 때 .unknown으로 맵핑되는지 확인
-    func test_execute_throwsUnknown_whenRepositoryReturnsFetchFailed() async {
+    func test_폴더_수정_리포지토리조회실패시_unknown에러를던진다() async {
         // Given
         let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
-        let repository = MockFolderRepository(updateBehavior: .fetchFailed)
+        let repository = MockFolderRepository()
+        await repository.setUpdateResult(.failure(.fetchFailed))
+        await repository.expectUpdate(callCount: 1)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When & Then
@@ -196,30 +204,31 @@ extension UpdateFolderUseCaseTest {
             XCTFail("조회 실패 시 .unknown으로 래핑되어야 합니다.")
         } catch UseCaseError.unknown(let error) {
             guard let repoError = error as? FolderRepositoryError else {
-                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다. ( Typed Throws )")
+                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다.")
             }
 
             switch repoError {
-                case .fetchFailed:
-                    break // Success
-                default:
-                    XCTFail("Expected .fetchFailed, but got \(repoError)")
+            case .fetchFailed:
+                break // Success
+            default:
+                XCTFail("Expected .fetchFailed, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
 
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 update가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 알 수 없는 에러 Case: Repository에서 맵핑되지 않은 에러를 던질 때 .unknown으로 래핑되는지 확인
-    func test_execute_throwsUnknown_whenRepositoryThrowsUnknown() async {
+    func test_폴더_수정_리포지토리알수없는에러시_unknown에러를던진다() async {
         // Given
         let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
         struct Dummy: Error {}
         let dummyError = Dummy()
-        let repository = MockFolderRepository(updateBehavior: .unknown(dummyError))
+        let repository = MockFolderRepository()
+        await repository.setUpdateResult(.failure(.unknown(dummyError)))
+        await repository.expectUpdate(callCount: 1)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When & Then
@@ -232,28 +241,30 @@ extension UpdateFolderUseCaseTest {
             }
 
             switch repoError {
-                case .unknown(let underlyingError):
-                    XCTAssertTrue(underlyingError is Dummy)
-                default:
-                    XCTFail("Expected .unknown underlying error, but got \(repoError)")
+            case .unknown(let underlyingError):
+                XCTAssertTrue(underlyingError is Dummy)
+            default:
+                XCTFail("Expected .unknown underlying error, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
         }
 
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 update가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 }
 
-// MARK: - Error Cases ( Cancelled )
+// MARK: - 취소 케이스
 
 extension UpdateFolderUseCaseTest {
-    /// 작업 취소 Case: repository Cancelled의 경우 UseCase.Cancelled와 대칭 확인
-    func test_execute_throwsCancelled_whenRepositoryReturnsCancelled() async {
+
+    func test_폴더_수정_리포지토리취소시_cancelled에러를던진다() async {
         // Given
         let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
-        let repository = MockFolderRepository(updateBehavior: .cancelled)
+        let repository = MockFolderRepository()
+        await repository.setUpdateResult(.failure(.cancelled))
+        await repository.expectUpdate(callCount: 1)
+
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When & Then
@@ -266,23 +277,23 @@ extension UpdateFolderUseCaseTest {
             XCTFail("Expected .cancelled, got \(error)")
         }
 
-        let callCount = await repository.updateCallCount
-        XCTAssertEqual(callCount, 1, "Repository의 update가 1번 호출되어야 합니다.")
+        await repository.verify()
     }
 
-    /// 취소 Case: 작업이 즉시 취소된 경우 execute 함수 내부 isCancelled를 검증한다
-    func test_execute_throwsCancelled_whenTaskIsCancelledPreemptively() async {
+    func test_폴더_수정_작업이미취소시_즉시cancelled에러를던진다() async {
         // Given
         let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
-        let useCase = DefaultUpdateFolderUseCase(
-            repository: MockFolderRepository(
-                updateBehavior: .success(folder)
-            )
-        )
+        let repository = MockFolderRepository()
+        await repository.setUpdateResult(.success(folder))
+        await repository.expectUpdate(callCount: 0)
+
+        let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When & Then
-        let task = Task { try await useCase.execute(folder) }
-        task.cancel()
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            _ = try await useCase.execute(folder)
+        }
 
         do {
             _ = try await task.value
@@ -292,6 +303,7 @@ extension UpdateFolderUseCaseTest {
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
         }
-    }
 
+        await repository.verify()
+    }
 }
