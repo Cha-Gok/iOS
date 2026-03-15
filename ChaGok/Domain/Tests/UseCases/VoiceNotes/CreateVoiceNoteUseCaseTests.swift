@@ -26,7 +26,7 @@ extension CreateVoiceNoteUseCaseTests {
 
     func test_execute_유효한입력을넣으면_생성된보이스노트를반환한다() async throws {
         // Given
-        let voiceRecord = VoiceRecord(
+        let voiceRecord = VoiceRecord.stub(
             audioFilePath: URL(fileURLWithPath: "/tmp/test.m4a"),
             duration: 1.0
         )
@@ -46,11 +46,11 @@ extension CreateVoiceNoteUseCaseTests {
 
     func test_execute_대문자확장자여도_정상적으로생성한다() async throws {
         // Given
-        let voiceRecord = VoiceRecord(
+        let voiceRecord = VoiceRecord.stub(
             audioFilePath: URL(fileURLWithPath: "/tmp/TEST.M4A"),
             duration: 1.0
         )
-        let expected = VoiceNote.stub(title: "Created", voiceRecord: voiceRecord)
+        let expected = VoiceNote.stub(voiceRecord: voiceRecord)
         await repository.setResult(.success(expected))
         await repository.expectCreate(callCount: 1, voiceRecordID: voiceRecord.id)
 
@@ -68,10 +68,7 @@ extension CreateVoiceNoteUseCaseTests {
 
     func test_execute_재생시간이0이면_invalidDuration에러를던진다() async {
         // Given
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(fileURLWithPath: "/tmp/test.m4a"),
-            duration: 0.0
-        )
+        let voiceRecord = VoiceRecord.stub(duration: 0.0)
         await repository.setResult(.success(VoiceNote.stub(voiceRecord: voiceRecord)))
         await repository.expectCreate(callCount: 0)
 
@@ -92,10 +89,7 @@ extension CreateVoiceNoteUseCaseTests {
 
     func test_execute_재생시간이NaN이면_invalidDuration에러를던진다() async {
         // Given
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(fileURLWithPath: "/tmp/test.m4a"),
-            duration: Double.nan
-        )
+        let voiceRecord = VoiceRecord.stub(duration: Double.nan)
         await repository.setResult(.success(VoiceNote.stub(voiceRecord: voiceRecord)))
         await repository.expectCreate(callCount: 0)
 
@@ -115,10 +109,7 @@ extension CreateVoiceNoteUseCaseTests {
 
     func test_execute_재생시간이무한이면_invalidDuration에러를던진다() async {
         // Given
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(fileURLWithPath: "/tmp/test.m4a"),
-            duration: Double.infinity
-        )
+        let voiceRecord = VoiceRecord.stub(duration: Double.infinity)
         await repository.setResult(.success(VoiceNote.stub(voiceRecord: voiceRecord)))
         await repository.expectCreate(callCount: 0)
 
@@ -138,10 +129,8 @@ extension CreateVoiceNoteUseCaseTests {
 
     func test_execute_오디오경로가파일URL이아니면_invalidAudioFilePath에러를던진다() async {
         // Given
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(string: "https://example.com/test.m4a")!,
-            duration: 1.0
-        )
+        let url = URL(string: "https://example.com/test.m4a")!
+        let voiceRecord = VoiceRecord.stub(audioFilePath: url)
         await repository.setResult(.success(VoiceNote.stub(voiceRecord: voiceRecord)))
         await repository.expectCreate(callCount: 0)
 
@@ -151,10 +140,10 @@ extension CreateVoiceNoteUseCaseTests {
             XCTFail("에러를 throw 해야 합니다.")
         } catch {
             // Then
-            guard case .invalidAudioFilePath(let url) = error else {
+            guard case .invalidAudioFilePath(let mappedUrl) = error else {
                 return XCTFail("expected .invalidAudioFilePath, got \(error)")
             }
-            XCTAssertEqual(url, voiceRecord.audioFilePath)
+            XCTAssertEqual(mappedUrl, url)
         }
 
         await repository.verify()
@@ -163,10 +152,8 @@ extension CreateVoiceNoteUseCaseTests {
     func test_execute_파일명이비어있으면_emptyFileName에러를던진다() async {
         // Given
         // "file://" 는 lastPathComponent가 빈 문자열이 됨
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(string: "file://")!,
-            duration: 1.0
-        )
+        let url = URL(string: "file://")!
+        let voiceRecord = VoiceRecord.stub(audioFilePath: url)
         await repository.setResult(.success(VoiceNote.stub(voiceRecord: voiceRecord)))
         await repository.expectCreate(callCount: 0)
 
@@ -186,10 +173,7 @@ extension CreateVoiceNoteUseCaseTests {
 
     func test_execute_지원하지않는확장자이면_unsupportedExtension에러를던진다() async {
         // Given
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(fileURLWithPath: "/tmp/test.txt"),
-            duration: 1.0
-        )
+        let voiceRecord = VoiceRecord.stub(audioFilePath: URL(fileURLWithPath: "/tmp/test.txt"))
         await repository.setResult(.success(VoiceNote.stub(voiceRecord: voiceRecord)))
         await repository.expectCreate(callCount: 0)
 
@@ -210,10 +194,7 @@ extension CreateVoiceNoteUseCaseTests {
 
     func test_execute_리포지토리가생성실패를반환하면_createFailed에러를던진다() async {
         // Given
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(fileURLWithPath: "/tmp/test.m4a"),
-            duration: 1.0
-        )
+        let voiceRecord = VoiceRecord.stub()
         await repository.setResult(.failure(.createFailed))
         await repository.expectCreate(callCount: 1, voiceRecordID: voiceRecord.id)
 
@@ -233,10 +214,7 @@ extension CreateVoiceNoteUseCaseTests {
 
     func test_execute_리포지토리가취소를반환하면_cancelled에러를던진다() async {
         // Given
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(fileURLWithPath: "/tmp/test.m4a"),
-            duration: 1.0
-        )
+        let voiceRecord = VoiceRecord.stub()
         await repository.setResult(.failure(.cancelled))
         await repository.expectCreate(callCount: 1, voiceRecordID: voiceRecord.id)
 
@@ -258,10 +236,7 @@ extension CreateVoiceNoteUseCaseTests {
         // Given
         struct DummyError: Error {}
 
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(fileURLWithPath: "/tmp/test.m4a"),
-            duration: 1.0
-        )
+        let voiceRecord = VoiceRecord.stub()
         await repository.setResult(.failure(.unknown(DummyError())))
         await repository.expectCreate(callCount: 1, voiceRecordID: voiceRecord.id)
 
@@ -291,10 +266,7 @@ extension CreateVoiceNoteUseCaseTests {
         }
 
         // Given
-        let voiceRecord = VoiceRecord(
-            audioFilePath: URL(fileURLWithPath: "/tmp/test.m4a"),
-            duration: 1.0
-        )
+        let voiceRecord = VoiceRecord.stub()
         await repository.setResult(.success(VoiceNote.stub(voiceRecord: voiceRecord)))
         await repository.expectCreate(callCount: 0)
 
