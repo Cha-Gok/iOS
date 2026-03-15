@@ -22,13 +22,28 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
         -> VoiceNote {
         if Task.isCancelled { throw .cancelled }
 
-        if voiceRecord.duration < 0 {
+        if !voiceRecord.duration.isFinite || voiceRecord.duration <= 0 {
             let error = CreateVoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
             AppLogger.error(error)
             throw error
         }
-        if !voiceRecord.audioFilePath.isFileURL || voiceRecord.audioFilePath.path.isEmpty {
+
+        if !voiceRecord.audioFilePath.isFileURL {
             let error = CreateVoiceNoteUseCaseError.invalidAudioFilePath(voiceRecord.audioFilePath)
+            AppLogger.error(error)
+            throw error
+        }
+
+        let fileName = voiceRecord.audioFilePath.lastPathComponent
+        if fileName.isEmpty {
+            let error = CreateVoiceNoteUseCaseError.emptyFileName
+            AppLogger.error(error)
+            throw error
+        }
+
+        let pathExtension = voiceRecord.audioFilePath.pathExtension
+        guard let _ = AudioFileFormat(extension: pathExtension) else {
+            let error = CreateVoiceNoteUseCaseError.unsupportedExtension(pathExtension)
             AppLogger.error(error)
             throw error
         }
@@ -43,7 +58,7 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
 }
 
 extension CreateVoiceNoteUseCaseError {
-    public init(_ error: VoiceNoteCreateRepositoryError) {
+    fileprivate init(_ error: VoiceNoteCreateRepositoryError) {
         switch error {
         case .createFailed:
             self = .createFailed
