@@ -1,7 +1,7 @@
 import Foundation
 
 /// 음성 메모 조회 유스케이스에서 발생할 수 있는 에러.
-public enum ReadVoiceNoteUseCaseError: LocalizedError, Sendable {
+public enum FetchVoiceNoteUseCaseError: LocalizedError, Sendable {
 
     /// 폴더별 목록 조회 실패.
     case fetchAllFailed(folderID: UUID)
