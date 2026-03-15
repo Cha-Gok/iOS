@@ -13,7 +13,6 @@ public protocol CreateVoiceNoteUseCase: Sendable {
 public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
 
     private let repository: VoiceNoteCreateRepository
-    private let allowedExtensions: Set<String> = ["m4a", "wav", "mp3", "caf", "aac", "aiff", "aif"]
 
     public init(repository: VoiceNoteCreateRepository) {
         self.repository = repository
@@ -42,9 +41,8 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
             throw error
         }
 
-        let pathExtension = voiceRecord.audioFilePath.pathExtension.lowercased()
-
-        guard allowedExtensions.contains(pathExtension) else {
+        let pathExtension = voiceRecord.audioFilePath.pathExtension
+        guard let _ = AudioFileFormat(extension: pathExtension) else {
             let error = CreateVoiceNoteUseCaseError.unsupportedExtension(pathExtension)
             AppLogger.error(error)
             throw error
