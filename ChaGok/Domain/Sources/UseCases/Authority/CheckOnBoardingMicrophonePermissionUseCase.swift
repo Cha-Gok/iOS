@@ -28,7 +28,8 @@ public struct DefaultCheckOnBoardingMicrophonePermissionUseCase: CheckOnBoarding
             AppLogger.error(error)
             switch error {
                 case .permissionDenied: return .denied // 권한 없음을 denied
-                default: throw UseCaseError(error)
+                case .cancelled: throw UseCaseError.cancelled
+                case .unknown(let err): throw UseCaseError.unknown(err)
             }
         }
     }
