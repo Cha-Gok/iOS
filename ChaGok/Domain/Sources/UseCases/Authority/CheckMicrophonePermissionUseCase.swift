@@ -25,11 +25,17 @@ public struct DefaultCheckMicrophonePermissionUseCase: CheckMicrophonePermission
             try await repository.checkRecordingPermission()
         } catch {
             AppLogger.error(error)
-            switch error {
-            case .permissionDenied: throw .permissionDenied
-            case .cancelled: throw .cancelled
-            case .unknown(let error): throw .unknown(error)
-            }
+            throw CheckMicrophonePermissionUseCaseError(error)
+        }
+    }
+}
+
+extension CheckMicrophonePermissionUseCaseError {
+    fileprivate init(_ error: VoiceRecordPermissionRepositoryError) {
+        switch error {
+        case .permissionDenied: self = .permissionDenied
+        case .cancelled: self = .cancelled
+        case .unknown(let error): self = .unknown(error)
         }
     }
 }
