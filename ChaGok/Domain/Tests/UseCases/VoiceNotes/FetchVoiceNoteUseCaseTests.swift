@@ -29,7 +29,7 @@ extension FetchVoiceNoteUseCaseTests {
         let folderID = UUID()
         let expectedNotes = [
             VoiceNote.stub(title: "Title 1"),
-            VoiceNote.stub(title: "Title 2"),
+            VoiceNote.stub(title: "Title 2")
         ]
         await repository.setFetchAllResult(.success(expectedNotes))
         await repository.expectFetchAll(callCount: 1, folderID: folderID)
