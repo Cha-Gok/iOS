@@ -109,7 +109,6 @@ extension StartRecordingUseCaseTests {
             return try await sut.execute()
         }
 
-        // When
         do {
             _ = try await task.value
             XCTFail("에러를 throw 해야 합니다.")
@@ -118,7 +117,9 @@ extension StartRecordingUseCaseTests {
             guard case .cancelled = error as? StartRecordingUseCaseError else {
                 return XCTFail("expected .cancelled, got \(error)")
             }
-            await recordingRepository.verify()
         }
+
+        // When
+        await recordingRepository.verify()
     }
 }
