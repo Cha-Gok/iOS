@@ -23,11 +23,10 @@ final class StartRecordingUseCaseTests: XCTestCase {
     }
 }
 
-// TODO: - 다시 봐야함.
 // MARK: - 성공
 extension StartRecordingUseCaseTests {
 
-    func test_execute_권한이허용되고시작에성공하면_파형스트림을반환한다() async throws {
+    func test_execute_시작에성공하면_파형스트림을반환한다() async throws {
         // Given
 
         let expectedStream = AsyncStream<Waveform> { continuation in
@@ -72,9 +71,11 @@ extension StartRecordingUseCaseTests {
         await recordingRepository.verify()
     }
 
-    func test_execute_녹음시작중취소되면_cancelled에러를던진다() async {
+    func test_execute_알수없는에러가발생하면_unknown에러를던진다() async {
         // Given
-        await recordingRepository.setResult(.failure(.cancelled))
+        struct DummyError: Error {}
+        let expectedError = DummyError()
+        await recordingRepository.setResult(.failure(.unknown(expectedError)))
         await recordingRepository.expectStartRecording(callCount: 1)
 
         // When
@@ -82,12 +83,13 @@ extension StartRecordingUseCaseTests {
             _ = try await sut.execute()
             XCTFail("에러를 throw 해야 합니다.")
         } catch {
-            // Then
-            guard case .cancelled = error else {
-                return XCTFail("expected .cancelled, got \(error)")
+            guard case .unknown(let error) = error else {
+                return XCTFail("expected .unknown, got \(error)")
             }
+            XCTAssertTrue(error is DummyError)
         }
 
+        // Then
         await recordingRepository.verify()
     }
 }

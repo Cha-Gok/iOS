@@ -30,8 +30,7 @@ actor MockMicrophonePermissionRepository: MicrophonePermissionRepository {
     }
 
     func checkMicrophonePermission() async throws(MicrophonePermissionRepositoryError)
-        -> PermissionStatus
-    {
+        -> PermissionStatus {
         actualCheckRecordingPermissionCallCount += 1
 
         switch result {
