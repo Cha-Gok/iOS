@@ -25,13 +25,17 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
 
     public func execute(audioFileURL: URL) async throws(AudioToSummaryUseCaseError)
         -> AudioToSummaryResult {
-        if Task.isCancelled { throw .cancelled }
         do {
+            try Task.checkCancellation()
+
             let transcript = try await sttRepository.transcribe(audioFileURL: audioFileURL)
 
             try Task.checkCancellation()
 
             let (keywords, summary) = try await summaryRepository.summarize(transcript: transcript)
+
+            try Task.checkCancellation()
+
             return AudioToSummaryResult(
                 transcript: transcript,
                 keywords: keywords,
@@ -45,8 +49,8 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
 }
 
 extension AudioToSummaryUseCaseError {
-    public init(_ error: Error) {
-        if let error = error as? CancellationError {
+    fileprivate init(_ error: Error) {
+        if error is CancellationError {
             self = .cancelled
         } else if let error = error as? STTRepositoryError {
             self = .transcribeFailed(error)
