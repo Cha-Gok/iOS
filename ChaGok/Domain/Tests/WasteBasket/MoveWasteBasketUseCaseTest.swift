@@ -17,7 +17,7 @@ extension MoveWasteBasketUseCaseTest {
         ]
         let repository = MockWasteBasketRepository()
         await repository.setMoveResult(.success(()))
-        await repository.expectMoveAllToWasteBasket(callCount: 1)
+        await repository.expectMoveAllToWasteBasket(items: items, callCount: 1)
 
         let useCase = DefaultMoveWasteBasketUseCase(repository: repository)
 
@@ -25,8 +25,6 @@ extension MoveWasteBasketUseCaseTest {
         _ = try await useCase.execute(method: .multiple(items: items))
 
         // Then
-        let lastMovedItems = await repository.lastMovedItems
-        XCTAssertEqual(lastMovedItems, items)
         await repository.verify()
     }
 
@@ -35,7 +33,7 @@ extension MoveWasteBasketUseCaseTest {
         let item: WasteBasketItem = .folder(id: UUID())
         let repository = MockWasteBasketRepository()
         await repository.setMoveResult(.success(()))
-        await repository.expectMoveToWasteBasket(callCount: 1)
+        await repository.expectMoveToWasteBasket(item: item, callCount: 1)
 
         let useCase = DefaultMoveWasteBasketUseCase(repository: repository)
 
@@ -43,8 +41,6 @@ extension MoveWasteBasketUseCaseTest {
         _ = try await useCase.execute(method: .single(item: item))
 
         // Then
-        let lastMovedItem = await repository.lastMovedItem
-        XCTAssertEqual(lastMovedItem, item)
         await repository.verify()
     }
 }

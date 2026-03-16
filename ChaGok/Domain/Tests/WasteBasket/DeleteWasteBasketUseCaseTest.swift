@@ -32,7 +32,7 @@ extension DeleteWasteBasketUseCaseTest {
         ]
         let repository = MockWasteBasketRepository()
         await repository.setDeleteResult(.success(()))
-        await repository.expectDeleteAll(callCount: 1)
+        await repository.expectDeleteAll(items: items, callCount: 1)
 
         let useCase = DefaultDeleteWasteBasketUseCase(repository: repository)
 
@@ -40,8 +40,6 @@ extension DeleteWasteBasketUseCaseTest {
         _ = try await useCase.execute(method: .multiple(items: items))
 
         // Then
-        let lastDeletedItems = await repository.lastDeletedItems
-        XCTAssertEqual(lastDeletedItems, items)
         await repository.verify()
     }
 
@@ -50,7 +48,7 @@ extension DeleteWasteBasketUseCaseTest {
         let item: WasteBasketItem = .folder(id: UUID())
         let repository = MockWasteBasketRepository()
         await repository.setDeleteResult(.success(()))
-        await repository.expectDelete(callCount: 1)
+        await repository.expectDelete(item: item, callCount: 1)
 
         let useCase = DefaultDeleteWasteBasketUseCase(repository: repository)
 
@@ -58,8 +56,6 @@ extension DeleteWasteBasketUseCaseTest {
         _ = try await useCase.execute(method: .single(item: item))
 
         // Then
-        let lastDeletedItem = await repository.lastDeletedItem
-        XCTAssertEqual(lastDeletedItem, item)
         await repository.verify()
     }
 }
