@@ -2,14 +2,14 @@ import XCTest
 
 @testable import Domain
 
-actor MockVoiceRecordPermissionRepository: VoiceRecordPermissionRepository {
+actor MockMicrophonePermissionRepository: MicrophonePermissionRepository {
 
-    private var result: Result<Void, VoiceRecordPermissionRepositoryError>?
+    private var result: Result<PermissionStatus, MicrophonePermissionRepositoryError>?
 
     private var actualCheckRecordingPermissionCallCount = 0
     private var expectedCheckRecordingPermissionCallCount: Int?
 
-    func setResult(_ result: Result<Void, VoiceRecordPermissionRepositoryError>) {
+    func setResult(_ result: Result<PermissionStatus, MicrophonePermissionRepositoryError>) {
         self.result = result
     }
 
@@ -29,12 +29,13 @@ actor MockVoiceRecordPermissionRepository: VoiceRecordPermissionRepository {
         }
     }
 
-    func checkRecordingPermission() async throws(VoiceRecordPermissionRepositoryError) {
+    func checkMicrophonePermission() async throws(MicrophonePermissionRepositoryError)
+        -> PermissionStatus {
         actualCheckRecordingPermissionCallCount += 1
 
         switch result {
-        case .success:
-            return
+        case .success(let result):
+            return result
         case .failure(let error):
             throw error
         case .none:
