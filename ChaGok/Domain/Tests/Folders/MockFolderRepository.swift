@@ -13,10 +13,17 @@ actor MockFolderRepository: FolderRepository {
     private(set) var fetchAllCallCount = 0
     private(set) var updateCallCount = 0
 
-    // Expected Call Counts
+    // 인자 검증
+    private(set) var actualName: String?
+    private(set) var actualFolder: Folder?
+
+    // Expected Values
     private var expectedCreateCallCount: Int?
     private var expectedFetchAllCallCount: Int?
     private var expectedUpdateCallCount: Int?
+
+    private var expectedName: String?
+    private var expectedFolderID: UUID?
 
     // MARK: - Setup
 
@@ -34,7 +41,8 @@ actor MockFolderRepository: FolderRepository {
 
     // MARK: - Expectations
 
-    func expectCreate(callCount: Int) {
+    func expectCreate(name: String? = nil, callCount: Int) {
+        expectedName = name
         expectedCreateCallCount = callCount
     }
 
@@ -42,7 +50,8 @@ actor MockFolderRepository: FolderRepository {
         expectedFetchAllCallCount = callCount
     }
 
-    func expectUpdate(callCount: Int) {
+    func expectUpdate(folderID: UUID? = nil, callCount: Int) {
+        expectedFolderID = folderID
         expectedUpdateCallCount = callCount
     }
 
@@ -52,11 +61,20 @@ actor MockFolderRepository: FolderRepository {
         if let expected = expectedCreateCallCount {
             XCTAssertEqual(createCallCount, expected, "create call count mismatch", file: file, line: line)
         }
+
+        if let expectedName = expectedName {
+            XCTAssertEqual(actualName, expectedName, "create name argument mismatch", file: file, line: line)
+        }
+
         if let expected = expectedFetchAllCallCount {
             XCTAssertEqual(fetchAllCallCount, expected, "fetchAll call count mismatch", file: file, line: line)
         }
+
         if let expected = expectedUpdateCallCount {
             XCTAssertEqual(updateCallCount, expected, "update call count mismatch", file: file, line: line)
+        }
+        if let expectedID = expectedFolderID {
+            XCTAssertEqual(actualFolder?.id, expectedID, "update folder ID mismatch", file: file, line: line)
         }
     }
 
@@ -64,46 +82,48 @@ actor MockFolderRepository: FolderRepository {
 
     func create(name: String) async throws(FolderRepositoryError) -> Folder {
         createCallCount += 1
+        actualName = name
 
-        guard let result = createResult else {
-            fatalError("MockFolderRepository.createResult not set")
-        }
-
-        switch result {
+        switch createResult {
             case .success(let folder):
                 return folder
             case .failure(let error):
                 throw error
+            case .none:
+                XCTFail("MockVoiceNoteCreateRepository.createResult가 설정되지 않았습니다.")
+                let error = NSError(domain: "MockFolderRepository.createResult", code: 0)
+                throw .unknown(error)
         }
     }
 
     func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
         fetchAllCallCount += 1
 
-        guard let result = fetchAllResult else {
-            fatalError("MockFolderRepository.fetchAllResult not set")
-        }
-
-        switch result {
+        switch fetchAllResult {
             case .success(let folders):
                 return folders
             case .failure(let error):
                 throw error
+            case .none:
+                XCTFail("MockVoiceNoteCreateRepository.fetchAll이 설정되지 않았습니다.")
+                let error = NSError(domain: "MockFolderRepository.fetchAllResult", code: 0)
+                throw .unknown(error)
         }
     }
 
     func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
         updateCallCount += 1
+        actualFolder = folder
 
-        guard let result = updateResult else {
-            fatalError("MockFolderRepository.updateResult not set")
-        }
-
-        switch result {
+        switch updateResult {
             case .success(let updatedFolder):
                 return updatedFolder
             case .failure(let error):
                 throw error
+            case .none:
+                XCTFail("MockVoiceNoteCreateRepository.updateResult가 설정되지 않았습니다.")
+                let error = NSError(domain: "MockFolderRepository.updateResult", code: 0)
+                throw .unknown(error)
         }
     }
 }
