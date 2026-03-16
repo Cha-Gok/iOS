@@ -5,24 +5,22 @@ import Foundation
 public protocol CheckMicrophonePermissionUseCase: Sendable {
     /// 마이크 권한을 요청 또는 확인합니다.
     /// - Throws: `CheckMicrophonePermissionUseCaseError` (권한 거부)
-    func execute() async throws(CheckMicrophonePermissionUseCaseError)
+    func execute() async throws(CheckMicrophonePermissionUseCaseError) -> PermissionStatus
 }
 
 /// 녹음 전 마이크 권한을 요청 또는 확인 합니다.
 public struct DefaultCheckMicrophonePermissionUseCase: CheckMicrophonePermissionUseCase {
-    private let repository: VoiceRecordPermissionRepository
+    private let repository: MicrophonePermissionRepository
 
-    public init(repository: VoiceRecordPermissionRepository) {
+    public init(repository: MicrophonePermissionRepository) {
         self.repository = repository
     }
 
-    public func execute() async throws(CheckMicrophonePermissionUseCaseError) {
-        if Task.isCancelled {
-            throw .cancelled
-        }
+    public func execute() async throws(CheckMicrophonePermissionUseCaseError) -> PermissionStatus {
+        if Task.isCancelled { throw .cancelled }
 
         do {
-            try await repository.checkRecordingPermission()
+            return try await repository.checkMicrophonePermission()
         } catch {
             AppLogger.error(error)
             throw CheckMicrophonePermissionUseCaseError(error)
@@ -31,9 +29,8 @@ public struct DefaultCheckMicrophonePermissionUseCase: CheckMicrophonePermission
 }
 
 extension CheckMicrophonePermissionUseCaseError {
-    fileprivate init(_ error: VoiceRecordPermissionRepositoryError) {
+    fileprivate init(_ error: MicrophonePermissionRepositoryError) {
         switch error {
-        case .permissionDenied: self = .permissionDenied
         case .cancelled: self = .cancelled
         case .unknown(let error): self = .unknown(error)
         }
