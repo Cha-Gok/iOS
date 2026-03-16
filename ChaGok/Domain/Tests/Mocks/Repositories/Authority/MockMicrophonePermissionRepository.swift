@@ -30,12 +30,13 @@ actor MockMicrophonePermissionRepository: MicrophonePermissionRepository {
     }
 
     func checkMicrophonePermission() async throws(MicrophonePermissionRepositoryError)
-        -> PermissionStatus {
+        -> PermissionStatus
+    {
         actualCheckRecordingPermissionCallCount += 1
 
         switch result {
-        case .success(let result):
-            return result
+        case .success(let state):
+            return state
         case .failure(let error):
             throw error
         case .none:
