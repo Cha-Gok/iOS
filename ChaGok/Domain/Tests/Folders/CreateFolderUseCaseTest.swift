@@ -15,7 +15,7 @@ extension CreateFolderUseCaseTest {
         let expectedFolder = Folder(path: URL(fileURLWithPath: "/test"), name: expectedName)
         let repository = MockFolderRepository()
         await repository.setCreateResult(.success(expectedFolder))
-        await repository.expectCreate(callCount: 1)
+        await repository.expectCreate(name: expectedName, callCount: 1)
 
         let useCase = DefaultCreateFolderUseCase(repository: repository)
 

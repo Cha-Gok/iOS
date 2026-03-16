@@ -21,7 +21,7 @@ extension UpdateFolderUseCaseTest {
 
         let repository = MockFolderRepository()
         await repository.setUpdateResult(.success(updatedFolder))
-        await repository.expectUpdate(callCount: 1)
+        await repository.expectUpdate(folderID: updatedFolder.id, callCount: 1)
 
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
