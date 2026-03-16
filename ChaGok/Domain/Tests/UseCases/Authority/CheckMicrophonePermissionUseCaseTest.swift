@@ -27,7 +27,7 @@ extension CheckMicrophonePermissionUseCaseTest {
     func test_execute_마이크권한이허용된경우_authorized상태를반환한다() async throws {
         // Given
         await repository.setResult(.success(.authorized))
-        await repository.expectCheckRecordingPermission(callCount: 1)
+        await repository.expectCheckMicrophonePermission(callCount: 1)
 
         // When
         let result = try await sut.execute()
@@ -40,7 +40,7 @@ extension CheckMicrophonePermissionUseCaseTest {
     func test_execute_마이크권한이거부된경우_denied상태를반환한다() async throws {
         // Given
         await repository.setResult(.success(.denied))
-        await repository.expectCheckRecordingPermission(callCount: 1)
+        await repository.expectCheckMicrophonePermission(callCount: 1)
 
         // When
         let result = try await sut.execute()
@@ -53,7 +53,7 @@ extension CheckMicrophonePermissionUseCaseTest {
     func test_execute_마이크권한이결정되지않은경우_notDetermined상태를반환한다() async throws {
         // Given
         await repository.setResult(.success(.notDetermined))
-        await repository.expectCheckRecordingPermission(callCount: 1)
+        await repository.expectCheckMicrophonePermission(callCount: 1)
 
         // When
         let result = try await sut.execute()
@@ -72,7 +72,7 @@ extension CheckMicrophonePermissionUseCaseTest {
         struct DummyError: Error {}
         let expectedError = DummyError()
         await repository.setResult(.failure(.unknown(expectedError)))
-        await repository.expectCheckRecordingPermission(callCount: 1)
+        await repository.expectCheckMicrophonePermission(callCount: 1)
 
         // When
         do {
@@ -96,7 +96,7 @@ extension CheckMicrophonePermissionUseCaseTest {
     func test_execute_실행전에태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
         guard let sut else { return XCTFail("sut은 반드시 설정되어야 합니다.") }
         // Given
-        await repository.expectCheckRecordingPermission(callCount: 0)
+        await repository.expectCheckMicrophonePermission(callCount: 0)
 
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
