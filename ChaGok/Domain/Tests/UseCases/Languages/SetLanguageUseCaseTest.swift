@@ -12,8 +12,8 @@ extension SetLanguageUseCaseTest {
     func test_execute_언어설정에성공하면_정상종료된다() async throws {
         // Given
         let repository = MockLanguageRepository()
-        await repository.setSelectResult(.success(()))
-        await repository.expectSelect(callCount: 1)
+        await repository.setSaveResult(.success(()))
+        await repository.expectSave(language: .ko, callCount: 1)
 
         let useCase = DefaultSelectLanguageUseCase(repository: repository)
 
@@ -32,8 +32,8 @@ extension SetLanguageUseCaseTest {
     func test_execute_언어설정실패시_saveFailed에러를던진다() async {
         // Given
         let repository = MockLanguageRepository()
-        await repository.setSelectResult(.failure(.saveFailed))
-        await repository.expectSelect(callCount: 1)
+        await repository.setSaveResult(.failure(.saveFailed))
+        await repository.expectSave(callCount: 1)
 
         let useCase = DefaultSelectLanguageUseCase(repository: repository)
 
@@ -52,8 +52,8 @@ extension SetLanguageUseCaseTest {
     func test_execute_언어설정중취소되면_cancelled에러를던진다() async {
         // Given
         let repository = MockLanguageRepository()
-        await repository.setSelectResult(.failure(.cancelled))
-        await repository.expectSelect(callCount: 1)
+        await repository.setSaveResult(.failure(.cancelled))
+        await repository.expectSave(callCount: 1)
 
         let useCase = DefaultSelectLanguageUseCase(repository: repository)
 
@@ -72,8 +72,8 @@ extension SetLanguageUseCaseTest {
     func test_execute_언어설정작업이이미취소되었으면_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockLanguageRepository()
-        await repository.setSelectResult(.success(()))
-        await repository.expectSelect(callCount: 0)
+        await repository.setSaveResult(.success(()))
+        await repository.expectSave(callCount: 0)
 
         let useCase = DefaultSelectLanguageUseCase(repository: repository)
 
@@ -99,8 +99,8 @@ extension SetLanguageUseCaseTest {
         struct Dummy: Error {}
         let dummyError = Dummy()
         let repository = MockLanguageRepository()
-        await repository.setSelectResult(.failure(.unknown(dummyError)))
-        await repository.expectSelect(callCount: 1)
+        await repository.setSaveResult(.failure(.unknown(dummyError)))
+        await repository.expectSave(callCount: 1)
 
         let useCase = DefaultSelectLanguageUseCase(repository: repository)
 
