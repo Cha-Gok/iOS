@@ -50,10 +50,10 @@ extension FinishRecordingUseCaseTest {
         // When & Then
         do {
             _ = try await sut.execute()
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("FinishRecordingUseCaseError.notRecording 에러를 throw 해야 합니다.")
         } catch {
             guard case .notRecording = error else {
-                return XCTFail("expected .notRecording, got \(error)")
+                return XCTFail("예상한 에러는 FinishRecordingUseCaseError.notRecording 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
 
@@ -68,10 +68,10 @@ extension FinishRecordingUseCaseTest {
         // When & Then
         do {
             _ = try await sut.execute()
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("FinishRecordingUseCaseError.finishFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .finishFailed = error else {
-                return XCTFail("expected .finishFailed, got \(error)")
+                return XCTFail("예상한 에러는 FinishRecordingUseCaseError.finishFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
 
@@ -86,10 +86,10 @@ extension FinishRecordingUseCaseTest {
         // When & Then
         do {
             _ = try await sut.execute()
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("FinishRecordingUseCaseError.encodingFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .encodingFailed = error else {
-                return XCTFail("expected .encodingFailed, got \(error)")
+                return XCTFail("예상한 에러는 FinishRecordingUseCaseError.encodingFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
 
@@ -105,10 +105,10 @@ extension FinishRecordingUseCaseTest {
         // When & Then
         do {
             _ = try await sut.execute()
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("FinishRecordingUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
             guard case .unknown(let wrappedError) = error else {
-                return XCTFail("expected .unknown, got \(error)")
+                return XCTFail("예상한 에러는 FinishRecordingUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
             XCTAssertEqual(wrappedError as NSError, underlyingError)
         }
@@ -131,10 +131,10 @@ extension FinishRecordingUseCaseTest {
         // When & Then
         do {
             _ = try await task.value
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("FinishRecordingUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
             guard case .cancelled = error as? FinishRecordingUseCaseError else {
-                return XCTFail("expected .cancelled, got \(error)")
+                return XCTFail("예상한 에러는 FinishRecordingUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
         await recordingRepository.verify()

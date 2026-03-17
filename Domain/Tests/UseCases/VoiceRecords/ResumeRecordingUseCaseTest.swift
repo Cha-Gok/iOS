@@ -45,10 +45,10 @@ extension ResumeRecordingUseCaseTest {
         // When & Then
         do {
             try await sut.execute()
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("ResumeRecordingUseCaseError.notPaused 에러를 throw 해야 합니다.")
         } catch {
             guard case .notPaused = error else {
-                return XCTFail("expected .notPaused, got \(error)")
+                return XCTFail("예상한 에러는 ResumeRecordingUseCaseError.notPaused 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
         await recordingRepository.verify()
@@ -69,10 +69,10 @@ extension ResumeRecordingUseCaseTest {
         // When & Then
         do {
             try await task.value
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("ResumeRecordingUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
             guard case .cancelled = error as? ResumeRecordingUseCaseError else {
-                return XCTFail("expected .cancelled, got \(error)")
+                return XCTFail("예상한 에러는 ResumeRecordingUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
         await recordingRepository.verify()
