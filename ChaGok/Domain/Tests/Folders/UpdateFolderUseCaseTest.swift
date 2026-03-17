@@ -11,12 +11,18 @@ extension UpdateFolderUseCaseTest {
 
     func test_폴더_수정_성공_업데이트된폴더를반환한다() async throws {
         // Given
-        let originalFolder = Folder(path: URL(fileURLWithPath: "/test"), name: "Old Name")
-        let updatedFolder = Folder(
+        let originalFolder = Folder.stub(
+            name: "Old Name"
+        )
+
+        let updatedFolder = Folder.stub(
             id: originalFolder.id,
             path: originalFolder.path,
             name: "New Name",
-            createdAt: originalFolder.createdAt
+            createdAt: originalFolder.createdAt,
+            content: originalFolder.content,
+            isDeletable: originalFolder.isDeletable,
+            deletedAt: originalFolder.deletedAt
         )
 
         let repository = MockFolderRepository()
@@ -33,6 +39,10 @@ extension UpdateFolderUseCaseTest {
         XCTAssertEqual(result.id, originalFolder.id)
         XCTAssertEqual(result.path, originalFolder.path)
         XCTAssertEqual(result.createdAt, originalFolder.createdAt)
+        XCTAssertEqual(result.isDeletable, originalFolder.isDeletable)
+        XCTAssertEqual(result.deletedAt, originalFolder.deletedAt)
+        XCTAssertEqual(result.content.count, originalFolder.content.count)
+
         await repository.verify()
     }
 }
@@ -63,13 +73,13 @@ extension UpdateFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_폴더_수정_이름이비어있을때_invalidName에러를던진다() async {
+    func test_폴더_수정_이름이비어있거나앞뒤공백이있을때_invalidName에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
         await repository.expectUpdate(callCount: 0)
 
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
-        let invalidNames = ["", " ", "  \n  "]
+        let invalidNames = ["", " ", "  \n  ", " 새폴더", "새 폴더 ", "  새 폴더  "]
 
         // When & Then
         await withTaskGroup(of: Void.self) { group in
@@ -79,7 +89,7 @@ extension UpdateFolderUseCaseTest {
 
                     do {
                         _ = try await useCase.execute(folder)
-                        XCTFail("이름이 비어있는 경우 .invalidName 에러가 발생해야 합니다. (input: '\(name)')")
+                        XCTFail("유효하지 않은 이름의 경우 .invalidName 에러가 발생해야 합니다. (input: '\(name)')")
                     } catch UseCaseError.invalidName {
                         // Success
                     } catch {
