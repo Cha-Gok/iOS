@@ -8,13 +8,13 @@ actor MockFolderRepository: FolderRepository {
     private var updateResult: Result<Folder, FolderRepositoryError>?
 
     // 호출 검증 Count
-    private(set) var createCallCount = 0
-    private(set) var fetchAllCallCount = 0
-    private(set) var updateCallCount = 0
+    private var createCallCount = 0
+    private var fetchAllCallCount = 0
+    private var updateCallCount = 0
 
     // 인자 검증
-    private(set) var actualName: String?
-    private(set) var actualFolder: Folder?
+    private var actualName: String?
+    private var actualFolder: Folder?
 
     // Expected Values
     private var expectedCreateCallCount: Int?

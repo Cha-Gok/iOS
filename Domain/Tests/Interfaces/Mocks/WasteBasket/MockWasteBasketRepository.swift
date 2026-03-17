@@ -9,12 +9,12 @@ actor MockWasteBasketRepository: WasteBasketRepository {
     private var fetchAllResult: Result<[WasteBasketItem], FetchWasteBasketRepositoryError>?
 
     // 호출 검증 Count
-    private(set) var fetchAllCallCount = 0
-    private(set) var moveToWasteBasketCallCount = 0
-    private(set) var moveAllToWasteBasketCallCount = 0
-    private(set) var deleteCallCount = 0
-    private(set) var deleteAllCallCount = 0
-    private(set) var allClearCallCount = 0
+    private var fetchAllCallCount = 0
+    private var moveToWasteBasketCallCount = 0
+    private var moveAllToWasteBasketCallCount = 0
+    private var deleteCallCount = 0
+    private var deleteAllCallCount = 0
+    private var allClearCallCount = 0
 
     // Expected Call Counts
     private var expectedFetchAllCallCount: Int?
@@ -31,10 +31,10 @@ actor MockWasteBasketRepository: WasteBasketRepository {
     private var expectedLastDeletedItems: [WasteBasketItem]?
 
     // 받은 인자 기록 (Verification용)
-    private(set) var lastMovedItem: WasteBasketItem?
-    private(set) var lastMovedItems: [WasteBasketItem]?
-    private(set) var lastDeletedItem: WasteBasketItem?
-    private(set) var lastDeletedItems: [WasteBasketItem]?
+    private var lastMovedItem: WasteBasketItem?
+    private var lastMovedItems: [WasteBasketItem]?
+    private var lastDeletedItem: WasteBasketItem?
+    private var lastDeletedItems: [WasteBasketItem]?
 
     // MARK: - Setup
 

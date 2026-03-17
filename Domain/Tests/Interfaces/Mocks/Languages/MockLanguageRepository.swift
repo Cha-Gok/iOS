@@ -6,14 +6,14 @@ actor MockLanguageRepository: LanguageRepository {
     private var fetchResult: Result<Language, FetchLanguagesRepositoryError>?
     private var saveResult: Result<Void, SetLanguagesRepositoryError>?
 
-    private(set) var fetchCallCount = 0
-    private(set) var saveCallCount = 0
+    private var fetchCallCount = 0
+    private var saveCallCount = 0
 
     private var expectedFetchCallCount: Int?
     private var expectedSaveCallCount: Int?
     private var expectedLastSavedLanguage: Language?
 
-    private(set) var lastSavedLanguage: Language?
+    private var lastSavedLanguage: Language?
 
     func setFetchResult(_ result: Result<Language, FetchLanguagesRepositoryError>) {
         fetchResult = result

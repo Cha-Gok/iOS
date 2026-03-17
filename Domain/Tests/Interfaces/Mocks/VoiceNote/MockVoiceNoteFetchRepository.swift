@@ -6,10 +6,10 @@ actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
     private var fetchAllResult: Result<[VoiceNote], VoiceNoteFetchRepositoryError>?
     private var fetchByIdResult: Result<VoiceNote, VoiceNoteFetchRepositoryError>?
 
-    private(set) var fetchAllCallCount = 0
-    private(set) var actualFetchAllFolderID: UUID?
-    private(set) var fetchByIdCallCount = 0
-    private(set) var actualFetchByIdID: UUID?
+    private var fetchAllCallCount = 0
+    private var actualFetchAllFolderID: UUID?
+    private var fetchByIdCallCount = 0
+    private var actualFetchByIdID: UUID?
 
     private var expectedFetchAllCallCount: Int?
     private var expectedFetchAllFolderID: UUID?

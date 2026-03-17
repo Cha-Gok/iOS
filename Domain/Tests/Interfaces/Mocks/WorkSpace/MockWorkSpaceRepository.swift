@@ -7,8 +7,8 @@ actor MockWorkSpaceRepository: WorkSpaceRepository {
     private var basicFolderResult: Result<Folder, WorkSpaceBasicFolderRepositoryError>?
 
     // 호출 검증 Count
-    private(set) var fetchRootURLCallCount = 0
-    private(set) var fetchOrCreateBasicFolderCallCount = 0
+    private var fetchRootURLCallCount = 0
+    private var fetchOrCreateBasicFolderCallCount = 0
 
     // Expected Call Counts
     private var expectedFetchRootURLCallCount: Int?

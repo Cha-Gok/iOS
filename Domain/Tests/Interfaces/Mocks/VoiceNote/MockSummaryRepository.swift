@@ -5,8 +5,8 @@ import XCTest
 actor MockSummaryRepository: SummaryRepository {
     private var result: Result<(keywords: [Keyword], summary: Summary), SummaryRepositoryError>?
 
-    private(set) var actualCallCount = 0
-    private(set) var actualTranscript: Transcript?
+    private var actualCallCount = 0
+    private var actualTranscript: Transcript?
 
     private var expectedCallCount: Int?
     private var expectedTranscriptText: String?

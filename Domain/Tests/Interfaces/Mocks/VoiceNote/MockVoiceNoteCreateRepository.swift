@@ -5,8 +5,8 @@ import XCTest
 actor MockVoiceNoteCreateRepository: VoiceNoteCreateRepository {
     private var result: Result<VoiceNote, VoiceNoteCreateRepositoryError>?
 
-    private(set) var createCallCount = 0
-    private(set) var actualVoiceRecord: VoiceRecord?
+    private var createCallCount = 0
+    private var actualVoiceRecord: VoiceRecord?
 
     private var expectedCreateCallCount: Int?
     private var expectedVoiceRecordID: UUID?

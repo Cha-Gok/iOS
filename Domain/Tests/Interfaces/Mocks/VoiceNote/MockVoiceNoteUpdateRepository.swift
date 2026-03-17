@@ -5,8 +5,8 @@ import XCTest
 actor MockVoiceNoteUpdateRepository: VoiceNoteUpdateRepository {
     private var result: Result<VoiceNote, VoiceNoteUpdateRepositoryError>?
 
-    private(set) var updateCallCount = 0
-    private(set) var actualUpdatedVoiceNote: VoiceNote?
+    private var updateCallCount = 0
+    private var actualUpdatedVoiceNote: VoiceNote?
 
     private var expectedUpdateCallCount: Int?
     private var expectedUpdatedVoiceNote: VoiceNote?

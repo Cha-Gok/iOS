@@ -5,8 +5,8 @@ import XCTest
 actor MockSTTRepository: STTRepository {
     private var result: Result<Transcript, STTRepositoryError>?
 
-    private(set) var actualCallCount = 0
-    private(set) var actualAudioFileURL: URL?
+    private var actualCallCount = 0
+    private var actualAudioFileURL: URL?
 
     private var expectedCallCount: Int?
     private var expectedAudioFileURL: URL?
