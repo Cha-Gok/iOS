@@ -2,9 +2,6 @@ name: Test
 
 on:
   workflow_call:
-    secrets:
-      TUIST_CONFIG_TOKEN:
-        required: false
 
 permissions:
   id-token: write
