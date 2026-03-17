@@ -1,9 +1,7 @@
 @testable import Domain
 import XCTest
 
-final class FetchWasteBasketFolderUseCaseTest: XCTestCase {
-    typealias UseCaseError = FetchWasteBasketFolderUseCaseError
-}
+final class FetchWasteBasketFolderUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
@@ -60,7 +58,7 @@ extension FetchWasteBasketFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("에러가 발생해야 합니다.")
-        } catch UseCaseError.fetchFailed {
+        } catch FetchWasteBasketFolderUseCaseError.fetchFailed {
             await repository.verify()
         } catch {
             XCTFail("Expected .fetchFailed, got \(error)")
@@ -81,7 +79,7 @@ extension FetchWasteBasketFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("에러가 발생해야 합니다.")
-        } catch UseCaseError.unknown(let error) {
+        } catch FetchWasteBasketFolderUseCaseError.unknown(let error) {
             XCTAssertTrue(error is Dummy)
             await repository.verify()
         } catch {
@@ -105,7 +103,7 @@ extension FetchWasteBasketFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch FetchWasteBasketFolderUseCaseError.cancelled {
             await repository.verify()
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
@@ -129,7 +127,7 @@ extension FetchWasteBasketFolderUseCaseTest {
         do {
             _ = try await task.value
             XCTFail("작업이 취소되어야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch FetchWasteBasketFolderUseCaseError.cancelled {
             await repository.verify()
         } catch {
             XCTFail("Expected .cancelled error, but got \(error)")

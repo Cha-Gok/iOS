@@ -1,9 +1,7 @@
 @testable import Domain
 import XCTest
 
-final class DeleteWasteBasketUseCaseTest: XCTestCase {
-    typealias UseCaseError = DeleteWasteBasketUseCaseError
-}
+final class DeleteWasteBasketUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
@@ -75,7 +73,7 @@ extension DeleteWasteBasketUseCaseTest {
         do {
             _ = try await useCase.execute(method: method)
             XCTFail("에러가 발생해야 합니다.")
-        } catch UseCaseError.deleteFailed(let failedMethod) {
+        } catch DeleteWasteBasketUseCaseError.deleteFailed(let failedMethod) {
             XCTAssertEqual(failedMethod, method)
             await repository.verify()
         } catch {
@@ -97,7 +95,7 @@ extension DeleteWasteBasketUseCaseTest {
         do {
             _ = try await useCase.execute(method: method)
             XCTFail("에러가 발생해야 합니다.")
-        } catch UseCaseError.deleteFailed(let failedMethod) {
+        } catch DeleteWasteBasketUseCaseError.deleteFailed(let failedMethod) {
             XCTAssertEqual(failedMethod, method)
             await repository.verify()
         } catch {
@@ -119,7 +117,7 @@ extension DeleteWasteBasketUseCaseTest {
         do {
             _ = try await useCase.execute(method: method)
             XCTFail("에러가 발생해야 합니다.")
-        } catch UseCaseError.deleteFailed(let failedMethod) {
+        } catch DeleteWasteBasketUseCaseError.deleteFailed(let failedMethod) {
             XCTAssertEqual(failedMethod, method)
             await repository.verify()
         } catch {
@@ -141,7 +139,7 @@ extension DeleteWasteBasketUseCaseTest {
         do {
             _ = try await useCase.execute(method: .all)
             XCTFail("에러가 발생해야 합니다.")
-        } catch UseCaseError.unknown(let error) {
+        } catch DeleteWasteBasketUseCaseError.unknown(let error) {
             XCTAssertTrue(error is Dummy)
             await repository.verify()
         } catch {
@@ -165,7 +163,7 @@ extension DeleteWasteBasketUseCaseTest {
         do {
             _ = try await useCase.execute(method: .all)
             XCTFail("에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch DeleteWasteBasketUseCaseError.cancelled {
             await repository.verify()
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
@@ -189,7 +187,7 @@ extension DeleteWasteBasketUseCaseTest {
         do {
             _ = try await task.value
             XCTFail("작업이 취소되어야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch DeleteWasteBasketUseCaseError.cancelled {
             await repository.verify()
         } catch {
             XCTFail("Expected .cancelled error, but got \(error)")

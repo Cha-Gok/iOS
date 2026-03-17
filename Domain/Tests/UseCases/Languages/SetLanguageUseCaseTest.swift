@@ -1,9 +1,7 @@
 @testable import Domain
 import XCTest
 
-final class SetLanguageUseCaseTest: XCTestCase {
-    typealias UseCaseError = SetLanguagesUseCaseError
-}
+final class SetLanguageUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
@@ -39,7 +37,7 @@ extension SetLanguageUseCaseTest {
         do {
             try await useCase.execute(lang: .ko)
             XCTFail("Repository가 saveFailed 에러를 던지면 UseCase도 saveFailed 에러를 던져야 합니다.")
-        } catch UseCaseError.saveFailed {
+        } catch SetLanguagesUseCaseError.saveFailed {
             // Success
             await repository.verify()
         } catch {
@@ -59,7 +57,7 @@ extension SetLanguageUseCaseTest {
         do {
             try await useCase.execute(lang: .ko)
             XCTFail("Repository가 cancelled 에러를 던지면 UseCase도 cancelled 에러를 던져야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch SetLanguagesUseCaseError.cancelled {
             // Success
             await repository.verify()
         } catch {
@@ -84,7 +82,7 @@ extension SetLanguageUseCaseTest {
         do {
             try await task.value
             XCTFail("이미 취소된 Task이므로 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch SetLanguagesUseCaseError.cancelled {
             // Success
             await repository.verify()
         } catch {
@@ -106,14 +104,11 @@ extension SetLanguageUseCaseTest {
         do {
             try await useCase.execute(lang: .ko)
             XCTFail("Repository가 unknown 에러를 던지면 UseCase도 .unknown 에러를 던져야 합니다.")
+        } catch SetLanguagesUseCaseError.unknown(let repoError) {
+            XCTAssertTrue(repoError is Dummy)
+            await repository.verify()
         } catch {
-            switch error {
-            case .unknown(let repoError):
-                XCTAssertTrue(repoError is Dummy)
-                await repository.verify()
-            default:
-                XCTFail("Expected .unknown, got \(error)")
-            }
+            XCTFail("Expected .unknown, got \(error)")
         }
     }
 }

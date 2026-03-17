@@ -17,13 +17,12 @@ public struct DefaultFetchLanguageUseCase: FetchLanguageUseCase {
     }
 
     public func execute() async throws(FetchLanguagesUseCaseError) -> Language {
-        typealias UseCaseError = FetchLanguagesUseCaseError
-        if Task.isCancelled { throw UseCaseError.cancelled }
+        if Task.isCancelled { throw .cancelled }
         do {
             return try await repository.fetchLanguage()
         } catch {
             AppLogger.error(error)
-            throw UseCaseError(error)
+            throw FetchLanguagesUseCaseError(error)
         }
     }
 }

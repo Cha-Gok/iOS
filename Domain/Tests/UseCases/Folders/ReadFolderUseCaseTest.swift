@@ -1,9 +1,7 @@
 @testable import Domain
 import XCTest
 
-final class ReadFolderUseCaseTest: XCTestCase {
-    typealias UseCaseError = ReadFolderUseCaseError
-}
+final class ReadFolderUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
@@ -48,7 +46,7 @@ extension ReadFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("조회 실패 시 .fetchFailed 에러가 발생해야 합니다.")
-        } catch UseCaseError.fetchFailed {
+        } catch ReadFolderUseCaseError.fetchFailed {
             // Success
         } catch {
             XCTFail("Expected .fetchFailed, got \(error)")
@@ -69,7 +67,7 @@ extension ReadFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("찾을 수 없을 시 .notFound 에러가 발생해야 합니다.")
-        } catch UseCaseError.notFound {
+        } catch ReadFolderUseCaseError.notFound {
             // Success
         } catch {
             XCTFail("Expected .notFound, got \(error)")
@@ -92,7 +90,7 @@ extension ReadFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("알 수 없는 에러 발생 시 .unknown으로 래핑되어야 합니다.")
-        } catch UseCaseError.unknown(let error) {
+        } catch ReadFolderUseCaseError.unknown(let error) {
             guard let repoError = error as? FolderRepositoryError else {
                 return XCTFail("Unknown 에러 내부에는 FolderRepositoryError가 포함되어야 합니다.")
             }
@@ -126,7 +124,7 @@ extension ReadFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("작업 취소의 경우 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch ReadFolderUseCaseError.cancelled {
             // Success
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
@@ -152,7 +150,7 @@ extension ReadFolderUseCaseTest {
         do {
             _ = try await task.value
             XCTFail("작업이 즉시 취소되었으므로 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch ReadFolderUseCaseError.cancelled {
             // Success
         } catch {
             XCTFail("Expected .cancelled, got \(error)")

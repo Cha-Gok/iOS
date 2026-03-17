@@ -18,13 +18,12 @@ public struct DefaultReadFolderUseCase: ReadFolderUseCase {
     }
 
     public func execute() async throws(ReadFolderUseCaseError) -> [Folder] {
-        typealias UseCaseError = ReadFolderUseCaseError
-        if Task.isCancelled { throw UseCaseError.cancelled }
+        if Task.isCancelled { throw .cancelled }
         do {
             return try await repository.fetchAll()
         } catch {
             AppLogger.error(error)
-            throw UseCaseError(error)
+            throw ReadFolderUseCaseError(error)
         }
     }
 }

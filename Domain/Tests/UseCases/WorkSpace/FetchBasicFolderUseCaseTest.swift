@@ -1,9 +1,7 @@
 @testable import Domain
 import XCTest
 
-final class FetchBasicFolderUseCaseTest: XCTestCase {
-    typealias UseCaseError = FetchBasicFolderUseCaseError
-}
+final class FetchBasicFolderUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
@@ -42,7 +40,7 @@ extension FetchBasicFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("기본 폴더가 없는 경우 .notFound 에러가 발생해야 합니다.")
-        } catch UseCaseError.notFound {
+        } catch FetchBasicFolderUseCaseError.notFound {
             // Success
             await repository.verify()
         } catch {
@@ -62,7 +60,7 @@ extension FetchBasicFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("생성 실패 시 .createFailed 에러가 발생해야 합니다.")
-        } catch UseCaseError.createFailed {
+        } catch FetchBasicFolderUseCaseError.createFailed {
             // Success
             await repository.verify()
         } catch {
@@ -84,7 +82,7 @@ extension FetchBasicFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("알 수 없는 에러 발생 시 .unknown으로 래핑되어야 합니다.")
-        } catch UseCaseError.unknown(let error) {
+        } catch FetchBasicFolderUseCaseError.unknown(let error) {
             // RepoError.unknown 내부의 Dummy 에러가 유지되어야 함
             XCTAssertTrue(error is Dummy)
             await repository.verify()
@@ -105,7 +103,7 @@ extension FetchBasicFolderUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("작업 취소의 경우 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch FetchBasicFolderUseCaseError.cancelled {
             // Success
             await repository.verify()
         } catch {
@@ -130,7 +128,7 @@ extension FetchBasicFolderUseCaseTest {
         do {
             _ = try await task.value
             XCTFail("작업이 즉시 취소되었으므로 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch FetchBasicFolderUseCaseError.cancelled {
             // Success
             await repository.verify()
         } catch {

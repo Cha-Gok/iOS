@@ -20,14 +20,13 @@ public struct DefaultFetchBasicFolderUseCase: FetchBasicFolderUseCase {
 
     @discardableResult
     public func execute() async throws(FetchBasicFolderUseCaseError) -> Folder {
-        typealias UseCaseError = FetchBasicFolderUseCaseError
-        if Task.isCancelled { throw UseCaseError.cancelled }
+        if Task.isCancelled { throw .cancelled }
         do {
             // 기본 폴더 생성/확인
             return try await repository.fetchOrCreateBasicFolder()
         } catch {
             AppLogger.error(error)
-            throw UseCaseError(error)
+            throw FetchBasicFolderUseCaseError(error)
         }
     }
 }

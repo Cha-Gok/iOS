@@ -19,18 +19,17 @@ public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
     }
 
     public func execute(_ folder: Folder) async throws(UpdateFolderUseCaseError) -> Folder {
-        typealias UseCaseError = UpdateFolderUseCaseError
-        if Task.isCancelled { throw UseCaseError.cancelled }
+        if Task.isCancelled { throw .cancelled }
 
         let trimName: String = folder.name.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // invalidName 유효성 검증
         guard !trimName.isEmpty, trimName == folder.name else {
-            throw UseCaseError.invalidName
+            throw .invalidName
         }
 
         // 폴더 이름 제한
-        guard trimName.count <= Policy.maxNameLength else { throw UseCaseError.invalidLengthName }
+        guard trimName.count <= Policy.maxNameLength else { throw .invalidLengthName }
 
         let updateFolder: Folder = .init(
             id: folder.id,
@@ -45,7 +44,7 @@ public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
             return try await repository.update(updateFolder)
         } catch {
             AppLogger.error(error)
-            throw UseCaseError(error)
+            throw UpdateFolderUseCaseError(error)
         }
     }
 }

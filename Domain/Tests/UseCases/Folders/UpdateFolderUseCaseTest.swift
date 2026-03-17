@@ -1,9 +1,7 @@
 @testable import Domain
 import XCTest
 
-final class UpdateFolderUseCaseTest: XCTestCase {
-    typealias UseCaseError = UpdateFolderUseCaseError
-}
+final class UpdateFolderUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
@@ -53,7 +51,7 @@ extension UpdateFolderUseCaseTest {
         do {
             _ = try await useCase.execute(folder)
             XCTFail("invalidLengthName이 발생해야 합니다.")
-        } catch UseCaseError.invalidLengthName {
+        } catch UpdateFolderUseCaseError.invalidLengthName {
             // Success
         } catch {
             XCTFail("Expected .invalidLengthName, got \(error)")
@@ -78,7 +76,7 @@ extension UpdateFolderUseCaseTest {
                     do {
                         _ = try await useCase.execute(folder)
                         XCTFail("유효하지 않은 이름의 경우 .invalidName 에러가 발생해야 합니다. (input: '\(name)')")
-                    } catch UseCaseError.invalidName {
+                    } catch UpdateFolderUseCaseError.invalidName {
                         // Success
                     } catch {
                         XCTFail("Expected .invalidName, got \(error) for name: '\(name)'")
@@ -103,7 +101,7 @@ extension UpdateFolderUseCaseTest {
         do {
             _ = try await useCase.execute(folder)
             XCTFail("폴더를 찾을 수 없는 경우 .notFound 에러가 발생해야 합니다.")
-        } catch UseCaseError.notFound {
+        } catch UpdateFolderUseCaseError.notFound {
             // Success
         } catch {
             XCTFail("Expected .notFound, got \(error)")
@@ -125,7 +123,7 @@ extension UpdateFolderUseCaseTest {
         do {
             _ = try await useCase.execute(folder)
             XCTFail("이름이 중복된 경우 .duplicateName 에러가 발생해야 합니다.")
-        } catch UseCaseError.duplicateName {
+        } catch UpdateFolderUseCaseError.duplicateName {
             // Success
         } catch {
             XCTFail("Expected .duplicateName, got \(error)")
@@ -147,7 +145,7 @@ extension UpdateFolderUseCaseTest {
         do {
             _ = try await useCase.execute(folder)
             XCTFail("수정 실패 시 .updateFailed 에러가 발생해야 합니다.")
-        } catch UseCaseError.updateFailed {
+        } catch UpdateFolderUseCaseError.updateFailed {
             // Success
         } catch {
             XCTFail("Expected .updateFailed, got \(error)")
@@ -171,7 +169,7 @@ extension UpdateFolderUseCaseTest {
         do {
             _ = try await useCase.execute(folder)
             XCTFail("알 수 없는 에러 발생 시 .unknown으로 래핑되어야 합니다.")
-        } catch UseCaseError.unknown(let error) {
+        } catch UpdateFolderUseCaseError.unknown(let error) {
             guard let repoError = error as? FolderRepositoryError else {
                 return XCTFail("Unknown 에러 내부에는 FolderRepositoryError가 포함되어야 합니다.")
             }
@@ -206,7 +204,7 @@ extension UpdateFolderUseCaseTest {
         do {
             _ = try await useCase.execute(folder)
             XCTFail("작업 취소의 경우 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch UpdateFolderUseCaseError.cancelled {
             // Success
         } catch {
             XCTFail("Expected .cancelled, got \(error)")
@@ -233,7 +231,7 @@ extension UpdateFolderUseCaseTest {
         do {
             _ = try await task.value
             XCTFail("작업이 즉시 취소되었으므로 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch UpdateFolderUseCaseError.cancelled {
             // Success
         } catch {
             XCTFail("Expected .cancelled, got \(error)")

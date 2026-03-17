@@ -17,8 +17,7 @@ public struct DefaultMoveWasteBasketUseCase: MoveWasteBasketUseCase {
     }
 
     public func execute(method: MoveWasteBasketMethod) async throws(MoveWasteBasketUseCaseError) {
-        typealias UseCaseError = MoveWasteBasketUseCaseError
-        if Task.isCancelled { throw UseCaseError.cancelled }
+        if Task.isCancelled { throw .cancelled }
         do {
             switch method {
             case .multiple(let items):
@@ -28,7 +27,7 @@ public struct DefaultMoveWasteBasketUseCase: MoveWasteBasketUseCase {
             }
         } catch {
             AppLogger.error(error)
-            throw UseCaseError(error)
+            throw MoveWasteBasketUseCaseError(error)
         }
     }
 }

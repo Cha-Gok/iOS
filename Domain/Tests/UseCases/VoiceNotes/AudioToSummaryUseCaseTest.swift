@@ -1,9 +1,7 @@
 @testable import Domain
 import XCTest
 
-final class AudioToSummaryUseCaseTest: XCTestCase {
-    typealias UseCaseError = AudioToSummaryUseCaseError
-}
+final class AudioToSummaryUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
@@ -66,7 +64,7 @@ extension AudioToSummaryUseCaseTest {
         do {
             _ = try await useCase.execute(audioFileURL: audioURL)
             XCTFail("STT 실패 시 .transcribeFailed 에러가 발생해야 합니다.")
-        } catch UseCaseError.transcribeFailed {
+        } catch AudioToSummaryUseCaseError.transcribeFailed {
             // Success
             await sttRepository.verify()
             await summaryRepository.verify()
@@ -97,7 +95,7 @@ extension AudioToSummaryUseCaseTest {
         do {
             _ = try await useCase.execute(audioFileURL: audioURL)
             XCTFail("요약 실패 시 .summarizeFailed 에러가 발생해야 합니다.")
-        } catch UseCaseError.summarizeFailed {
+        } catch AudioToSummaryUseCaseError.summarizeFailed {
             // Success
             await sttRepository.verify()
             await summaryRepository.verify()
@@ -126,7 +124,7 @@ extension AudioToSummaryUseCaseTest {
         do {
             _ = try await useCase.execute(audioFileURL: audioURL)
             XCTFail("알 수 없는 에러 발생 시 .unknown으로 래핑되어야 합니다.")
-        } catch UseCaseError.unknown(let error) {
+        } catch AudioToSummaryUseCaseError.unknown(let error) {
             XCTAssertTrue(error is Dummy)
             await sttRepository.verify()
             await summaryRepository.verify()
@@ -157,7 +155,7 @@ extension AudioToSummaryUseCaseTest {
         do {
             _ = try await useCase.execute(audioFileURL: audioURL)
             XCTFail("작업 취소 시 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch AudioToSummaryUseCaseError.cancelled {
             // Success
             await sttRepository.verify()
             await summaryRepository.verify()
@@ -188,7 +186,7 @@ extension AudioToSummaryUseCaseTest {
         do {
             _ = try await task.value
             XCTFail("이미 취소된 태스크이므로 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch AudioToSummaryUseCaseError.cancelled {
             // Success
             await sttRepository.verify()
             await summaryRepository.verify()

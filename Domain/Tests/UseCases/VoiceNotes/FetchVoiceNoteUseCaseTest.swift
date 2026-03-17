@@ -1,9 +1,7 @@
 @testable import Domain
 import XCTest
 
-final class FetchVoiceNoteUseCaseTest: XCTestCase {
-    typealias UseCaseError = FetchVoiceNoteUseCaseError
-}
+final class FetchVoiceNoteUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
@@ -65,7 +63,7 @@ extension FetchVoiceNoteUseCaseTest {
         do {
             _ = try await useCase.execute(folderID: folderID)
             XCTFail("조회 실패 시 .fetchAllFailed 에러가 발생해야 합니다.")
-        } catch UseCaseError.fetchAllFailed(let failedID) {
+        } catch FetchVoiceNoteUseCaseError.fetchAllFailed(let failedID) {
             XCTAssertEqual(failedID, folderID)
             await repository.verify()
         } catch {
@@ -89,7 +87,7 @@ extension FetchVoiceNoteUseCaseTest {
         do {
             _ = try await useCase.execute(folderID: folderID)
             XCTFail("알 수 없는 에러 시 .unknown으로 래핑되어야 합니다.")
-        } catch UseCaseError.unknown(let error) {
+        } catch FetchVoiceNoteUseCaseError.unknown(let error) {
             XCTAssertTrue(error is Dummy)
             await repository.verify()
         } catch {
@@ -111,7 +109,7 @@ extension FetchVoiceNoteUseCaseTest {
         do {
             _ = try await useCase.execute(folderID: folderID)
             XCTFail("작업 취소 시 .cancelled 에러가 발생해야 합니다.")
-        } catch UseCaseError.cancelled {
+        } catch FetchVoiceNoteUseCaseError.cancelled {
             // Success
             await repository.verify()
         } catch {

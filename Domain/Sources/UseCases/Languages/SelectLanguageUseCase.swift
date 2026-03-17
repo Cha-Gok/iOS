@@ -17,13 +17,12 @@ public struct DefaultSelectLanguageUseCase: SelectLanguageUseCase {
     }
 
     public func execute(lang: Language) async throws(SetLanguagesUseCaseError) {
-        typealias UseCaseError = SetLanguagesUseCaseError
-        if Task.isCancelled { throw UseCaseError.cancelled }
+        if Task.isCancelled { throw .cancelled }
         do {
             return try await repository.saveLanguage(lang)
         } catch {
             AppLogger.error(error)
-            throw UseCaseError(error)
+            throw SetLanguagesUseCaseError(error)
         }
     }
 }

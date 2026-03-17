@@ -17,8 +17,7 @@ public struct DefaultDeleteWasteBasketUseCase: DeleteWasteBasketUseCase {
     }
 
     public func execute(method: DeleteWasteBasketMethod) async throws(DeleteWasteBasketUseCaseError) {
-        typealias UseCaseError = DeleteWasteBasketUseCaseError
-        if Task.isCancelled { throw UseCaseError.cancelled }
+        if Task.isCancelled { throw .cancelled }
         do {
             switch method {
             case .all:
@@ -30,7 +29,7 @@ public struct DefaultDeleteWasteBasketUseCase: DeleteWasteBasketUseCase {
             }
         } catch {
             AppLogger.error(error)
-            throw UseCaseError(error)
+            throw DeleteWasteBasketUseCaseError(error)
         }
     }
 }

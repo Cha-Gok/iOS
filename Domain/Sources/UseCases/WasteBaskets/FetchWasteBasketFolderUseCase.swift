@@ -18,13 +18,12 @@ public struct DefaultFetchWasteBasketFolderUseCase: FetchWasteBasketFolderUseCas
     }
 
     public func execute() async throws(FetchWasteBasketFolderUseCaseError) -> [WasteBasketItem] {
-        typealias UseCaseError = FetchWasteBasketFolderUseCaseError
-        if Task.isCancelled { throw UseCaseError.cancelled }
+        if Task.isCancelled { throw .cancelled }
         do {
             return try await repository.fetchAll()
         } catch {
             AppLogger.error(error)
-            throw UseCaseError(error)
+            throw FetchWasteBasketFolderUseCaseError(error)
         }
     }
 }
