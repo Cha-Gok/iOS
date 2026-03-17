@@ -12,7 +12,7 @@ extension CreateFolderUseCaseTest {
     func test_폴더_생성_성공_생성된폴더를반환한다() async throws {
         // Given
         let expectedName = "New Folder"
-        let expectedFolder = Folder(path: URL(fileURLWithPath: "/test"), name: expectedName)
+        let expectedFolder = Folder.stub(path: URL(fileURLWithPath: "/test"), name: expectedName)
         let repository = MockFolderRepository()
         await repository.setCreateResult(.success(expectedFolder))
         await repository.expectCreate(name: expectedName, callCount: 1)
@@ -33,13 +33,13 @@ extension CreateFolderUseCaseTest {
 
 extension CreateFolderUseCaseTest {
 
-    func test_폴더_생성_이름이비어있을때_invalidName에러를던진다() async {
+    func test_폴더_생성_이름이비어있거나앞뒤공백이있을때_invalidName에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
         await repository.expectCreate(callCount: 0)
 
         let useCase = DefaultCreateFolderUseCase(repository: repository)
-        let invalidNames = ["", " ", "  \n  "]
+        let invalidNames = ["", " ", "  \n  ", " 새폴더", "새 폴더 ", "  새 폴더  "]
 
         // When & Then
         await withTaskGroup(of: Void.self) { group in
@@ -47,7 +47,7 @@ extension CreateFolderUseCaseTest {
                 group.addTask {
                     do {
                         _ = try await useCase.execute(name: name)
-                        XCTFail("이름이 비어있는 경우 .invalidName 에러가 발생해야 합니다. (input: '\(name)')")
+                        XCTFail("유효하지 않은 이름의 경우 .invalidName 에러가 발생해야 합니다. (input: '\(name)')")
                     } catch UseCaseError.invalidName {
                         // Success
                     } catch {
@@ -274,7 +274,7 @@ extension CreateFolderUseCaseTest {
     func test_폴더_생성_작업이미취소시_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
-        await repository.setCreateResult(.success(Folder(path: URL.applicationSupportDirectory, name: "test")))
+        await repository.setCreateResult(.success(Folder.stub(path: URL.applicationSupportDirectory, name: "test")))
         await repository.expectCreate(callCount: 0)
 
         let useCase = DefaultCreateFolderUseCase(repository: repository)

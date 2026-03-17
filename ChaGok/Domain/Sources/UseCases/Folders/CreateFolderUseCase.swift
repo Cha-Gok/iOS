@@ -23,16 +23,18 @@ public struct DefaultCreateFolderUseCase: CreateFolderUseCase {
         typealias UseCaseError = CreateFolderUseCaseError
         if Task.isCancelled { throw UseCaseError.cancelled }
 
-        // 폴더 이름 제한
-        guard name.count <= FolderConstants.maxNameLength else { throw UseCaseError.invalidLengthName }
+        let trimName: String = name.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // invalidName 유효성 검증
-        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        guard !trimName.isEmpty, trimName == name else {
             throw UseCaseError.invalidName
         }
 
+        // 폴더 이름 제한
+        guard trimName.count <= FolderConstants.maxNameLength else { throw UseCaseError.invalidLengthName }
+
         do {
-            return try await repository.create(name: name)
+            return try await repository.create(name: trimName)
         } catch {
             AppLogger.error(error)
             throw UseCaseError(error)

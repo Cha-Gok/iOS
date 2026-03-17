@@ -23,16 +23,27 @@ public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
         typealias UseCaseError = UpdateFolderUseCaseError
         if Task.isCancelled { throw UseCaseError.cancelled }
 
-        // 폴더 이름 제한
-        guard folder.name.count <= FolderConstants.maxNameLength else { throw UseCaseError.invalidLengthName }
+        let trimName: String = folder.name.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // invalidName 유효성 검증
-        guard !folder.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        guard !trimName.isEmpty, trimName == folder.name else {
             throw UseCaseError.invalidName
         }
 
+        // 폴더 이름 제한
+        guard trimName.count <= FolderConstants.maxNameLength else { throw UseCaseError.invalidLengthName }
+
+        let updateFolder: Folder = .init(
+            id: folder.id,
+            path: folder.path,
+            name: trimName,
+            createdAt: folder.createdAt,
+            content: folder.content,
+            isDeletable: folder.isDeletable,
+            deletedAt: folder.deletedAt
+        )
         do {
-            return try await repository.update(folder)
+            return try await repository.update(updateFolder)
         } catch {
             AppLogger.error(error)
             throw UseCaseError(error)
