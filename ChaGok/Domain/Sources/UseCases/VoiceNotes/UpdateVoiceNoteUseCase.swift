@@ -20,9 +20,39 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
 
     public func execute(_ voiceNote: VoiceNote) async throws(UpdateVoiceNoteUseCaseError)
         -> VoiceNote {
-        if Task.isCancelled { throw .cancelled }
+
+        if Task.isCancelled {
+            AppLogger.error("Task cancelled")
+            throw .cancelled
+        }
+
+        // 1. 제목 유효성 검사 (공백)
+        let trimmedTitle = voiceNote.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedTitle.isEmpty || voiceNote.title != trimmedTitle {
+            throw .invalidTitle
+        }
+
+        // 2. 제목 길이 검사 (최대 50자)
+        if trimmedTitle.count > 50 {
+            throw .invalidLengthTitle
+        }
+
+        // 3. 수정 시각 및 데이터 정합성 보정 (Updated 시각 갱신)
+        let updatedNote = VoiceNote(
+            id: voiceNote.id,
+            title: trimmedTitle,
+            createdAt: voiceNote.createdAt,
+            updatedAt: Date.now,
+            folderID: voiceNote.folderID,
+            voiceRecord: voiceNote.voiceRecord,
+            keywords: voiceNote.keywords,
+            transcript: voiceNote.transcript,
+            summary: voiceNote.summary,
+            deletedAt: voiceNote.deletedAt
+        )
+
         do {
-            return try await repository.update(voiceNote)
+            return try await repository.update(updatedNote)
         } catch {
             AppLogger.error(error)
             throw UpdateVoiceNoteUseCaseError(error)
@@ -31,7 +61,7 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
 }
 
 extension UpdateVoiceNoteUseCaseError {
-    public init(_ error: VoiceNoteUpdateRepositoryError) {
+    fileprivate init(_ error: VoiceNoteUpdateRepositoryError) {
         switch error {
         case .updateFailed:
             self = .updateFailed

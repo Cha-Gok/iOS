@@ -74,7 +74,7 @@ extension FetchVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(folderID: folderID)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .fetchAllFailed(let mappedFolderID) = error else {
@@ -95,7 +95,7 @@ extension FetchVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(byId: id)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .recordNotFound(let mappedID) = error else {
@@ -117,7 +117,7 @@ extension FetchVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(folderID: folderID)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .fetchFailed(let mappedID) = error else {
@@ -138,7 +138,7 @@ extension FetchVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(folderID: folderID)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .cancelled = error else {
@@ -159,7 +159,7 @@ extension FetchVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(folderID: folderID)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .unknown(let underlying) = error else {
@@ -181,7 +181,7 @@ extension FetchVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(byId: id)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .fetchAllFailed(let mappedFolderID) = error else {
@@ -202,7 +202,7 @@ extension FetchVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(byId: id)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .fetchFailed(let mappedID) = error else {
@@ -223,7 +223,7 @@ extension FetchVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(byId: id)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .cancelled = error else {
@@ -245,7 +245,7 @@ extension FetchVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(byId: id)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .unknown(let underlying) = error else {
