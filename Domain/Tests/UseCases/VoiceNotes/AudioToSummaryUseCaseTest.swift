@@ -127,7 +127,7 @@ extension AudioToSummaryUseCaseTest {
             _ = try await useCase.execute(audioFileURL: audioURL)
             XCTFail("알 수 없는 에러 발생 시 .unknown으로 래핑되어야 합니다.")
         } catch UseCaseError.unknown(let error) {
-            XCTAssertTrue(error is STTRepositoryError)
+            XCTAssertTrue(error is Dummy)
             await sttRepository.verify()
             await summaryRepository.verify()
         } catch {

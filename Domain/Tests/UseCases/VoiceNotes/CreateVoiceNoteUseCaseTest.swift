@@ -71,7 +71,7 @@ extension CreateVoiceNoteUseCaseTest {
             _ = try await useCase.execute(voiceRecord)
             XCTFail("알 수 없는 에러 시 .unknown으로 래핑되어야 합니다.")
         } catch UseCaseError.unknown(let error) {
-            XCTAssertTrue(error is VoiceNoteCreateRepositoryError)
+            XCTAssertTrue(error is Dummy)
             await repository.verify()
         } catch {
             XCTFail("Expected .unknown, got \(error)")
