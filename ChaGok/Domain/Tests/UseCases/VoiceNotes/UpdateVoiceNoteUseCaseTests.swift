@@ -54,7 +54,7 @@ extension UpdateVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(voiceNote)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .invalidTitle = error else {
@@ -73,7 +73,7 @@ extension UpdateVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(voiceNote)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .invalidTitle = error else {
@@ -93,7 +93,7 @@ extension UpdateVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(voiceNote)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .invalidLengthTitle = error else {
@@ -113,7 +113,7 @@ extension UpdateVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(voiceNote)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .updateFailed = error else {
@@ -133,7 +133,7 @@ extension UpdateVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(voiceNote)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .cancelled = error else {
@@ -154,7 +154,7 @@ extension UpdateVoiceNoteUseCaseTests {
         // When
         do {
             _ = try await sut.execute(voiceNote)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .unknown(let underlying) = error else {
@@ -190,7 +190,7 @@ extension UpdateVoiceNoteUseCaseTests {
         // Then
         do {
             _ = try await task.value
-            XCTFail("취소 에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 취소 에러를 throw해야 하지만, 성공하거나 다른 에러를 throw했습니다.")
         } catch {
             guard case .cancelled = error as? UpdateVoiceNoteUseCaseError else {
                 return XCTFail("expected .cancelled, got \(error)")

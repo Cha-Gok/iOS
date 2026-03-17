@@ -95,7 +95,7 @@ extension AudioToSummaryUseCaseTests {
         // When
         do {
             _ = try await sut.execute(audioFileURL: audioURL)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .transcribeFailed(.transcribeFailed) = error else {
@@ -117,7 +117,7 @@ extension AudioToSummaryUseCaseTests {
         // When
         do {
             _ = try await sut.execute(audioFileURL: audioURL)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .transcribeFailed(.cancelled) = error else {
@@ -140,7 +140,7 @@ extension AudioToSummaryUseCaseTests {
         // When
         do {
             _ = try await sut.execute(audioFileURL: audioURL)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .transcribeFailed(.unknown(let error)) = error else {
@@ -166,7 +166,7 @@ extension AudioToSummaryUseCaseTests {
         // When
         do {
             _ = try await sut.execute(audioFileURL: audioURL)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .summarizeFailed(.summarizeFailed) = error else {
@@ -191,7 +191,7 @@ extension AudioToSummaryUseCaseTests {
         // When
         do {
             _ = try await sut.execute(audioFileURL: audioURL)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .summarizeFailed(.cancelled) = error else {
@@ -217,7 +217,7 @@ extension AudioToSummaryUseCaseTests {
         // When
         do {
             _ = try await sut.execute(audioFileURL: audioURL)
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
             guard case .summarizeFailed(.unknown(let error)) = error else {
