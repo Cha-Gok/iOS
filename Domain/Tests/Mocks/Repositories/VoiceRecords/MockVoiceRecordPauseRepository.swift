@@ -1,9 +1,7 @@
+@testable import Domain
 import XCTest
 
-@testable import Domain
-
 actor MockVoiceRecordPauseRepository: VoiceRecordPauseRepository {
-
     private var result: Result<Void, VoiceRecordPauseRepositoryError>?
 
     private var actualPauseRecordingCallCount = 0

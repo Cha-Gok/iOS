@@ -1,5 +1,5 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class CreateFolderUseCaseTest: XCTestCase {
     typealias UseCaseError = CreateFolderUseCaseError
@@ -8,7 +8,6 @@ final class CreateFolderUseCaseTest: XCTestCase {
 // MARK: - 성공 케이스
 
 extension CreateFolderUseCaseTest {
-
     func test_폴더_생성_성공_생성된폴더를반환한다() async throws {
         // Given
         let expectedName = "New Folder"
@@ -32,7 +31,6 @@ extension CreateFolderUseCaseTest {
 // MARK: - 에러 케이스
 
 extension CreateFolderUseCaseTest {
-
     func test_폴더_생성_이름이비어있거나앞뒤공백이있을때_invalidName에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
@@ -249,7 +247,6 @@ extension CreateFolderUseCaseTest {
 // MARK: - 취소 케이스
 
 extension CreateFolderUseCaseTest {
-
     func test_폴더_생성_리포지토리취소시_cancelled에러를던진다() async {
         // Given
         let repository = MockFolderRepository()

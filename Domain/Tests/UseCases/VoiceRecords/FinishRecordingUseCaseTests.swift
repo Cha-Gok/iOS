@@ -1,10 +1,8 @@
+@testable import Domain
 import Foundation
 import XCTest
 
-@testable import Domain
-
 final class FinishRecordingUseCaseTests: XCTestCase {
-
     private var recordingRepository: MockVoiceRecordFinishRepository!
     private var sut: DefaultFinishRecordingUseCase!
 
@@ -22,8 +20,8 @@ final class FinishRecordingUseCaseTests: XCTestCase {
 }
 
 // MARK: - 성공
-extension FinishRecordingUseCaseTests {
 
+extension FinishRecordingUseCaseTests {
     func test_execute_녹음종료에성공하면_생성된VoiceRecord를반환한다() async throws {
         // Given
         let expectedRecord = VoiceRecord.stub()
@@ -42,8 +40,8 @@ extension FinishRecordingUseCaseTests {
 }
 
 // MARK: - 실패 / 에러 매핑
-extension FinishRecordingUseCaseTests {
 
+extension FinishRecordingUseCaseTests {
     func test_execute_녹음중이아니면_notRecording에러를던진다() async {
         // Given
         await recordingRepository.setResult(.failure(.notRecording))
@@ -143,6 +141,7 @@ extension FinishRecordingUseCaseTests {
 }
 
 // MARK: - Task 취소
+
 extension FinishRecordingUseCaseTests {
     func test_execute_실행전에태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
         guard let sut else {

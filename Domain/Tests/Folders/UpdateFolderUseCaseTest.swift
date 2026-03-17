@@ -1,5 +1,5 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class UpdateFolderUseCaseTest: XCTestCase {
     typealias UseCaseError = UpdateFolderUseCaseError
@@ -8,7 +8,6 @@ final class UpdateFolderUseCaseTest: XCTestCase {
 // MARK: - 성공 케이스
 
 extension UpdateFolderUseCaseTest {
-
     func test_폴더_수정_성공_업데이트된폴더를반환한다() async throws {
         // Given
         let originalFolder = Folder.stub(
@@ -50,7 +49,6 @@ extension UpdateFolderUseCaseTest {
 // MARK: - 에러 케이스
 
 extension UpdateFolderUseCaseTest {
-
     func test_폴더_수정_이름이너무길때_invalidLengthName에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
@@ -267,7 +265,6 @@ extension UpdateFolderUseCaseTest {
 // MARK: - 취소 케이스
 
 extension UpdateFolderUseCaseTest {
-
     func test_폴더_수정_리포지토리취소시_cancelled에러를던진다() async {
         // Given
         let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")

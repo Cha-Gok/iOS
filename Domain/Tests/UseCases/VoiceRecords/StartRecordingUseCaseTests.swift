@@ -1,10 +1,8 @@
+@testable import Domain
 import Core
 import XCTest
 
-@testable import Domain
-
 final class StartRecordingUseCaseTests: XCTestCase {
-
     private var recordingRepository: MockVoiceRecordStartRepository!
     private var sut: DefaultStartRecordingUseCase!
 
@@ -24,8 +22,8 @@ final class StartRecordingUseCaseTests: XCTestCase {
 }
 
 // MARK: - 성공
-extension StartRecordingUseCaseTests {
 
+extension StartRecordingUseCaseTests {
     func test_execute_시작에성공하면_파형스트림을반환한다() async throws {
         // Given
 
@@ -50,8 +48,8 @@ extension StartRecordingUseCaseTests {
 }
 
 // MARK: - 실패 / 에러 매핑
-extension StartRecordingUseCaseTests {
 
+extension StartRecordingUseCaseTests {
     func test_execute_녹음시작에실패하면_startFailed에러를던진다() async {
         // Given
         await recordingRepository.setResult(.failure(.startFailed))
@@ -65,7 +63,8 @@ extension StartRecordingUseCaseTests {
             // Then
             guard case .startFailed = error else {
                 return XCTFail(
-                    "예상한 에러는 StartRecordingUseCaseError.startFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
+                    "예상한 에러는 StartRecordingUseCaseError.startFailed 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
             }
         }
 
@@ -98,8 +97,8 @@ extension StartRecordingUseCaseTests {
 }
 
 // MARK: - Task 취소
-extension StartRecordingUseCaseTests {
 
+extension StartRecordingUseCaseTests {
     func test_execute_실행전에태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
         guard let sut else {
             return XCTFail("sut은 반드시 설정되어야 합니다.")

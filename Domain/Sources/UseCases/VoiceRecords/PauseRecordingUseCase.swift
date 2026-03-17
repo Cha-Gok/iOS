@@ -10,7 +10,6 @@ public protocol PauseRecordingUseCase: Sendable {
 }
 
 public struct DefaultPauseRecordingUseCase: PauseRecordingUseCase {
-
     private let recordingRepository: VoiceRecordPauseRepository
 
     public init(recordingRepository: VoiceRecordPauseRepository) {
@@ -29,8 +28,8 @@ public struct DefaultPauseRecordingUseCase: PauseRecordingUseCase {
     }
 }
 
-extension PauseRecordingUseCaseError {
-    fileprivate init(_ error: VoiceRecordPauseRepositoryError) {
+fileprivate extension PauseRecordingUseCaseError {
+    init(_ error: VoiceRecordPauseRepositoryError) {
         switch error {
         case .notRecording: self = .notRecording
         case .pauseFailed: self = .pauseFailed

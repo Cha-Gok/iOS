@@ -1,5 +1,5 @@
-import Foundation
 import Core
+import Foundation
 
 /// 현재 설정된 언어를 가져오는 유즈케이스
 public protocol FetchLanguageUseCase: Sendable {

@@ -1,10 +1,8 @@
+@testable import Domain
 import Core
 import XCTest
 
-@testable import Domain
-
 final class CheckMicrophonePermissionUseCaseTest: XCTestCase {
-
     private var repository: MockMicrophonePermissionRepository!
     private var sut: DefaultCheckMicrophonePermissionUseCase!
 
@@ -22,8 +20,8 @@ final class CheckMicrophonePermissionUseCaseTest: XCTestCase {
 }
 
 // MARK: - 성공
-extension CheckMicrophonePermissionUseCaseTest {
 
+extension CheckMicrophonePermissionUseCaseTest {
     func test_execute_마이크권한이허용된경우_authorized상태를반환한다() async throws {
         // Given
         await repository.setResult(.success(.authorized))
@@ -65,8 +63,8 @@ extension CheckMicrophonePermissionUseCaseTest {
 }
 
 // MARK: - 실패 / 에러 매핑
-extension CheckMicrophonePermissionUseCaseTest {
 
+extension CheckMicrophonePermissionUseCaseTest {
     func test_execute_리포지토리에서에러가발생한경우_UseCase에러로변환하여던진다() async {
         // Given
         struct DummyError: Error {}
@@ -93,8 +91,8 @@ extension CheckMicrophonePermissionUseCaseTest {
 }
 
 // MARK: - Task 취소
-extension CheckMicrophonePermissionUseCaseTest {
 
+extension CheckMicrophonePermissionUseCaseTest {
     func test_execute_실행전에태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
         guard let sut else { return XCTFail("sut은 반드시 설정되어야 합니다.") }
         // Given

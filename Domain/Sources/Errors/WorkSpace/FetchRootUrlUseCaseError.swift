@@ -8,20 +8,19 @@ public enum FetchRootUrlUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-            case .cancelled:
-                nil
-            case .unknown(let error):
-                error.localizedDescription
+        case .cancelled:
+            nil
+        case .unknown(let error):
+            error.localizedDescription
         }
     }
 
     init(_ error: WorkSpaceRootURLRepositoryError) {
         switch error {
-            case .cancelled:
-                self = .cancelled
-            case .unknown(let error):
-                self = .unknown(error)
+        case .cancelled:
+            self = .cancelled
+        case .unknown(let error):
+            self = .unknown(error)
         }
     }
-
 }

@@ -1,5 +1,5 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class FetchWasteBasketFolderUseCaseTest: XCTestCase {
     typealias UseCaseError = FetchWasteBasketFolderUseCaseError
@@ -8,7 +8,6 @@ final class FetchWasteBasketFolderUseCaseTest: XCTestCase {
 // MARK: - Success Cases
 
 extension FetchWasteBasketFolderUseCaseTest {
-
     func test_휴지통_조회_성공_항목을반환한다() async throws {
         // Given
         let expectedItems: [WasteBasketItem] = [
@@ -49,7 +48,6 @@ extension FetchWasteBasketFolderUseCaseTest {
 // MARK: - Error Mapping Cases
 
 extension FetchWasteBasketFolderUseCaseTest {
-
     func test_휴지통_조회_리포지토리조회실패시_fetchFailed에러를던진다() async {
         // Given
         let repository = MockWasteBasketRepository()
@@ -114,7 +112,6 @@ extension FetchWasteBasketFolderUseCaseTest {
 // MARK: - Cancellation Case
 
 extension FetchWasteBasketFolderUseCaseTest {
-
     func test_휴지통_조회_작업전_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockWasteBasketRepository()

@@ -1,9 +1,7 @@
+@testable import Domain
 import XCTest
 
-@testable import Domain
-
 actor MockSTTPermissionRepository: STTPermissionRepository {
-
     private var result: Result<PermissionStatus, STTPermissionRepositoryError>?
 
     private var actualCheckSTTPermissionCallCount = 0

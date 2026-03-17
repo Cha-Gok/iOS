@@ -1,10 +1,8 @@
+@testable import Domain
 import Foundation
 import XCTest
 
-@testable import Domain
-
 actor MockSummaryRepository: SummaryRepository {
-
     private var result: Result<(keywords: [Keyword], summary: Summary), SummaryRepositoryError>?
 
     private(set) var actualCallCount = 0
@@ -31,7 +29,8 @@ actor MockSummaryRepository: SummaryRepository {
         if let expectedText = expectedTranscriptText {
             XCTAssertEqual(
                 actualTranscript?.text, expectedText, "summarize transcript text", file: file,
-                line: line)
+                line: line
+            )
         }
     }
 

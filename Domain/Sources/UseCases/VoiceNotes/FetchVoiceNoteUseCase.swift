@@ -17,7 +17,6 @@ public protocol FetchVoiceNoteUseCase: Sendable {
 }
 
 public struct DefaultFetchVoiceNoteUseCase: FetchVoiceNoteUseCase {
-
     private let repository: VoiceNoteFetchRepository
 
     public init(repository: VoiceNoteFetchRepository) {
@@ -51,8 +50,8 @@ public struct DefaultFetchVoiceNoteUseCase: FetchVoiceNoteUseCase {
     }
 }
 
-extension FetchVoiceNoteUseCaseError {
-    fileprivate init(_ error: VoiceNoteFetchRepositoryError) {
+fileprivate extension FetchVoiceNoteUseCaseError {
+    init(_ error: VoiceNoteFetchRepositoryError) {
         switch error {
         case .fetchAllFailed(let folderID):
             self = .fetchAllFailed(folderID: folderID)

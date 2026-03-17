@@ -11,23 +11,23 @@ public enum DeleteWasteBasketUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-            case .cancelled:
-                nil
-            case .deleteFailed(let method):
-                method.errorDescription
-            case .unknown(let error):
-                error.localizedDescription
+        case .cancelled:
+            nil
+        case .deleteFailed(let method):
+            method.errorDescription
+        case .unknown(let error):
+            error.localizedDescription
         }
     }
 
     init(_ error: DeleteWasteBasketRepositoryError) {
         switch error {
-            case .cancelled:
-                self = .cancelled
-            case .deleteFailed(let method):
-                self = .deleteFailed(method)
-            case .unknown(let error):
-                self = .unknown(error)
+        case .cancelled:
+            self = .cancelled
+        case .deleteFailed(let method):
+            self = .deleteFailed(method)
+        case .unknown(let error):
+            self = .unknown(error)
         }
     }
 }

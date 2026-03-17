@@ -1,9 +1,7 @@
+@testable import Domain
 import XCTest
 
-@testable import Domain
-
 final class CreateVoiceNoteUseCaseTests: XCTestCase {
-
     private var repository: MockVoiceNoteCreateRepository!
     private var sut: DefaultCreateVoiceNoteUseCase!
 
@@ -23,7 +21,6 @@ final class CreateVoiceNoteUseCaseTests: XCTestCase {
 // MARK: - 성공
 
 extension CreateVoiceNoteUseCaseTests {
-
     func test_execute_유효한입력을넣으면_생성된보이스노트를반환한다() async throws {
         // Given
         let voiceRecord = VoiceRecord.stub(
@@ -64,8 +61,8 @@ extension CreateVoiceNoteUseCaseTests {
 }
 
 // MARK: - 실패 / 에러 매핑
-extension CreateVoiceNoteUseCaseTests {
 
+extension CreateVoiceNoteUseCaseTests {
     func test_execute_재생시간이0이면_invalidDuration에러를던진다() async {
         // Given
         let voiceRecord = VoiceRecord.stub(duration: 0.0)
@@ -127,9 +124,9 @@ extension CreateVoiceNoteUseCaseTests {
         await repository.verify()
     }
 
-    func test_execute_오디오경로가파일URL이아니면_invalidAudioFilePath에러를던진다() async {
+    func test_execute_오디오경로가파일URL이아니면_invalidAudioFilePath에러를던진다() async throws {
         // Given
-        let url = URL(string: "https://example.com/test.m4a")!
+        let url = try XCTUnwrap(URL(string: "https://example.com/test.m4a"))
         let voiceRecord = VoiceRecord.stub(audioFilePath: url)
         await repository.setResult(.success(VoiceNote.stub(voiceRecord: voiceRecord)))
         await repository.expectCreate(callCount: 0)
@@ -149,10 +146,10 @@ extension CreateVoiceNoteUseCaseTests {
         await repository.verify()
     }
 
-    func test_execute_파일명이비어있으면_emptyFileName에러를던진다() async {
+    func test_execute_파일명이비어있으면_emptyFileName에러를던진다() async throws {
         // Given
         // "file://" 는 lastPathComponent가 빈 문자열이 됨
-        let url = URL(string: "file://")!
+        let url = try XCTUnwrap(URL(string: "file://"))
         let voiceRecord = VoiceRecord.stub(audioFilePath: url)
         await repository.setResult(.success(VoiceNote.stub(voiceRecord: voiceRecord)))
         await repository.expectCreate(callCount: 0)
@@ -259,7 +256,6 @@ extension CreateVoiceNoteUseCaseTests {
 // MARK: - Task 취소
 
 extension CreateVoiceNoteUseCaseTests {
-
     func test_execute_실행전에태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
         guard let sut else {
             return XCTFail("sut should be initialized in setUp")

@@ -1,6 +1,6 @@
+@testable import Core
 import Foundation
 import XCTest
-@testable import Core
 
 final class AppLoggerProtocolTests: XCTestCase {
     override func setUp() {

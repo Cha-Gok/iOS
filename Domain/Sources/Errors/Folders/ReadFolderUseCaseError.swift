@@ -12,28 +12,27 @@ public enum ReadFolderUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-            case .cancelled:
-                nil
-            case .notFound:
-                "해당 폴더를 찾을 수 없습니다."
-            case .fetchFailed:
-                "폴더 목록을 불러오는데 실패했습니다."
-            case .unknown(let error):
-                error.localizedDescription
+        case .cancelled:
+            nil
+        case .notFound:
+            "해당 폴더를 찾을 수 없습니다."
+        case .fetchFailed:
+            "폴더 목록을 불러오는데 실패했습니다."
+        case .unknown(let error):
+            error.localizedDescription
         }
     }
 
     init(_ error: FolderRepositoryError) {
         switch error {
-            case .cancelled:
-                self = .cancelled
-            case .notFound:
-                self = .notFound
-            case .fetchFailed:
-                self = .fetchFailed
-            default:
-                self = .unknown(error)
+        case .cancelled:
+            self = .cancelled
+        case .notFound:
+            self = .notFound
+        case .fetchFailed:
+            self = .fetchFailed
+        default:
+            self = .unknown(error)
         }
     }
-
 }

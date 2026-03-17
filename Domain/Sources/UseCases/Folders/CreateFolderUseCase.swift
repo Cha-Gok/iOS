@@ -1,5 +1,5 @@
-import Foundation
 import Core
+import Foundation
 
 /// 폴더 생성 유스케이스 프로토콜.
 /// FileManager를 통한 실제 디렉토리 생성과 CoreData 모델 저장을 요청합니다.
@@ -12,7 +12,6 @@ public protocol CreateFolderUseCase: Sendable {
 }
 
 public struct DefaultCreateFolderUseCase: CreateFolderUseCase {
-
     private let repository: FolderRepository
 
     public init(repository: FolderRepository) {

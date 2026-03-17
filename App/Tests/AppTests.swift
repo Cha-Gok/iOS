@@ -1,4 +1,5 @@
-import Testing
 @testable import App
+import Testing
 
-@Test func placeholder() {}
+@Test
+func placeholder() {}

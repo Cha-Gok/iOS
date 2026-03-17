@@ -1,9 +1,7 @@
+@testable import Domain
 import XCTest
 
-@testable import Domain
-
 actor MockMicrophonePermissionRepository: MicrophonePermissionRepository {
-
     private var result: Result<PermissionStatus, MicrophonePermissionRepositoryError>?
 
     private var actualCheckMicrophonePermissionCallCount = 0
@@ -30,7 +28,8 @@ actor MockMicrophonePermissionRepository: MicrophonePermissionRepository {
     }
 
     func checkMicrophonePermission() async throws(MicrophonePermissionRepositoryError)
-        -> PermissionStatus {
+        -> PermissionStatus
+    {
         actualCheckMicrophonePermissionCallCount += 1
 
         switch result {

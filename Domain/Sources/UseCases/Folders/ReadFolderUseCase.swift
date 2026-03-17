@@ -1,5 +1,5 @@
-import Foundation
 import Core
+import Foundation
 
 /// 폴더 목록 조회 유스케이스 프로토콜.
 /// CoreData에 저장된 모든 폴더 정보를 조회합니다.
@@ -11,7 +11,6 @@ public protocol ReadFolderUseCase: Sendable {
 }
 
 public struct DefaultReadFolderUseCase: ReadFolderUseCase {
-
     private let repository: FolderRepository
 
     public init(repository: FolderRepository) {
@@ -28,5 +27,4 @@ public struct DefaultReadFolderUseCase: ReadFolderUseCase {
             throw UseCaseError(error)
         }
     }
-
 }

@@ -8,10 +8,10 @@ public enum WorkSpaceRootURLRepositoryError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-            case .cancelled:
-                nil
-            case .unknown(let error):
-                error.localizedDescription
+        case .cancelled:
+            nil
+        case .unknown(let error):
+            error.localizedDescription
         }
     }
 }

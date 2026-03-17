@@ -6,5 +6,6 @@ public protocol SummaryRepository: Sendable {
     /// - Parameter transcript: 분석할 전사 엔티티
     /// - Returns: 키워드 배열과 요약 엔티티의 튜플
     /// - Throws: `SummaryRepositoryError` (분석·요약 실패)
-    func summarize(transcript: Transcript) async throws(SummaryRepositoryError) -> (keywords: [Keyword], summary: Summary)
+    func summarize(transcript: Transcript) async throws(SummaryRepositoryError)
+        -> (keywords: [Keyword], summary: Summary)
 }

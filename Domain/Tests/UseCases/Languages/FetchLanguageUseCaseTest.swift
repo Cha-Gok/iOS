@@ -1,5 +1,5 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class FetchLanguageUseCaseTest: XCTestCase {
     typealias UseCaseError = FetchLanguagesUseCaseError
@@ -8,7 +8,6 @@ final class FetchLanguageUseCaseTest: XCTestCase {
 // MARK: - Success Cases
 
 extension FetchLanguageUseCaseTest {
-
     func test_execute_언어조회에성공하면_Language를반환한다() async throws {
         // Given
         let expectedLanguage: Language = .ko
@@ -30,7 +29,6 @@ extension FetchLanguageUseCaseTest {
 // MARK: - Error Cases
 
 extension FetchLanguageUseCaseTest {
-
     func test_execute_언어조회실패시_notFound에러를던진다() async {
         // Given
         let repository = MockLanguageRepository()
@@ -113,11 +111,11 @@ extension FetchLanguageUseCaseTest {
             XCTFail("Repository가 unknown 에러를 던지면 UseCase도 .unknown 에러를 던져야 합니다.")
         } catch {
             switch error {
-                case .unknown(let repoError):
-                    XCTAssertTrue(repoError is Dummy)
-                    await repository.verify()
-                default:
-                    XCTFail("Expected .unknown, got \(error)")
+            case .unknown(let repoError):
+                XCTAssertTrue(repoError is Dummy)
+                await repository.verify()
+            default:
+                XCTFail("Expected .unknown, got \(error)")
             }
         }
     }

@@ -17,22 +17,22 @@ public protocol AppLoggerProtocol {
 ///   - line: 줄 번호
 public extension AppLoggerProtocol {
     static func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
-        Self.log(.debug, message: message, file: file, function: function, line: line)
+        log(.debug, message: message, file: file, function: function, line: line)
     }
 
     static func info(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
-        Self.log(.info, message: message, file: file, function: function, line: line)
+        log(.info, message: message, file: file, function: function, line: line)
     }
 
     static func warning(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
-        Self.log(.warning, message: message, file: file, function: function, line: line)
+        log(.warning, message: message, file: file, function: function, line: line)
     }
 
     static func error(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
-        Self.log(.error, message: message, file: file, function: function, line: line)
+        log(.error, message: message, file: file, function: function, line: line)
     }
 
     static func error(_ error: Swift.Error, file: String = #file, function: String = #function, line: Int = #line) {
-        Self.log(.error, message: String(describing: error), file: file, function: function, line: line)
+        log(.error, message: String(describing: error), file: file, function: function, line: line)
     }
 }

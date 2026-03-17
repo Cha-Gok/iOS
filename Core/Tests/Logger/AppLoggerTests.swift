@@ -1,6 +1,6 @@
+@testable import Core
 import Foundation
 import XCTest
-@testable import Core
 
 final class AppLoggerTests: XCTestCase {
     func test_log_호출시_크래시_없음() {
@@ -19,7 +19,7 @@ final class AppLoggerTests: XCTestCase {
     }
 
     func test_긴_메시지_처리() {
-        let longMessage = String(repeating: "가", count: 10_000)
+        let longMessage = String(repeating: "가", count: 10000)
         AppLogger.info(longMessage)
     }
 

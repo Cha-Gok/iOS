@@ -1,10 +1,8 @@
+@testable import Domain
 import Foundation
 import XCTest
 
-@testable import Domain
-
 final class AudioToSummaryUseCaseTests: XCTestCase {
-
     private var sttRepository: MockSTTRepository!
     private var summaryRepository: MockSummaryRepository!
     private var sut: DefaultAudioToSummaryUseCase!
@@ -30,7 +28,6 @@ final class AudioToSummaryUseCaseTests: XCTestCase {
 // MARK: - 성공
 
 extension AudioToSummaryUseCaseTests {
-
     func test_execute_모든과정이성공하면_결과를반환한다() async throws {
         // Given
         let audioURL = URL(fileURLWithPath: "/tmp/test.m4a")
@@ -84,7 +81,6 @@ extension AudioToSummaryUseCaseTests {
 // MARK: - 실패
 
 extension AudioToSummaryUseCaseTests {
-
     func test_execute_전사가실패하면_transcribeFailed에러를던진다() async {
         // Given
         let audioURL = URL(fileURLWithPath: "/tmp/test.m4a")
@@ -234,7 +230,6 @@ extension AudioToSummaryUseCaseTests {
 // MARK: - Task 취소
 
 extension AudioToSummaryUseCaseTests {
-
     func test_execute_지점1_실행전에태스크가취소되면_cancelled에러를던진다() async {
         guard let sut else {
             return XCTFail("sut가 setup되지 않았습니다.")

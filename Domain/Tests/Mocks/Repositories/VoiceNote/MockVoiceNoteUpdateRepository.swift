@@ -1,10 +1,8 @@
+@testable import Domain
 import Foundation
 import XCTest
 
-@testable import Domain
-
 actor MockVoiceNoteUpdateRepository: VoiceNoteUpdateRepository {
-
     private var result: Result<VoiceNote, VoiceNoteUpdateRepositoryError>?
 
     private(set) var updateCallCount = 0

@@ -1,5 +1,5 @@
-import Foundation
 @testable import Domain
+import Foundation
 
 extension Folder {
     static func stub(

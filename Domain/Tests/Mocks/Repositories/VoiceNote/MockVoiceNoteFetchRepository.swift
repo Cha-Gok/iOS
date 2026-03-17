@@ -1,10 +1,8 @@
+@testable import Domain
 import Foundation
 import XCTest
 
-@testable import Domain
-
 actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
-
     private var fetchAllResult: Result<[VoiceNote], VoiceNoteFetchRepositoryError>?
     private var fetchByIdResult: Result<VoiceNote, VoiceNoteFetchRepositoryError>?
 

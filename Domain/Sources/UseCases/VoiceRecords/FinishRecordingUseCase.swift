@@ -11,7 +11,6 @@ public protocol FinishRecordingUseCase: Sendable {
 }
 
 public struct DefaultFinishRecordingUseCase: FinishRecordingUseCase {
-
     private let recordingRepository: VoiceRecordFinishRepository
 
     public init(recordingRepository: VoiceRecordFinishRepository) {
@@ -30,8 +29,8 @@ public struct DefaultFinishRecordingUseCase: FinishRecordingUseCase {
     }
 }
 
-extension FinishRecordingUseCaseError {
-    fileprivate init(_ error: VoiceRecordFinishRepositoryError) {
+fileprivate extension FinishRecordingUseCaseError {
+    init(_ error: VoiceRecordFinishRepositoryError) {
         switch error {
         case .notRecording: self = .notRecording
         case .finishFailed: self = .finishFailed

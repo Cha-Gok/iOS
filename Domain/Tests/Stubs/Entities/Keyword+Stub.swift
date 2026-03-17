@@ -1,6 +1,5 @@
-import Foundation
-
 @testable import Domain
+import Foundation
 
 extension Keyword {
     static func stub(

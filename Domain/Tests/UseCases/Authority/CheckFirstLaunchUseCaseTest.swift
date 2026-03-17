@@ -1,8 +1,7 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class CheckFirstLaunchUseCaseTest: XCTestCase {
-
     func test_동작_첫실행일때_리포지토리가True를반환하면_UseCase도True를반환한다() {
         // Given
         let repository = MockCheckFirstLaunchRepository()

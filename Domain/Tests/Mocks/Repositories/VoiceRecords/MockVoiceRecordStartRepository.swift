@@ -1,10 +1,8 @@
+@testable import Domain
 import Core
 import XCTest
 
-@testable import Domain
-
 actor MockVoiceRecordStartRepository: VoiceRecordStartRepository {
-
     private var result: Result<AsyncStream<Waveform>, VoiceRecordStartRepositoryError>?
 
     private var actualStartRecordingCallCount = 0

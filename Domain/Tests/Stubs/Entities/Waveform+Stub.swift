@@ -1,6 +1,5 @@
-import Foundation
-
 @testable import Domain
+import Foundation
 
 extension Waveform {
     static func stub(

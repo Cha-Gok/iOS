@@ -1,5 +1,5 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class DeleteWasteBasketUseCaseTest: XCTestCase {
     typealias UseCaseError = DeleteWasteBasketUseCaseError
@@ -8,7 +8,6 @@ final class DeleteWasteBasketUseCaseTest: XCTestCase {
 // MARK: - Success Cases
 
 extension DeleteWasteBasketUseCaseTest {
-
     func test_휴지통_삭제_전체삭제_성공_리포지토리를호출한다() async throws {
         // Given
         let repository = MockWasteBasketRepository()
@@ -63,7 +62,6 @@ extension DeleteWasteBasketUseCaseTest {
 // MARK: - Error Mapping Cases
 
 extension DeleteWasteBasketUseCaseTest {
-
     func test_휴지통_삭제_리포지토리삭제실패시_deleteFailed에러를던진다() async {
         // Given
         let method = DeleteWasteBasketMethod.all
@@ -174,7 +172,6 @@ extension DeleteWasteBasketUseCaseTest {
 // MARK: - Cancellation Case
 
 extension DeleteWasteBasketUseCaseTest {
-
     func test_휴지통_삭제_작업전_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockWasteBasketRepository()

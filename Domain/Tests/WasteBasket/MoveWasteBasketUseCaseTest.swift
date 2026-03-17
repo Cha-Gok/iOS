@@ -1,5 +1,5 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class MoveWasteBasketUseCaseTest: XCTestCase {
     typealias UseCaseError = MoveWasteBasketUseCaseError
@@ -8,7 +8,6 @@ final class MoveWasteBasketUseCaseTest: XCTestCase {
 // MARK: - Success Cases
 
 extension MoveWasteBasketUseCaseTest {
-
     func test_휴지통_이동_다중이동_성공_리포지토리를호출한다() async throws {
         // Given
         let items: [WasteBasketItem] = [
@@ -48,7 +47,6 @@ extension MoveWasteBasketUseCaseTest {
 // MARK: - Error Mapping Cases
 
 extension MoveWasteBasketUseCaseTest {
-
     func test_휴지통_이동_리포지토리이동실패시_moveFailed에러를던진다() async {
         // Given
         let method = MoveWasteBasketMethod.single(item: .folder(id: UUID()))
@@ -139,7 +137,6 @@ extension MoveWasteBasketUseCaseTest {
 // MARK: - Cancellation Case
 
 extension MoveWasteBasketUseCaseTest {
-
     func test_휴지통_이동_작업전_즉시cancelled에러를던진다() async {
         // Given
         let item: WasteBasketItem = .folder(id: UUID())

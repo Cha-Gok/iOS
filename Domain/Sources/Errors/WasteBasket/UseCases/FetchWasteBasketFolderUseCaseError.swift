@@ -11,23 +11,23 @@ public enum FetchWasteBasketFolderUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-            case .cancelled:
-                nil
-            case .fetchFailed:
-                "조회에 실패하였습니다"
-            case .unknown(let error):
-                error.localizedDescription
+        case .cancelled:
+            nil
+        case .fetchFailed:
+            "조회에 실패하였습니다"
+        case .unknown(let error):
+            error.localizedDescription
         }
     }
 
     init(_ error: FetchWasteBasketRepositoryError) {
         switch error {
-            case .cancelled:
-                self = .cancelled
-            case .fetchFailed:
-                self = .fetchFailed
-            case .unknown(let error):
-                self = .unknown(error)
+        case .cancelled:
+            self = .cancelled
+        case .fetchFailed:
+            self = .fetchFailed
+        case .unknown(let error):
+            self = .unknown(error)
         }
     }
 }

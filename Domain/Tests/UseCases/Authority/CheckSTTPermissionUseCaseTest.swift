@@ -1,10 +1,8 @@
+@testable import Domain
 import Core
 import XCTest
 
-@testable import Domain
-
 final class CheckSTTPermissionUseCaseTest: XCTestCase {
-
     private var repository: MockSTTPermissionRepository!
     private var sut: DefaultCheckSTTPermissionUseCase!
 
@@ -22,8 +20,8 @@ final class CheckSTTPermissionUseCaseTest: XCTestCase {
 }
 
 // MARK: - 성공
-extension CheckSTTPermissionUseCaseTest {
 
+extension CheckSTTPermissionUseCaseTest {
     func test_execute_STT권한이허용된경우_authorized상태를반환한다() async throws {
         // Given
         await repository.setResult(.success(.authorized))
@@ -65,8 +63,8 @@ extension CheckSTTPermissionUseCaseTest {
 }
 
 // MARK: - 실패
-extension CheckSTTPermissionUseCaseTest {
 
+extension CheckSTTPermissionUseCaseTest {
     func test_execute_리포지토리에서에러가발생한경우_UseCase에러로변환하여던진다() async {
         // Given
         struct DummyError: Error {}
@@ -81,7 +79,8 @@ extension CheckSTTPermissionUseCaseTest {
         } catch {
             guard case .unknown(let error) = error else {
                 return XCTFail(
-                    "예상한 에러는 CheckSTTPermissionUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다.")
+                    "예상한 에러는 CheckSTTPermissionUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
             }
             XCTAssertTrue(error is DummyError)
         }
@@ -92,8 +91,8 @@ extension CheckSTTPermissionUseCaseTest {
 }
 
 // MARK: - Task 취소
-extension CheckSTTPermissionUseCaseTest {
 
+extension CheckSTTPermissionUseCaseTest {
     func test_execute_실행전에태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
         guard let sut else { return XCTFail("sut은 반드시 설정되어야 합니다.") }
         // Given
@@ -111,12 +110,12 @@ extension CheckSTTPermissionUseCaseTest {
         } catch {
             guard case .cancelled = error as? CheckSTTPermissionUseCaseError else {
                 return XCTFail(
-                    "예상한 에러는 CheckSTTPermissionUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
+                    "예상한 에러는 CheckSTTPermissionUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
             }
         }
 
         // Then
         await repository.verify()
     }
-
 }

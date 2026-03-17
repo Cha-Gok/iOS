@@ -1,8 +1,7 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 actor MockFolderRepository: FolderRepository {
-
     // Results
     private var createResult: Result<Folder, FolderRepositoryError>?
     private var fetchAllResult: Result<[Folder], FolderRepositoryError>?
@@ -28,15 +27,15 @@ actor MockFolderRepository: FolderRepository {
     // MARK: - Setup
 
     func setCreateResult(_ result: Result<Folder, FolderRepositoryError>) {
-        self.createResult = result
+        createResult = result
     }
 
     func setFetchAllResult(_ result: Result<[Folder], FolderRepositoryError>) {
-        self.fetchAllResult = result
+        fetchAllResult = result
     }
 
     func setUpdateResult(_ result: Result<Folder, FolderRepositoryError>) {
-        self.updateResult = result
+        updateResult = result
     }
 
     // MARK: - Expectations
@@ -62,7 +61,7 @@ actor MockFolderRepository: FolderRepository {
             XCTAssertEqual(createCallCount, expected, "create call count mismatch", file: file, line: line)
         }
 
-        if let expectedName = expectedName {
+        if let expectedName {
             XCTAssertEqual(actualName, expectedName, "create name argument mismatch", file: file, line: line)
         }
 
@@ -85,14 +84,14 @@ actor MockFolderRepository: FolderRepository {
         actualName = name
 
         switch createResult {
-            case .success(let folder):
-                return folder
-            case .failure(let error):
-                throw error
-            case .none:
-                XCTFail("MockVoiceNoteCreateRepository.createResult가 설정되지 않았습니다.")
-                let error = NSError(domain: "MockFolderRepository.createResult", code: 0)
-                throw .unknown(error)
+        case .success(let folder):
+            return folder
+        case .failure(let error):
+            throw error
+        case .none:
+            XCTFail("MockVoiceNoteCreateRepository.createResult가 설정되지 않았습니다.")
+            let error = NSError(domain: "MockFolderRepository.createResult", code: 0)
+            throw .unknown(error)
         }
     }
 
@@ -100,14 +99,14 @@ actor MockFolderRepository: FolderRepository {
         fetchAllCallCount += 1
 
         switch fetchAllResult {
-            case .success(let folders):
-                return folders
-            case .failure(let error):
-                throw error
-            case .none:
-                XCTFail("MockVoiceNoteCreateRepository.fetchAll이 설정되지 않았습니다.")
-                let error = NSError(domain: "MockFolderRepository.fetchAllResult", code: 0)
-                throw .unknown(error)
+        case .success(let folders):
+            return folders
+        case .failure(let error):
+            throw error
+        case .none:
+            XCTFail("MockVoiceNoteCreateRepository.fetchAll이 설정되지 않았습니다.")
+            let error = NSError(domain: "MockFolderRepository.fetchAllResult", code: 0)
+            throw .unknown(error)
         }
     }
 
@@ -116,14 +115,14 @@ actor MockFolderRepository: FolderRepository {
         actualFolder = folder
 
         switch updateResult {
-            case .success(let updatedFolder):
-                return updatedFolder
-            case .failure(let error):
-                throw error
-            case .none:
-                XCTFail("MockVoiceNoteCreateRepository.updateResult가 설정되지 않았습니다.")
-                let error = NSError(domain: "MockFolderRepository.updateResult", code: 0)
-                throw .unknown(error)
+        case .success(let updatedFolder):
+            return updatedFolder
+        case .failure(let error):
+            throw error
+        case .none:
+            XCTFail("MockVoiceNoteCreateRepository.updateResult가 설정되지 않았습니다.")
+            let error = NSError(domain: "MockFolderRepository.updateResult", code: 0)
+            throw .unknown(error)
         }
     }
 }

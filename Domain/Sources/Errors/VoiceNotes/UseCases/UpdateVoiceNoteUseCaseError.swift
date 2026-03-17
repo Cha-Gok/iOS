@@ -2,7 +2,6 @@ import Foundation
 
 /// 음성 메모 업데이트 유스케이스에서 발생할 수 있는 에러.
 public enum UpdateVoiceNoteUseCaseError: LocalizedError, Sendable {
-
     /// 음성 메모 제목이 유효하지 않음 (공백 등).
     case invalidTitle
 

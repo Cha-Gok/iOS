@@ -2,7 +2,6 @@ import Foundation
 
 /// 음성 메모 생성 리포지토리에서 발생할 수 있는 에러 (ISP).
 public enum VoiceNoteCreateRepositoryError: LocalizedError, Sendable {
-
     /// 음성 메모 생성 실패 (저장/디스크/권한 등).
     case createFailed
 

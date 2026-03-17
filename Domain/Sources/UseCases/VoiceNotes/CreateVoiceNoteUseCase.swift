@@ -11,7 +11,6 @@ public protocol CreateVoiceNoteUseCase: Sendable {
 }
 
 public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
-
     private let repository: VoiceNoteCreateRepository
 
     public init(repository: VoiceNoteCreateRepository) {
@@ -19,7 +18,8 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
     }
 
     public func execute(_ voiceRecord: VoiceRecord) async throws(CreateVoiceNoteUseCaseError)
-        -> VoiceNote {
+        -> VoiceNote
+    {
         if Task.isCancelled { throw .cancelled }
 
         if !voiceRecord.duration.isFinite || voiceRecord.duration <= 0 {
@@ -57,8 +57,8 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
     }
 }
 
-extension CreateVoiceNoteUseCaseError {
-    fileprivate init(_ error: VoiceNoteCreateRepositoryError) {
+fileprivate extension CreateVoiceNoteUseCaseError {
+    init(_ error: VoiceNoteCreateRepositoryError) {
         switch error {
         case .createFailed:
             self = .createFailed

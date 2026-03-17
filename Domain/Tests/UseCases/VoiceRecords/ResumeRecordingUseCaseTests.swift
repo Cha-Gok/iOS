@@ -1,9 +1,7 @@
+@testable import Domain
 import XCTest
 
-@testable import Domain
-
 final class ResumeRecordingUseCaseTests: XCTestCase {
-
     private var recordingRepository: MockVoiceRecordResumeRepository!
     private var sut: DefaultResumeRecordingUseCase!
 
@@ -21,8 +19,8 @@ final class ResumeRecordingUseCaseTests: XCTestCase {
 }
 
 // MARK: - 성공
-extension ResumeRecordingUseCaseTests {
 
+extension ResumeRecordingUseCaseTests {
     func test_execute_녹음재개에성공하면_완료된다() async throws {
         // Given
         await recordingRepository.setResult(.success(()))
@@ -37,8 +35,8 @@ extension ResumeRecordingUseCaseTests {
 }
 
 // MARK: - 실패 / 에러 매핑
-extension ResumeRecordingUseCaseTests {
 
+extension ResumeRecordingUseCaseTests {
     func test_execute_일시정지상태가아니면_notPaused에러를던진다() async {
         // Given
         await recordingRepository.setResult(.failure(.notPaused))
@@ -123,8 +121,8 @@ extension ResumeRecordingUseCaseTests {
 }
 
 // MARK: - Task 취소
-extension ResumeRecordingUseCaseTests {
 
+extension ResumeRecordingUseCaseTests {
     func test_execute_실행전에태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
         guard let sut else {
             XCTFail("sut은 반드시 설정되어야 합니다.")

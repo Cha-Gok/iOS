@@ -1,10 +1,8 @@
+@testable import Domain
 import Foundation
 import XCTest
 
-@testable import Domain
-
 actor MockVoiceNoteCreateRepository: VoiceNoteCreateRepository {
-
     private var result: Result<VoiceNote, VoiceNoteCreateRepositoryError>?
 
     private(set) var createCallCount = 0
@@ -44,7 +42,8 @@ actor MockVoiceNoteCreateRepository: VoiceNoteCreateRepository {
     }
 
     func create(_ voiceRecord: VoiceRecord) async throws(VoiceNoteCreateRepositoryError)
-        -> VoiceNote {
+        -> VoiceNote
+    {
         createCallCount += 1
         actualVoiceRecord = voiceRecord
 

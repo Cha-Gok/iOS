@@ -12,14 +12,14 @@ public enum WorkSpaceBasicFolderRepositoryError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-            case .cancelled:
-                nil
-            case .notFound:
-                "기본 폴더를 찾을 수 없습니다"
-            case .createFailed:
-                "기본 폴더를 생성 할 수 없습니다"
-            case .unknown(let error):
-                error.localizedDescription
+        case .cancelled:
+            nil
+        case .notFound:
+            "기본 폴더를 찾을 수 없습니다"
+        case .createFailed:
+            "기본 폴더를 생성 할 수 없습니다"
+        case .unknown(let error):
+            error.localizedDescription
         }
     }
 }

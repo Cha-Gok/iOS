@@ -1,19 +1,18 @@
+@testable import Domain
 import Foundation
 import XCTest
-@testable import Domain
 
 final class MockCheckFirstLaunchRepository: CheckFirstLaunchRepository, @unchecked Sendable {
-
     private var returnValue: Bool = false
     private(set) var checkAndMarkFirstLaunchCallCount = 0
     private var expectedCallCount: Int?
 
     func setReturnValue(_ value: Bool) {
-        self.returnValue = value
+        returnValue = value
     }
 
     func expectCheckAndMarkFirstLaunch(callCount: Int) {
-        self.expectedCallCount = callCount
+        expectedCallCount = callCount
     }
 
     func verify(file: StaticString = #filePath, line: UInt = #line) {

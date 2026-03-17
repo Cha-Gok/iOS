@@ -1,5 +1,5 @@
-import Foundation
 import Core
+import Foundation
 
 /// 휴지통 삭제 유스케이스 프로토콜.
 public protocol DeleteWasteBasketUseCase: Sendable {
@@ -10,7 +10,6 @@ public protocol DeleteWasteBasketUseCase: Sendable {
 }
 
 public struct DefaultDeleteWasteBasketUseCase: DeleteWasteBasketUseCase {
-
     private let repository: WasteBasketRepository
 
     public init(repository: WasteBasketRepository) {
@@ -22,12 +21,12 @@ public struct DefaultDeleteWasteBasketUseCase: DeleteWasteBasketUseCase {
         if Task.isCancelled { throw UseCaseError.cancelled }
         do {
             switch method {
-                case .all:
-                    try await repository.allClear()
-                case .multiple(let items):
-                    try await repository.deleteAll(items: items)
-                case .single(let item):
-                    try await repository.delete(item: item)
+            case .all:
+                try await repository.allClear()
+            case .multiple(let items):
+                try await repository.deleteAll(items: items)
+            case .single(let item):
+                try await repository.delete(item: item)
             }
         } catch {
             AppLogger.error(error)

@@ -12,28 +12,27 @@ public enum FetchBasicFolderUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-            case .cancelled:
-                nil
-            case .notFound:
-                "기본 폴더를 찾을 수 없습니다"
-            case .createFailed:
-                "기본 폴더를 생성 할 수 없습니다"
-            case .unknown(let error):
-                error.localizedDescription
+        case .cancelled:
+            nil
+        case .notFound:
+            "기본 폴더를 찾을 수 없습니다"
+        case .createFailed:
+            "기본 폴더를 생성 할 수 없습니다"
+        case .unknown(let error):
+            error.localizedDescription
         }
     }
 
     init(_ error: WorkSpaceBasicFolderRepositoryError) {
         switch error {
-            case .cancelled:
-                self = .cancelled
-            case .notFound:
-                self = .notFound
-            case .createFailed:
-                self = .createFailed
-            case .unknown(let err):
-                self = .unknown(err)
+        case .cancelled:
+            self = .cancelled
+        case .notFound:
+            self = .notFound
+        case .createFailed:
+            self = .createFailed
+        case .unknown(let err):
+            self = .unknown(err)
         }
     }
-
 }

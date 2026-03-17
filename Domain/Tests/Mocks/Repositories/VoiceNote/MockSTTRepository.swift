@@ -1,10 +1,8 @@
+@testable import Domain
 import Foundation
 import XCTest
 
-@testable import Domain
-
 actor MockSTTRepository: STTRepository {
-
     private var result: Result<Transcript, STTRepositoryError>?
 
     private(set) var actualCallCount = 0
@@ -25,11 +23,13 @@ actor MockSTTRepository: STTRepository {
     func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedCallCount {
             XCTAssertEqual(
-                actualCallCount, expected, "transcribe callCount", file: file, line: line)
+                actualCallCount, expected, "transcribe callCount", file: file, line: line
+            )
         }
         if let expectedURL = expectedAudioFileURL {
             XCTAssertEqual(
-                actualAudioFileURL, expectedURL, "transcribe audioFileURL", file: file, line: line)
+                actualAudioFileURL, expectedURL, "transcribe audioFileURL", file: file, line: line
+            )
         }
     }
 

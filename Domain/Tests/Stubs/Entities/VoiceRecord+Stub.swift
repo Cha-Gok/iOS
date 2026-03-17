@@ -1,6 +1,5 @@
-import Foundation
-
 @testable import Domain
+import Foundation
 
 extension VoiceRecord {
     static func stub(

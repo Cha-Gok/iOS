@@ -1,5 +1,5 @@
-import Foundation
 import Core
+import Foundation
 
 /// 폴더 정보 업데이트 유스케이스 프로토콜.
 /// 폴더 이름 변경 등 기존 폴더의 정보를 수정합니다.
@@ -12,7 +12,6 @@ public protocol UpdateFolderUseCase: Sendable {
 }
 
 public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
-
     private let repository: FolderRepository
 
     public init(repository: FolderRepository) {
@@ -49,5 +48,4 @@ public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
             throw UseCaseError(error)
         }
     }
-
 }

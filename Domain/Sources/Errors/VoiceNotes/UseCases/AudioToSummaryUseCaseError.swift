@@ -2,7 +2,6 @@ import Foundation
 
 /// 오디오-요약 유스케이스에서 발생할 수 있는 에러.
 public enum AudioToSummaryUseCaseError: LocalizedError, Sendable {
-
     /// 음성 인식(전사) 실패.
     case transcribeFailed(STTRepositoryError)
 

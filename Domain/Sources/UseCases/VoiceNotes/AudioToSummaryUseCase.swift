@@ -11,7 +11,6 @@ public protocol AudioToSummaryUseCase: Sendable {
 }
 
 public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
-
     private let sttRepository: STTRepository
     private let summaryRepository: SummaryRepository
 
@@ -24,7 +23,8 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
     }
 
     public func execute(audioFileURL: URL) async throws(AudioToSummaryUseCaseError)
-        -> AudioToSummaryResult {
+        -> AudioToSummaryResult
+    {
         do {
             try Task.checkCancellation()
 
@@ -48,8 +48,8 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
     }
 }
 
-extension AudioToSummaryUseCaseError {
-    fileprivate init(_ error: Error) {
+fileprivate extension AudioToSummaryUseCaseError {
+    init(_ error: Error) {
         if error is CancellationError {
             self = .cancelled
         } else if let error = error as? STTRepositoryError {

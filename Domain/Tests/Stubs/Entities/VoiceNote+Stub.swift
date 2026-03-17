@@ -1,6 +1,5 @@
-import Foundation
-
 @testable import Domain
+import Foundation
 
 extension VoiceNote {
     static func stub(

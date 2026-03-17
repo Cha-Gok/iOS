@@ -1,5 +1,5 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class FetchBasicFolderUseCaseTest: XCTestCase {
     typealias UseCaseError = FetchBasicFolderUseCaseError
@@ -8,7 +8,6 @@ final class FetchBasicFolderUseCaseTest: XCTestCase {
 // MARK: - Success Cases
 
 extension FetchBasicFolderUseCaseTest {
-
     func test_execute_기본폴더조회에성공하면_Folder를반환한다() async throws {
         // Given
         let expectedFolder = Folder(path: URL(fileURLWithPath: "/test"), name: "Basic Folder")
@@ -31,7 +30,6 @@ extension FetchBasicFolderUseCaseTest {
 // MARK: - Error Cases
 
 extension FetchBasicFolderUseCaseTest {
-
     func test_execute_기본폴더를찾을수없으면_notFound에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
@@ -99,7 +97,6 @@ extension FetchBasicFolderUseCaseTest {
 // MARK: - Error Cases ( Cancelled )
 
 extension FetchBasicFolderUseCaseTest {
-
     func test_execute_기본폴더조회중취소되면_cancelled에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()

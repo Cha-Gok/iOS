@@ -1,5 +1,5 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class FetchRootUrlUseCaseTest: XCTestCase {
     typealias UseCaseError = FetchRootUrlUseCaseError
@@ -8,7 +8,6 @@ final class FetchRootUrlUseCaseTest: XCTestCase {
 // MARK: - Success Cases
 
 extension FetchRootUrlUseCaseTest {
-
     func test_execute_루트URL조회에성공하면_URL을반환한다() async throws {
         // Given
         let expectedURL = URL.applicationSupportDirectory
@@ -30,7 +29,6 @@ extension FetchRootUrlUseCaseTest {
 // MARK: - Error Cases
 
 extension FetchRootUrlUseCaseTest {
-
     func test_execute_루트URL조회중취소되면_cancelled에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
@@ -63,7 +61,7 @@ extension FetchRootUrlUseCaseTest {
         // When & Then
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-             _ = try await useCase.execute()
+            _ = try await useCase.execute()
         }
 
         do {
@@ -91,13 +89,13 @@ extension FetchRootUrlUseCaseTest {
         do {
             _ = try await useCase.execute()
             XCTFail("Repository가 unknown 에러를 던지면 UseCase도 .unknown 에러를 던져야 합니다.")
-        } catch let error {
+        } catch {
             switch error {
-                case .unknown(let repoError):
-                    XCTAssertTrue(repoError is Dummy)
-                    await repository.verify()
-                default:
-                    XCTFail("Expected .unknown, got \(error)")
+            case .unknown(let repoError):
+                XCTAssertTrue(repoError is Dummy)
+                await repository.verify()
+            default:
+                XCTFail("Expected .unknown, got \(error)")
             }
         }
     }

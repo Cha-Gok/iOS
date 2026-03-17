@@ -1,5 +1,5 @@
-import Foundation
 import Core
+import Foundation
 
 /// 기본 폴더의의 존재 유무 판단 및 생성을 반환하는 유즈케이스
 public protocol FetchBasicFolderUseCase: Sendable {
@@ -12,7 +12,6 @@ public protocol FetchBasicFolderUseCase: Sendable {
 }
 
 public struct DefaultFetchBasicFolderUseCase: FetchBasicFolderUseCase {
-
     private let repository: WorkSpaceRepository
 
     public init(repository: WorkSpaceRepository) {
@@ -26,7 +25,7 @@ public struct DefaultFetchBasicFolderUseCase: FetchBasicFolderUseCase {
         do {
             // 기본 폴더 생성/확인
             return try await repository.fetchOrCreateBasicFolder()
-        } catch let error {
+        } catch {
             AppLogger.error(error)
             throw UseCaseError(error)
         }

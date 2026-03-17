@@ -1,6 +1,5 @@
-import Foundation
-
 @testable import Domain
+import Foundation
 
 extension Transcript {
     static func stub(

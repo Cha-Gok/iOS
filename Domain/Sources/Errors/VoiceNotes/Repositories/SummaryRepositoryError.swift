@@ -2,7 +2,6 @@ import Foundation
 
 /// 요약(Summary) 리포지토리에서 발생할 수 있는 에러.
 public enum SummaryRepositoryError: LocalizedError, Sendable {
-
     /// 키워드·요약 생성 실패.
     case summarizeFailed
 

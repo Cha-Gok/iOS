@@ -1,5 +1,5 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 final class ReadFolderUseCaseTest: XCTestCase {
     typealias UseCaseError = ReadFolderUseCaseError
@@ -8,7 +8,6 @@ final class ReadFolderUseCaseTest: XCTestCase {
 // MARK: - 성공 케이스
 
 extension ReadFolderUseCaseTest {
-
     func test_폴더_조회_성공_폴더목록을반환한다() async throws {
         // Given
         let expectedFolders = [
@@ -37,7 +36,6 @@ extension ReadFolderUseCaseTest {
 // MARK: - 에러 케이스
 
 extension ReadFolderUseCaseTest {
-
     func test_폴더_조회_리포지토리조회실패시_fetchFailed에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
@@ -98,10 +96,10 @@ extension ReadFolderUseCaseTest {
             }
 
             switch repoError {
-                case .createFailed:
-                    break // Success
-                default:
-                    XCTFail("Expected .createFailed, but got \(repoError)")
+            case .createFailed:
+                break // Success
+            default:
+                XCTFail("Expected .createFailed, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
@@ -128,10 +126,10 @@ extension ReadFolderUseCaseTest {
             }
 
             switch repoError {
-                case .updateFailed:
-                    break // Success
-                default:
-                    XCTFail("Expected .updateFailed, but got \(repoError)")
+            case .updateFailed:
+                break // Success
+            default:
+                XCTFail("Expected .updateFailed, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
@@ -160,10 +158,10 @@ extension ReadFolderUseCaseTest {
             }
 
             switch repoError {
-                case .unknown(let underlyingError):
-                    XCTAssertTrue(underlyingError is Dummy)
-                default:
-                    XCTFail("Expected .unknown underlying error, but got \(repoError)")
+            case .unknown(let underlyingError):
+                XCTAssertTrue(underlyingError is Dummy)
+            default:
+                XCTFail("Expected .unknown underlying error, but got \(repoError)")
             }
         } catch {
             XCTFail("Expected .unknown, got \(error)")
@@ -176,7 +174,6 @@ extension ReadFolderUseCaseTest {
 // MARK: - 취소 케이스
 
 extension ReadFolderUseCaseTest {
-
     func test_폴더_조회_리포지토리취소시_cancelled에러를던진다() async {
         // Given
         let repository = MockFolderRepository()

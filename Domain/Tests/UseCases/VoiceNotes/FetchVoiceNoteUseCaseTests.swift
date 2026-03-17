@@ -1,9 +1,7 @@
+@testable import Domain
 import XCTest
 
-@testable import Domain
-
 final class FetchVoiceNoteUseCaseTests: XCTestCase {
-
     private var repository: MockVoiceNoteFetchRepository!
     private var sut: DefaultFetchVoiceNoteUseCase!
 
@@ -23,7 +21,6 @@ final class FetchVoiceNoteUseCaseTests: XCTestCase {
 // MARK: - 성공
 
 extension FetchVoiceNoteUseCaseTests {
-
     func test_execute_전체조회에성공하면_보이스노트목록을반환한다() async throws {
         // Given
         let folderID = UUID()
@@ -64,7 +61,6 @@ extension FetchVoiceNoteUseCaseTests {
 // MARK: - 실패 / 에러 매핑
 
 extension FetchVoiceNoteUseCaseTests {
-
     func test_execute_전체조회가실패하면_fetchAllFailed에러를던진다() async {
         // Given
         let folderID = UUID()
@@ -261,7 +257,6 @@ extension FetchVoiceNoteUseCaseTests {
 // MARK: - Task 취소
 
 extension FetchVoiceNoteUseCaseTests {
-
     func test_execute_태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
         guard let sut else {
             return XCTFail("sut should be initialized in setUp")

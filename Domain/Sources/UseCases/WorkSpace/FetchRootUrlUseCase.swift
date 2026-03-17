@@ -1,5 +1,5 @@
-import Foundation
 import Core
+import Foundation
 
 /// Root 폴더의 URL을 반환하는 유즈케이스
 public protocol FetchRootUrlUseCase: Sendable {
@@ -11,7 +11,6 @@ public protocol FetchRootUrlUseCase: Sendable {
 }
 
 public struct DefaultFetchRootUrlUseCase: FetchRootUrlUseCase {
-
     private let repository: WorkSpaceRepository
 
     public init(repository: WorkSpaceRepository) {

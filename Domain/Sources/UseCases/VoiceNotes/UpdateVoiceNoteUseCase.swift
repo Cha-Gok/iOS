@@ -11,7 +11,6 @@ public protocol UpdateVoiceNoteUseCase: Sendable {
 }
 
 public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
-
     private let repository: VoiceNoteUpdateRepository
 
     public init(repository: VoiceNoteUpdateRepository) {
@@ -19,8 +18,8 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
     }
 
     public func execute(_ voiceNote: VoiceNote) async throws(UpdateVoiceNoteUseCaseError)
-        -> VoiceNote {
-
+        -> VoiceNote
+    {
         if Task.isCancelled {
             AppLogger.error("Task cancelled")
             throw .cancelled
@@ -60,8 +59,8 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
     }
 }
 
-extension UpdateVoiceNoteUseCaseError {
-    fileprivate init(_ error: VoiceNoteUpdateRepositoryError) {
+fileprivate extension UpdateVoiceNoteUseCaseError {
+    init(_ error: VoiceNoteUpdateRepositoryError) {
         switch error {
         case .updateFailed:
             self = .updateFailed

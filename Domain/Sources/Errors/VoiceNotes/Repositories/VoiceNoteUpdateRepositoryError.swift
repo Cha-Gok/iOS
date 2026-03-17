@@ -2,7 +2,6 @@ import Foundation
 
 /// 음성 메모 업데이트 리포지토리에서 발생할 수 있는 에러 (ISP).
 public enum VoiceNoteUpdateRepositoryError: LocalizedError, Sendable {
-
     /// 음성 메모 업데이트 실패.
     case updateFailed
 

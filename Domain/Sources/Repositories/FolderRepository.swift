@@ -18,5 +18,4 @@ public protocol FolderRepository: Sendable {
     /// - Returns: 업데이트된 폴더 엔티티
     /// - Throws: `FolderRepositoryError.updateFailed`, `.notFound`, `.duplicateName` 등
     func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder
-
 }

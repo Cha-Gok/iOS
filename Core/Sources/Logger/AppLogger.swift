@@ -7,9 +7,9 @@ public enum AppLogger: AppLoggerProtocol, Sendable {
     private static let osLog = OSLog(subsystem: subsystem, category: category)
     private static let minLevel: LogLevel = {
         #if DEBUG
-        return .debug
+            return .debug
         #else
-        return .info
+            return .info
         #endif
     }()
 

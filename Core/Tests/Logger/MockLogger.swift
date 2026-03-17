@@ -1,5 +1,5 @@
-import Foundation
 @testable import Core
+import Foundation
 
 enum MockLogger: AppLoggerProtocol {
     nonisolated(unsafe) static var recordedLogs: [(level: LogLevel, message: String)] = []

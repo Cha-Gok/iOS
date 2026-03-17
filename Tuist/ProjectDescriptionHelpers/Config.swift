@@ -25,7 +25,7 @@ public let settings: Settings = .settings(
         "ENABLE_MODULE_VERIFIER": "YES",
         "MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS": "gnu11 gnu++14",
         // Run Script가 정상 동작하도록 User Script Sandboxing 비활성화
-        "ENABLE_USER_SCRIPT_SANDBOXING": "NO",
+        "ENABLE_USER_SCRIPT_SANDBOXING": "NO"
     ],
     defaultSettings: .recommended
 )

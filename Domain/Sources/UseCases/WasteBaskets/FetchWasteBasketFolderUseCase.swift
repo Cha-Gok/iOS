@@ -1,5 +1,5 @@
-import Foundation
 import Core
+import Foundation
 
 /// 휴지통 폴더의 Item을 조회하는 유즈케이스
 public protocol FetchWasteBasketFolderUseCase: Sendable {
@@ -11,7 +11,6 @@ public protocol FetchWasteBasketFolderUseCase: Sendable {
 }
 
 public struct DefaultFetchWasteBasketFolderUseCase: FetchWasteBasketFolderUseCase {
-
     private let repository: WasteBasketRepository
 
     public init(repository: WasteBasketRepository) {

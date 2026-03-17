@@ -10,23 +10,23 @@ public enum FetchLanguagesUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-            case .cancelled:
-                nil
-            case .notFound:
-                "설정된 언어를 찾을 수 없습니다"
-            case .unknown(let error):
-                error.localizedDescription
+        case .cancelled:
+            nil
+        case .notFound:
+            "설정된 언어를 찾을 수 없습니다"
+        case .unknown(let error):
+            error.localizedDescription
         }
     }
 
     init(_ error: FetchLanguagesRepositoryError) {
         switch error {
-            case .cancelled:
-                self = .cancelled
-            case .notFound:
-                self = .notFound
-            case .unknown(let error):
-                self = .unknown(error)
+        case .cancelled:
+            self = .cancelled
+        case .notFound:
+            self = .notFound
+        case .unknown(let error):
+            self = .unknown(error)
         }
     }
 }

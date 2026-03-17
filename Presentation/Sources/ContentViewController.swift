@@ -1,8 +1,7 @@
 import UIKit
 
 public final class ContentViewController: UIViewController {
-
-    public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+    override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
     }
 
@@ -10,7 +9,7 @@ public final class ContentViewController: UIViewController {
         super.init(coder: coder)
     }
 
-    public override func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
 

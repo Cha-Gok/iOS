@@ -1,10 +1,8 @@
+@testable import Domain
 import Foundation
 import XCTest
 
-@testable import Domain
-
 final class UpdateVoiceNoteUseCaseTests: XCTestCase {
-
     private var repository: MockVoiceNoteUpdateRepository!
     private var sut: DefaultUpdateVoiceNoteUseCase!
 
@@ -24,7 +22,6 @@ final class UpdateVoiceNoteUseCaseTests: XCTestCase {
 // MARK: - 성공
 
 extension UpdateVoiceNoteUseCaseTests {
-
     func test_execute_유효한입력을넣으면_업데이트된보이스노트를반환한다() async throws {
         // Given
         let original = VoiceNote.stub(title: "Original")
@@ -45,7 +42,6 @@ extension UpdateVoiceNoteUseCaseTests {
 // MARK: - 실패
 
 extension UpdateVoiceNoteUseCaseTests {
-
     func test_execute_제목이비어있으면_invalidTitle에러를던진다() async {
         // Given
         let voiceNote = VoiceNote.stub(title: "")
@@ -115,7 +111,7 @@ extension UpdateVoiceNoteUseCaseTests {
             XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
         } catch {
             // Then
-            guard case .invalidTitle = error as? UpdateVoiceNoteUseCaseError else {
+            guard case .invalidTitle = error else {
                 return XCTFail("expected .invalidTitle, got \(error)")
             }
         }
@@ -189,7 +185,6 @@ extension UpdateVoiceNoteUseCaseTests {
 // MARK: - Task 취소
 
 extension UpdateVoiceNoteUseCaseTests {
-
     func test_execute_실행전에태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
         guard let sut else {
             return XCTFail("sut가 setup되지 않았습니다.")

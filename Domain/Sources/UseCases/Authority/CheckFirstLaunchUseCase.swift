@@ -1,6 +1,6 @@
 import Foundation
 
-// 사용자가 처음으로 사용하는지 판단하는 유즈케이스
+/// 사용자가 처음으로 사용하는지 판단하는 유즈케이스
 public protocol CheckFirstLaunchUseCase: Sendable {
     /// True는 처음 사용하는 사용자 , False 는 기존 사용자
     /// - Parameter None

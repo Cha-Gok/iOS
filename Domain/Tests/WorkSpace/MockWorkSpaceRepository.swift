@@ -1,8 +1,7 @@
-import XCTest
 @testable import Domain
+import XCTest
 
 actor MockWorkSpaceRepository: WorkSpaceRepository {
-
     // Results
     private var rootURLResult: Result<URL, WorkSpaceRootURLRepositoryError>?
     private var basicFolderResult: Result<Folder, WorkSpaceBasicFolderRepositoryError>?
@@ -15,21 +14,21 @@ actor MockWorkSpaceRepository: WorkSpaceRepository {
     private var expectedFetchRootURLCallCount: Int?
     private var expectedFetchOrCreateBasicFolderCallCount: Int?
 
-    // 작업 도중 취소 테스트를 위한 제어 변수
+    /// 작업 도중 취소 테스트를 위한 제어 변수
     private var shouldWaitUntilCancelled = false
 
     // MARK: - Setup
 
     func setRootURLResult(_ result: Result<URL, WorkSpaceRootURLRepositoryError>) {
-        self.rootURLResult = result
+        rootURLResult = result
     }
 
     func setBasicFolderResult(_ result: Result<Folder, WorkSpaceBasicFolderRepositoryError>) {
-        self.basicFolderResult = result
+        basicFolderResult = result
     }
 
     func setWaitUntilCancelled(_ shouldWait: Bool) {
-        self.shouldWaitUntilCancelled = shouldWait
+        shouldWaitUntilCancelled = shouldWait
     }
 
     // MARK: - Expectations
@@ -49,7 +48,13 @@ actor MockWorkSpaceRepository: WorkSpaceRepository {
             XCTAssertEqual(fetchRootURLCallCount, expected, "fetchRootURL call count mismatch", file: file, line: line)
         }
         if let expected = expectedFetchOrCreateBasicFolderCallCount {
-            XCTAssertEqual(fetchOrCreateBasicFolderCallCount, expected, "fetchOrCreateBasicFolder call count mismatch", file: file, line: line)
+            XCTAssertEqual(
+                fetchOrCreateBasicFolderCallCount,
+                expected,
+                "fetchOrCreateBasicFolder call count mismatch",
+                file: file,
+                line: line
+            )
         }
     }
 
@@ -63,10 +68,10 @@ actor MockWorkSpaceRepository: WorkSpaceRepository {
         }
 
         switch result {
-            case .success(let url):
-                return url
-            case .failure(let error):
-                throw error
+        case .success(let url):
+            return url
+        case .failure(let error):
+            throw error
         }
     }
 
@@ -78,10 +83,10 @@ actor MockWorkSpaceRepository: WorkSpaceRepository {
         }
 
         switch result {
-            case .success(let folder):
-                return folder
-            case .failure(let error):
-                throw error
+        case .success(let folder):
+            return folder
+        case .failure(let error):
+            throw error
         }
     }
 }
