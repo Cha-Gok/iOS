@@ -1,7 +1,23 @@
 @testable import Domain
+import Core
 import XCTest
 
-final class FetchBasicFolderUseCaseTest: XCTestCase {}
+final class FetchBasicFolderUseCaseTest: XCTestCase {
+    private var repository: MockWorkSpaceRepository!
+    private var sut: DefaultFetchBasicFolderUseCase!
+
+    override func setUp() {
+        super.setUp()
+        repository = MockWorkSpaceRepository()
+        sut = DefaultFetchBasicFolderUseCase(repository: repository)
+    }
+
+    override func tearDown() {
+        repository = nil
+        sut = nil
+        super.tearDown()
+    }
+}
 
 // MARK: - 성공 케이스
 
@@ -9,14 +25,11 @@ extension FetchBasicFolderUseCaseTest {
     func test_정상상태_기본폴더조회시_기대하는Folder를반환한다() async throws {
         // Given
         let expectedFolder = Folder(path: URL(fileURLWithPath: "/test"), name: "Basic Folder")
-        let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.success(expectedFolder))
         await repository.expectFetchOrCreateBasicFolder(callCount: 1)
 
-        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
-
         // When
-        let folder = try await useCase.execute()
+        let folder = try await sut.execute()
 
         // Then
         XCTAssertEqual(folder.id, expectedFolder.id)
@@ -30,109 +43,109 @@ extension FetchBasicFolderUseCaseTest {
 extension FetchBasicFolderUseCaseTest {
     func test_기본폴더미존재상태_기본폴더조회시_notFound에러를던진다() async {
         // Given
-        let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.failure(.notFound))
         await repository.expectFetchOrCreateBasicFolder(callCount: 1)
 
-        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute()
-            XCTFail("기본 폴더가 없는 경우 .notFound 에러가 발생해야 합니다.")
-        } catch FetchBasicFolderUseCaseError.notFound {
-            // Success
-            await repository.verify()
+            _ = try await sut.execute()
+            XCTFail("FetchBasicFolderUseCaseError.notFound 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .notFound, got \(error)")
+            guard case .notFound = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchBasicFolderUseCaseError.notFound 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await repository.verify()
     }
 
     func test_폴더생성실패상태_기본폴더조회시_createFailed에러를던진다() async {
         // Given
-        let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.failure(.createFailed))
         await repository.expectFetchOrCreateBasicFolder(callCount: 1)
 
-        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute()
-            XCTFail("생성 실패 시 .createFailed 에러가 발생해야 합니다.")
-        } catch FetchBasicFolderUseCaseError.createFailed {
-            // Success
-            await repository.verify()
+            _ = try await sut.execute()
+            XCTFail("FetchBasicFolderUseCaseError.createFailed 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .createFailed, got \(error)")
+            guard case .createFailed = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchBasicFolderUseCaseError.createFailed 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await repository.verify()
     }
 
     func test_알수없는에러발생상태_기본폴더조회시_unknown에러를던진다() async {
         // Given
-        struct Dummy: Error {}
-        let dummyError = Dummy()
-        let repository = MockWorkSpaceRepository()
+        struct DummyError: Error {}
+        let dummyError = DummyError()
         await repository.setBasicFolderResult(.failure(.unknown(dummyError)))
         await repository.expectFetchOrCreateBasicFolder(callCount: 1)
 
-        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute()
-            XCTFail("알 수 없는 에러 발생 시 .unknown으로 래핑되어야 합니다.")
-        } catch FetchBasicFolderUseCaseError.unknown(let error) {
-            // RepoError.unknown 내부의 Dummy 에러가 유지되어야 함
-            XCTAssertTrue(error is Dummy)
-            await repository.verify()
+            _ = try await sut.execute()
+            XCTFail("FetchBasicFolderUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .unknown, got \(error)")
+            guard case .unknown(let repoError) = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchBasicFolderUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
+            XCTAssertTrue(repoError is DummyError)
         }
+        await repository.verify()
     }
 
     func test_조회중취소상태_기본폴더조회시_cancelled에러를던진다() async {
         // Given
-        let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.failure(.cancelled))
         await repository.expectFetchOrCreateBasicFolder(callCount: 1)
 
-        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute()
-            XCTFail("작업 취소의 경우 .cancelled 에러가 발생해야 합니다.")
-        } catch FetchBasicFolderUseCaseError.cancelled {
-            // Success
-            await repository.verify()
+            _ = try await sut.execute()
+            XCTFail("FetchBasicFolderUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .cancelled, got \(error)")
+            guard case .cancelled = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchBasicFolderUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await repository.verify()
     }
 
     func test_태스크이미취소상태_기본폴더조회시_즉시cancelled에러를던진다() async {
+        guard let sut else {
+            return XCTFail("sut가 초기화되지 않았습니다.")
+        }
         // Given
-        let repository = MockWorkSpaceRepository()
-        await repository.setBasicFolderResult(.success(Folder(path: URL(fileURLWithPath: "/"), name: "test")))
+        await repository.setBasicFolderResult(
+            .success(Folder(path: URL(fileURLWithPath: "/"), name: "test"))
+        )
         await repository.expectFetchOrCreateBasicFolder(callCount: 0)
-
-        let useCase = DefaultFetchBasicFolderUseCase(repository: repository)
 
         // When & Then
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            _ = try await useCase.execute()
+            return try await sut.execute()
         }
 
         do {
             _ = try await task.value
-            XCTFail("작업이 즉시 취소되었으므로 .cancelled 에러가 발생해야 합니다.")
-        } catch FetchBasicFolderUseCaseError.cancelled {
-            // Success
-            await repository.verify()
+            XCTFail("FetchBasicFolderUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .cancelled, got \(error)")
+            guard case .cancelled = error as? FetchBasicFolderUseCaseError else {
+                return XCTFail(
+                    "예상한 에러는 FetchBasicFolderUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await repository.verify()
     }
 }

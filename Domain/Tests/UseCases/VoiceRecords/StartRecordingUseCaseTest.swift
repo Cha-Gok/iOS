@@ -60,7 +60,9 @@ extension StartRecordingUseCaseTest {
             XCTFail("StartRecordingUseCaseError.startFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .startFailed = error else {
-                return XCTFail("예상한 에러는 StartRecordingUseCaseError.startFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
+                return XCTFail(
+                    "예상한 에러는 StartRecordingUseCaseError.startFailed 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
             }
         }
 
@@ -80,7 +82,9 @@ extension StartRecordingUseCaseTest {
             XCTFail("StartRecordingUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
             guard case .unknown(let underlyingError) = error else {
-                return XCTFail("예상한 에러는 StartRecordingUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다.")
+                return XCTFail(
+                    "예상한 에러는 StartRecordingUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
             }
             XCTAssertTrue(underlyingError is DummyError)
         }
@@ -89,10 +93,12 @@ extension StartRecordingUseCaseTest {
     }
 
     func test_태스크취소상태_녹음시작시_cancelled에러를던진다() async throws {
+        guard let sut else {
+            return XCTFail("sut가 초기화되지 않았습니다.")
+        }
         // Given
         await recordingRepository.expectStartRecording(callCount: 0)
 
-        let sut = try XCTUnwrap(sut)
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
             return try await sut.execute()
@@ -104,7 +110,9 @@ extension StartRecordingUseCaseTest {
             XCTFail("StartRecordingUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
             guard case .cancelled = error as? StartRecordingUseCaseError else {
-                return XCTFail("예상한 에러는 StartRecordingUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
+                return XCTFail(
+                    "예상한 에러는 StartRecordingUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
             }
         }
 

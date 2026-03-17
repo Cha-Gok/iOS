@@ -1,7 +1,23 @@
 @testable import Domain
+import Core
 import XCTest
 
-final class UpdateVoiceNoteUseCaseTest: XCTestCase {}
+final class UpdateVoiceNoteUseCaseTest: XCTestCase {
+    private var repository: MockVoiceNoteUpdateRepository!
+    private var sut: DefaultUpdateVoiceNoteUseCase!
+
+    override func setUp() {
+        super.setUp()
+        repository = MockVoiceNoteUpdateRepository()
+        sut = DefaultUpdateVoiceNoteUseCase(repository: repository)
+    }
+
+    override func tearDown() {
+        repository = nil
+        sut = nil
+        super.tearDown()
+    }
+}
 
 // MARK: - 성공 케이스
 
@@ -9,15 +25,12 @@ extension UpdateVoiceNoteUseCaseTest {
     func test_정상상태_음성메모업데이트시_업데이트된객체를반환한다() async throws {
         // Given
         let expectedVoiceNote = VoiceNote.stub()
-        let repository = MockVoiceNoteUpdateRepository()
 
         await repository.setResult(.success(expectedVoiceNote))
         await repository.expectUpdate(callCount: 1, voiceNote: expectedVoiceNote)
 
-        let useCase = DefaultUpdateVoiceNoteUseCase(repository: repository)
-
         // When
-        let result = try await useCase.execute(expectedVoiceNote)
+        let result = try await sut.execute(expectedVoiceNote)
 
         // Then
         XCTAssertEqual(result.id, expectedVoiceNote.id)
@@ -32,47 +45,42 @@ extension UpdateVoiceNoteUseCaseTest {
     func test_리포지토리업데이트실패상태_음성메모업데이트시_updateFailed에러를던진다() async {
         // Given
         let voiceNote = VoiceNote.stub()
-        let repository = MockVoiceNoteUpdateRepository()
 
         await repository.setResult(.failure(.updateFailed))
         await repository.expectUpdate(callCount: 1)
 
-        let useCase = DefaultUpdateVoiceNoteUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute(voiceNote)
-            XCTFail("업데이트 실패 시 .updateFailed 에러가 발생해야 합니다.")
-        } catch UpdateVoiceNoteUseCaseError.updateFailed {
-            // Success
-            await repository.verify()
+            _ = try await sut.execute(voiceNote)
+            XCTFail("UpdateVoiceNoteUseCaseError.updateFailed 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .updateFailed, got \(error)")
+            guard case .updateFailed = error else {
+                return XCTFail("예상한 에러는 UpdateVoiceNoteUseCaseError.updateFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
+            }
         }
+        await repository.verify()
     }
 
     func test_알수없는에러발생상태_음성메모업데이트시_unknown에러를던진다() async {
         // Given
         let voiceNote = VoiceNote.stub()
-        struct Dummy: Error {}
-        let dummyError = Dummy()
-        let repository = MockVoiceNoteUpdateRepository()
+        struct DummyError: Error {}
+        let expectedError = DummyError()
 
-        await repository.setResult(.failure(.unknown(dummyError)))
+        await repository.setResult(.failure(.unknown(expectedError)))
         await repository.expectUpdate(callCount: 1)
-
-        let useCase = DefaultUpdateVoiceNoteUseCase(repository: repository)
 
         // When & Then
         do {
-            _ = try await useCase.execute(voiceNote)
-            XCTFail("알 수 없는 에러 시 .unknown으로 래핑되어야 합니다.")
-        } catch UpdateVoiceNoteUseCaseError.unknown(let error) {
-            XCTAssertTrue(error is Dummy)
-            await repository.verify()
+            _ = try await sut.execute(voiceNote)
+            XCTFail("UpdateVoiceNoteUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .unknown, got \(error)")
+            guard case .unknown(let underlyingError) = error else {
+                return XCTFail("예상한 에러는 UpdateVoiceNoteUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다.")
+            }
+            XCTAssertTrue(underlyingError is DummyError)
         }
+        await repository.verify()
     }
 }
 
@@ -82,22 +90,19 @@ extension UpdateVoiceNoteUseCaseTest {
     func test_작업취소상태_음성메모업데이트시_cancelled에러를던진다() async {
         // Given
         let voiceNote = VoiceNote.stub()
-        let repository = MockVoiceNoteUpdateRepository()
 
         await repository.setResult(.failure(.cancelled))
         await repository.expectUpdate(callCount: 1)
 
-        let useCase = DefaultUpdateVoiceNoteUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute(voiceNote)
-            XCTFail("작업 취소 시 .cancelled 에러가 발생해야 합니다.")
-        } catch UpdateVoiceNoteUseCaseError.cancelled {
-            // Success
-            await repository.verify()
+            _ = try await sut.execute(voiceNote)
+            XCTFail("UpdateVoiceNoteUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .cancelled, got \(error)")
+            guard case .cancelled = error else {
+                return XCTFail("예상한 에러는 UpdateVoiceNoteUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
+            }
         }
+        await repository.verify()
     }
 }

@@ -55,10 +55,12 @@ extension PauseRecordingUseCaseTest {
     }
 
     func test_태스크취소상태_녹음일시정지시_cancelled에러를던진다() async throws {
+        guard let sut else {
+            return XCTFail("sut가 초기화되지 않았습니다.")
+        }
         // Given
         await recordingRepository.expectPauseRecording(callCount: 0)
 
-        let sut = try XCTUnwrap(sut)
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
             try await sut.execute()

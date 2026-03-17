@@ -1,7 +1,23 @@
 @testable import Domain
+import Core
 import XCTest
 
-final class FetchWasteBasketFolderUseCaseTest: XCTestCase {}
+final class FetchWasteBasketFolderUseCaseTest: XCTestCase {
+    private var wasteBasketRepository: MockWasteBasketRepository!
+    private var sut: DefaultFetchWasteBasketFolderUseCase!
+
+    override func setUp() {
+        super.setUp()
+        wasteBasketRepository = MockWasteBasketRepository()
+        sut = DefaultFetchWasteBasketFolderUseCase(repository: wasteBasketRepository)
+    }
+
+    override func tearDown() {
+        wasteBasketRepository = nil
+        sut = nil
+        super.tearDown()
+    }
+}
 
 // MARK: - 성공 케이스
 
@@ -12,34 +28,28 @@ extension FetchWasteBasketFolderUseCaseTest {
             .folder(id: UUID()),
             .voiceNote(id: UUID())
         ]
-        let repository = MockWasteBasketRepository()
-        await repository.setFetchAllResult(.success(expectedItems))
-        await repository.expectFetchAll(callCount: 1)
-
-        let useCase = DefaultFetchWasteBasketFolderUseCase(repository: repository)
+        await wasteBasketRepository.setFetchAllResult(.success(expectedItems))
+        await wasteBasketRepository.expectFetchAll(callCount: 1)
 
         // When
-        let result = try await useCase.execute()
+        let result = try await sut.execute()
 
         // Then
         XCTAssertEqual(result, expectedItems)
-        await repository.verify()
+        await wasteBasketRepository.verify()
     }
 
     func test_데이터미존재상태_휴지통항목조회시_빈배열을반환한다() async throws {
         // Given
-        let repository = MockWasteBasketRepository()
-        await repository.setFetchAllResult(.success([]))
-        await repository.expectFetchAll(callCount: 1)
-
-        let useCase = DefaultFetchWasteBasketFolderUseCase(repository: repository)
+        await wasteBasketRepository.setFetchAllResult(.success([]))
+        await wasteBasketRepository.expectFetchAll(callCount: 1)
 
         // When
-        let result = try await useCase.execute()
+        let result = try await sut.execute()
 
         // Then
         XCTAssertTrue(result.isEmpty)
-        await repository.verify()
+        await wasteBasketRepository.verify()
     }
 }
 
@@ -48,43 +58,44 @@ extension FetchWasteBasketFolderUseCaseTest {
 extension FetchWasteBasketFolderUseCaseTest {
     func test_리포지토리조회실패상태_휴지통항목조회시_fetchFailed에러를던진다() async {
         // Given
-        let repository = MockWasteBasketRepository()
-        await repository.setFetchAllResult(.failure(.fetchFailed))
-        await repository.expectFetchAll(callCount: 1)
-
-        let useCase = DefaultFetchWasteBasketFolderUseCase(repository: repository)
+        await wasteBasketRepository.setFetchAllResult(.failure(.fetchFailed))
+        await wasteBasketRepository.expectFetchAll(callCount: 1)
 
         // When & Then
         do {
-            _ = try await useCase.execute()
-            XCTFail("에러가 발생해야 합니다.")
-        } catch FetchWasteBasketFolderUseCaseError.fetchFailed {
-            await repository.verify()
+            _ = try await sut.execute()
+            XCTFail("FetchWasteBasketFolderUseCaseError.fetchFailed 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .fetchFailed, got \(error)")
+            guard case .fetchFailed = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchWasteBasketFolderUseCaseError.fetchFailed 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await wasteBasketRepository.verify()
     }
 
     func test_리포지토리알수없는에러상태_휴지통항목조회시_unknown에러를던진다() async {
         // Given
-        struct Dummy: Error {}
-        let dummyError = Dummy()
-        let repository = MockWasteBasketRepository()
-        await repository.setFetchAllResult(.failure(.unknown(dummyError)))
-        await repository.expectFetchAll(callCount: 1)
-
-        let useCase = DefaultFetchWasteBasketFolderUseCase(repository: repository)
+        struct DummyError: Error {}
+        let expectedError = DummyError()
+        await wasteBasketRepository.setFetchAllResult(.failure(.unknown(expectedError)))
+        await wasteBasketRepository.expectFetchAll(callCount: 1)
 
         // When & Then
         do {
-            _ = try await useCase.execute()
-            XCTFail("에러가 발생해야 합니다.")
-        } catch FetchWasteBasketFolderUseCaseError.unknown(let error) {
-            XCTAssertTrue(error is Dummy)
-            await repository.verify()
+            _ = try await sut.execute()
+            XCTFail("FetchWasteBasketFolderUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .unknown, got \(error)")
+            guard case .unknown(let underlyingError) = error
+            else {
+                return XCTFail(
+                    "예상한 에러는 FetchWasteBasketFolderUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
+            XCTAssertTrue(underlyingError is DummyError)
         }
+        await wasteBasketRepository.verify()
     }
 }
 
@@ -93,44 +104,47 @@ extension FetchWasteBasketFolderUseCaseTest {
 extension FetchWasteBasketFolderUseCaseTest {
     func test_작업취소상태_휴지통항목조회시_cancelled에러를던진다() async {
         // Given
-        let repository = MockWasteBasketRepository()
-        await repository.setFetchAllResult(.failure(.cancelled))
-        await repository.expectFetchAll(callCount: 1)
-
-        let useCase = DefaultFetchWasteBasketFolderUseCase(repository: repository)
+        await wasteBasketRepository.setFetchAllResult(.failure(.cancelled))
+        await wasteBasketRepository.expectFetchAll(callCount: 1)
 
         // When & Then
         do {
-            _ = try await useCase.execute()
-            XCTFail("에러가 발생해야 합니다.")
-        } catch FetchWasteBasketFolderUseCaseError.cancelled {
-            await repository.verify()
+            _ = try await sut.execute()
+            XCTFail("FetchWasteBasketFolderUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .cancelled, got \(error)")
+            guard case .cancelled = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchWasteBasketFolderUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await wasteBasketRepository.verify()
     }
 
-    func test_태스크이미취소상태_휴지통항목조회시_즉시cancelled에러를던진다() async {
+    func test_태스크이미취소상태_휴지통항목조회시_즉시cancelled에러를던진다() async throws {
+        guard let sut else {
+            return XCTFail("sut가 초기화되지 않았습니다.")
+        }
         // Given
-        let repository = MockWasteBasketRepository()
-        await repository.setFetchAllResult(.success([]))
-        await repository.expectFetchAll(callCount: 0)
-
-        let useCase = DefaultFetchWasteBasketFolderUseCase(repository: repository)
+        await wasteBasketRepository.setFetchAllResult(.success([]))
+        await wasteBasketRepository.expectFetchAll(callCount: 0)
 
         // When & Then
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            _ = try await useCase.execute()
+            _ = try await sut.execute()
         }
 
         do {
             _ = try await task.value
-            XCTFail("작업이 취소되어야 합니다.")
-        } catch FetchWasteBasketFolderUseCaseError.cancelled {
-            await repository.verify()
+            XCTFail("FetchWasteBasketFolderUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .cancelled error, but got \(error)")
+            guard case .cancelled = error as? FetchWasteBasketFolderUseCaseError else {
+                return XCTFail(
+                    "예상한 에러는 FetchWasteBasketFolderUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await wasteBasketRepository.verify()
     }
 }

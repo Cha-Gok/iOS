@@ -1,7 +1,23 @@
 @testable import Domain
+import Core
 import XCTest
 
-final class FetchVoiceNoteUseCaseTest: XCTestCase {}
+final class FetchVoiceNoteUseCaseTest: XCTestCase {
+    private var repository: MockVoiceNoteFetchRepository!
+    private var sut: DefaultFetchVoiceNoteUseCase!
+
+    override func setUp() {
+        super.setUp()
+        repository = MockVoiceNoteFetchRepository()
+        sut = DefaultFetchVoiceNoteUseCase(repository: repository)
+    }
+
+    override func tearDown() {
+        repository = nil
+        sut = nil
+        super.tearDown()
+    }
+}
 
 // MARK: - 성공 케이스
 
@@ -10,15 +26,12 @@ extension FetchVoiceNoteUseCaseTest {
         // Given
         let folderID = UUID()
         let expectedVoiceNotes = [VoiceNote.stub(folderID: folderID)]
-        let repository = MockVoiceNoteFetchRepository()
 
         await repository.setFetchAllResult(.success(expectedVoiceNotes))
         await repository.expectFetchAll(callCount: 1, folderID: folderID)
 
-        let useCase = DefaultFetchVoiceNoteUseCase(repository: repository)
-
         // When
-        let result = try await useCase.execute(folderID: folderID)
+        let result = try await sut.execute(folderID: folderID)
 
         // Then
         XCTAssertEqual(result.count, expectedVoiceNotes.count)
@@ -30,15 +43,12 @@ extension FetchVoiceNoteUseCaseTest {
         // Given
         let voiceNoteID = UUID()
         let expectedVoiceNote = VoiceNote.stub(id: voiceNoteID)
-        let repository = MockVoiceNoteFetchRepository()
 
         await repository.setFetchByIdResult(.success(expectedVoiceNote))
         await repository.expectFetchById(callCount: 1, id: voiceNoteID)
 
-        let useCase = DefaultFetchVoiceNoteUseCase(repository: repository)
-
         // When
-        let result = try await useCase.execute(byId: voiceNoteID)
+        let result = try await sut.execute(byId: voiceNoteID)
 
         // Then
         XCTAssertEqual(result.id, voiceNoteID)
@@ -52,68 +62,61 @@ extension FetchVoiceNoteUseCaseTest {
     func test_리포지토리조회실패상태_음성메모조회시_fetchAllFailed에러를던진다() async {
         // Given
         let folderID = UUID()
-        let repository = MockVoiceNoteFetchRepository()
 
         await repository.setFetchAllResult(.failure(.fetchAllFailed(folderID: folderID)))
         await repository.expectFetchAll(callCount: 1, folderID: folderID)
 
-        let useCase = DefaultFetchVoiceNoteUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute(folderID: folderID)
-            XCTFail("조회 실패 시 .fetchAllFailed 에러가 발생해야 합니다.")
-        } catch FetchVoiceNoteUseCaseError.fetchAllFailed(let failedID) {
-            XCTAssertEqual(failedID, folderID)
-            await repository.verify()
+            _ = try await sut.execute(folderID: folderID)
+            XCTFail("FetchVoiceNoteUseCaseError.fetchAllFailed 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .fetchAllFailed, got \(error)")
+            guard case .fetchAllFailed(let failedID) = error else {
+                return XCTFail("예상한 에러는 FetchVoiceNoteUseCaseError.fetchAllFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
+            }
+            XCTAssertEqual(failedID, folderID)
         }
+        await repository.verify()
     }
 
     func test_알수없는에러발생상태_음성메모조회시_unknown에러를던진다() async {
         // Given
         let folderID = UUID()
-        struct Dummy: Error {}
-        let dummyError = Dummy()
-        let repository = MockVoiceNoteFetchRepository()
+        struct DummyError: Error {}
+        let expectedError = DummyError()
 
-        await repository.setFetchAllResult(.failure(.unknown(dummyError)))
+        await repository.setFetchAllResult(.failure(.unknown(expectedError)))
         await repository.expectFetchAll(callCount: 1, folderID: folderID)
-
-        let useCase = DefaultFetchVoiceNoteUseCase(repository: repository)
 
         // When & Then
         do {
-            _ = try await useCase.execute(folderID: folderID)
-            XCTFail("알 수 없는 에러 시 .unknown으로 래핑되어야 합니다.")
-        } catch FetchVoiceNoteUseCaseError.unknown(let error) {
-            XCTAssertTrue(error is Dummy)
-            await repository.verify()
+            _ = try await sut.execute(folderID: folderID)
+            XCTFail("FetchVoiceNoteUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .unknown, got \(error)")
+            guard case .unknown(let underlyingError) = error else {
+                return XCTFail("예상한 에러는 FetchVoiceNoteUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다.")
+            }
+            XCTAssertTrue(underlyingError is DummyError)
         }
+        await repository.verify()
     }
 
     func test_작업취소상태_음성메모조회시_cancelled에러를던진다() async {
         // Given
         let folderID = UUID()
-        let repository = MockVoiceNoteFetchRepository()
 
         await repository.setFetchAllResult(.failure(.cancelled))
         await repository.expectFetchAll(callCount: 1, folderID: folderID)
 
-        let useCase = DefaultFetchVoiceNoteUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute(folderID: folderID)
-            XCTFail("작업 취소 시 .cancelled 에러가 발생해야 합니다.")
-        } catch FetchVoiceNoteUseCaseError.cancelled {
-            // Success
-            await repository.verify()
+            _ = try await sut.execute(folderID: folderID)
+            XCTFail("FetchVoiceNoteUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .cancelled, got \(error)")
+            guard case .cancelled = error else {
+                return XCTFail("예상한 에러는 FetchVoiceNoteUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
+            }
         }
+        await repository.verify()
     }
 }

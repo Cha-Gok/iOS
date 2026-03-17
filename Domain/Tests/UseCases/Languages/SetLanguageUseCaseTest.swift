@@ -1,21 +1,34 @@
 @testable import Domain
+import Core
 import XCTest
 
-final class SetLanguageUseCaseTest: XCTestCase {}
+final class SetLanguageUseCaseTest: XCTestCase {
+    private var repository: MockLanguageRepository!
+    private var sut: DefaultSelectLanguageUseCase!
+
+    override func setUp() {
+        super.setUp()
+        repository = MockLanguageRepository()
+        sut = DefaultSelectLanguageUseCase(repository: repository)
+    }
+
+    override func tearDown() {
+        repository = nil
+        sut = nil
+        super.tearDown()
+    }
+}
 
 // MARK: - 성공 케이스
 
 extension SetLanguageUseCaseTest {
     func test_정상상태_언어설정시_리포지토리의저장메서드를호출한다() async throws {
         // Given
-        let repository = MockLanguageRepository()
         await repository.setSaveResult(.success(()))
         await repository.expectSave(language: .ko, callCount: 1)
 
-        let useCase = DefaultSelectLanguageUseCase(repository: repository)
-
         // When
-        try await useCase.execute(lang: .ko)
+        try await sut.execute(lang: .ko)
 
         // Then
         await repository.verify()
@@ -27,88 +40,88 @@ extension SetLanguageUseCaseTest {
 extension SetLanguageUseCaseTest {
     func test_리포지토리저장실패상태_언어설정시_saveFailed에러를던진다() async {
         // Given
-        let repository = MockLanguageRepository()
         await repository.setSaveResult(.failure(.saveFailed))
         await repository.expectSave(language: .ko, callCount: 1)
 
-        let useCase = DefaultSelectLanguageUseCase(repository: repository)
-
         // When & Then
         do {
-            try await useCase.execute(lang: .ko)
-            XCTFail("Repository가 saveFailed 에러를 던지면 UseCase도 saveFailed 에러를 던져야 합니다.")
-        } catch SetLanguagesUseCaseError.saveFailed {
-            // Success
-            await repository.verify()
+            try await sut.execute(lang: .ko)
+            XCTFail("SetLanguagesUseCaseError.saveFailed 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .saveFailed, got \(error)")
+            guard case .saveFailed = error else {
+                return XCTFail(
+                    "예상한 에러는 SetLanguagesUseCaseError.saveFailed 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await repository.verify()
     }
 
     func test_조회중취소상태_언어설정시_cancelled에러를던진다() async {
         // Given
-        let repository = MockLanguageRepository()
         await repository.setSaveResult(.failure(.cancelled))
         await repository.expectSave(language: .ko, callCount: 1)
 
-        let useCase = DefaultSelectLanguageUseCase(repository: repository)
-
         // When & Then
         do {
-            try await useCase.execute(lang: .ko)
-            XCTFail("Repository가 cancelled 에러를 던지면 UseCase도 cancelled 에러를 던져야 합니다.")
-        } catch SetLanguagesUseCaseError.cancelled {
-            // Success
-            await repository.verify()
+            try await sut.execute(lang: .ko)
+            XCTFail("SetLanguagesUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .cancelled, got \(error)")
+            guard case .cancelled = error else {
+                return XCTFail(
+                    "예상한 에러는 SetLanguagesUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await repository.verify()
     }
 
     func test_태스크이미취소상태_언어설정시_즉시cancelled에러를던진다() async {
+        guard let sut else {
+            return XCTFail("sut가 초기화되지 않았습니다.")
+        }
         // Given
-        let repository = MockLanguageRepository()
         await repository.setSaveResult(.success(()))
         await repository.expectSave(callCount: 0)
-
-        let useCase = DefaultSelectLanguageUseCase(repository: repository)
 
         // When & Then
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            try await useCase.execute(lang: .ko)
+            try await sut.execute(lang: .ko)
         }
 
         do {
             try await task.value
-            XCTFail("이미 취소된 Task이므로 .cancelled 에러가 발생해야 합니다.")
-        } catch SetLanguagesUseCaseError.cancelled {
-            // Success
-            await repository.verify()
+            XCTFail("SetLanguagesUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected SetLanguagesUseCaseError.cancelled, got \(error)")
+            guard case .cancelled = error as? SetLanguagesUseCaseError else {
+                return XCTFail(
+                    "예상한 에러는 SetLanguagesUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await repository.verify()
     }
 
     func test_알수없는에러발생상태_언어설정시_unknown에러를던진다() async {
         // Given
-        struct Dummy: Error {}
-        let dummyError = Dummy()
-        let repository = MockLanguageRepository()
+        struct DummyError: Error {}
+        let dummyError = DummyError()
         await repository.setSaveResult(.failure(.unknown(dummyError)))
         await repository.expectSave(language: .ko, callCount: 1)
 
-        let useCase = DefaultSelectLanguageUseCase(repository: repository)
-
         // When & Then
         do {
-            try await useCase.execute(lang: .ko)
-            XCTFail("Repository가 unknown 에러를 던지면 UseCase도 .unknown 에러를 던져야 합니다.")
-        } catch SetLanguagesUseCaseError.unknown(let repoError) {
-            XCTAssertTrue(repoError is Dummy)
-            await repository.verify()
+            try await sut.execute(lang: .ko)
+            XCTFail("SetLanguagesUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .unknown, got \(error)")
+            guard case .unknown(let repoError) = error else {
+                return XCTFail(
+                    "예상한 에러는 SetLanguagesUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
+            XCTAssertTrue(repoError is DummyError)
         }
+        await repository.verify()
     }
 }

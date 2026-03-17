@@ -1,7 +1,23 @@
 @testable import Domain
+import Core
 import XCTest
 
-final class FetchRootUrlUseCaseTest: XCTestCase {}
+final class FetchRootUrlUseCaseTest: XCTestCase {
+    private var repository: MockWorkSpaceRepository!
+    private var sut: DefaultFetchRootUrlUseCase!
+
+    override func setUp() {
+        super.setUp()
+        repository = MockWorkSpaceRepository()
+        sut = DefaultFetchRootUrlUseCase(repository: repository)
+    }
+
+    override func tearDown() {
+        repository = nil
+        sut = nil
+        super.tearDown()
+    }
+}
 
 // MARK: - 성공 케이스
 
@@ -9,14 +25,11 @@ extension FetchRootUrlUseCaseTest {
     func test_정상상태_루트URL조회시_기대하는URL을반환한다() async throws {
         // Given
         let expectedURL = URL.applicationSupportDirectory
-        let repository = MockWorkSpaceRepository()
         await repository.setRootURLResult(.success(expectedURL))
         await repository.expectFetchRootURL(callCount: 1)
 
-        let useCase = DefaultFetchRootUrlUseCase(repository: repository)
-
         // When
-        let url = try await useCase.execute()
+        let url = try await sut.execute()
 
         // Then
         XCTAssertEqual(url, expectedURL)
@@ -29,72 +42,70 @@ extension FetchRootUrlUseCaseTest {
 extension FetchRootUrlUseCaseTest {
     func test_조회중취소상태_루트URL조회시_cancelled에러를던진다() async {
         // Given
-        let repository = MockWorkSpaceRepository()
         await repository.setRootURLResult(.failure(.cancelled))
         await repository.expectFetchRootURL(callCount: 1)
 
-        let useCase = DefaultFetchRootUrlUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute()
-            XCTFail("Repository가 cancelled 에러를 던지면 UseCase도 cancelled 에러를 던져야 합니다.")
-        } catch FetchRootUrlUseCaseError.cancelled {
-            // Success
-            await repository.verify()
+            _ = try await sut.execute()
+            XCTFail("FetchRootUrlUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected .cancelled, got \(error)")
+            guard case .cancelled = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchRootUrlUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await repository.verify()
     }
 
     func test_태스크이미취소상태_루트URL조회시_즉시cancelled에러를던진다() async {
+        guard let sut else {
+            return XCTFail("sut가 초기화되지 않았습니다.")
+        }
         // Given
         let testURL: URL = .applicationSupportDirectory
-        let repository = MockWorkSpaceRepository()
         await repository.setRootURLResult(.success(testURL))
         await repository.expectFetchRootURL(callCount: 0)
-
-        let useCase = DefaultFetchRootUrlUseCase(repository: repository)
 
         // When & Then
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            _ = try await useCase.execute()
+            return try await sut.execute()
         }
 
         do {
             _ = try await task.value
-            XCTFail("이미 취소된 Task이므로 .cancelled 에러가 발생해야 합니다.")
-        } catch FetchRootUrlUseCaseError.cancelled {
-            // Success
-            await repository.verify()
+            XCTFail("FetchRootUrlUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
-            XCTFail("Expected FetchRootUrlUseCaseError.cancelled, got \(error)")
+            guard case .cancelled = error as? FetchRootUrlUseCaseError else {
+                return XCTFail(
+                    "예상한 에러는 FetchRootUrlUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
         }
+        await repository.verify()
     }
 
     func test_알수없는에러발생상태_루트URL조회시_unknown에러를던진다() async {
         // Given
-        struct Dummy: Error {}
-        let dummyError = Dummy()
-        let repository = MockWorkSpaceRepository()
+        struct DummyError: Error {}
+        let dummyError = DummyError()
         await repository.setRootURLResult(.failure(.unknown(dummyError)))
         await repository.expectFetchRootURL(callCount: 1)
 
-        let useCase = DefaultFetchRootUrlUseCase(repository: repository)
-
         // When & Then
         do {
-            _ = try await useCase.execute()
-            XCTFail("Repository가 unknown 에러를 던지면 UseCase도 .unknown 에러를 던져야 합니다.")
+            _ = try await sut.execute()
+            XCTFail("FetchRootUrlUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
-            switch error {
-            case .unknown(let repoError):
-                XCTAssertTrue(repoError is Dummy)
-                await repository.verify()
-            default:
-                XCTFail("Expected .unknown, got \(error)")
+            guard case .unknown(let repoError) = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchRootUrlUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
             }
+            XCTAssertTrue(repoError is DummyError)
         }
+        await repository.verify()
     }
 }

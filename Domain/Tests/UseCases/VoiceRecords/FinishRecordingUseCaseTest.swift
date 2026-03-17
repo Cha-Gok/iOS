@@ -117,11 +117,12 @@ extension FinishRecordingUseCaseTest {
     }
 
     func test_태스크취소상태_녹음종료시_cancelled에러를던진다() async throws {
+        guard let sut else {
+            return XCTFail("sut가 초기화되지 않았습니다.")
+        }
         // Given
         await recordingRepository.setResult(.success(.stub()))
         await recordingRepository.expectFinishRecording(callCount: 0)
-
-        let sut = try XCTUnwrap(sut)
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
             return try await sut.execute()
