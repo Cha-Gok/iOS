@@ -59,6 +59,31 @@ extension FetchLanguageUseCaseTest {
         await repository.verify()
     }
 
+    func test_알수없는에러발생상태_언어조회시_unknown에러를던진다() async {
+        // Given
+        struct DummyError: Error {}
+        await repository.setFetchResult(.failure(.unknown(DummyError())))
+        await repository.expectFetch(callCount: 1)
+
+        // When & Then
+        do {
+            _ = try await sut.execute()
+            XCTFail("FetchLanguagesUseCaseError.unknown 에러를 throw 해야 합니다.")
+        } catch {
+            guard case .unknown(let repoError) = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchLanguagesUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
+            XCTAssertTrue(repoError is DummyError)
+        }
+        await repository.verify()
+    }
+}
+
+// MARK: - 취소 케이스
+
+extension FetchLanguageUseCaseTest {
     func test_조회중취소상태_언어조회시_cancelled에러를던진다() async {
         // Given
         await repository.setFetchResult(.failure(.cancelled))
@@ -102,28 +127,6 @@ extension FetchLanguageUseCaseTest {
                     "예상한 에러는 FetchLanguagesUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
                 )
             }
-        }
-        await repository.verify()
-    }
-
-    func test_알수없는에러발생상태_언어조회시_unknown에러를던진다() async {
-        // Given
-        struct DummyError: Error {}
-        let dummyError = DummyError()
-        await repository.setFetchResult(.failure(.unknown(dummyError)))
-        await repository.expectFetch(callCount: 1)
-
-        // When & Then
-        do {
-            _ = try await sut.execute()
-            XCTFail("FetchLanguagesUseCaseError.unknown 에러를 throw 해야 합니다.")
-        } catch {
-            guard case .unknown(let repoError) = error else {
-                return XCTFail(
-                    "예상한 에러는 FetchLanguagesUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
-                )
-            }
-            XCTAssertTrue(repoError is DummyError)
         }
         await repository.verify()
     }
