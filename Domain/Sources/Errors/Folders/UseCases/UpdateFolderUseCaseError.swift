@@ -23,7 +23,7 @@ public enum UpdateFolderUseCaseError: LocalizedError, Sendable {
         case .invalidName:
             return "폴더 이름을 한 글자 이상 입력해 주세요."
         case .invalidLengthName:
-            return "폴더 이름이 너무 길어요."
+            return "폴더 이름은 \(Policy.maxNameLength)자 이내로 입력해주세요."
         case .notFound:
             return "해당 폴더를 찾을 수 없습니다."
         case .duplicateName:

@@ -70,8 +70,6 @@ Derived/
 ### Tuist managed dependencies ###
 Tuist/.build
 
-### Cursor ###
-.cursor
-.cursorrules
-.cursor/
+### VSCode ###
+.vscode
 buildServer.json

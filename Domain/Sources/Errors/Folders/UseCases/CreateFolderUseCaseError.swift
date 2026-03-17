@@ -23,7 +23,7 @@ public enum CreateFolderUseCaseError: LocalizedError, Sendable {
         case .duplicateName:
             return "이미 동일한 이름의 폴더가 존재합니다."
         case .invalidLengthName:
-            return "폴더 이름이 너무 길어요."
+            return "폴더 이름은 \(Policy.maxNameLength)자 이내로 입력해주세요."
         case .createFailed:
             return "폴더 생성에 실패했습니다."
         case .unknown(let error):
