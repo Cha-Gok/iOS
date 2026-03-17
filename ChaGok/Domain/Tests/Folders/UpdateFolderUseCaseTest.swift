@@ -32,7 +32,7 @@ extension UpdateFolderUseCaseTest {
         let useCase = DefaultUpdateFolderUseCase(repository: repository)
 
         // When
-        let result = try await useCase.execute(originalFolder)
+        let result = try await useCase.execute(updatedFolder)
 
         // Then
         XCTAssertEqual(result.name, "New Name")
