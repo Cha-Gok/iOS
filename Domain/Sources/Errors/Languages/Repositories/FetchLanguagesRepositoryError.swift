@@ -11,11 +11,11 @@ public enum FetchLanguagesRepositoryError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .cancelled:
-            nil
+            return nil
         case .notFound:
-            "설정된 언어를 찾을 수 없습니다"
+            return "설정된 언어를 찾을 수 없습니다"
         case .unknown(let error):
-            error.localizedDescription
+            return error.localizedDescription
         }
     }
 }

@@ -11,11 +11,11 @@ public enum SetLanguagesUseCaseError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .cancelled:
-            nil
+            return nil
         case .saveFailed:
-            "언어 설정 저장에 실패했습니다"
+            return "언어 설정 저장에 실패했습니다"
         case .unknown(let error):
-            error.localizedDescription
+            return error.localizedDescription
         }
     }
 

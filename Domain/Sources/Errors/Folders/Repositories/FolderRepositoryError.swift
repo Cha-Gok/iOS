@@ -19,19 +19,19 @@ public enum FolderRepositoryError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .cancelled:
-            nil
+            return nil
         case .notFound:
-            "해당 폴더를 찾을 수 없습니다."
+            return "해당 폴더를 찾을 수 없습니다."
         case .duplicateName:
-            "이미 동일한 이름의 폴더가 존재합니다."
+            return "이미 동일한 이름의 폴더가 존재합니다."
         case .createFailed:
-            "폴더 생성에 실패했습니다."
+            return "폴더 생성에 실패했습니다."
         case .fetchFailed:
-            "폴더 목록을 불러오는데 실패했습니다."
+            return "폴더 목록을 불러오는데 실패했습니다."
         case .updateFailed:
-            "폴더 정보를 수정하는데 실패했습니다."
+            return "폴더 정보를 수정하는데 실패했습니다."
         case .unknown(let error):
-            error.localizedDescription
+            return error.localizedDescription
         }
     }
 }
