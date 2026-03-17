@@ -31,7 +31,12 @@ private let domainTarget = Target.target(
     infoPlist: .default,
     sources: ["Sources/**/*.swift"],
     scripts: [
-        .pre(tool: "swiftlint", arguments: ["--fix"], name: "SwiftLint", basedOnDependencyAnalysis: false)
+        .pre(
+            tool: "swiftformat",
+            arguments: ["--config", "../.swiftformat", "."],
+            name: "SwiftFormat",
+            basedOnDependencyAnalysis: false
+        )
     ],
     dependencies: [
         .project(target: "Core", path: "../Core")
@@ -46,6 +51,14 @@ private let domainTestsTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Tests/**/*.swift"],
+    scripts: [
+        .pre(
+            tool: "swiftformat",
+            arguments: ["--config", "../.swiftformat", "."],
+            name: "SwiftFormat",
+            basedOnDependencyAnalysis: false
+        )
+    ],
     dependencies: [.target(name: "Domain")]
 )
 

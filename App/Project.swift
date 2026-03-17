@@ -48,7 +48,12 @@ private let appTarget = Target.target(
     sources: ["Sources/**/*.swift"],
     resources: ["Resources/**"],
     scripts: [
-        .pre(tool: "swiftlint", arguments: ["--fix"], name: "SwiftLint", basedOnDependencyAnalysis: false)
+        .pre(
+            tool: "swiftformat",
+            arguments: ["--config", "../.swiftformat", "."],
+            name: "SwiftFormat",
+            basedOnDependencyAnalysis: false
+        )
     ],
     dependencies: [
         .project(target: "Core", path: "../Core"),
@@ -67,6 +72,14 @@ private let appTestsTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Tests/**/*.swift"],
+    scripts: [
+        .pre(
+            tool: "swiftformat",
+            arguments: ["--config", "../.swiftformat", "."],
+            name: "SwiftFormat",
+            basedOnDependencyAnalysis: false
+        )
+    ],
     dependencies: [.target(name: "App")]
 )
 
