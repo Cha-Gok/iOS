@@ -2,9 +2,13 @@ import Foundation
 
 /// 녹음 재개 유스케이스 에러
 public enum ResumeRecordingUseCaseError: LocalizedError, Sendable {
+    /// 일시정지된 녹음이 없는 상태에서 재개를 시도한 경우
     case notPaused
+    /// 녹음 재개 작업에 실패한 경우
     case resumeFailed
+    /// 사용자가 작업을 취소한 경우
     case cancelled
+    /// 기타 알 수 없는 에러
     case unknown(Error)
 
     public var errorDescription: String? {
