@@ -1,6 +1,6 @@
 import Foundation
 
-public struct StorageInfo {
+public struct StorageInfo: Sendable, Equatable {
     public let appUsedBytes: Int64
     public let deviceTotalBytes: Int64
     public let deviceUsedBytes: Int64
@@ -15,6 +15,3 @@ public struct StorageInfo {
         self.deviceUsedBytes = deviceUsedBytes
     }
 }
-
-extension StorageInfo: Sendable {}
-extension StorageInfo: Equatable {}

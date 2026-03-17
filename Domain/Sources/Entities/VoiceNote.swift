@@ -1,6 +1,6 @@
 import Foundation
 
-public struct VoiceNote {
+public struct VoiceNote: Sendable {
     public let id: UUID
     public let title: String
     public let createdAt: Date
@@ -36,5 +36,3 @@ public struct VoiceNote {
         self.deletedAt = deletedAt
     }
 }
-
-extension VoiceNote: Sendable {}

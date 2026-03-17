@@ -14,7 +14,12 @@ public enum MoveWasteBasketUseCaseError: LocalizedError, Sendable {
         case .cancelled:
             nil
         case .moveFailed(let method):
-            method.errorDescription
+            switch method {
+            case .single:
+                "휴지통 개별 이동을 실패하였습니다"
+            case .multiple:
+                "휴지통 다수 선택 이동을 실패하였습니다"
+            }
         case .unknown(let error):
             error.localizedDescription
         }

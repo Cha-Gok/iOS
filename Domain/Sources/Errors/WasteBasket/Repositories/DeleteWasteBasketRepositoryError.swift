@@ -13,7 +13,14 @@ public enum DeleteWasteBasketRepositoryError: LocalizedError, Sendable {
         case .cancelled:
             nil
         case .deleteFailed(let method):
-            method.errorDescription
+            switch method {
+            case .all:
+                "휴지통 전체 삭제를 실패하였습니다"
+            case .multiple:
+                "휴지통 다수 선택 삭제를 실패하였습니다"
+            case .single:
+                "휴지통 개별 삭제를 실패하였습니다"
+            }
         case .unknown(let error):
             error.localizedDescription
         }

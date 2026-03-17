@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Transcript {
+public struct Transcript: Sendable {
     public let id: UUID
     public let createdAt: Date
     public let text: String
@@ -15,5 +15,3 @@ public struct Transcript {
         self.text = text
     }
 }
-
-extension Transcript: Sendable {}

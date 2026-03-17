@@ -11,11 +11,16 @@ public enum MoveWasteBasketRepositoryError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .cancelled:
-            nil
+            return nil
         case .moveFailed(let method):
-            method.errorDescription
+            switch method {
+            case .single:
+                return "휴지통 개별 이동을 실패하였습니다"
+            case .multiple:
+                return "휴지통 다수 선택 이동을 실패하였습니다"
+            }
         case .unknown(let error):
-            error.localizedDescription
+            return error.localizedDescription
         }
     }
 }

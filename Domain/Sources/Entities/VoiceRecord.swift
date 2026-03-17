@@ -1,6 +1,6 @@
 import Foundation
 
-public struct VoiceRecord {
+public struct VoiceRecord: Sendable {
     public let id: UUID
     public let createdAt: Date
     public let audioFilePath: URL
@@ -18,5 +18,3 @@ public struct VoiceRecord {
         self.duration = duration
     }
 }
-
-extension VoiceRecord: Sendable {}

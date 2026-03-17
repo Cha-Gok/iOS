@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Summary {
+public struct Summary: Sendable {
     public let id: UUID
     public let createdAt: Date
     public let text: String
@@ -15,5 +15,3 @@ public struct Summary {
         self.text = text
     }
 }
-
-extension Summary: Sendable {}

@@ -12,11 +12,18 @@ public enum DeleteWasteBasketUseCaseError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .cancelled:
-            nil
+            return nil
         case .deleteFailed(let method):
-            method.errorDescription
+            switch method {
+            case .all:
+                return"휴지통 전체 삭제를 실패하였습니다"
+            case .multiple:
+                return "휴지통 다수 선택 삭제를 실패하였습니다"
+            case .single:
+                return "휴지통 개별 삭제를 실패하였습니다"
+            }
         case .unknown(let error):
-            error.localizedDescription
+            return error.localizedDescription
         }
     }
 

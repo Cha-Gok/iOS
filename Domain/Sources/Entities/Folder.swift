@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Folder {
+public struct Folder: Sendable {
     public let id: UUID
     public let path: URL
     public let name: String
@@ -27,5 +27,3 @@ public struct Folder {
         self.deletedAt = deletedAt
     }
 }
-
-extension Folder: Sendable {}

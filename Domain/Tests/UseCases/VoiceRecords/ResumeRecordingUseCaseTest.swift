@@ -47,7 +47,7 @@ extension ResumeRecordingUseCaseTest {
             try await sut.execute()
             XCTFail("에러를 throw 해야 합니다.")
         } catch {
-            guard case .notPaused = error as? ResumeRecordingUseCaseError else {
+            guard case .notPaused = error else {
                 return XCTFail("expected .notPaused, got \(error)")
             }
         }

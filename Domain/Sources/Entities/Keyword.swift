@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Keyword {
+public struct Keyword: Sendable {
     public let id: UUID
     public let noteId: UUID
     public let word: String
@@ -15,5 +15,3 @@ public struct Keyword {
         self.word = word
     }
 }
-
-extension Keyword: Sendable {}
