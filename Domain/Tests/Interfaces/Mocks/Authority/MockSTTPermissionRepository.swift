@@ -20,7 +20,7 @@ actor MockSTTPermissionRepository: STTPermissionRepository {
             XCTAssertEqual(
                 actualCheckSTTPermissionCallCount,
                 expected,
-                "checkSTTPermission callCount",
+                "STT 권한 확인 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )

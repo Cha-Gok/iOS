@@ -25,7 +25,7 @@ actor MockVoiceNoteCreateRepository: VoiceNoteCreateRepository {
             XCTAssertEqual(
                 createCallCount,
                 expected,
-                "create call count mismatch",
+                "생성 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -34,7 +34,7 @@ actor MockVoiceNoteCreateRepository: VoiceNoteCreateRepository {
             XCTAssertEqual(
                 actualVoiceRecord?.id,
                 expectedID,
-                "voiceRecord ID mismatch",
+                "음성 녹음 ID가 일치하지 않습니다.",
                 file: file,
                 line: line
             )

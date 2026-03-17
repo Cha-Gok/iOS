@@ -39,7 +39,7 @@ actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
             XCTAssertEqual(
                 fetchAllCallCount,
                 expected,
-                "fetchAll call count mismatch",
+                "전체 조회 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -48,7 +48,7 @@ actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
             XCTAssertEqual(
                 actualFetchAllFolderID,
                 expectedFolderID,
-                "fetchAll folderID mismatch",
+                "전체 조회 폴더 ID가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -57,7 +57,7 @@ actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
             XCTAssertEqual(
                 fetchByIdCallCount,
                 expected,
-                "fetch(byId:) call count mismatch",
+                "ID별 조회 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -66,7 +66,7 @@ actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
             XCTAssertEqual(
                 actualFetchByIdID,
                 expectedID,
-                "fetch(byId:) id mismatch",
+                "ID별 조회 ID가 일치하지 않습니다.",
                 file: file,
                 line: line
             )

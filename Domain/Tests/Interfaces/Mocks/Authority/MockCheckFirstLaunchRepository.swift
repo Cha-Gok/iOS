@@ -20,7 +20,7 @@ final class MockCheckFirstLaunchRepository: CheckFirstLaunchRepository, @uncheck
             XCTAssertEqual(
                 checkAndMarkFirstLaunchCallCount,
                 expected,
-                "checkAndMarkFirstLaunch call count mismatch",
+                "첫 실행 확인 및 마킹 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )

@@ -24,11 +24,11 @@ actor MockSummaryRepository: SummaryRepository {
 
     func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedCallCount {
-            XCTAssertEqual(actualCallCount, expected, "summarize callCount", file: file, line: line)
+            XCTAssertEqual(actualCallCount, expected, "요약 호출 횟수가 일치하지 않습니다.", file: file, line: line)
         }
         if let expectedText = expectedTranscriptText {
             XCTAssertEqual(
-                actualTranscript?.text, expectedText, "summarize transcript text", file: file,
+                actualTranscript?.text, expectedText, "요약 텍스트 내용이 일치하지 않습니다.", file: file,
                 line: line
             )
         }

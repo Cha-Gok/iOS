@@ -37,7 +37,7 @@ actor MockLanguageRepository: LanguageRepository {
             XCTAssertEqual(
                 fetchCallCount,
                 expected,
-                "fetch call count mismatch",
+                "조회 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -46,7 +46,7 @@ actor MockLanguageRepository: LanguageRepository {
             XCTAssertEqual(
                 saveCallCount,
                 expected,
-                "save call count mismatch",
+                "저장 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -56,7 +56,7 @@ actor MockLanguageRepository: LanguageRepository {
             XCTAssertEqual(
                 lastSavedLanguage,
                 expected,
-                "lastSavedLanguage mismatch",
+                "마지막으로 저장된 언어가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -72,7 +72,7 @@ actor MockLanguageRepository: LanguageRepository {
         case .failure(let error):
             throw error
         case .none:
-            XCTFail("MockLanguageRepository.fetchResult를 찾을 수 없습니다")
+            XCTFail("MockLanguageRepository.fetchResult 가 설정되지 않았습니다.")
             let error = NSError(domain: "MockLanguageRepository.fetchResult", code: 0)
             throw .unknown(error)
         }
@@ -88,7 +88,7 @@ actor MockLanguageRepository: LanguageRepository {
         case .failure(let error):
             throw error
         case .none:
-            XCTFail("MockLanguageRepository.saveResult를 찾을 수 없습니다")
+            XCTFail("MockLanguageRepository.saveResult 가 설정되지 않았습니다.")
             let error = NSError(domain: "MockLanguageRepository.saveResult", code: 0)
             throw .unknown(error)
         }

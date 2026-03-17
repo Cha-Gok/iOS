@@ -20,7 +20,7 @@ actor MockVoiceRecordFinishRepository: VoiceRecordFinishRepository {
             XCTAssertEqual(
                 actualFinishRecordingCallCount,
                 expected,
-                "finishRecording callCount",
+                "녹음 종료 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )

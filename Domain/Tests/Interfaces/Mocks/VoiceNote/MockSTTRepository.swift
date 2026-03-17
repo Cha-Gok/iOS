@@ -23,12 +23,12 @@ actor MockSTTRepository: STTRepository {
     func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedCallCount {
             XCTAssertEqual(
-                actualCallCount, expected, "transcribe callCount", file: file, line: line
+                actualCallCount, expected, "변환 호출 횟수가 일치하지 않습니다.", file: file, line: line
             )
         }
         if let expectedURL = expectedAudioFileURL {
             XCTAssertEqual(
-                actualAudioFileURL, expectedURL, "transcribe audioFileURL", file: file, line: line
+                actualAudioFileURL, expectedURL, "변환 오디오 파일 URL이 일치하지 않습니다.", file: file, line: line
             )
         }
     }

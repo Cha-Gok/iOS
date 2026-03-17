@@ -25,7 +25,7 @@ actor MockVoiceNoteUpdateRepository: VoiceNoteUpdateRepository {
             XCTAssertEqual(
                 updateCallCount,
                 expected,
-                "update call count mismatch",
+                "수정 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -34,14 +34,14 @@ actor MockVoiceNoteUpdateRepository: VoiceNoteUpdateRepository {
             XCTAssertEqual(
                 actualUpdatedVoiceNote?.id,
                 expectedNote.id,
-                "update voiceNote id mismatch",
+                "수정 음성 메모 ID가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
             XCTAssertEqual(
                 actualUpdatedVoiceNote?.title,
                 expectedNote.title,
-                "update voiceNote title mismatch",
+                "수정 음성 메모 제목이 일치하지 않습니다.",
                 file: file,
                 line: line
             )

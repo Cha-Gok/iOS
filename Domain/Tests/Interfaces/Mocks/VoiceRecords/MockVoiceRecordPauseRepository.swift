@@ -20,7 +20,7 @@ actor MockVoiceRecordPauseRepository: VoiceRecordPauseRepository {
             XCTAssertEqual(
                 actualPauseRecordingCallCount,
                 expected,
-                "pauseRecording callCount",
+                "녹음 일시정지 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )

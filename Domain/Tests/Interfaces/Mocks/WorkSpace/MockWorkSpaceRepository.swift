@@ -45,13 +45,13 @@ actor MockWorkSpaceRepository: WorkSpaceRepository {
 
     func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedFetchRootURLCallCount {
-            XCTAssertEqual(fetchRootURLCallCount, expected, "fetchRootURL call count mismatch", file: file, line: line)
+            XCTAssertEqual(fetchRootURLCallCount, expected, "루트 URL 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line)
         }
         if let expected = expectedFetchOrCreateBasicFolderCallCount {
             XCTAssertEqual(
                 fetchOrCreateBasicFolderCallCount,
                 expected,
-                "fetchOrCreateBasicFolder call count mismatch",
+                "기본 폴더 조회 또는 생성 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -64,7 +64,8 @@ actor MockWorkSpaceRepository: WorkSpaceRepository {
         fetchRootURLCallCount += 1
 
         guard let result = rootURLResult else {
-            fatalError("MockWorkSpaceRepository.rootURLResult not set")
+            XCTFail("MockWorkSpaceRepository.rootURLResult 가 설정되지 않았습니다.")
+            fatalError("MockWorkSpaceRepository.rootURLResult 가 설정되지 않았습니다.")
         }
 
         switch result {
@@ -79,7 +80,8 @@ actor MockWorkSpaceRepository: WorkSpaceRepository {
         fetchOrCreateBasicFolderCallCount += 1
 
         guard let result = basicFolderResult else {
-            fatalError("MockWorkSpaceRepository.basicFolderResult not set")
+            XCTFail("MockWorkSpaceRepository.basicFolderResult 가 설정되지 않았습니다.")
+            fatalError("MockWorkSpaceRepository.basicFolderResult 가 설정되지 않았습니다.")
         }
 
         switch result {

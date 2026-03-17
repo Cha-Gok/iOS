@@ -84,13 +84,13 @@ actor MockWasteBasketRepository: WasteBasketRepository {
 
     func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedFetchAllCallCount {
-            XCTAssertEqual(fetchAllCallCount, expected, "fetchAll call count mismatch", file: file, line: line)
+            XCTAssertEqual(fetchAllCallCount, expected, "전체 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line)
         }
         if let expected = expectedMoveToWasteBasketCallCount {
             XCTAssertEqual(
                 moveToWasteBasketCallCount,
                 expected,
-                "moveToWasteBasket call count mismatch",
+                "휴지통으로 이동 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -99,33 +99,33 @@ actor MockWasteBasketRepository: WasteBasketRepository {
             XCTAssertEqual(
                 moveAllToWasteBasketCallCount,
                 expected,
-                "moveAllToWasteBasket call count mismatch",
+                "전체 휴지통으로 이동 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
         }
         if let expected = expectedDeleteCallCount {
-            XCTAssertEqual(deleteCallCount, expected, "delete call count mismatch", file: file, line: line)
+            XCTAssertEqual(deleteCallCount, expected, "삭제 호출 횟수가 일치하지 않습니다.", file: file, line: line)
         }
         if let expected = expectedDeleteAllCallCount {
-            XCTAssertEqual(deleteAllCallCount, expected, "deleteAll call count mismatch", file: file, line: line)
+            XCTAssertEqual(deleteAllCallCount, expected, "전체 삭제 호출 횟수가 일치하지 않습니다.", file: file, line: line)
         }
         if let expected = expectedAllClearCallCount {
-            XCTAssertEqual(allClearCallCount, expected, "allClear call count mismatch", file: file, line: line)
+            XCTAssertEqual(allClearCallCount, expected, "비우기 호출 횟수가 일치하지 않습니다.", file: file, line: line)
         }
 
         // Argument Verification
         if let expected = expectedLastMovedItem {
-            XCTAssertEqual(lastMovedItem, expected, "lastMovedItem mismatch", file: file, line: line)
+            XCTAssertEqual(lastMovedItem, expected, "마지막으로 이동된 항목이 일치하지 않습니다.", file: file, line: line)
         }
         if let expected = expectedLastMovedItems {
-            XCTAssertEqual(lastMovedItems, expected, "lastMovedItems mismatch", file: file, line: line)
+            XCTAssertEqual(lastMovedItems, expected, "마지막으로 이동된 항목 목록이 일치하지 않습니다.", file: file, line: line)
         }
         if let expected = expectedLastDeletedItem {
-            XCTAssertEqual(lastDeletedItem, expected, "lastDeletedItem mismatch", file: file, line: line)
+            XCTAssertEqual(lastDeletedItem, expected, "마지막으로 삭제된 항목이 일치하지 않습니다.", file: file, line: line)
         }
         if let expected = expectedLastDeletedItems {
-            XCTAssertEqual(lastDeletedItems, expected, "lastDeletedItems mismatch", file: file, line: line)
+            XCTAssertEqual(lastDeletedItems, expected, "마지막으로 삭제된 항목 목록이 일치하지 않습니다.", file: file, line: line)
         }
     }
 
@@ -140,7 +140,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         case .failure(let error):
             throw error
         case .none:
-            XCTFail("MockWasteBasketRepository.fetchAllResult를 찾을 수 없습니다")
+            XCTFail("MockWasteBasketRepository.fetchAllResult 가 설정되지 않았습니다.")
             let error = NSError(domain: "MockWasteBasketRepository.fetchAllResult", code: 0)
             throw .unknown(error)
         }
@@ -156,7 +156,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         case .failure(let error):
             throw error
         case .none:
-            XCTFail("MockWasteBasketRepository.moveResult를 찾을 수 없습니다")
+            XCTFail("MockWasteBasketRepository.moveResult 가 설정되지 않았습니다.")
             let error = NSError(domain: "MockWasteBasketRepository.moveResult", code: 0)
             throw .unknown(error)
         }
@@ -172,7 +172,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         case .failure(let error):
             throw error
         case .none:
-            XCTFail("MockWasteBasketRepository.moveResult를 찾을 수 없습니다")
+            XCTFail("MockWasteBasketRepository.moveResult 가 설정되지 않았습니다.")
             let error = NSError(domain: "MockWasteBasketRepository.moveResult", code: 0)
             throw .unknown(error)
         }
@@ -188,7 +188,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         case .failure(let error):
             throw error
         case .none:
-            XCTFail("MockWasteBasketRepository.deleteResult를 찾을 수 없습니다")
+            XCTFail("MockWasteBasketRepository.deleteResult 가 설정되지 않았습니다.")
             let error = NSError(domain: "MockWasteBasketRepository.deleteResult", code: 0)
             throw .unknown(error)
         }
@@ -204,7 +204,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         case .failure(let error):
             throw error
         case .none:
-            XCTFail("MockWasteBasketRepository.deleteResult를 찾을 수 없습니다")
+            XCTFail("MockWasteBasketRepository.deleteResult 가 설정되지 않았습니다.")
             let error = NSError(domain: "MockWasteBasketRepository.deleteResult", code: 0)
             throw .unknown(error)
         }
@@ -219,7 +219,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         case .failure(let error):
             throw error
         case .none:
-            XCTFail("MockWasteBasketRepository.deleteResult를 찾을 수 없습니다")
+            XCTFail("MockWasteBasketRepository.deleteResult 가 설정되지 않았습니다.")
             let error = NSError(domain: "MockWasteBasketRepository.deleteResult", code: 0)
             throw .unknown(error)
         }

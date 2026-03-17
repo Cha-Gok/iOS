@@ -21,7 +21,7 @@ actor MockVoiceRecordStartRepository: VoiceRecordStartRepository {
             XCTAssertEqual(
                 actualStartRecordingCallCount,
                 expected,
-                "startRecording callCount",
+                "녹음 시작 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
