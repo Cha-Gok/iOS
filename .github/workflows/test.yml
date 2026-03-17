@@ -1,0 +1,46 @@
+name: Test
+
+on:
+  workflow_call:
+    secrets:
+      TUIST_CONFIG_TOKEN:
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    name: Build and Test
+    runs-on: macos-15
+    env:
+      TUIST_XDG_STATE_HOME: /tmp/tuist-state
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 🛠 mise를 통한 도구 설치 및 버전 관리
+      - name: Setup Tools with mise
+        uses: jdx/mise-action@v2
+
+      # 🔑 1. 인증
+      - name: Tuist auth login
+        run: tuist auth login
+
+      # 📦 2. 캐시 설정
+      - name: Tuist setup cache
+        run: tuist setup cache
+
+      # 🧪 3. 테스트 실행
+      - name: Run Tests
+        run: tuist test
+
+      # 📁 실패 시 Tuist 세션 로그 업로드
+      - name: Upload Tuist session logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tuist-session-logs
+          path: /tmp/tuist-state/tuist/sessions/
+          if-no-files-found: ignore

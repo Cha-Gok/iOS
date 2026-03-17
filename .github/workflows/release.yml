@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 모든 히스토리를 가져와야 릴리즈 노트 생성이 가능함
+
+      # 🏷️ Tuist 설정에서 버전 정보 추출 (v1.0.0 형식)
+      - name: Extract Version
+        id: get_version
+        run: |
+          VERSION=$(grep 'public let version =' Tuist/ProjectDescriptionHelpers/Config.swift | sed 's/.*"\(.*\)".*/\1/')
+          echo "VERSION=v$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      # 🚀 GitHub Release 생성 및 자동 노트 작성
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ steps.get_version.outputs.VERSION }}
+        run: |
+          # 이미 해당 태그가 존재하는지 확인
+          if gh release view "$TAG_NAME" > /dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists. Skipping..."
+          else
+            gh release create "$TAG_NAME" \
+              --title "$TAG_NAME" \
+              --generate-notes
+          fi

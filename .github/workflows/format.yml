@@ -1,0 +1,18 @@
+name: Format
+
+on:
+  workflow_call:
+
+jobs:
+  format:
+    name: Code Style Check
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install SwiftFormat
+        run: brew install swiftformat
+
+      - name: Run SwiftFormat Lint
+        run: swiftformat . --lint
