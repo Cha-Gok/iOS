@@ -20,6 +20,8 @@
 --modifier-order public,private,static,final
 --pattern-let inline
 --semicolons never
+--indent-case false
+--blank-line-after-switch-case always
 
 # [추천 추가 규칙 - 가독성 향상]
 --acronyms ID,URL,UUID,JSON  # 약어 대소문자 일관성 (UserId -> userID)
@@ -27,6 +29,8 @@
 --enable typeSugar           # 단축 문법 사용 (Array<Int> -> [Int])
 --enable redundantInit       # 불필요한 .init 제거 (MyClass.init() -> MyClass())
 --wrap-collections before-first # 긴 배열/딕셔너리 가로 길이 초과 시 줄바꿈
+--enable wrapSwitchCases     # switch case가 길어질 때 줄바꿈 유도
+--enable consistentSwitchCaseSpacing # switch case 간 간격 일관성
 
 # [어트리뷰트 배치]
 --func-attributes prev-line

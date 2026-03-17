@@ -4,16 +4,12 @@ import Foundation
 public enum UpdateVoiceNoteUseCaseError: LocalizedError, Sendable {
     /// 음성 메모 제목이 유효하지 않음 (공백 등).
     case invalidTitle
-
     /// 음성 메모 제목 길이가 너무 김.
     case invalidLengthTitle
-
     /// 음성 메모 업데이트 실패.
     case updateFailed
-
     /// 취소됨.
     case cancelled
-
     /// 예측할 수 없는 오류.
     case unknown(Error)
 

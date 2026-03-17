@@ -4,10 +4,8 @@ import Foundation
 public enum VoiceNoteUpdateRepositoryError: LocalizedError, Sendable {
     /// 음성 메모 업데이트 실패.
     case updateFailed
-
     /// 취소됨.
     case cancelled
-
     /// 예측할 수 없는 오류.
     case unknown(Error)
 

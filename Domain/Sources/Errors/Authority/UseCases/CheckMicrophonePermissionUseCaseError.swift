@@ -7,8 +7,10 @@ public enum CheckMicrophonePermissionUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-        case .cancelled: return nil
-        case .unknown(let error): return error.localizedDescription
+        case .cancelled:
+            return nil
+        case .unknown(let error):
+            return error.localizedDescription
         }
     }
 }

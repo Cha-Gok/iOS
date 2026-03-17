@@ -4,10 +4,8 @@ import Foundation
 public enum SummaryRepositoryError: LocalizedError, Sendable {
     /// 키워드·요약 생성 실패.
     case summarizeFailed
-
     /// 취소됨.
     case cancelled
-
     /// 알 수 없는 에러.
     case unknown(Error)
 

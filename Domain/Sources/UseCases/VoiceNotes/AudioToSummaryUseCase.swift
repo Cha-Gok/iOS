@@ -48,8 +48,8 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
     }
 }
 
-fileprivate extension AudioToSummaryUseCaseError {
-    init(_ error: Error) {
+extension AudioToSummaryUseCaseError {
+    fileprivate init(_ error: Error) {
         if error is CancellationError {
             self = .cancelled
         } else if let error = error as? STTRepositoryError {

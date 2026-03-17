@@ -4,10 +4,8 @@ import Foundation
 public enum STTRepositoryError: LocalizedError, Sendable {
     /// 오디오 전사(Transcription) 실패.
     case transcribeFailed
-
     /// 취소됨.
     case cancelled
-
     /// 알 수 없는 에러.
     case unknown(Error)
 

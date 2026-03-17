@@ -4,22 +4,16 @@ import Foundation
 public enum CreateVoiceNoteUseCaseError: LocalizedError, Sendable {
     /// 검증 실패: 녹음 길이가 유효하지 않음 (0 이하).
     case invalidDuration(duration: Double)
-
     /// 검증 실패: 오디오 파일 경로가 유효하지 않음.
     case invalidAudioFilePath(URL)
-
     /// 검증 실패: 파일명이 비어있음.
     case emptyFileName
-
     /// 검증 실패: 지원하지 않는 파일 확장자.
     case unsupportedExtension(String)
-
     /// 음성 메모 생성 실패 (저장/디스크/권한 등).
     case createFailed
-
     /// 취소됨.
     case cancelled
-
     /// 예측할 수 없는 오류.
     case unknown(Error)
 

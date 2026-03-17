@@ -4,16 +4,12 @@ import Foundation
 public enum VoiceNoteFetchRepositoryError: LocalizedError, Sendable {
     /// 폴더별 목록 조회 실패.
     case fetchAllFailed(folderID: UUID)
-
     /// 해당 ID의 음성 메모를 찾을 수 없음.
     case recordNotFound(id: UUID)
-
     /// 단건 조회 실패.
     case fetchFailed(id: UUID)
-
     /// 취소됨.
     case cancelled
-
     /// 예측할 수 없는 오류.
     case unknown(Error)
 

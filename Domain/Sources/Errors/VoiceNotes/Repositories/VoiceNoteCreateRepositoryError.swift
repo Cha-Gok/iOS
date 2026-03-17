@@ -4,10 +4,8 @@ import Foundation
 public enum VoiceNoteCreateRepositoryError: LocalizedError, Sendable {
     /// 음성 메모 생성 실패 (저장/디스크/권한 등).
     case createFailed
-
     /// 취소됨.
     case cancelled
-
     /// 예측할 수 없는 오류.
     case unknown(Error)
 

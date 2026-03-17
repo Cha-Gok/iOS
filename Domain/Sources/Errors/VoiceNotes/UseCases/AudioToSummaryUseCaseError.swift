@@ -4,13 +4,10 @@ import Foundation
 public enum AudioToSummaryUseCaseError: LocalizedError, Sendable {
     /// 음성 인식(전사) 실패.
     case transcribeFailed(STTRepositoryError)
-
     /// 요약 생성 실패.
     case summarizeFailed(SummaryRepositoryError)
-
     /// 취소됨.
     case cancelled
-
     /// 알 수 없는 에러.
     case unknown(Error)
 
