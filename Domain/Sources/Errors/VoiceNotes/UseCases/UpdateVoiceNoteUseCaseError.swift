@@ -18,7 +18,7 @@ public enum UpdateVoiceNoteUseCaseError: LocalizedError, Sendable {
         case .invalidTitle:
             return "음성 메모 제목을 입력해주세요."
         case .invalidLengthTitle:
-            return "제목은 50자 이내로 입력해주세요."
+            return "제목은 \(Policy.maxNameLength)자 이내로 입력해주세요."
         case .updateFailed:
             return "음성 메모 수정에 실패했습니다."
         case .cancelled:

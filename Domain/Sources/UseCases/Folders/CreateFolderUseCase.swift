@@ -30,7 +30,7 @@ public struct DefaultCreateFolderUseCase: CreateFolderUseCase {
         }
 
         // 폴더 이름 제한
-        guard trimName.count <= FolderConstants.maxNameLength else { throw UseCaseError.invalidLengthName }
+        guard trimName.count <= Policy.maxNameLength else { throw UseCaseError.invalidLengthName }
 
         do {
             return try await repository.create(name: trimName)

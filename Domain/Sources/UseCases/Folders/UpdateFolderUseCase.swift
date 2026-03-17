@@ -30,7 +30,7 @@ public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
         }
 
         // 폴더 이름 제한
-        guard trimName.count <= FolderConstants.maxNameLength else { throw UseCaseError.invalidLengthName }
+        guard trimName.count <= Policy.maxNameLength else { throw UseCaseError.invalidLengthName }
 
         let updateFolder: Folder = .init(
             id: folder.id,

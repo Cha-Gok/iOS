@@ -1,7 +1,6 @@
+@testable import Domain
 import Foundation
 import XCTest
-
-@testable import Domain
 
 final class MockCheckFirstLaunchRepository: CheckFirstLaunchRepository, @unchecked Sendable {
     private var returnValue: Bool = false

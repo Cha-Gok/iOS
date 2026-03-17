@@ -31,8 +31,8 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
             throw .invalidTitle
         }
 
-        // 2. 제목 길이 검사 (최대 50자)
-        if trimmedTitle.count > 50 {
+        // 2. 제목 길이 검사
+        if trimmedTitle.count > Policy.maxNameLength {
             throw .invalidLengthTitle
         }
 
