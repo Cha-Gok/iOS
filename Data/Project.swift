@@ -7,7 +7,10 @@ private let dataScheme = Scheme.scheme(
     buildAction: .buildAction(
         targets: [.target("Data")],
         findImplicitDependencies: true
-    )
+    ),
+    testAction: .targets([
+        .testableTarget(target: .target("DataTests"), parallelization: .disabled)
+    ])
 )
 
 private let dataTestsScheme = Scheme.scheme(

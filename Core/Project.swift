@@ -7,7 +7,10 @@ private let coreScheme = Scheme.scheme(
     buildAction: .buildAction(
         targets: [.target("Core")],
         findImplicitDependencies: true
-    )
+    ),
+    testAction: .targets([
+        .testableTarget(target: .target("CoreTests"), parallelization: .disabled)
+    ])
 )
 
 private let coreTestsScheme = Scheme.scheme(

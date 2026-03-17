@@ -8,6 +8,9 @@ private let appScheme = Scheme.scheme(
         targets: [.target("App")],
         findImplicitDependencies: true
     ),
+    testAction: .targets([
+        .testableTarget(target: .target("AppTests"), parallelization: .disabled)
+    ]),
     runAction: .runAction(executable: .target("App"))
 )
 

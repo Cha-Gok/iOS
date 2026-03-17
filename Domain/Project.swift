@@ -7,7 +7,10 @@ private let domainScheme = Scheme.scheme(
     buildAction: .buildAction(
         targets: [.target("Domain")],
         findImplicitDependencies: true
-    )
+    ),
+    testAction: .targets([
+        .testableTarget(target: .target("DomainTests"), parallelization: .disabled)
+    ])
 )
 
 private let domainTestsScheme = Scheme.scheme(

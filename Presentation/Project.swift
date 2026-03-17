@@ -7,7 +7,10 @@ private let presentationScheme = Scheme.scheme(
     buildAction: .buildAction(
         targets: [.target("Presentation")],
         findImplicitDependencies: true
-    )
+    ),
+    testAction: .targets([
+        .testableTarget(target: .target("PresentationTests"), parallelization: .disabled)
+    ])
 )
 
 private let presentationTestsScheme = Scheme.scheme(
