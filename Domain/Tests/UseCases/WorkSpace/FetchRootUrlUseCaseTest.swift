@@ -40,6 +40,31 @@ extension FetchRootUrlUseCaseTest {
 // MARK: - 에러 케이스
 
 extension FetchRootUrlUseCaseTest {
+    func test_알수없는에러발생상태_루트URL조회시_unknown에러를던진다() async {
+        // Given
+        struct DummyError: Error {}
+        await repository.setRootURLResult(.failure(.unknown(DummyError())))
+        await repository.expectFetchRootURL(callCount: 1)
+
+        // When & Then
+        do {
+            _ = try await sut.execute()
+            XCTFail("FetchRootUrlUseCaseError.unknown 에러를 throw 해야 합니다.")
+        } catch {
+            guard case .unknown(let repoError) = error else {
+                return XCTFail(
+                    "예상한 에러는 FetchRootUrlUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
+            XCTAssertTrue(repoError is DummyError)
+        }
+        await repository.verify()
+    }
+}
+
+// MARK: - 취소 케이스
+
+extension FetchRootUrlUseCaseTest {
     func test_조회중취소상태_루트URL조회시_cancelled에러를던진다() async {
         // Given
         await repository.setRootURLResult(.failure(.cancelled))
@@ -83,28 +108,6 @@ extension FetchRootUrlUseCaseTest {
                     "예상한 에러는 FetchRootUrlUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
                 )
             }
-        }
-        await repository.verify()
-    }
-
-    func test_알수없는에러발생상태_루트URL조회시_unknown에러를던진다() async {
-        // Given
-        struct DummyError: Error {}
-        let dummyError = DummyError()
-        await repository.setRootURLResult(.failure(.unknown(dummyError)))
-        await repository.expectFetchRootURL(callCount: 1)
-
-        // When & Then
-        do {
-            _ = try await sut.execute()
-            XCTFail("FetchRootUrlUseCaseError.unknown 에러를 throw 해야 합니다.")
-        } catch {
-            guard case .unknown(let repoError) = error else {
-                return XCTFail(
-                    "예상한 에러는 FetchRootUrlUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
-                )
-            }
-            XCTAssertTrue(repoError is DummyError)
         }
         await repository.verify()
     }
