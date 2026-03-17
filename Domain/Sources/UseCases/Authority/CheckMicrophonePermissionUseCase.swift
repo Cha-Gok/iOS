@@ -27,12 +27,3 @@ public struct DefaultCheckMicrophonePermissionUseCase: CheckMicrophonePermission
         }
     }
 }
-
-fileprivate extension CheckMicrophonePermissionUseCaseError {
-    init(_ error: MicrophonePermissionRepositoryError) {
-        switch error {
-        case .cancelled: self = .cancelled
-        case .unknown(let error): self = .unknown(error)
-        }
-    }
-}

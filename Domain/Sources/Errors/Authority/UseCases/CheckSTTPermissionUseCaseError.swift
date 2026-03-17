@@ -7,8 +7,19 @@ public enum CheckSTTPermissionUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-        case .cancelled: return nil
-        case .unknown(let error): return error.localizedDescription
+        case .cancelled:
+            return nil
+        case .unknown(let error):
+            return error.localizedDescription
+        }
+    }
+
+    init(_ error: STTPermissionRepositoryError) {
+        switch error {
+        case .cancelled:
+            self = .cancelled
+        case .unknown(let error):
+            self = .unknown(error)
         }
     }
 }

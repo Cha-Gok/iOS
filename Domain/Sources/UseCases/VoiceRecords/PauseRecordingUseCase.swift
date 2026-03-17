@@ -27,14 +27,3 @@ public struct DefaultPauseRecordingUseCase: PauseRecordingUseCase {
         }
     }
 }
-
-fileprivate extension PauseRecordingUseCaseError {
-    init(_ error: VoiceRecordPauseRepositoryError) {
-        switch error {
-        case .notRecording: self = .notRecording
-        case .pauseFailed: self = .pauseFailed
-        case .cancelled: self = .cancelled
-        case .unknown(let error): self = .unknown(error)
-        }
-    }
-}

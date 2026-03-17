@@ -27,14 +27,3 @@ public struct DefaultResumeRecordingUseCase: ResumeRecordingUseCase {
         }
     }
 }
-
-fileprivate extension ResumeRecordingUseCaseError {
-    init(_ error: VoiceRecordResumeRepositoryError) {
-        switch error {
-        case .notPaused: self = .notPaused
-        case .resumeFailed: self = .resumeFailed
-        case .cancelled: self = .cancelled
-        case .unknown(let error): self = .unknown(error)
-        }
-    }
-}

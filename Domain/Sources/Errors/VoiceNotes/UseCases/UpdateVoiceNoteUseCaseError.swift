@@ -27,4 +27,15 @@ public enum UpdateVoiceNoteUseCaseError: LocalizedError, Sendable {
             return error.localizedDescription
         }
     }
+
+    init(_ error: VoiceNoteUpdateRepositoryError) {
+        switch error {
+        case .updateFailed:
+            self = .updateFailed
+        case .cancelled:
+            self = .cancelled
+        case .unknown(let error):
+            self = .unknown(error)
+        }
+    }
 }

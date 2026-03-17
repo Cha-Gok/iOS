@@ -27,4 +27,19 @@ public enum FetchVoiceNoteUseCaseError: LocalizedError, Sendable {
             return error.localizedDescription
         }
     }
+
+    init(_ error: VoiceNoteFetchRepositoryError) {
+        switch error {
+        case .fetchAllFailed(let folderID):
+            self = .fetchAllFailed(folderID: folderID)
+        case .recordNotFound(let id):
+            self = .recordNotFound(id: id)
+        case .fetchFailed(let id):
+            self = .fetchFailed(id: id)
+        case .cancelled:
+            self = .cancelled
+        case .unknown(let error):
+            self = .unknown(error)
+        }
+    }
 }

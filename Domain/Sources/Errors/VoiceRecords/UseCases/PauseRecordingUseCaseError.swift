@@ -9,10 +9,27 @@ public enum PauseRecordingUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-        case .notRecording: return "진행 중인 녹음이 없습니다."
-        case .pauseFailed: return "녹음 일시정지에 실패했습니다."
-        case .cancelled: return nil
-        case .unknown(let error): return error.localizedDescription
+        case .notRecording:
+            return "진행 중인 녹음이 없습니다."
+        case .pauseFailed:
+            return "녹음 일시정지에 실패했습니다."
+        case .cancelled:
+            return nil
+        case .unknown(let error):
+            return error.localizedDescription
+        }
+    }
+
+    init(_ error: VoiceRecordPauseRepositoryError) {
+        switch error {
+        case .notRecording:
+            self = .notRecording
+        case .pauseFailed:
+            self = .pauseFailed
+        case .cancelled:
+            self = .cancelled
+        case .unknown(let error):
+            self = .unknown(error)
         }
     }
 }

@@ -47,31 +47,3 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
         }
     }
 }
-
-fileprivate extension AudioToSummaryUseCaseError {
-    init(_ error: Error) {
-        if error is CancellationError {
-            self = .cancelled
-        } else if let error = error as? STTRepositoryError {
-            switch error {
-            case .cancelled:
-                self = .cancelled
-            case .unknown:
-                self = .unknown(error)
-            case .transcribeFailed:
-                self = .transcribeFailed(error)
-            }
-        } else if let error = error as? SummaryRepositoryError {
-            switch error {
-            case .cancelled:
-                self = .cancelled
-            case .unknown:
-                self = .unknown(error)
-            case .summarizeFailed:
-                self = .summarizeFailed(error)
-            }
-        } else {
-            self = .unknown(error)
-        }
-    }
-}

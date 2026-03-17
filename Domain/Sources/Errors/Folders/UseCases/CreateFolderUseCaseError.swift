@@ -17,17 +17,17 @@ public enum CreateFolderUseCaseError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .cancelled:
-            nil
+            return nil
         case .invalidName:
-            "폴더 이름을 한 글자 이상 입력해 주세요."
+            return "폴더 이름을 한 글자 이상 입력해 주세요."
         case .duplicateName:
-            "이미 동일한 이름의 폴더가 존재합니다."
+            return "이미 동일한 이름의 폴더가 존재합니다."
         case .invalidLengthName:
-            "폴더 이름이 너무 길어요."
+            return "폴더 이름이 너무 길어요."
         case .createFailed:
-            "폴더 생성에 실패했습니다."
+            return "폴더 생성에 실패했습니다."
         case .unknown(let error):
-            error.localizedDescription
+            return error.localizedDescription
         }
     }
 

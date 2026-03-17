@@ -12,11 +12,11 @@ public enum FetchWasteBasketFolderUseCaseError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .cancelled:
-            nil
+            return nil
         case .fetchFailed:
-            "조회에 실패하였습니다"
+            return "조회에 실패하였습니다"
         case .unknown(let error):
-            error.localizedDescription
+            return error.localizedDescription
         }
     }
 

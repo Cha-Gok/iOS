@@ -56,16 +56,3 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
         }
     }
 }
-
-fileprivate extension CreateVoiceNoteUseCaseError {
-    init(_ error: VoiceNoteCreateRepositoryError) {
-        switch error {
-        case .createFailed:
-            self = .createFailed
-        case .cancelled:
-            self = .cancelled
-        case .unknown:
-            self = .unknown(error)
-        }
-    }
-}

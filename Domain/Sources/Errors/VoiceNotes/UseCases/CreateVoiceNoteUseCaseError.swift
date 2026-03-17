@@ -35,4 +35,15 @@ public enum CreateVoiceNoteUseCaseError: LocalizedError, Sendable {
             return error.localizedDescription
         }
     }
+
+    init(_ error: VoiceNoteCreateRepositoryError) {
+        switch error {
+        case .createFailed:
+            self = .createFailed
+        case .cancelled:
+            self = .cancelled
+        case .unknown(let error):
+            self = .unknown(error)
+        }
+    }
 }

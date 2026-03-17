@@ -27,12 +27,3 @@ public struct DefaultCheckSTTPermissionUseCase: CheckSTTPermissionUseCase {
         }
     }
 }
-
-fileprivate extension CheckSTTPermissionUseCaseError {
-    init(_ error: STTPermissionRepositoryError) {
-        switch error {
-        case .cancelled: self = .cancelled
-        case .unknown(let error): self = .unknown(error)
-        }
-    }
-}

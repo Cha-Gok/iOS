@@ -28,15 +28,3 @@ public struct DefaultFinishRecordingUseCase: FinishRecordingUseCase {
         }
     }
 }
-
-fileprivate extension FinishRecordingUseCaseError {
-    init(_ error: VoiceRecordFinishRepositoryError) {
-        switch error {
-        case .notRecording: self = .notRecording
-        case .finishFailed: self = .finishFailed
-        case .encodingFailed: self = .encodingFailed
-        case .cancelled: self = .cancelled
-        case .unknown(let error): self = .unknown(error)
-        }
-    }
-}

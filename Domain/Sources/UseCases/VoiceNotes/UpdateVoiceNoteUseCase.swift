@@ -58,16 +58,3 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
         }
     }
 }
-
-fileprivate extension UpdateVoiceNoteUseCaseError {
-    init(_ error: VoiceNoteUpdateRepositoryError) {
-        switch error {
-        case .updateFailed:
-            self = .updateFailed
-        case .cancelled:
-            self = .cancelled
-        case .unknown:
-            self = .unknown(error)
-        }
-    }
-}

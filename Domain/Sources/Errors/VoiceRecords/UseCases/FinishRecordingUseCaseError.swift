@@ -10,11 +10,31 @@ public enum FinishRecordingUseCaseError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-        case .notRecording: return "진행 중인 녹음이 없습니다."
-        case .finishFailed: return "녹음 저장에 실패했습니다."
-        case .encodingFailed: return "오디오 인코딩에 실패했습니다."
-        case .cancelled: return nil
-        case .unknown(let error): return error.localizedDescription
+        case .notRecording:
+            return "진행 중인 녹음이 없습니다."
+        case .finishFailed:
+            return "녹음 저장에 실패했습니다."
+        case .encodingFailed:
+            return "오디오 인코딩에 실패했습니다."
+        case .cancelled:
+            return nil
+        case .unknown(let error):
+            return error.localizedDescription
+        }
+    }
+
+    init(_ error: VoiceRecordFinishRepositoryError) {
+        switch error {
+        case .notRecording:
+            self = .notRecording
+        case .finishFailed:
+            self = .finishFailed
+        case .encodingFailed:
+            self = .encodingFailed
+        case .cancelled:
+            self = .cancelled
+        case .unknown(let error):
+            self = .unknown(error)
         }
     }
 }

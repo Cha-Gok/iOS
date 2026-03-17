@@ -28,13 +28,3 @@ public struct DefaultStartRecordingUseCase: StartRecordingUseCase {
         }
     }
 }
-
-fileprivate extension StartRecordingUseCaseError {
-    init(_ error: VoiceRecordStartRepositoryError) {
-        switch error {
-        case .startFailed: self = .startFailed
-        case .cancelled: self = .cancelled
-        case .unknown(let error): self = .unknown(error)
-        }
-    }
-}

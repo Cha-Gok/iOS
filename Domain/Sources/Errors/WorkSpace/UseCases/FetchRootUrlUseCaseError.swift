@@ -9,9 +9,9 @@ public enum FetchRootUrlUseCaseError: LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .cancelled:
-            nil
+            return nil
         case .unknown(let error):
-            error.localizedDescription
+            return error.localizedDescription
         }
     }
 

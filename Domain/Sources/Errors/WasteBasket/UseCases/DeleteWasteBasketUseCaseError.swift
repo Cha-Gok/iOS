@@ -16,7 +16,7 @@ public enum DeleteWasteBasketUseCaseError: LocalizedError, Sendable {
         case .deleteFailed(let method):
             switch method {
             case .all:
-                return"휴지통 전체 삭제를 실패하였습니다"
+                return "휴지통 전체 삭제를 실패하였습니다"
             case .multiple:
                 return "휴지통 다수 선택 삭제를 실패하였습니다"
             case .single:

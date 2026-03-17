@@ -23,4 +23,30 @@ public enum AudioToSummaryUseCaseError: LocalizedError, Sendable {
             return error.localizedDescription
         }
     }
+
+    init(_ error: Error) {
+        if error is CancellationError {
+            self = .cancelled
+        } else if let error = error as? STTRepositoryError {
+            switch error {
+            case .cancelled:
+                self = .cancelled
+            case .transcribeFailed:
+                self = .transcribeFailed(error)
+            case .unknown(let error):
+                self = .unknown(error)
+            }
+        } else if let error = error as? SummaryRepositoryError {
+            switch error {
+            case .cancelled:
+                self = .cancelled
+            case .summarizeFailed:
+                self = .summarizeFailed(error)
+            case .unknown(let error):
+                self = .unknown(error)
+            }
+        } else {
+            self = .unknown(error)
+        }
+    }
 }
