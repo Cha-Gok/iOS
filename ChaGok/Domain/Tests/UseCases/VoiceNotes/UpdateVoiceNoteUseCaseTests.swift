@@ -104,6 +104,25 @@ extension UpdateVoiceNoteUseCaseTests {
         await repository.verify()
     }
 
+    func test_execute_제목에앞뒤공백이있으면_invalidTitle에러를던진다() async {
+        // Given
+        let voiceNote = VoiceNote.stub(title: "  Valid Title  ")
+        await repository.expectUpdate(callCount: 0)
+
+        // When
+        do {
+            _ = try await sut.execute(voiceNote)
+            XCTFail("sut.execute()가 에러를 throw해야 하지만, 성공했습니다.")
+        } catch {
+            // Then
+            guard case .invalidTitle = error as? UpdateVoiceNoteUseCaseError else {
+                return XCTFail("expected .invalidTitle, got \(error)")
+            }
+        }
+
+        await repository.verify()
+    }
+
     func test_execute_리포지토리가업데이트실패를반환하면_updateFailed에러를던진다() async {
         // Given
         let voiceNote = VoiceNote.stub()

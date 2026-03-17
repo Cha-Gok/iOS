@@ -28,7 +28,7 @@ public struct DefaultUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
 
         // 1. 제목 유효성 검사 (공백)
         let trimmedTitle = voiceNote.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedTitle.isEmpty {
+        if trimmedTitle.isEmpty || voiceNote.title != trimmedTitle {
             throw .invalidTitle
         }
 
