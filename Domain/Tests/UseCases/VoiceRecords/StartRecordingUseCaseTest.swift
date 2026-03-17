@@ -91,7 +91,11 @@ extension StartRecordingUseCaseTest {
 
         await recordingRepository.verify()
     }
+}
 
+// MARK: - 취소 케이스
+
+extension StartRecordingUseCaseTest {
     func test_태스크취소상태_녹음시작시_cancelled에러를던진다() async throws {
         guard let sut else {
             return XCTFail("sut가 초기화되지 않았습니다.")
