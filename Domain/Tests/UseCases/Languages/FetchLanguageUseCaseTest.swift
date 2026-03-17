@@ -5,10 +5,10 @@ final class FetchLanguageUseCaseTest: XCTestCase {
     typealias UseCaseError = FetchLanguagesUseCaseError
 }
 
-// MARK: - Success Cases
+// MARK: - 성공 케이스
 
 extension FetchLanguageUseCaseTest {
-    func test_execute_언어조회에성공하면_Language를반환한다() async throws {
+    func test_정상상태_언어조회시_설정된Language를반환한다() async throws {
         // Given
         let expectedLanguage: Language = .ko
         let repository = MockLanguageRepository()
@@ -26,10 +26,10 @@ extension FetchLanguageUseCaseTest {
     }
 }
 
-// MARK: - Error Cases
+// MARK: - 에러 케이스
 
 extension FetchLanguageUseCaseTest {
-    func test_execute_언어조회실패시_notFound에러를던진다() async {
+    func test_데이터미존재상태_언어조회시_notFound에러를던진다() async {
         // Given
         let repository = MockLanguageRepository()
         await repository.setFetchResult(.failure(.notFound))
@@ -49,7 +49,7 @@ extension FetchLanguageUseCaseTest {
         }
     }
 
-    func test_execute_언어조회중취소되면_cancelled에러를던진다() async {
+    func test_조회중취소상태_언어조회시_cancelled에러를던진다() async {
         // Given
         let repository = MockLanguageRepository()
         await repository.setFetchResult(.failure(.cancelled))
@@ -69,7 +69,7 @@ extension FetchLanguageUseCaseTest {
         }
     }
 
-    func test_execute_언어조회작업이이미취소되었으면_즉시cancelled에러를던진다() async {
+    func test_태스크이미취소상태_언어조회시_즉시cancelled에러를던진다() async {
         // Given
         let expectedLanguage: Language = .ko
         let repository = MockLanguageRepository()
@@ -95,7 +95,7 @@ extension FetchLanguageUseCaseTest {
         }
     }
 
-    func test_execute_언어조회중알수없는에러가발생하면_unknown에러를던진다() async {
+    func test_알수없는에러발생상태_언어조회시_unknown에러를던진다() async {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()

@@ -5,10 +5,10 @@ final class SetLanguageUseCaseTest: XCTestCase {
     typealias UseCaseError = SetLanguagesUseCaseError
 }
 
-// MARK: - Success Cases
+// MARK: - 성공 케이스
 
 extension SetLanguageUseCaseTest {
-    func test_execute_언어설정에성공하면_정상종료된다() async throws {
+    func test_정상상태_언어설정시_리포지토리의저장메서드를호출한다() async throws {
         // Given
         let repository = MockLanguageRepository()
         await repository.setSaveResult(.success(()))
@@ -24,14 +24,14 @@ extension SetLanguageUseCaseTest {
     }
 }
 
-// MARK: - Error Cases
+// MARK: - 에러 케이스
 
 extension SetLanguageUseCaseTest {
-    func test_execute_언어설정실패시_saveFailed에러를던진다() async {
+    func test_리포지토리저장실패상태_언어설정시_saveFailed에러를던진다() async {
         // Given
         let repository = MockLanguageRepository()
         await repository.setSaveResult(.failure(.saveFailed))
-        await repository.expectSave(callCount: 1)
+        await repository.expectSave(language: .ko, callCount: 1)
 
         let useCase = DefaultSelectLanguageUseCase(repository: repository)
 
@@ -47,11 +47,11 @@ extension SetLanguageUseCaseTest {
         }
     }
 
-    func test_execute_언어설정중취소되면_cancelled에러를던진다() async {
+    func test_조회중취소상태_언어설정시_cancelled에러를던진다() async {
         // Given
         let repository = MockLanguageRepository()
         await repository.setSaveResult(.failure(.cancelled))
-        await repository.expectSave(callCount: 1)
+        await repository.expectSave(language: .ko, callCount: 1)
 
         let useCase = DefaultSelectLanguageUseCase(repository: repository)
 
@@ -67,7 +67,7 @@ extension SetLanguageUseCaseTest {
         }
     }
 
-    func test_execute_언어설정작업이이미취소되었으면_즉시cancelled에러를던진다() async {
+    func test_태스크이미취소상태_언어설정시_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockLanguageRepository()
         await repository.setSaveResult(.success(()))
@@ -92,13 +92,13 @@ extension SetLanguageUseCaseTest {
         }
     }
 
-    func test_execute_언어설정중알수없는에러가발생하면_unknown에러를던진다() async {
+    func test_알수없는에러발생상태_언어설정시_unknown에러를던진다() async {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
         let repository = MockLanguageRepository()
         await repository.setSaveResult(.failure(.unknown(dummyError)))
-        await repository.expectSave(callCount: 1)
+        await repository.expectSave(language: .ko, callCount: 1)
 
         let useCase = DefaultSelectLanguageUseCase(repository: repository)
 

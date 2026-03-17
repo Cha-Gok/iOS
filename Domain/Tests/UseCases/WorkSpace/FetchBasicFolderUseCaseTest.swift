@@ -5,10 +5,10 @@ final class FetchBasicFolderUseCaseTest: XCTestCase {
     typealias UseCaseError = FetchBasicFolderUseCaseError
 }
 
-// MARK: - Success Cases
+// MARK: - 성공 케이스
 
 extension FetchBasicFolderUseCaseTest {
-    func test_execute_기본폴더조회에성공하면_Folder를반환한다() async throws {
+    func test_정상상태_기본폴더조회시_기대하는Folder를반환한다() async throws {
         // Given
         let expectedFolder = Folder(path: URL(fileURLWithPath: "/test"), name: "Basic Folder")
         let repository = MockWorkSpaceRepository()
@@ -27,10 +27,10 @@ extension FetchBasicFolderUseCaseTest {
     }
 }
 
-// MARK: - Error Cases
+// MARK: - 에러 케이스
 
 extension FetchBasicFolderUseCaseTest {
-    func test_execute_기본폴더를찾을수없으면_notFound에러를던진다() async {
+    func test_기본폴더미존재상태_기본폴더조회시_notFound에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.failure(.notFound))
@@ -50,7 +50,7 @@ extension FetchBasicFolderUseCaseTest {
         }
     }
 
-    func test_execute_기본폴더생성에실패하면_createFailed에러를던진다() async {
+    func test_폴더생성실패상태_기본폴더조회시_createFailed에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.failure(.createFailed))
@@ -70,7 +70,7 @@ extension FetchBasicFolderUseCaseTest {
         }
     }
 
-    func test_execute_기본폴더조회중알수없는에러가발생하면_unknown에러를던진다() async {
+    func test_알수없는에러발생상태_기본폴더조회시_unknown에러를던진다() async {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
@@ -92,12 +92,8 @@ extension FetchBasicFolderUseCaseTest {
             XCTFail("Expected .unknown, got \(error)")
         }
     }
-}
 
-// MARK: - Error Cases ( Cancelled )
-
-extension FetchBasicFolderUseCaseTest {
-    func test_execute_기본폴더조회중취소되면_cancelled에러를던진다() async {
+    func test_조회중취소상태_기본폴더조회시_cancelled에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.failure(.cancelled))
@@ -117,7 +113,7 @@ extension FetchBasicFolderUseCaseTest {
         }
     }
 
-    func test_execute_기본폴더조회작업이취소되었으면_즉시cancelled에러를던진다() async {
+    func test_태스크이미취소상태_기본폴더조회시_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockWorkSpaceRepository()
         await repository.setBasicFolderResult(.success(Folder(path: URL(fileURLWithPath: "/"), name: "test")))

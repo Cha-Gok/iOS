@@ -53,9 +53,23 @@ fileprivate extension AudioToSummaryUseCaseError {
         if error is CancellationError {
             self = .cancelled
         } else if let error = error as? STTRepositoryError {
-            self = .transcribeFailed(error)
+            switch error {
+            case .cancelled:
+                self = .cancelled
+            case .unknown:
+                self = .unknown(error)
+            case .transcribeFailed:
+                self = .transcribeFailed(error)
+            }
         } else if let error = error as? SummaryRepositoryError {
-            self = .summarizeFailed(error)
+            switch error {
+            case .cancelled:
+                self = .cancelled
+            case .unknown:
+                self = .unknown(error)
+            case .summarizeFailed:
+                self = .summarizeFailed(error)
+            }
         } else {
             self = .unknown(error)
         }

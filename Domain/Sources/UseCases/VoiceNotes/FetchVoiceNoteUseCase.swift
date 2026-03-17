@@ -61,7 +61,7 @@ fileprivate extension FetchVoiceNoteUseCaseError {
             self = .fetchFailed(id: id)
         case .cancelled:
             self = .cancelled
-        case .unknown(let error):
+        case .unknown:
             self = .unknown(error)
         }
     }

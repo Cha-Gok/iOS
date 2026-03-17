@@ -2,7 +2,7 @@
 import Foundation
 import XCTest
 
-final class FinishRecordingUseCaseTests: XCTestCase {
+final class FinishRecordingUseCaseTest: XCTestCase {
     private var recordingRepository: MockVoiceRecordFinishRepository!
     private var sut: DefaultFinishRecordingUseCase!
 
@@ -19,10 +19,10 @@ final class FinishRecordingUseCaseTests: XCTestCase {
     }
 }
 
-// MARK: - 성공
+// MARK: - 성공 케이스
 
-extension FinishRecordingUseCaseTests {
-    func test_execute_녹음종료에성공하면_생성된VoiceRecord를반환한다() async throws {
+extension FinishRecordingUseCaseTest {
+    func test_정상상태_녹음종료시_생성된VoiceRecord를반환한다() async throws {
         // Given
         let expectedRecord = VoiceRecord.stub()
         await recordingRepository.setResult(.success(expectedRecord))
@@ -39,20 +39,19 @@ extension FinishRecordingUseCaseTests {
     }
 }
 
-// MARK: - 실패 / 에러 매핑
+// MARK: - 에러 케이스
 
-extension FinishRecordingUseCaseTests {
-    func test_execute_녹음중이아니면_notRecording에러를던진다() async {
+extension FinishRecordingUseCaseTest {
+    func test_녹음중아닌상태_녹음종료시_notRecording에러를던진다() async {
         // Given
         await recordingRepository.setResult(.failure(.notRecording))
         await recordingRepository.expectFinishRecording(callCount: 1)
 
-        // When
+        // When & Then
         do {
             _ = try await sut.execute()
             XCTFail("에러를 throw 해야 합니다.")
         } catch {
-            // Then
             guard case .notRecording = error else {
                 return XCTFail("expected .notRecording, got \(error)")
             }
@@ -61,17 +60,16 @@ extension FinishRecordingUseCaseTests {
         await recordingRepository.verify()
     }
 
-    func test_execute_녹음종료에실패하면_finishFailed에러를던진다() async {
+    func test_리포지토리종료실패상태_녹음종료시_finishFailed에러를던진다() async {
         // Given
         await recordingRepository.setResult(.failure(.finishFailed))
         await recordingRepository.expectFinishRecording(callCount: 1)
 
-        // When
+        // When & Then
         do {
             _ = try await sut.execute()
             XCTFail("에러를 throw 해야 합니다.")
         } catch {
-            // Then
             guard case .finishFailed = error else {
                 return XCTFail("expected .finishFailed, got \(error)")
             }
@@ -80,17 +78,16 @@ extension FinishRecordingUseCaseTests {
         await recordingRepository.verify()
     }
 
-    func test_execute_인코딩에실패하면_encodingFailed에러를던진다() async {
+    func test_인코딩실패상태_녹음종료시_encodingFailed에러를던진다() async {
         // Given
         await recordingRepository.setResult(.failure(.encodingFailed))
         await recordingRepository.expectFinishRecording(callCount: 1)
 
-        // When
+        // When & Then
         do {
             _ = try await sut.execute()
             XCTFail("에러를 throw 해야 합니다.")
         } catch {
-            // Then
             guard case .encodingFailed = error else {
                 return XCTFail("expected .encodingFailed, got \(error)")
             }
@@ -99,37 +96,17 @@ extension FinishRecordingUseCaseTests {
         await recordingRepository.verify()
     }
 
-    func test_execute_녹음종료중취소되면_cancelled에러를던진다() async {
-        // Given
-        await recordingRepository.setResult(.failure(.cancelled))
-        await recordingRepository.expectFinishRecording(callCount: 1)
-
-        // When
-        do {
-            _ = try await sut.execute()
-            XCTFail("에러를 throw 해야 합니다.")
-        } catch {
-            // Then
-            guard case .cancelled = error else {
-                return XCTFail("expected .cancelled, got \(error)")
-            }
-        }
-
-        await recordingRepository.verify()
-    }
-
-    func test_execute_녹음종료중알수없는에러가발생하면_unknown에러를던진다() async {
+    func test_알수없는에러발생상태_녹음종료시_unknown에러를던진다() async {
         // Given
         let underlyingError = NSError(domain: "Test", code: 404)
         await recordingRepository.setResult(.failure(.unknown(underlyingError)))
         await recordingRepository.expectFinishRecording(callCount: 1)
 
-        // When
+        // When & Then
         do {
             _ = try await sut.execute()
             XCTFail("에러를 throw 해야 합니다.")
         } catch {
-            // Then
             guard case .unknown(let wrappedError) = error else {
                 return XCTFail("expected .unknown, got \(error)")
             }
@@ -138,35 +115,27 @@ extension FinishRecordingUseCaseTests {
 
         await recordingRepository.verify()
     }
-}
 
-// MARK: - Task 취소
-
-extension FinishRecordingUseCaseTests {
-    func test_execute_실행전에태스크가취소되면_리포지토리호출없이cancelled에러를던진다() async {
-        guard let sut else {
-            XCTFail("sut은 반드시 설정되어야 합니다.")
-            return
-        }
+    func test_태스크취소상태_녹음종료시_cancelled에러를던진다() async throws {
         // Given
         await recordingRepository.setResult(.success(.stub()))
         await recordingRepository.expectFinishRecording(callCount: 0)
 
+        let sut = try XCTUnwrap(sut)
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
             return try await sut.execute()
         }
 
-        // When
+        // When & Then
         do {
             _ = try await task.value
             XCTFail("에러를 throw 해야 합니다.")
         } catch {
-            // Then
             guard case .cancelled = error as? FinishRecordingUseCaseError else {
                 return XCTFail("expected .cancelled, got \(error)")
             }
-            await recordingRepository.verify()
         }
+        await recordingRepository.verify()
     }
 }

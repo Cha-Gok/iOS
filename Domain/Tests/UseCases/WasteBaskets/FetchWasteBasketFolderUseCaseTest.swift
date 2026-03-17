@@ -5,10 +5,10 @@ final class FetchWasteBasketFolderUseCaseTest: XCTestCase {
     typealias UseCaseError = FetchWasteBasketFolderUseCaseError
 }
 
-// MARK: - Success Cases
+// MARK: - 성공 케이스
 
 extension FetchWasteBasketFolderUseCaseTest {
-    func test_휴지통_조회_성공_항목을반환한다() async throws {
+    func test_정상상태_휴지통항목조회시_전체항목목록을반환한다() async throws {
         // Given
         let expectedItems: [WasteBasketItem] = [
             .folder(id: UUID()),
@@ -28,7 +28,7 @@ extension FetchWasteBasketFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_휴지통_조회_성공_항목이결과가없으면_빈배열을반환한다() async throws {
+    func test_데이터미존재상태_휴지통항목조회시_빈배열을반환한다() async throws {
         // Given
         let repository = MockWasteBasketRepository()
         await repository.setFetchAllResult(.success([]))
@@ -45,10 +45,10 @@ extension FetchWasteBasketFolderUseCaseTest {
     }
 }
 
-// MARK: - Error Mapping Cases
+// MARK: - 에러 케이스
 
 extension FetchWasteBasketFolderUseCaseTest {
-    func test_휴지통_조회_리포지토리조회실패시_fetchFailed에러를던진다() async {
+    func test_리포지토리조회실패상태_휴지통항목조회시_fetchFailed에러를던진다() async {
         // Given
         let repository = MockWasteBasketRepository()
         await repository.setFetchAllResult(.failure(.fetchFailed))
@@ -67,7 +67,7 @@ extension FetchWasteBasketFolderUseCaseTest {
         }
     }
 
-    func test_휴지통_조회_리포지토리알수없는에러시_unknown에러를던진다() async {
+    func test_리포지토리알수없는에러상태_휴지통항목조회시_unknown에러를던진다() async {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
@@ -88,8 +88,12 @@ extension FetchWasteBasketFolderUseCaseTest {
             XCTFail("Expected .unknown, got \(error)")
         }
     }
+}
 
-    func test_휴지통_조회_리포지토리취소시_cancelled에러를던진다() async {
+// MARK: - 취소 케이스
+
+extension FetchWasteBasketFolderUseCaseTest {
+    func test_작업취소상태_휴지통항목조회시_cancelled에러를던진다() async {
         // Given
         let repository = MockWasteBasketRepository()
         await repository.setFetchAllResult(.failure(.cancelled))
@@ -107,12 +111,8 @@ extension FetchWasteBasketFolderUseCaseTest {
             XCTFail("Expected .cancelled, got \(error)")
         }
     }
-}
 
-// MARK: - Cancellation Case
-
-extension FetchWasteBasketFolderUseCaseTest {
-    func test_휴지통_조회_작업전_즉시cancelled에러를던진다() async {
+    func test_태스크이미취소상태_휴지통항목조회시_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockWasteBasketRepository()
         await repository.setFetchAllResult(.success([]))

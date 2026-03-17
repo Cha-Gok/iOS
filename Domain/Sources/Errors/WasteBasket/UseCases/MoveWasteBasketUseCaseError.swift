@@ -26,7 +26,7 @@ public enum MoveWasteBasketUseCaseError: LocalizedError, Sendable {
             self = .cancelled
         case .moveFailed(let method):
             self = .moveFailed(method)
-        case .unknown(let error):
+        case .unknown:
             self = .unknown(error)
         }
     }

@@ -5,10 +5,10 @@ final class DeleteWasteBasketUseCaseTest: XCTestCase {
     typealias UseCaseError = DeleteWasteBasketUseCaseError
 }
 
-// MARK: - Success Cases
+// MARK: - 성공 케이스
 
 extension DeleteWasteBasketUseCaseTest {
-    func test_휴지통_삭제_전체삭제_성공_리포지토리를호출한다() async throws {
+    func test_정상상태_휴지통비우기시_리포지토리의비우기메서드를호출한다() async throws {
         // Given
         let repository = MockWasteBasketRepository()
         await repository.setDeleteResult(.success(()))
@@ -23,7 +23,7 @@ extension DeleteWasteBasketUseCaseTest {
         await repository.verify()
     }
 
-    func test_휴지통_삭제_다중삭제_성공_리포지토리를호출한다() async throws {
+    func test_정상상태_휴지통다중삭제시_리포지토리의다중삭제메서드를호출한다() async throws {
         // Given
         let items: [WasteBasketItem] = [
             .folder(id: UUID()),
@@ -42,7 +42,7 @@ extension DeleteWasteBasketUseCaseTest {
         await repository.verify()
     }
 
-    func test_휴지통_삭제_단일삭제_성공_리포지토리를호출한다() async throws {
+    func test_정상상태_휴지통단일삭제시_리포지토리의단일삭제메서드를호출한다() async throws {
         // Given
         let item: WasteBasketItem = .folder(id: UUID())
         let repository = MockWasteBasketRepository()
@@ -59,10 +59,10 @@ extension DeleteWasteBasketUseCaseTest {
     }
 }
 
-// MARK: - Error Mapping Cases
+// MARK: - 에러 케이스
 
 extension DeleteWasteBasketUseCaseTest {
-    func test_휴지통_삭제_리포지토리삭제실패시_deleteFailed에러를던진다() async {
+    func test_리포지토리비우기실패상태_휴지통비우기시_deleteFailed에러를던진다() async {
         // Given
         let method = DeleteWasteBasketMethod.all
         let repository = MockWasteBasketRepository()
@@ -83,7 +83,7 @@ extension DeleteWasteBasketUseCaseTest {
         }
     }
 
-    func test_휴지통_삭제_리포지토리단일삭제실패시_deleteFailed에러를던진다() async {
+    func test_리포지토리단일삭제실패상태_휴지통단일삭제시_deleteFailed에러를던진다() async {
         // Given
         let item = WasteBasketItem.folder(id: UUID())
         let method = DeleteWasteBasketMethod.single(item: item)
@@ -105,7 +105,7 @@ extension DeleteWasteBasketUseCaseTest {
         }
     }
 
-    func test_휴지통_삭제_리포지토리다중삭제실패시_deleteFailed에러를던진다() async {
+    func test_리포지토리다중삭제실패상태_휴지통다중삭제시_deleteFailed에러를던진다() async {
         // Given
         let items: [WasteBasketItem] = [.folder(id: UUID())]
         let method = DeleteWasteBasketMethod.multiple(items: items)
@@ -127,7 +127,7 @@ extension DeleteWasteBasketUseCaseTest {
         }
     }
 
-    func test_휴지통_삭제_리포지토리알수없는에러시_unknown에러를던진다() async {
+    func test_리포지토리알수없는에러상태_휴지통삭제시_unknown에러를던진다() async {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
@@ -148,8 +148,12 @@ extension DeleteWasteBasketUseCaseTest {
             XCTFail("Expected .unknown, got \(error)")
         }
     }
+}
 
-    func test_휴지통_삭제_리포지토리취소시_cancelled에러를던진다() async {
+// MARK: - 취소 케이스
+
+extension DeleteWasteBasketUseCaseTest {
+    func test_작업취소상태_휴지통삭제시_cancelled에러를던진다() async {
         // Given
         let repository = MockWasteBasketRepository()
         await repository.setDeleteResult(.failure(.cancelled))
@@ -167,12 +171,8 @@ extension DeleteWasteBasketUseCaseTest {
             XCTFail("Expected .cancelled, got \(error)")
         }
     }
-}
 
-// MARK: - Cancellation Case
-
-extension DeleteWasteBasketUseCaseTest {
-    func test_휴지통_삭제_작업전_즉시cancelled에러를던진다() async {
+    func test_태스크이미취소상태_휴지통삭제시_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockWasteBasketRepository()
         await repository.setDeleteResult(.success(()))

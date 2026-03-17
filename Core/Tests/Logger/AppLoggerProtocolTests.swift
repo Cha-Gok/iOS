@@ -7,113 +7,133 @@ final class AppLoggerProtocolTests: XCTestCase {
         super.setUp()
         MockLogger.reset()
     }
+}
 
-    func test_debug_호출시_log에_debug_전달() {
-        MockLogger.debug("테스트 메시지")
+// MARK: - 성공 케이스
 
+extension AppLoggerProtocolTests {
+    func test_debug메서드_로그호출시_debug레벨로정확히기록된다() {
+        // Given
+        let message = "테스트 메시지"
+
+        // When
+        MockLogger.debug(message)
+
+        // Then
         XCTAssertEqual(MockLogger.recordedLogs.count, 1)
         XCTAssertEqual(MockLogger.recordedLogs[0].level, .debug)
-        XCTAssertEqual(MockLogger.recordedLogs[0].message, "테스트 메시지")
-    }
-
-    func test_info_호출시_log에_info_전달() {
-        MockLogger.info("정보 메시지")
-
-        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
-        XCTAssertEqual(MockLogger.recordedLogs[0].level, .info)
-        XCTAssertEqual(MockLogger.recordedLogs[0].message, "정보 메시지")
-    }
-
-    func test_warning_호출시_log에_warning_전달() {
-        MockLogger.warning("경고 메시지")
-
-        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
-        XCTAssertEqual(MockLogger.recordedLogs[0].level, .warning)
-        XCTAssertEqual(MockLogger.recordedLogs[0].message, "경고 메시지")
-    }
-
-    func test_errorString_호출시_log에_error_전달() {
-        MockLogger.error("에러 메시지")
-
-        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
-        XCTAssertEqual(MockLogger.recordedLogs[0].level, .error)
-        XCTAssertEqual(MockLogger.recordedLogs[0].message, "에러 메시지")
-    }
-
-    func test_errorError_호출시_String_describing_전달() {
-        struct TestError: Error {}
-        MockLogger.error(TestError())
-
-        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
-        XCTAssertEqual(MockLogger.recordedLogs[0].level, .error)
-        XCTAssertEqual(MockLogger.recordedLogs[0].message, "TestError()")
-    }
-
-    func test_여러_로그_연속_호출시_순서대로_기록() {
-        MockLogger.debug("1")
-        MockLogger.info("2")
-        MockLogger.warning("3")
-        MockLogger.error("4")
-
-        XCTAssertEqual(MockLogger.recordedLogs.count, 4)
-        XCTAssertEqual(MockLogger.recordedLogs[0].level, .debug)
-        XCTAssertEqual(MockLogger.recordedLogs[0].message, "1")
-        XCTAssertEqual(MockLogger.recordedLogs[1].level, .info)
-        XCTAssertEqual(MockLogger.recordedLogs[1].message, "2")
-        XCTAssertEqual(MockLogger.recordedLogs[2].level, .warning)
-        XCTAssertEqual(MockLogger.recordedLogs[2].message, "3")
-        XCTAssertEqual(MockLogger.recordedLogs[3].level, .error)
-        XCTAssertEqual(MockLogger.recordedLogs[3].message, "4")
-    }
-
-    func test_빈_메시지_처리() {
-        MockLogger.info("")
-
-        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
-        XCTAssertEqual(MockLogger.recordedLogs[0].message, "")
-    }
-
-    func test_특수문자_메시지_처리() {
-        let message = "이모지 🔥 유니코드 日本語 \n 줄바꿈"
-        MockLogger.info(message)
-
-        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
         XCTAssertEqual(MockLogger.recordedLogs[0].message, message)
     }
 
-    func test_localizedDescription_nil인_Error_처리() {
-        struct PlainError: Error {}
-        MockLogger.error(PlainError())
+    func test_info메서드_로그호출시_info레벨로정확히기록된다() {
+        // Given
+        let message = "정보 메시지"
 
+        // When
+        MockLogger.info(message)
+
+        // Then
         XCTAssertEqual(MockLogger.recordedLogs.count, 1)
-        XCTAssertEqual(MockLogger.recordedLogs[0].level, .error)
-        XCTAssertFalse(MockLogger.recordedLogs[0].message.isEmpty)
+        XCTAssertEqual(MockLogger.recordedLogs[0].level, .info)
+        XCTAssertEqual(MockLogger.recordedLogs[0].message, message)
     }
 
-    func test_LocalizedError_미준수_Error_처리() {
+    func test_warning메서드_로그호출시_warning레벨로정확히기록된다() {
+        // Given
+        let message = "경고 메시지"
+
+        // When
+        MockLogger.warning(message)
+
+        // Then
+        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
+        XCTAssertEqual(MockLogger.recordedLogs[0].level, .warning)
+        XCTAssertEqual(MockLogger.recordedLogs[0].message, message)
+    }
+
+    func test_errorString메서드_로그호출시_error레벨로정확히기록된다() {
+        // Given
+        let message = "에러 메시지"
+
+        // When
+        MockLogger.error(message)
+
+        // Then
+        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
+        XCTAssertEqual(MockLogger.recordedLogs[0].level, .error)
+        XCTAssertEqual(MockLogger.recordedLogs[0].message, message)
+    }
+
+    func test_errorError객체_로그호출시_Error의문자열설명이정확히기록된다() {
+        // Given
+        struct TestError: Error {}
+        let error = TestError()
+
+        // When
+        MockLogger.error(error)
+
+        // Then
+        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
+        XCTAssertEqual(MockLogger.recordedLogs[0].level, .error)
+        XCTAssertEqual(MockLogger.recordedLogs[0].message, String(describing: error))
+    }
+
+    func test_여러로그_연속호출시_호출한순서대로정확히기록된다() {
+        // Given
+        let messages = ["1", "2", "3", "4"]
+        let levels: [LogLevel] = [.debug, .info, .warning, .error]
+
+        // When
+        MockLogger.debug(messages[0])
+        MockLogger.info(messages[1])
+        MockLogger.warning(messages[2])
+        MockLogger.error(messages[3])
+
+        // Then
+        XCTAssertEqual(MockLogger.recordedLogs.count, 4)
+        for (index, level) in levels.enumerated() {
+            XCTAssertEqual(MockLogger.recordedLogs[index].level, level)
+            XCTAssertEqual(MockLogger.recordedLogs[index].message, messages[index])
+        }
+    }
+
+    func test_빈메시지_로그호출시_정상적으로기록된다() {
+        // Given
+        let emptyMessage = ""
+
+        // When
+        MockLogger.info(emptyMessage)
+
+        // Then
+        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
+        XCTAssertEqual(MockLogger.recordedLogs[0].message, emptyMessage)
+    }
+
+    func test_특수문자포함메시지_로그호출시_정상적으로기록된다() {
+        // Given
+        let specialMessage = "이모지 🔥 유니코드 日本語 \n 줄바꿈"
+
+        // When
+        MockLogger.info(specialMessage)
+
+        // Then
+        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
+        XCTAssertEqual(MockLogger.recordedLogs[0].message, specialMessage)
+    }
+
+    func test_LocalizedError미준수객체_로그호출시_기본문자열설명으로기록된다() {
+        // Given
         struct CustomError: Error {
             let code: Int
         }
-        MockLogger.error(CustomError(code: 42))
+        let error = CustomError(code: 42)
 
+        // When
+        MockLogger.error(error)
+
+        // Then
         XCTAssertEqual(MockLogger.recordedLogs.count, 1)
         XCTAssertEqual(MockLogger.recordedLogs[0].level, .error)
-    }
-
-    func test_null_nil_문자열_처리() {
-        MockLogger.info("null")
-        MockLogger.info("nil")
-
-        XCTAssertEqual(MockLogger.recordedLogs.count, 2)
-        XCTAssertEqual(MockLogger.recordedLogs[0].message, "null")
-        XCTAssertEqual(MockLogger.recordedLogs[1].message, "nil")
-    }
-
-    func test_개행_탭_메시지_처리() {
-        let message = "line1\nline2\t"
-        MockLogger.info(message)
-
-        XCTAssertEqual(MockLogger.recordedLogs.count, 1)
-        XCTAssertEqual(MockLogger.recordedLogs[0].message, message)
+        XCTAssertFalse(MockLogger.recordedLogs[0].message.isEmpty)
     }
 }

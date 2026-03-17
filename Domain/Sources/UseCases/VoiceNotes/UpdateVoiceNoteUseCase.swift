@@ -66,7 +66,7 @@ fileprivate extension UpdateVoiceNoteUseCaseError {
             self = .updateFailed
         case .cancelled:
             self = .cancelled
-        case .unknown(let error):
+        case .unknown:
             self = .unknown(error)
         }
     }

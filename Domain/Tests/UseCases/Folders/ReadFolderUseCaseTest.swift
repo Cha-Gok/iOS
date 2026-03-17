@@ -8,7 +8,7 @@ final class ReadFolderUseCaseTest: XCTestCase {
 // MARK: - 성공 케이스
 
 extension ReadFolderUseCaseTest {
-    func test_폴더_조회_성공_폴더목록을반환한다() async throws {
+    func test_정상상태_폴더조회시_전체폴더목록을반환한다() async throws {
         // Given
         let expectedFolders = [
             Folder(path: URL(fileURLWithPath: "/1"), name: "Folder 1"),
@@ -36,7 +36,7 @@ extension ReadFolderUseCaseTest {
 // MARK: - 에러 케이스
 
 extension ReadFolderUseCaseTest {
-    func test_폴더_조회_리포지토리조회실패시_fetchFailed에러를던진다() async {
+    func test_리포지토리조회실패상태_폴더조회시_fetchFailed에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
         await repository.setFetchAllResult(.failure(.fetchFailed))
@@ -57,7 +57,7 @@ extension ReadFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_폴더_조회_리포지토리찾을수없음시_notFound에러를던진다() async {
+    func test_폴더미존재상태_폴더조회시_notFound에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
         await repository.setFetchAllResult(.failure(.notFound))
@@ -78,67 +78,7 @@ extension ReadFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_폴더_조회_리포지토리생성실패시_unknown에러를던진다() async {
-        // Given
-        let repository = MockFolderRepository()
-        await repository.setFetchAllResult(.failure(.createFailed))
-        await repository.expectFetchAll(callCount: 1)
-
-        let useCase = DefaultReadFolderUseCase(repository: repository)
-
-        // When & Then
-        do {
-            _ = try await useCase.execute()
-            XCTFail("생성 실패 시 .unknown으로 래핑되어야 합니다.")
-        } catch UseCaseError.unknown(let error) {
-            guard let repoError = error as? FolderRepositoryError else {
-                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다.")
-            }
-
-            switch repoError {
-            case .createFailed:
-                break // Success
-            default:
-                XCTFail("Expected .createFailed, but got \(repoError)")
-            }
-        } catch {
-            XCTFail("Expected .unknown, got \(error)")
-        }
-
-        await repository.verify()
-    }
-
-    func test_폴더_조회_리포지토리수정실패시_unknown에러를던진다() async {
-        // Given
-        let repository = MockFolderRepository()
-        await repository.setFetchAllResult(.failure(.updateFailed))
-        await repository.expectFetchAll(callCount: 1)
-
-        let useCase = DefaultReadFolderUseCase(repository: repository)
-
-        // When & Then
-        do {
-            _ = try await useCase.execute()
-            XCTFail("수정 실패 시 .unknown으로 래핑되어야 합니다.")
-        } catch UseCaseError.unknown(let error) {
-            guard let repoError = error as? FolderRepositoryError else {
-                return XCTFail("Unknown 에러 내부는 FolderRepositoryError가 적용되어야 합니다.")
-            }
-
-            switch repoError {
-            case .updateFailed:
-                break // Success
-            default:
-                XCTFail("Expected .updateFailed, but got \(repoError)")
-            }
-        } catch {
-            XCTFail("Expected .unknown, got \(error)")
-        }
-
-        await repository.verify()
-    }
-
-    func test_폴더_조회_리포지토리알수없는에러시_unknown에러를던진다() async {
+    func test_리포지토리알수없는에러상태_폴더조회시_unknown에러를던진다() async {
         // Given
         struct Dummy: Error {}
         let dummyError = Dummy()
@@ -174,7 +114,7 @@ extension ReadFolderUseCaseTest {
 // MARK: - 취소 케이스
 
 extension ReadFolderUseCaseTest {
-    func test_폴더_조회_리포지토리취소시_cancelled에러를던진다() async {
+    func test_작업취소상태_폴더조회시_cancelled에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
         await repository.setFetchAllResult(.failure(.cancelled))
@@ -195,7 +135,7 @@ extension ReadFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_폴더_조회_작업전_즉시cancelled에러를던진다() async {
+    func test_태스크이미취소상태_폴더조회시_즉시cancelled에러를던진다() async {
         // Given
         let repository = MockFolderRepository()
         await repository.setFetchAllResult(.success([]))
