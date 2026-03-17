@@ -12,14 +12,9 @@ public protocol StartRecordingUseCase: Sendable {
 
 public struct DefaultStartRecordingUseCase: StartRecordingUseCase {
 
-    private let permissionRepository: VoiceRecordPermissionRepository
     private let recordingRepository: VoiceRecordStartRepository
 
-    public init(
-        permissionRepository: VoiceRecordPermissionRepository,
-        recordingRepository: VoiceRecordStartRepository
-    ) {
-        self.permissionRepository = permissionRepository
+    public init(recordingRepository: VoiceRecordStartRepository) {
         self.recordingRepository = recordingRepository
     }
 
@@ -27,10 +22,6 @@ public struct DefaultStartRecordingUseCase: StartRecordingUseCase {
         if Task.isCancelled { throw .cancelled }
 
         do {
-            try await permissionRepository.checkRecordingPermission()
-
-            if Task.isCancelled { throw StartRecordingUseCaseError.cancelled }
-
             return try await recordingRepository.startRecording()
         } catch {
             AppLogger.error(error)
@@ -40,21 +31,11 @@ public struct DefaultStartRecordingUseCase: StartRecordingUseCase {
 }
 
 extension StartRecordingUseCaseError {
-    fileprivate init(_ error: Error) {
-        if let repositoryError = error as? VoiceRecordPermissionRepositoryError {
-            switch repositoryError {
-            case .permissionDenied: self = .permissionDenied
-            case .cancelled: self = .cancelled
-            case .unknown(let error): self = .unknown(error)
-            }
-        } else if let repositoryError = error as? VoiceRecordStartRepositoryError {
-            switch repositoryError {
-            case .startFailed: self = .startFailed
-            case .cancelled: self = .cancelled
-            case .unknown(let error): self = .unknown(error)
-            }
-        } else {
-            self = .unknown(error)
+    fileprivate init(_ error: VoiceRecordStartRepositoryError) {
+        switch error {
+        case .startFailed: self = .startFailed
+        case .cancelled: self = .cancelled
+        case .unknown(let error): self = .unknown(error)
         }
     }
 }
