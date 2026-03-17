@@ -77,10 +77,11 @@ extension CheckSTTPermissionUseCaseTest {
         // When
         do {
             _ = try await sut.execute()
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("CheckSTTPermissionUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
             guard case .unknown(let error) = error else {
-                return XCTFail("expected CheckSTTPermissionUseCaseError, got \(error)")
+                return XCTFail(
+                    "예상한 에러는 CheckSTTPermissionUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
             XCTAssertTrue(error is DummyError)
         }
@@ -106,10 +107,11 @@ extension CheckSTTPermissionUseCaseTest {
         // When
         do {
             _ = try await task.value
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("CheckSTTPermissionUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
             guard case .cancelled = error as? CheckSTTPermissionUseCaseError else {
-                return XCTFail("expected .cancelled, got \(error)")
+                return XCTFail(
+                    "예상한 에러는 CheckSTTPermissionUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
 

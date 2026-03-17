@@ -60,11 +60,12 @@ extension StartRecordingUseCaseTests {
         // When
         do {
             _ = try await sut.execute()
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("StartRecordingUseCaseError.startFailed 에러를 throw 해야 합니다.")
         } catch {
             // Then
             guard case .startFailed = error else {
-                return XCTFail("expected .startFailed, got \(error)")
+                return XCTFail(
+                    "예상한 에러는 StartRecordingUseCaseError.startFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
 
@@ -81,12 +82,14 @@ extension StartRecordingUseCaseTests {
         // When
         do {
             _ = try await sut.execute()
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("StartRecordingUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
-            guard case .unknown(let error) = error else {
-                return XCTFail("expected .unknown, got \(error)")
+            guard case .unknown(let underlyingError) = error else {
+                return XCTFail(
+                    "예상한 에러는 StartRecordingUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
             }
-            XCTAssertTrue(error is DummyError)
+            XCTAssertTrue(underlyingError is DummyError, "내부 에러 타입은 DummyError 여야 합니다.")
         }
 
         // Then
@@ -111,11 +114,12 @@ extension StartRecordingUseCaseTests {
 
         do {
             _ = try await task.value
-            XCTFail("에러를 throw 해야 합니다.")
+            XCTFail("StartRecordingUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
             // Then
             guard case .cancelled = error as? StartRecordingUseCaseError else {
-                return XCTFail("expected .cancelled, got \(error)")
+                XCTFail("예상한 에러는 StartRecordingUseCaseError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
+                return
             }
         }
 
