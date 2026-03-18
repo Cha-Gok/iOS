@@ -1,0 +1,20 @@
+import Foundation
+
+public struct VoiceRecord: Sendable {
+    public let id: UUID
+    public let createdAt: Date
+    public let audioFilePath: URL
+    public let duration: Double
+
+    public init(
+        id: UUID = UUID(),
+        createdAt: Date = Date.now,
+        audioFilePath: URL,
+        duration: Double
+    ) {
+        self.id = id
+        self.createdAt = createdAt
+        self.audioFilePath = audioFilePath
+        self.duration = duration
+    }
+}
