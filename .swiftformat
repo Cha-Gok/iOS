@@ -39,7 +39,7 @@
 --computed-var-attributes prev-line
 
 # [Import 정렬 - @testable 우선]
---import-grouping testable-first,alpha
+--import-grouping testable-first
 --enable sortImports
 
 # [비활성화 (중요!) - 코드 변형 방지]
