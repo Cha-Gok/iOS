@@ -59,7 +59,8 @@ actor MockFolderRepository: FolderRepository {
     func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedCreateCallCount {
             XCTAssertEqual(
-                createCallCount, expected, "생성 호출 횟수가 일치하지 않습니다.", file: file, line: line)
+                createCallCount, expected, "생성 호출 횟수가 일치하지 않습니다.", file: file, line: line
+            )
         }
 
         if let expectedName {
@@ -68,16 +69,19 @@ actor MockFolderRepository: FolderRepository {
 
         if let expected = expectedFetchAllCallCount {
             XCTAssertEqual(
-                fetchAllCallCount, expected, "전체 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line)
+                fetchAllCallCount, expected, "전체 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line
+            )
         }
 
         if let expected = expectedUpdateCallCount {
             XCTAssertEqual(
-                updateCallCount, expected, "수정 호출 횟수가 일치하지 않습니다.", file: file, line: line)
+                updateCallCount, expected, "수정 호출 횟수가 일치하지 않습니다.", file: file, line: line
+            )
         }
         if let expectedID = expectedFolderID {
             XCTAssertEqual(
-                actualFolder?.id, expectedID, "수정 폴더 ID가 일치하지 않습니다.", file: file, line: line)
+                actualFolder?.id, expectedID, "수정 폴더 ID가 일치하지 않습니다.", file: file, line: line
+            )
         }
     }
 

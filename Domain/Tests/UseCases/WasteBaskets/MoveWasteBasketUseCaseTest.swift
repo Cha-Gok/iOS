@@ -80,7 +80,7 @@ extension MoveWasteBasketUseCaseTest {
                     "예상한 에러는 MoveWasteBasketUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
                 )
             }
-            XCTAssertTrue(underlyingError is MoveWasteBasketRepositoryError)
+            XCTAssertTrue(underlyingError is DummyError)
         }
         await wasteBasketRepository.verify()
     }

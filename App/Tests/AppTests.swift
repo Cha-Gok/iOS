@@ -1,5 +1,6 @@
 @testable import App
-import Testing
+import XCTest
 
-@Test
-func placeholder() {}
+final class AppTests: XCTestCase {
+    func testExample() {}
+}
