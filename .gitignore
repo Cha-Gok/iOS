@@ -73,3 +73,6 @@ Tuist/.build
 ### VSCode ###
 .vscode
 buildServer.json
+
+### Claude ###
+CLAUDE.md
