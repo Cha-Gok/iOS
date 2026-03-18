@@ -2,7 +2,7 @@
 name: 버그 제보
 about: 동작 오류나 예상과 다른 동작을 알려주세요
 title: '[Bug] '
-labels:
+labels: 🐛 Bug
 ---
 
 ## 버그 설명

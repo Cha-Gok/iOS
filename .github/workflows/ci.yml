@@ -11,6 +11,9 @@ permissions:
   contents: read
 
 jobs:
-  # 🧪 빌드 및 테스트 (Test)
+  format:
+    uses: ./.github/workflows/format.yml
+
   test:
+    needs: format
     uses: ./.github/workflows/test.yml

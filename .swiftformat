@@ -48,10 +48,16 @@
 --disable redundantType
 --disable redundantFileprivate
 --disable unusedArguments
---disable redundantVariable
 --disable redundantLet
 
 # [줄바꿈 및 인자 관리]
 --wrap-arguments before-first
 --wrap-parameters before-first
 --hex-literal-case lowercase
+
+# ============================
+# Exclude
+# ============================
+
+# Tuist 매니페스트 파일 제외 (Tuist API는 bundleId 등 고유 네이밍을 사용)
+--exclude Tuist,**/Project.swift,Workspace.swift
