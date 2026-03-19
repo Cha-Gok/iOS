@@ -24,7 +24,7 @@ final class CheckSTTPermissionUseCaseTest: XCTestCase {
 extension CheckSTTPermissionUseCaseTest {
     func test_STT권한허용상태_권한조회시_authorized를반환한다() async throws {
         // Given
-        await authorityRepository.setResult(.success(.authorized))
+        await authorityRepository.setCheckResult(.success(.authorized))
         await authorityRepository.expectCheckSTTPermission(callCount: 1)
 
         // When
@@ -37,7 +37,7 @@ extension CheckSTTPermissionUseCaseTest {
 
     func test_STT권한거부상태_권한조회시_denied를반환한다() async throws {
         // Given
-        await authorityRepository.setResult(.success(.denied))
+        await authorityRepository.setCheckResult(.success(.denied))
         await authorityRepository.expectCheckSTTPermission(callCount: 1)
 
         // When
@@ -50,7 +50,7 @@ extension CheckSTTPermissionUseCaseTest {
 
     func test_STT권한미결정상태_권한조회시_notDetermined를반환한다() async throws {
         // Given
-        await authorityRepository.setResult(.success(.notDetermined))
+        await authorityRepository.setCheckResult(.success(.notDetermined))
         await authorityRepository.expectCheckSTTPermission(callCount: 1)
 
         // When
@@ -69,7 +69,7 @@ extension CheckSTTPermissionUseCaseTest {
         // Given
         struct DummyError: Error {}
         let expectedError = DummyError()
-        await authorityRepository.setResult(.failure(.unknown(expectedError)))
+        await authorityRepository.setCheckResult(.failure(.unknown(expectedError)))
         await authorityRepository.expectCheckSTTPermission(callCount: 1)
 
         // When & Then

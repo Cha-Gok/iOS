@@ -14,7 +14,7 @@ public enum RequestMicrophonePermissionUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    init(_ error: RequestMicrophonePermissionRepositoryError) {
+    init(_ error: MicrophonePermissionRepositoryError) {
         switch error {
         case .cancelled:
             self = .cancelled

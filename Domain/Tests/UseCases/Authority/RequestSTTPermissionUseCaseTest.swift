@@ -3,12 +3,12 @@ import Core
 import XCTest
 
 final class RequestSTTPermissionUseCaseTest: XCTestCase {
-    private var authorityRepository: MockRequestSTTPermissionRepository!
+    private var authorityRepository: MockSTTPermissionRepository!
     private var sut: DefaultRequestSTTPermissionUseCase!
 
     override func setUp() {
         super.setUp()
-        authorityRepository = MockRequestSTTPermissionRepository()
+        authorityRepository = MockSTTPermissionRepository()
         sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
     }
 
@@ -24,7 +24,7 @@ final class RequestSTTPermissionUseCaseTest: XCTestCase {
 extension RequestSTTPermissionUseCaseTest {
     func test_STT권한미결정상태_권한요청시_authorized를반환한다() async throws {
         // Given
-        await authorityRepository.setResult(.success(.authorized))
+        await authorityRepository.setRequestResult(.success(.authorized))
         await authorityRepository.expectRequestSTTPermission(callCount: 1)
 
         // When
@@ -37,7 +37,7 @@ extension RequestSTTPermissionUseCaseTest {
 
     func test_STT권한이미거부상태_권한요청시_denied를반환한다() async throws {
         // Given
-        await authorityRepository.setResult(.success(.denied))
+        await authorityRepository.setRequestResult(.success(.denied))
         await authorityRepository.expectRequestSTTPermission(callCount: 1)
 
         // When
@@ -56,7 +56,7 @@ extension RequestSTTPermissionUseCaseTest {
         // Given
         struct DummyError: Error {}
         let expectedError = DummyError()
-        await authorityRepository.setResult(.failure(.unknown(expectedError)))
+        await authorityRepository.setRequestResult(.failure(.unknown(expectedError)))
         await authorityRepository.expectRequestSTTPermission(callCount: 1)
 
         // When & Then

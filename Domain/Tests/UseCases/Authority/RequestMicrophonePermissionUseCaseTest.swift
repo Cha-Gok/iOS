@@ -3,12 +3,12 @@ import Core
 import XCTest
 
 final class RequestMicrophonePermissionUseCaseTest: XCTestCase {
-    private var authorityRepository: MockRequestMicrophonePermissionRepository!
+    private var authorityRepository: MockMicrophonePermissionRepository!
     private var sut: DefaultRequestMicrophonePermissionUseCase!
 
     override func setUp() {
         super.setUp()
-        authorityRepository = MockRequestMicrophonePermissionRepository()
+        authorityRepository = MockMicrophonePermissionRepository()
         sut = DefaultRequestMicrophonePermissionUseCase(repository: authorityRepository)
     }
 
@@ -24,7 +24,7 @@ final class RequestMicrophonePermissionUseCaseTest: XCTestCase {
 extension RequestMicrophonePermissionUseCaseTest {
     func test_마이크권한미결정상태_권한요청시_authorized를반환한다() async throws {
         // Given
-        await authorityRepository.setResult(.success(.authorized))
+        await authorityRepository.setRequestResult(.success(.authorized))
         await authorityRepository.expectRequestMicrophonePermission(callCount: 1)
 
         // When
@@ -37,7 +37,7 @@ extension RequestMicrophonePermissionUseCaseTest {
 
     func test_마이크권한이미거부상태_권한요청시_denied를반환한다() async throws {
         // Given
-        await authorityRepository.setResult(.success(.denied))
+        await authorityRepository.setRequestResult(.success(.denied))
         await authorityRepository.expectRequestMicrophonePermission(callCount: 1)
 
         // When
@@ -56,7 +56,7 @@ extension RequestMicrophonePermissionUseCaseTest {
         // Given
         struct DummyError: Error {}
         let expectedError = DummyError()
-        await authorityRepository.setResult(.failure(.unknown(expectedError)))
+        await authorityRepository.setRequestResult(.failure(.unknown(expectedError)))
         await authorityRepository.expectRequestMicrophonePermission(callCount: 1)
 
         // When & Then

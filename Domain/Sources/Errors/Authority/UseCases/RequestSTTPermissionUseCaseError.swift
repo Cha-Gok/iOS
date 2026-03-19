@@ -14,7 +14,7 @@ public enum RequestSTTPermissionUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    init(_ error: RequestSTTPermissionRepositoryError) {
+    init(_ error: STTPermissionRepositoryError) {
         switch error {
         case .cancelled:
             self = .cancelled
