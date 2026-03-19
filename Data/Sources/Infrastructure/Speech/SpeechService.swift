@@ -1,0 +1,36 @@
+import Domain
+import Speech
+
+struct DefaultSpeechService: STTPermissionService {
+    func checkPermission() async -> PermissionStatus {
+        switch SFSpeechRecognizer.authorizationStatus() {
+        case .authorized:
+            return .authorized
+        case .denied, .restricted:
+            return .denied
+        case .notDetermined:
+            return .notDetermined
+        @unknown default:
+            return .denied
+        }
+    }
+
+    func requestPermission() async -> PermissionStatus {
+        let status = await withCheckedContinuation { continuation in
+            SFSpeechRecognizer.requestAuthorization { status in
+                continuation.resume(returning: status)
+            }
+        }
+
+        switch status {
+        case .authorized:
+            return .authorized
+        case .denied, .restricted:
+            return .denied
+        case .notDetermined:
+            return .notDetermined
+        @unknown default:
+            return .denied
+        }
+    }
+}
