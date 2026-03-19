@@ -33,6 +33,7 @@ private let dataTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Sources/**/*.swift"],
+    resources: ["Resources/**"],
     scripts: [
         .pre(
             tool: "swiftformat",
