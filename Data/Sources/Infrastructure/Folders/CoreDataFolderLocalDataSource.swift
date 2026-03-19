@@ -19,7 +19,6 @@ public struct CoreDataFolderLocalDataSource: FolderLocalDataSource {
             entity.id = UUID()
             entity.name = name
             entity.createdAt = current
-            entity.updatedAt = current
             entity.path = URL.applicationSupportDirectory
 
             try backgroundContext.save()
@@ -53,7 +52,6 @@ public struct CoreDataFolderLocalDataSource: FolderLocalDataSource {
             }
 
             entity.name = folder.name
-            entity.updatedAt = Date.now
 
             try backgroundContext.save()
             return entity.toDomain()

@@ -29,7 +29,6 @@ final class CoreDataStorageTests: XCTestCase {
         folder.id = UUID()
         folder.name = "Test Folder"
         folder.createdAt = Date()
-        folder.updatedAt = Date()
         folder.path = URL.applicationSupportDirectory
 
         // Then
