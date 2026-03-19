@@ -1,7 +1,7 @@
 import Domain
 
 /// 마이크 권한 상태를 확인하고 요청하는 서비스 프로토콜
-protocol MicrophonePermissionService: Sendable {
+public protocol MicrophonePermissionService: Sendable {
     /// 현재 마이크 권한 상태를 확인합니다.
     /// - Returns: 현재 마이크 권한 상태
     func checkPermission() async -> PermissionStatus

@@ -1,8 +1,8 @@
 import Domain
 import Speech
 
-struct DefaultSpeechService: STTPermissionService {
-    func checkPermission() async -> PermissionStatus {
+public struct DefaultSpeechService: STTPermissionService {
+    public func checkPermission() async -> PermissionStatus {
         switch SFSpeechRecognizer.authorizationStatus() {
         case .authorized:
             return .authorized
@@ -15,7 +15,7 @@ struct DefaultSpeechService: STTPermissionService {
         }
     }
 
-    func requestPermission() async -> PermissionStatus {
+    public func requestPermission() async -> PermissionStatus {
         let status = await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { status in
                 continuation.resume(returning: status)

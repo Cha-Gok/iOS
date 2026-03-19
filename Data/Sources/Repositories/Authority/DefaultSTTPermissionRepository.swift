@@ -3,7 +3,7 @@ import Domain
 public struct DefaultSTTPermissionRepository: STTPermissionRepository {
     private let service: any STTPermissionService
 
-    init(service: any STTPermissionService) {
+    public init(service: any STTPermissionService) {
         self.service = service
     }
 

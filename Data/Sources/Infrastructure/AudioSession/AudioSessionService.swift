@@ -1,8 +1,8 @@
 import AVFoundation
 import Domain
 
-struct DefaultAudioSessionService: MicrophonePermissionService {
-    func checkPermission() async -> PermissionStatus {
+public struct DefaultAudioSessionService: MicrophonePermissionService {
+    public func checkPermission() async -> PermissionStatus {
         switch AVAudioApplication.shared.recordPermission {
         case .granted:
             return .authorized
@@ -15,7 +15,7 @@ struct DefaultAudioSessionService: MicrophonePermissionService {
         }
     }
 
-    func requestPermission() async -> PermissionStatus {
+    public func requestPermission() async -> PermissionStatus {
         let granted = await withCheckedContinuation { continuation in
             AVAudioApplication.requestRecordPermission { granted in
                 continuation.resume(returning: granted)

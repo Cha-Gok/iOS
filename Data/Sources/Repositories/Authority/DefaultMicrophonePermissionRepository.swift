@@ -3,7 +3,7 @@ import Domain
 public struct DefaultMicrophonePermissionRepository: MicrophonePermissionRepository {
     private let service: any MicrophonePermissionService
 
-    init(service: any MicrophonePermissionService) {
+    public init(service: any MicrophonePermissionService) {
         self.service = service
     }
 
