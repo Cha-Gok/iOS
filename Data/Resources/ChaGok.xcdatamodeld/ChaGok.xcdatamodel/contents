@@ -7,7 +7,6 @@
         <attribute name="isDeletable" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="path" attributeType="URI"/>
-        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="voiceNotes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="VoiceNote" inverseName="folder" inverseEntity="VoiceNote"/>
     </entity>
     <entity name="Keyword" representedClassName="KeywordEntity" syncable="YES">

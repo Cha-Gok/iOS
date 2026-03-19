@@ -16,9 +16,6 @@ public class FolderEntity: NSManagedObject {
     public var createdAt: Date
 
     @NSManaged
-    public var updatedAt: Date
-
-    @NSManaged
     public var isDeletable: Bool
 
     @NSManaged
