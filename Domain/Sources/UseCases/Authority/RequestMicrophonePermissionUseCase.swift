@@ -11,9 +11,9 @@ public protocol RequestMicrophonePermissionUseCase: Sendable {
 
 /// 마이크 권한을 요청합니다.
 public struct DefaultRequestMicrophonePermissionUseCase: RequestMicrophonePermissionUseCase {
-    private let repository: RequestMicrophonePermissionRepository
+    private let repository: MicrophonePermissionRepository
 
-    public init(repository: RequestMicrophonePermissionRepository) {
+    public init(repository: MicrophonePermissionRepository) {
         self.repository = repository
     }
 
