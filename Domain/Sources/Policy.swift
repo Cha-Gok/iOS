@@ -6,8 +6,8 @@ public enum Policy {
 
     /// AVAudioEngine installTap 버퍼 크기 (프레임 수)
     /// 44100 Hz 기준 약 93ms/buffer → ~10.7 Waveform/sec
-    static let waveformTapBufferSize: Int = 4096
+    public static let waveformTapBufferSize: Int = 4096
 
     /// Waveform 당 amplitude 샘플 수 (파형 막대 개수)
-    static let waveformSamplesPerBuffer: Int = 100
+    public static let waveformSamplesPerBuffer: Int = 20
 }

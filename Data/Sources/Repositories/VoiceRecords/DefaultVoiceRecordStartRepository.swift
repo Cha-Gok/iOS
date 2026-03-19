@@ -1,3 +1,4 @@
+import Core
 import Domain
 
 public struct DefaultVoiceRecordStartRepository: VoiceRecordStartRepository {
@@ -12,7 +13,8 @@ public struct DefaultVoiceRecordStartRepository: VoiceRecordStartRepository {
         do {
             return try await service.startRecording()
         } catch {
-            throw .startFailed
+            AppLogger.error(error)
+            throw VoiceRecordStartRepositoryError(error)
         }
     }
 }

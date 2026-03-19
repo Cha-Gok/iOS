@@ -32,8 +32,7 @@ extension DefaultVoiceRecordStartRepositoryTest {
         let sut = DefaultVoiceRecordStartRepository(service: service)
 
         // Given
-        struct SomeError: Error {}
-        await service.setStartResult(.failure(SomeError()))
+        await service.setStartResult(.failure(.startFailed))
         await service.expectStart(callCount: 1)
 
         // When & Then
@@ -41,7 +40,7 @@ extension DefaultVoiceRecordStartRepositoryTest {
             _ = try await sut.startRecording()
             XCTFail("VoiceRecordStartRepositoryError.startFailed 에러를 throw 해야 합니다.")
         } catch {
-            guard case .startFailed = error as? VoiceRecordStartRepositoryError else {
+            guard case .startFailed = error else {
                 return XCTFail(
                     "예상한 에러는 VoiceRecordStartRepositoryError.startFailed 이지만, 실제 받은 에러는 \(error) 입니다."
                 )
