@@ -9,6 +9,6 @@ public protocol MicrophonePermissionRepository: Sendable {
 
     /// 마이크 권한을 요청합니다.
     /// - Returns: 요청 결과 권한 상태.
-    /// - Throws: `RequestMicrophonePermissionRepositoryError`
+    /// - Throws: `MicrophonePermissionRepositoryError`
     func requestMicrophonePermission() async throws(MicrophonePermissionRepositoryError) -> PermissionStatus
 }

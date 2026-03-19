@@ -9,6 +9,6 @@ public protocol STTPermissionRepository: Sendable {
 
     /// STT 권한을 요청합니다.
     /// - Returns: 요청 결과 권한 상태.
-    /// - Throws: `RequestSTTPermissionRepositoryError`
+    /// - Throws: `STTPermissionRepositoryError`
     func requestSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus
 }
