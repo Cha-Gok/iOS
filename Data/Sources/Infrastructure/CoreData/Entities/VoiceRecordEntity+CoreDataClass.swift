@@ -1,8 +1,8 @@
 import CoreData
-import Foundation
+import Domain
 
 @objc(VoiceRecordEntity)
-public class VoiceRecordEntity: NSManagedObject {
+public final class VoiceRecordEntity: NSManagedObject {
     @NSManaged
     public var id: UUID
 
@@ -17,4 +17,15 @@ public class VoiceRecordEntity: NSManagedObject {
 
     @NSManaged
     public var voiceNote: VoiceNoteEntity
+}
+
+public extension VoiceRecordEntity {
+    func toDomain() -> VoiceRecord {
+        VoiceRecord(
+            id: id,
+            createdAt: createdAt,
+            audioFilePath: audioFilePath,
+            duration: duration
+        )
+    }
 }

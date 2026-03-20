@@ -1,8 +1,8 @@
 import CoreData
-import Foundation
+import Domain
 
 @objc(KeywordEntity)
-public class KeywordEntity: NSManagedObject {
+public final class KeywordEntity: NSManagedObject {
     @NSManaged
     public var id: UUID
 
@@ -11,4 +11,14 @@ public class KeywordEntity: NSManagedObject {
 
     @NSManaged
     public var voiceNote: VoiceNoteEntity
+}
+
+public extension KeywordEntity {
+    func toDomain() -> Keyword {
+        Keyword(
+            id: id,
+            noteId: voiceNote.id,
+            word: word
+        )
+    }
 }

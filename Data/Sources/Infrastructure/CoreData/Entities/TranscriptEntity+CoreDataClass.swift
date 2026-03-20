@@ -1,8 +1,8 @@
 import CoreData
-import Foundation
+import Domain
 
 @objc(TranscriptEntity)
-public class TranscriptEntity: NSManagedObject {
+public final class TranscriptEntity: NSManagedObject {
     @NSManaged
     public var id: UUID
 
@@ -14,4 +14,14 @@ public class TranscriptEntity: NSManagedObject {
 
     @NSManaged
     public var voiceNote: VoiceNoteEntity
+}
+
+public extension TranscriptEntity {
+    func toDomain() -> Transcript {
+        Transcript(
+            id: id,
+            createdAt: createdAt,
+            text: text
+        )
+    }
 }

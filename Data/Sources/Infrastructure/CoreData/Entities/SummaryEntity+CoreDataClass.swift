@@ -1,8 +1,8 @@
 import CoreData
-import Foundation
+import Domain
 
 @objc(SummaryEntity)
-public class SummaryEntity: NSManagedObject {
+public final class SummaryEntity: NSManagedObject {
     @NSManaged
     public var id: UUID
 
@@ -14,4 +14,14 @@ public class SummaryEntity: NSManagedObject {
 
     @NSManaged
     public var voiceNote: VoiceNoteEntity
+}
+
+public extension SummaryEntity {
+    func toDomain() -> Summary {
+        Summary(
+            id: id,
+            createdAt: createdAt,
+            text: text
+        )
+    }
 }

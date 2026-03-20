@@ -5,7 +5,8 @@ import Domain
 public protocol ManagedObjectMapping: NSManagedObject {
     /// 해당 엔티티와 매핑되는 도메인 모델 타입
     associatedtype DomainType: Sendable
-    /// 엔티티가 포함하는 하위 항목들의 타입 (기본값은 Never)
+
+    /// 자식 요소들의 타입 (다형성이 필요한 경우 열거형 사용)
     associatedtype ChildType: Sendable = Never
 
     /// 도메인 모델과 컨텍스트를 받아 엔티티를 초기화합니다.
@@ -17,8 +18,8 @@ public protocol ManagedObjectMapping: NSManagedObject {
     /// 도메인 모델의 데이터를 엔티티에 반영(주입)합니다.
     func insert(from domain: DomainType)
 
-    /// 엔티티가 소유한 하위 항목들을 반환합니다.
-    var child: ChildType { get }
+    /// 여러 자식들을 배열로 묶어서 반환합니다.
+    var children: [ChildType] { get }
 
     /// Core Data 엔티티의 이름
     static var entityName: String { get }
@@ -34,7 +35,7 @@ public protocol ManagedObjectMapping: NSManagedObject {
 }
 
 public extension ManagedObjectMapping where ChildType == Never {
-    var child: ChildType {
-        fatalError("This entity has no children (ChildType is Never)")
+    var children: [ChildType] {
+        return [] // 자식이 없는 엔티티는 기본적으로 빈 배열 반환
     }
 }

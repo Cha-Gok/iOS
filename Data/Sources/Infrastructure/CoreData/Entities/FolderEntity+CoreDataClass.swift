@@ -45,7 +45,6 @@ public extension FolderEntity {
 
 extension FolderEntity: ManagedObjectMapping {
     public typealias DomainType = Folder
-    public typealias ChildType = [VoiceNote]
 
     public convenience init(domain: Folder, context: NSManagedObjectContext) {
         self.init(context: context)
@@ -58,13 +57,13 @@ extension FolderEntity: ManagedObjectMapping {
             path: path,
             name: name,
             createdAt: createdAt,
-            content: child,
+            content: children,
             isDeletable: isDeletable,
             deletedAt: deletedAt
         )
     }
 
-    public var child: [VoiceNote] {
+    public var children: [VoiceNote] {
         let voiceNotes = voiceNotes as? Set<VoiceNoteEntity> ?? []
         return voiceNotes.map { $0.toDomain() }
     }
