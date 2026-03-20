@@ -1,10 +1,10 @@
 import Core
-import CoreData
+@preconcurrency import CoreData
 import Domain
 
 /// Core Data를 사용하는 폴더 로컬 데이터 소스의 실구현체입니다.
 /// 내부적으로 `backgroundContext.perform`을 호출하여 비동기 작업 및 트랜잭션을 직접 관리합니다.
-public struct CoreDataFolderLocalDataSource: FolderLocalDataSource {
+public actor CoreDataFolderLocalDataSource: FolderLocalDataSource {
     private let backgroundContext: NSManagedObjectContext
 
     public init(backgroundContext: NSManagedObjectContext) {
@@ -12,7 +12,9 @@ public struct CoreDataFolderLocalDataSource: FolderLocalDataSource {
     }
 
     public func create(name: String) async throws -> Folder {
-        try await backgroundContext.perform {
+        let backgroundContext = backgroundContext
+
+        return try await backgroundContext.perform {
             let entity = FolderEntity(context: backgroundContext)
             let current = Date.now
 
@@ -27,7 +29,9 @@ public struct CoreDataFolderLocalDataSource: FolderLocalDataSource {
     }
 
     public func fetch() async throws -> [Folder] {
-        try await backgroundContext.perform {
+        let backgroundContext = backgroundContext
+
+        return try await backgroundContext.perform {
             let request = FolderEntity.fetchRequest()
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \FolderEntity.createdAt, ascending: true)
@@ -42,7 +46,9 @@ public struct CoreDataFolderLocalDataSource: FolderLocalDataSource {
     }
 
     public func update(_ folder: Folder) async throws -> Folder {
-        try await backgroundContext.perform {
+        let backgroundContext = backgroundContext
+
+        return try await backgroundContext.perform {
             let request = FolderEntity.fetchRequest()
             request.predicate = NSPredicate(format: "id == %@", folder.id as CVarArg)
             request.fetchLimit = 1
