@@ -8,12 +8,6 @@ final class BundleInfo: Sendable {
     static let ExtensionName: String = "momd"
 }
 
-public enum CoreDataStorageError: Error, Sendable {
-    case resourceNotFound
-    case initializeFailed
-    case unknown(any Error)
-}
-
 public actor CoreDataStorage: Sendable {
     public let container: NSPersistentContainer
 
