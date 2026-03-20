@@ -2,7 +2,7 @@ import Domain
 
 /// Folders 도메인을 위한 리포지토리 실구현체입니다.
 /// 이제 리포지토리는 Core Data 엔진을 직접 관리하지 않고, 추상화된 `FolderLocalDataSource`에만 의존합니다.
-final actor DefaultFolderRepository: FolderRepository {
+actor DefaultFolderRepository: FolderRepository {
     private let dataSource: FolderLocalDataSource
 
     init(dataSource: FolderLocalDataSource) {
