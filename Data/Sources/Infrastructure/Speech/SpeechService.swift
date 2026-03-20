@@ -1,7 +1,7 @@
 import Domain
 import Speech
 
-public struct DefaultSpeechService: STTPermissionService {
+public struct SpeechService: STTPermissionService {
     public func checkPermission() async -> PermissionStatus {
         switch SFSpeechRecognizer.authorizationStatus() {
         case .authorized:

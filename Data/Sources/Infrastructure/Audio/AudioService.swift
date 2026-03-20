@@ -2,14 +2,41 @@ import AVFoundation
 import Core
 import Domain
 
-/// AVAudioEngine 기반 오디오 녹음 서비스
-public actor DefaultAudioRecorderService: AudioRecorderService {
+/// AVAudioSession 및 AVAudioEngine 기반 오디오 서비스
+public actor AudioService: MicrophonePermissionService, AudioRecorderService {
     private var engine: AVAudioEngine?
 
     public init() {}
 
+    // MARK: - MicrophonePermissionService
+
+    public func checkPermission() async -> PermissionStatus {
+        switch AVAudioApplication.shared.recordPermission {
+        case .granted:
+            return .authorized
+        case .denied:
+            return .denied
+        case .undetermined:
+            return .notDetermined
+        @unknown default:
+            return .denied
+        }
+    }
+
+    public func requestPermission() async -> PermissionStatus {
+        let granted = await withCheckedContinuation { continuation in
+            AVAudioApplication.requestRecordPermission { granted in
+                continuation.resume(returning: granted)
+            }
+        }
+        return granted ? .authorized : .denied
+    }
+
+    // MARK: - AudioRecorderService
+
     public func startRecording() async throws(AudioRecorderServiceError) -> AsyncStream<Waveform> {
         guard engine == nil else { throw .alreadyRecording }
+        try await activateSession()
         let engine = AVAudioEngine()
         self.engine = engine
 
@@ -49,9 +76,27 @@ public actor DefaultAudioRecorderService: AudioRecorderService {
         return stream
     }
 
+    // MARK: - Private
+
+    private func activateSession() async throws(AudioRecorderServiceError) {
+        let avSession = AVAudioSession.sharedInstance()
+        do {
+            try avSession.setCategory(.record, mode: .default)
+            try avSession.setActive(true)
+        } catch {
+            AppLogger.error(error)
+            throw AudioRecorderServiceError(error)
+        }
+    }
+
     private func stopEngine() {
         engine?.inputNode.removeTap(onBus: 0)
         engine?.stop()
         engine = nil
+        Task { await deactivateSession() }
+    }
+
+    private func deactivateSession() async {
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }
