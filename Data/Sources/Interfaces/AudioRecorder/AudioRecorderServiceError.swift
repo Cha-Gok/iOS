@@ -2,6 +2,8 @@ import Foundation
 
 /// 오디오 녹음 서비스 에러
 public enum AudioRecorderServiceError: LocalizedError, Sendable {
+    /// 이미 녹음이 진행 중인 경우
+    case alreadyRecording
     /// 다른 앱이 오디오 세션을 점유하여 활성화에 실패한 경우
     case sessionActivationFailed
     /// 미디어 서비스가 리셋되어 사용 불가한 경우
@@ -13,6 +15,8 @@ public enum AudioRecorderServiceError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
+        case .alreadyRecording:
+            return "이미 녹음이 진행 중입니다."
         case .sessionActivationFailed:
             return "다른 앱이 오디오를 사용 중입니다."
         case .mediaServicesFailed:

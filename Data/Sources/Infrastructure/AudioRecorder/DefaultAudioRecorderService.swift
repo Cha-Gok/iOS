@@ -9,6 +9,7 @@ public actor DefaultAudioRecorderService: AudioRecorderService {
     public init() {}
 
     public func startRecording() async throws(AudioRecorderServiceError) -> AsyncStream<Waveform> {
+        guard engine == nil else { throw .alreadyRecording }
         let engine = AVAudioEngine()
         self.engine = engine
 
