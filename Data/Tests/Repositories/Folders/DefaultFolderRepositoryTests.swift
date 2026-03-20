@@ -5,11 +5,11 @@ import XCTest
 
 final class DefaultFolderRepositoryTests: XCTestCase {}
 
-// MARK: - 폴더 생성 성공 케이스
+// MARK: - 폴더 생성 에러 및 취소 케이스
 
 extension DefaultFolderRepositoryTests {
     func test_정상적인이름일때_폴더생성시_성공한폴더를반환한다() async throws {
-        let mock = MockFolderLocalDataSource()
+        let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(dataSource: mock)
         let name = "새 폴더"
         let expectedFolder = Folder(id: UUID(), path: URL.applicationSupportDirectory, name: name, createdAt: Date.now)
@@ -26,13 +26,9 @@ extension DefaultFolderRepositoryTests {
         XCTAssertEqual(result.id, expectedFolder.id)
         await mock.verify()
     }
-}
 
-// MARK: - 폴더 생성 에러 및 취소 케이스
-
-extension DefaultFolderRepositoryTests {
     func test_데이터소스에서_생성실패에러가나면_createFailed를던진다() async throws {
-        let mock = MockFolderLocalDataSource()
+        let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(dataSource: mock)
 
         // Given
@@ -52,7 +48,7 @@ extension DefaultFolderRepositoryTests {
     }
 
     func test_태스크가취소된상태에서_생성요청시_cancelled를던진다() async throws {
-        let mock = MockFolderLocalDataSource()
+        let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(dataSource: mock)
 
         // Given
@@ -80,7 +76,7 @@ extension DefaultFolderRepositoryTests {
 
 extension DefaultFolderRepositoryTests {
     func test_폴더목록이존재할때_전체조회시_폴더리스트를반환한다() async throws {
-        let mock = MockFolderLocalDataSource()
+        let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(dataSource: mock)
         let expectedFolders = [
             Folder(id: UUID(), path: URL.applicationSupportDirectory, name: "폴더1", createdAt: Date.now),
@@ -101,7 +97,7 @@ extension DefaultFolderRepositoryTests {
     }
 
     func test_데이터소스에서_조회실패에러가나면_fetchFailed를던진다() async throws {
-        let mock = MockFolderLocalDataSource()
+        let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(dataSource: mock)
 
         // Given
@@ -121,7 +117,7 @@ extension DefaultFolderRepositoryTests {
     }
 
     func test_태스크가취소된상태에서_전체조회요청시_cancelled를던진다() async throws {
-        let mock = MockFolderLocalDataSource()
+        let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(dataSource: mock)
 
         // Given
@@ -149,7 +145,7 @@ extension DefaultFolderRepositoryTests {
 
 extension DefaultFolderRepositoryTests {
     func test_폴더정보가수정되었을때_업데이트요청시_수정된폴더를반환한다() async throws {
-        let mock = MockFolderLocalDataSource()
+        let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(dataSource: mock)
         let folder = Folder(id: UUID(), path: URL.applicationSupportDirectory, name: "수정된 이름", createdAt: Date.now)
 
@@ -166,7 +162,7 @@ extension DefaultFolderRepositoryTests {
     }
 
     func test_데이터소스에서_업데이트실패에러가나면_updateFailed를던진다() async throws {
-        let mock = MockFolderLocalDataSource()
+        let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(dataSource: mock)
         let dummyFolder = Folder(id: UUID(), path: URL.applicationSupportDirectory, name: "무관", createdAt: Date.now)
 
@@ -188,7 +184,7 @@ extension DefaultFolderRepositoryTests {
     }
 
     func test_태스크가취소된상태에서_업데이트요청시_cancelled를던진다() async throws {
-        let mock = MockFolderLocalDataSource()
+        let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(dataSource: mock)
         let folder = Folder(id: UUID(), path: URL.applicationSupportDirectory, name: "무관", createdAt: Date.now)
 
