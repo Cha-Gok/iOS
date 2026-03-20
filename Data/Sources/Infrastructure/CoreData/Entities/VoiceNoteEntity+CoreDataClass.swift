@@ -56,7 +56,6 @@ extension VoiceNoteEntity: ManagedObjectMapping {
     public typealias DomainType = VoiceNote
 
     public enum ChildType: Sendable {
-        case record(VoiceRecord)
         case keyword(Keyword)
         case transcript(Transcript)
         case summary(Summary)
@@ -64,7 +63,6 @@ extension VoiceNoteEntity: ManagedObjectMapping {
 
     public var children: [ChildType] {
         var items: [ChildType] = []
-        items.append(.record(voiceRecord.toDomain()))
 
         let keywordsDomain = (keywords as? Set<KeywordEntity> ?? []).map { $0.toDomain() }
         items.append(contentsOf: keywordsDomain.map { .keyword($0) })
@@ -84,16 +82,28 @@ extension VoiceNoteEntity: ManagedObjectMapping {
     }
 
     public func toDomain() -> VoiceNote {
-        VoiceNote(
+        var keys: [Keyword] = []
+        var t: Transcript?
+        var s: Summary?
+
+        for child in children {
+            switch child {
+            case .keyword(let val): keys.append(val)
+            case .transcript(let val): t = val
+            case .summary(let val): s = val
+            }
+        }
+
+        return VoiceNote(
             id: id,
             title: title,
             createdAt: createdAt,
             updatedAt: updatedAt,
             folderID: folder.id,
             voiceRecord: voiceRecord.toDomain(),
-            keywords: (keywords as? Set<KeywordEntity> ?? []).map { $0.toDomain() },
-            transcript: transcript?.toDomain(),
-            summary: summary?.toDomain(),
+            keywords: keys,
+            transcript: t,
+            summary: s,
             deletedAt: deletedAt
         )
     }
