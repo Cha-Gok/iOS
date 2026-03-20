@@ -1,10 +1,10 @@
 import Core
-@preconcurrency import CoreData
+import CoreData
 import Domain
 
 /// Core Data를 사용하는 폴더 로컬 데이터 소스의 실구현체입니다.
 /// 내부적으로 `backgroundContext.perform`을 호출하여 비동기 작업 및 트랜잭션을 직접 관리합니다.
-public actor CoreDataFolderLocalDataSource: FolderLocalDataSource {
+public struct CoreDataFolderLocalDataSource: FolderLocalDataSource, @unchecked Sendable {
     private let backgroundContext: NSManagedObjectContext
 
     public init(backgroundContext: NSManagedObjectContext) {

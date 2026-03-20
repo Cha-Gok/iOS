@@ -8,7 +8,7 @@ final class BundleInfo: Sendable {
     static let ExtensionName: String = "momd"
 }
 
-public actor CoreDataStorage: Sendable {
+public actor CoreDataStorage: @unchecked Sendable {
     public let container: NSPersistentContainer
 
     /// 싱글톤을 제거하고 외부에서 직접 생성할 수 있도록 public init으로 변경합니다.
