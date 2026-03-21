@@ -27,13 +27,14 @@ public actor CoreDataLocalDataBase<MO: ManagedObjectMapping>: LocalDataBase {
 
         container = NSPersistentContainer(name: BundleInfo.EntityName, managedObjectModel: model)
         backgroundContext = container.newBackgroundContext()
-        try await setup()
 
         if inMemory {
             let description = NSPersistentStoreDescription()
             description.type = NSInMemoryStoreType
             container.persistentStoreDescriptions = [description]
         }
+
+        try await setup()
     }
 
     /// container 초기 설정을 실행합니다.
