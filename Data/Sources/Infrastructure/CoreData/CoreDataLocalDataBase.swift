@@ -16,7 +16,7 @@ public actor CoreDataLocalDataBase<MO: ManagedObjectMapping>: LocalDataBase {
     let container: NSPersistentContainer
     let backgroundContext: NSManagedObjectContext
 
-    /// 싱글톤을 제거하고 외부에서 직접 생성할 수 있도록 public init으로 변경합니다.
+    /// Core Data 스토리지를 초기화합니다.
     public init(inMemory: Bool = false) async throws(CoreDataStorageError) {
         let bundle = Bundle(for: BundleInfo.self)
         guard let modelURL = bundle.url(forResource: BundleInfo.EntityName, withExtension: BundleInfo.ExtensionName),

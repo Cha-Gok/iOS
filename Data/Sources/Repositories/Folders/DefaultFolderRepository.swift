@@ -1,8 +1,8 @@
 import Domain
-import Foundation
+import Core
 
 /// Folders 도메인을 위한 리포지토리 실구현체입니다.
-/// 이제 리포지토리는 Core Data 엔진을 직접 관리하지 않고, 추상화된 `FolderLocalDataSource`에만 의존합니다.
+/// 이제 리포지토리는 Core Data 엔진을 직접 관리하지 않고, 추상화된 `LocalDataBase`에 의존합니다.
 actor DefaultFolderRepository: FolderRepository {
     private let dataSource: any LocalDataBase<Folder>
 
@@ -18,6 +18,7 @@ actor DefaultFolderRepository: FolderRepository {
             let folder = Folder(path: .applicationSupportDirectory, name: name)
             return try await dataSource.create(folder)
         } catch {
+            AppLogger.error(error)
             throw .createFailed
         }
     }
@@ -28,6 +29,7 @@ actor DefaultFolderRepository: FolderRepository {
         do {
             return try await dataSource.fetch()
         } catch {
+            AppLogger.error(error)
             throw .fetchFailed
         }
     }
@@ -38,6 +40,7 @@ actor DefaultFolderRepository: FolderRepository {
         do {
             return try await dataSource.update(folder)
         } catch {
+            AppLogger.error(error)
             throw .updateFailed
         }
     }
