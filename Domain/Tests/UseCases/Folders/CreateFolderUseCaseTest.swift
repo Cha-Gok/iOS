@@ -25,7 +25,7 @@ extension CreateFolderUseCaseTest {
     func test_정상상태_폴더생성시_생성된폴더를반환한다() async throws {
         // Given
         let expectedName = "New Folder"
-        let expectedFolder = Folder.stub(path: URL(fileURLWithPath: "/test"), name: expectedName)
+        let expectedFolder = Folder.stub(name: expectedName)
         await repository.setCreateResult(.success(expectedFolder))
         await repository.expectCreate(name: expectedName, callCount: 1)
 
@@ -190,7 +190,7 @@ extension CreateFolderUseCaseTest {
         }
         // Given
         await repository.setCreateResult(
-            .success(Folder.stub(path: URL.applicationSupportDirectory, name: "test"))
+            .success(Folder.stub(name: "test"))
         )
         await repository.expectCreate(callCount: 0)
 

@@ -4,7 +4,6 @@ import Foundation
 extension Folder {
     static func stub(
         id: UUID = UUID(),
-        path: URL = URL(fileURLWithPath: "/test"),
         name: String = "Stub Folder",
         createdAt: Date = Date(),
         content: [VoiceNote] = [],
@@ -13,7 +12,6 @@ extension Folder {
     ) -> Folder {
         Folder(
             id: id,
-            path: path,
             name: name,
             createdAt: createdAt,
             content: content,

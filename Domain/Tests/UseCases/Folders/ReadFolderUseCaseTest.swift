@@ -25,8 +25,8 @@ extension ReadFolderUseCaseTest {
     func test_정상상태_폴더조회시_전체폴더목록을반환한다() async throws {
         // Given
         let expectedFolders = [
-            Folder(path: URL(fileURLWithPath: "/1"), name: "Folder 1"),
-            Folder(path: URL(fileURLWithPath: "/2"), name: "Folder 2")
+            Folder(name: "Folder 1"),
+            Folder(name: "Folder 2")
         ]
         await repository.setFetchAllResult(.success(expectedFolders))
         await repository.expectFetchAll(callCount: 1)

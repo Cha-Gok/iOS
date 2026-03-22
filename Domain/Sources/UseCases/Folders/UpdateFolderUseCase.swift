@@ -33,7 +33,6 @@ public struct DefaultUpdateFolderUseCase: UpdateFolderUseCase {
 
         let updateFolder: Folder = .init(
             id: folder.id,
-            path: folder.path,
             name: trimName,
             createdAt: folder.createdAt,
             content: folder.content,
