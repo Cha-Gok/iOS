@@ -1,6 +1,6 @@
 import Foundation
 
-public struct DefaultFileService: FileService {
+public struct DefaultFileService: FileService, @unchecked Sendable {
     private let fileManager = FileManager.default
 
     public init() {}

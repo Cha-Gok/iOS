@@ -1,7 +1,7 @@
 import Foundation
 
 /// 파일 시스템 접근 및 조작을 위한 인터페이스입니다.
-public protocol FileService {
+public protocol FileService: Sendable {
     /// 지정된 검색 경로 디렉토리에 대한 URL 배열을 반환합니다.
     /// - Parameters:
     ///   - directory: 검색할 디렉토리 유형 (예: .documentDirectory)

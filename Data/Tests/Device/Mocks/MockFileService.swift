@@ -2,7 +2,7 @@
 import Foundation
 import XCTest
 
-final class MockFileService: FileService {
+final class MockFileService: FileService, @unchecked Sendable {
     private var urlsResults: [FileManager.SearchPathDirectory: [URL]] = [:]
     private var fileExistsResults: [String: Bool] = [:]
     private var createDirectoryError: Error?
