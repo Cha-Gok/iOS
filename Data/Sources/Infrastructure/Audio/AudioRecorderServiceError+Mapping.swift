@@ -3,10 +3,14 @@ import AVFoundation
 extension AudioRecorderServiceError {
     init(_ error: Error) {
         let nsError = error as NSError
-        switch nsError.code {
-        case AVAudioSession.ErrorCode.insufficientPriority.rawValue:
+        guard let errorCode = AVAudioSession.ErrorCode(rawValue: nsError.code) else {
+            self = .unknown(error)
+            return
+        }
+        switch errorCode {
+        case .insufficientPriority:
             self = .sessionActivationFailed
-        case AVAudioSession.ErrorCode.mediaServicesFailed.rawValue:
+        case .mediaServicesFailed:
             self = .mediaServicesFailed
         default:
             self = .unknown(error)
