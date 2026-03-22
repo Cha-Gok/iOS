@@ -16,7 +16,8 @@ public actor DefaultWorkSpaceRepository: WorkSpaceRepository {
         if Task.isCancelled { throw .cancelled }
         guard let documentURL = fileService.urls(
             for: .applicationSupportDirectory,
-            in: .userDomainMask).first
+            in: .userDomainMask
+        ).first
         else {
             throw .unknown(
                 NSError(

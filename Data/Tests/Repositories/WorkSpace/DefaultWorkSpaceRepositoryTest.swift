@@ -80,10 +80,10 @@ extension DefaultWorkSpaceRepositoryTest {
         // Given
         let baseURL = URL(fileURLWithPath: "/test/path")
         let rootURL = baseURL.appendingPathComponent("ChaGok", isDirectory: true)
-        
+
         service.setUrlsResult(for: .applicationSupportDirectory, urls: [baseURL])
         service.setFileExistsResult(atPath: rootURL.path, exists: true)
-        
+
         service.expectUrls(callCount: 1)
         service.expectFileExists(callCount: 1)
         service.expectCreateDirectory(callCount: 0)
@@ -104,10 +104,10 @@ extension DefaultWorkSpaceRepositoryTest {
         // Given
         let baseURL = URL(fileURLWithPath: "/test/path")
         let rootURL = baseURL.appendingPathComponent("ChaGok", isDirectory: true)
-        
+
         service.setUrlsResult(for: .applicationSupportDirectory, urls: [baseURL])
         service.setFileExistsResult(atPath: rootURL.path, exists: false)
-        
+
         service.expectUrls(callCount: 1)
         service.expectFileExists(callCount: 1)
         service.expectCreateDirectory(callCount: 1)
@@ -128,11 +128,11 @@ extension DefaultWorkSpaceRepositoryTest {
         // Given
         let baseURL = URL(fileURLWithPath: "/test/path")
         let rootURL = baseURL.appendingPathComponent("ChaGok", isDirectory: true)
-        
+
         service.setUrlsResult(for: .applicationSupportDirectory, urls: [baseURL])
         service.setFileExistsResult(atPath: rootURL.path, exists: false)
         service.setCreateDirectoryError(NSError(domain: "test", code: -1))
-        
+
         service.expectCreateDirectory(callCount: 1)
 
         // When & Then
