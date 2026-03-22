@@ -9,6 +9,8 @@ extension VoiceRecordStartRepositoryError {
             self = .startFailed
         case .unknown(let underlying):
             self = .unknown(underlying)
+        default:
+            self = .unknown(error)
         }
     }
 }
