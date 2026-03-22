@@ -10,4 +10,6 @@ public enum Policy {
 
     /// Waveform 당 amplitude 샘플 수 (파형 막대 개수)
     public static let waveformSamplesPerBuffer: Int = 20
+    /// 루트 디렉토리 폴더 이름
+    public static let rootName: String = "ChaGok"
 }
