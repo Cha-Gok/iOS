@@ -1,10 +1,57 @@
 import Domain
 import Foundation
 
-/// 파일 시스템 내부 조작을 위한 내부 익스텐션 인터페이스.
-protocol InternalWorkSpaceRepository: WorkSpaceRepository {
-    /// 특정 URL에 디렉토리가 존재하는지 확인합니다.
-    /// - Parameter url: 확인할 대상 경로
-    /// - Returns: 폴더 존재 여부
-    func directoryExists(at url: URL) -> Bool
+public actor DefaultWorkSpaceRepository: WorkSpaceRepository {
+    private let fileService: FileService
+
+    public init(fileService: FileService) {
+        self.fileService = fileService
+    }
+
+    private func directoryExists(at url: URL) -> Bool {
+        fileService.fileExists(atPath: url.path)
+    }
+
+    public func fetchRootURL() async throws(WorkSpaceRootURLRepositoryError) -> URL {
+        if Task.isCancelled { throw .cancelled }
+        guard let documentURL = fileService.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask).first
+        else {
+            throw .unknown(
+                NSError(
+                    domain: "WorkSpaceRepository",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "applicationSupportDirectory not found"]
+                )
+            )
+        }
+        return documentURL.appendingPathComponent(Policy.rootName, isDirectory: true)
+    }
+
+    public func fetchOrCreateBasicFolder() async throws(WorkSpaceBasicFolderRepositoryError) -> Folder {
+        let rootURL: URL
+        if Task.isCancelled { throw .cancelled }
+
+        do {
+            rootURL = try await fetchRootURL()
+        } catch {
+            if case .cancelled = error { throw .cancelled }
+            throw .unknown(error)
+        }
+
+        if !directoryExists(at: rootURL) {
+            do {
+                try fileService.createDirectory(at: rootURL, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                throw .createFailed
+            }
+        }
+
+        return Folder(
+            path: rootURL,
+            name: rootURL.lastPathComponent,
+            isDeletable: false
+        )
+    }
 }
