@@ -1,11 +1,20 @@
 import Domain
 import Foundation
 
-/// 내부 구현체에서 사용할 리포지토리 인터페이스입니다.
-protocol InternalFirstLaunchRepository: CheckFirstLaunchRepository {
-    /// 신규 사용자라면 기존 사용자로 상태 변경.
-    func setUser()
+public final class DefaultCheckFirstLaunchRepository: CheckFirstLaunchRepository {
+    private let service: CheckFirstUserService
 
-    /// 사용자가 처음인지 판단한다.
-    func getUser() -> Bool
+    public init(service: CheckFirstUserService) {
+        self.service = service
+    }
+
+    public func checkAndMarkFirstLaunch() -> Bool {
+        let firstUser: Bool = service.getFirstUser()
+        if firstUser { // 신규 사용자
+            service.setUser()
+            return true
+        }
+
+        return firstUser
+    }
 }
