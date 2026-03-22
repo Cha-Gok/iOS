@@ -3,14 +3,14 @@ import Domain
 
 /// Folders 도메인을 위한 리포지토리 실구현체입니다.
 /// 이제 리포지토리는 Core Data 엔진을 직접 관리하지 않고, 추상화된 `LocalDataBase`에 의존합니다.
-actor DefaultFolderRepository: FolderRepository {
+public actor DefaultFolderRepository: FolderRepository {
     private let database: any LocalDataBase<Folder>
 
-    init(database: any LocalDataBase<Folder>) {
+    public init(database: any LocalDataBase<Folder>) {
         self.database = database
     }
 
-    func create(name: String) async throws(FolderRepositoryError) -> Folder {
+    public func create(name: String) async throws(FolderRepositoryError) -> Folder {
         if Task.isCancelled { throw .cancelled }
 
         do {
@@ -22,7 +22,7 @@ actor DefaultFolderRepository: FolderRepository {
         }
     }
 
-    func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
+    public func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
         if Task.isCancelled { throw .cancelled }
 
         do {
@@ -33,7 +33,7 @@ actor DefaultFolderRepository: FolderRepository {
         }
     }
 
-    func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
+    public func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
         if Task.isCancelled { throw .cancelled }
 
         do {
