@@ -4,19 +4,51 @@ import XCTest
 
 actor MockAudioRecorderService: AudioRecorderService {
     private var startResult: Result<AsyncStream<Waveform>, AudioRecorderServiceError>?
+    private var pauseResult: Result<Void, AudioRecorderServiceError>?
+    private var resumeResult: Result<Void, AudioRecorderServiceError>?
+
     private var startCallCount = 0
+    private var pauseCallCount = 0
+    private var resumeCallCount = 0
+
     private var expectedStartCallCount: Int?
+    private var expectedPauseCallCount: Int?
+    private var expectedResumeCallCount: Int?
 
     func setStartResult(_ result: Result<AsyncStream<Waveform>, AudioRecorderServiceError>) {
         startResult = result
+    }
+
+    func setPauseResult(_ result: Result<Void, AudioRecorderServiceError>) {
+        pauseResult = result
+    }
+
+    func setResumeResult(_ result: Result<Void, AudioRecorderServiceError>) {
+        resumeResult = result
     }
 
     func expectStart(callCount: Int) {
         expectedStartCallCount = callCount
     }
 
+    func expectPause(callCount: Int) {
+        expectedPauseCallCount = callCount
+    }
+
+    func expectResume(callCount: Int) {
+        expectedResumeCallCount = callCount
+    }
+
     func verify(file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertEqual(startCallCount, expectedStartCallCount, file: file, line: line)
+        if let expectedStartCallCount {
+            XCTAssertEqual(startCallCount, expectedStartCallCount, file: file, line: line)
+        }
+        if let expectedPauseCallCount {
+            XCTAssertEqual(pauseCallCount, expectedPauseCallCount, file: file, line: line)
+        }
+        if let expectedResumeCallCount {
+            XCTAssertEqual(resumeCallCount, expectedResumeCallCount, file: file, line: line)
+        }
     }
 
     func startRecording() async throws(AudioRecorderServiceError) -> AsyncStream<Waveform> {
@@ -26,5 +58,23 @@ actor MockAudioRecorderService: AudioRecorderService {
             throw .startFailed
         }
         return try startResult.get()
+    }
+
+    func pauseRecording() async throws(AudioRecorderServiceError) {
+        pauseCallCount += 1
+        guard let pauseResult else {
+            XCTFail("pauseResult가 설정되지 않았습니다. setPauseResult()를 먼저 호출하세요.")
+            throw .pauseFailed
+        }
+        _ = try pauseResult.get()
+    }
+
+    func resumeRecording() async throws(AudioRecorderServiceError) {
+        resumeCallCount += 1
+        guard let resumeResult else {
+            XCTFail("resumeResult가 설정되지 않았습니다. setResumeResult()를 먼저 호출하세요.")
+            throw .resumeFailed
+        }
+        _ = try resumeResult.get()
     }
 }
