@@ -14,8 +14,7 @@ actor DefaultFolderRepository: FolderRepository {
         if Task.isCancelled { throw .cancelled }
 
         do {
-            // Folder 생성을 위해 기본값들로 초기화 (path 등)
-            let folder = Folder(path: .applicationSupportDirectory, name: name)
+            let folder = Folder(name: name)
             return try await database.create(folder)
         } catch {
             AppLogger.error(error)
@@ -27,7 +26,7 @@ actor DefaultFolderRepository: FolderRepository {
         if Task.isCancelled { throw .cancelled }
 
         do {
-            return try await database.fetch()
+            return try await database.fetchAll()
         } catch {
             AppLogger.error(error)
             throw .fetchFailed
