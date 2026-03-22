@@ -14,10 +14,11 @@ public actor DefaultWorkSpaceRepository: WorkSpaceRepository {
 
     public func fetchRootURL() async throws(WorkSpaceRootURLRepositoryError) -> URL {
         if Task.isCancelled { throw .cancelled }
-        guard let documentURL = fileService.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        ).first
+        guard
+            let documentURL = fileService.urls(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask
+            ).first
         else {
             throw .unknown(
                 NSError(
@@ -41,9 +42,13 @@ public actor DefaultWorkSpaceRepository: WorkSpaceRepository {
             throw .unknown(error)
         }
 
+        if Task.isCancelled { throw .cancelled }
+
         if !directoryExists(at: rootURL) {
             do {
-                try fileService.createDirectory(at: rootURL, withIntermediateDirectories: true, attributes: nil)
+                try fileService.createDirectory(
+                    at: rootURL, withIntermediateDirectories: true, attributes: nil
+                )
             } catch {
                 throw .createFailed
             }
