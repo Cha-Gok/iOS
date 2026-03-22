@@ -5,6 +5,7 @@ import Domain
 /// AVAudioSession 및 AVAudioEngine 기반 오디오 서비스
 public actor AudioService: MicrophonePermissionService, AudioRecorderService {
     private var engine: AVAudioEngine?
+    private var isPaused = false
 
     public init() {}
 
@@ -39,6 +40,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
         try await activateSession()
         let engine = AVAudioEngine()
         self.engine = engine
+        isPaused = false
 
         let (stream, continuation) = AsyncStream.makeStream(of: Waveform.self)
         let inputNode = engine.inputNode
@@ -70,10 +72,34 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
         } catch {
             AppLogger.error(error)
             continuation.finish()
-            throw AudioRecorderServiceError(error)
+            throw .startFailed
         }
 
         return stream
+    }
+
+    public func pauseRecording() async throws(AudioRecorderServiceError) {
+        guard let engine, isPaused == false else { throw .notRecording }
+
+        guard engine.isRunning else { throw .pauseFailed }
+
+        engine.pause()
+        isPaused = true
+    }
+
+    public func resumeRecording() async throws(AudioRecorderServiceError) {
+        guard let engine else { throw .notPaused }
+        guard isPaused else { throw .notPaused }
+
+        try await activateSession()
+
+        do {
+            try engine.start()
+            isPaused = false
+        } catch {
+            AppLogger.error(error)
+            throw .resumeFailed
+        }
     }
 
     // MARK: - Private
@@ -93,6 +119,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
         engine?.inputNode.removeTap(onBus: 0)
         engine?.stop()
         engine = nil
+        isPaused = false
         Task { await deactivateSession() }
     }
 
