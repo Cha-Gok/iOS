@@ -7,6 +7,6 @@ public final class DefaultCheckFirstUserService: CheckFirstUserService {
     }
 
     public func getFirstUser() -> Bool {
-        UserDefaults.standard.bool(forKey: Policy.isExistingUserKey)
+        !UserDefaults.standard.bool(forKey: Policy.isExistingUserKey)
     }
 }
