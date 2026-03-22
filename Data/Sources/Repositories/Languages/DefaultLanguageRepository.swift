@@ -15,7 +15,7 @@ public struct DefaultLanguageRepository: LanguageRepository {
             return Language(rawValue: rawLanguage) ?? .ko
         } catch let error as FetchLanguagesRepositoryError {
             throw error
-        } catch is LanguageSettingServiceError {
+        } catch is LanguageServiceError {
             return .ko
         } catch {
             throw .unknown(error)
