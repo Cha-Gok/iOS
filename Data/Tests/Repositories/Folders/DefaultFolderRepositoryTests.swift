@@ -12,7 +12,7 @@ extension DefaultFolderRepositoryTests {
         let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(database: mock)
         let name = "새 폴더"
-        let expectedFolder = Folder(id: UUID(), path: URL.applicationSupportDirectory, name: name, createdAt: Date.now)
+        let expectedFolder = Folder(id: UUID(), name: name, createdAt: Date.now)
 
         // Given
         await mock.setCreateResult(.success(expectedFolder))
@@ -79,13 +79,13 @@ extension DefaultFolderRepositoryTests {
         let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(database: mock)
         let expectedFolders = [
-            Folder(id: UUID(), path: URL.applicationSupportDirectory, name: "폴더1", createdAt: Date.now),
-            Folder(id: UUID(), path: URL.applicationSupportDirectory, name: "폴더2", createdAt: Date.now)
+            Folder(id: UUID(), name: "폴더1", createdAt: Date.now),
+            Folder(id: UUID(), name: "폴더2", createdAt: Date.now)
         ]
 
         // Given
-        await mock.setFetchResult(.success(expectedFolders))
-        await mock.expectFetch(callCount: 1)
+        await mock.setFetchAllResult(.success(expectedFolders))
+        await mock.expectFetchAll(callCount: 1)
 
         // When
         let result = try await sut.fetchAll()
@@ -101,8 +101,8 @@ extension DefaultFolderRepositoryTests {
         let sut = DefaultFolderRepository(database: mock)
 
         // Given
-        await mock.setFetchResult(.failure(FolderRepositoryError.fetchFailed))
-        await mock.expectFetch(callCount: 1)
+        await mock.setFetchAllResult(.failure(FolderRepositoryError.fetchFailed))
+        await mock.expectFetchAll(callCount: 1)
 
         // When & Then
         do {
@@ -121,7 +121,7 @@ extension DefaultFolderRepositoryTests {
         let sut = DefaultFolderRepository(database: mock)
 
         // Given
-        await mock.expectFetch(callCount: 0)
+        await mock.expectFetchAll(callCount: 0)
 
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
@@ -147,7 +147,7 @@ extension DefaultFolderRepositoryTests {
     func test_폴더정보가수정되었을때_업데이트요청시_수정된폴더를반환한다() async throws {
         let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(database: mock)
-        let folder = Folder(id: UUID(), path: URL.applicationSupportDirectory, name: "수정된 이름", createdAt: Date.now)
+        let folder = Folder(id: UUID(), name: "수정된 이름", createdAt: Date.now)
 
         // Given
         await mock.setUpdateResult(.success(folder))
@@ -164,7 +164,7 @@ extension DefaultFolderRepositoryTests {
     func test_데이터소스에서_업데이트실패에러가나면_updateFailed를던진다() async throws {
         let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(database: mock)
-        let dummyFolder = Folder(id: UUID(), path: URL.applicationSupportDirectory, name: "무관", createdAt: Date.now)
+        let dummyFolder = Folder(id: UUID(), name: "무관", createdAt: Date.now)
 
         // Given
         // 데이터 소스에서 조회 실패(notFound)가 발생해도 리포지토리는 updateFailed로 변환해야 함
@@ -186,7 +186,7 @@ extension DefaultFolderRepositoryTests {
     func test_태스크가취소된상태에서_업데이트요청시_cancelled를던진다() async throws {
         let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(database: mock)
-        let folder = Folder(id: UUID(), path: URL.applicationSupportDirectory, name: "무관", createdAt: Date.now)
+        let folder = Folder(id: UUID(), name: "무관", createdAt: Date.now)
 
         // Given
         await mock.expectUpdate(callCount: 0)
