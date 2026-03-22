@@ -10,4 +10,7 @@ public enum Policy {
 
     /// Waveform 당 amplitude 샘플 수 (파형 막대 개수)
     public static let waveformSamplesPerBuffer: Int = 20
+
+    /// 기존 사용자 여부를 확인하기 위한 UserDefaults 키
+    public static let isExistingUserKey: String = "isExistingUser"
 }
