@@ -6,6 +6,6 @@ public protocol CheckFirstUserService: Sendable {
     func setUser()
 
     /// 사용자가 처음인지 판단한다.
-    /// - Returns: 신규 사용자는 True, 기존 사용자는 First
+    /// - Returns: 신규 사용자는 True, 기존 사용자는 False
     func getFirstUser() -> Bool
 }
