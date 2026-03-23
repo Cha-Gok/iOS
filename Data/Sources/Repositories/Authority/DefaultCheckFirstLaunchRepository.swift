@@ -2,19 +2,19 @@ import Domain
 import Foundation
 
 public final class DefaultCheckFirstLaunchRepository: CheckFirstLaunchRepository {
-    private let service: CheckFirstUserService
+    private let service: FirstLaunchService
 
-    public init(service: CheckFirstUserService) {
+    public init(service: FirstLaunchService) {
         self.service = service
     }
 
     public func checkAndMarkFirstLaunch() -> Bool {
-        let firstUser: Bool = service.getFirstUser()
-        if firstUser { // 신규 사용자
-            service.setUser()
+        let isFirstLaunch: Bool = service.isFirstLaunch()
+        if isFirstLaunch { // 신규 사용자
+            service.markAsLaunched()
             return true
         }
 
-        return firstUser
+        return isFirstLaunch
     }
 }

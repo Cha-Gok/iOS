@@ -8,13 +8,13 @@ final class DefaultCheckFirstLaunchRepositoryTest: XCTestCase {}
 
 extension DefaultCheckFirstLaunchRepositoryTest {
     func test_신규사용자상태_최초실행확인시_true를반환한다() {
-        let service = MockCheckFirstUserService()
+        let service = MockFirstLaunchService()
         let sut = DefaultCheckFirstLaunchRepository(service: service)
 
         // Given
-        service.setFirstUserResult(true)
-        service.expectGetFirstUser(callCount: 1)
-        service.expectSetUser(callCount: 1)
+        service.setIsFirstLaunchResult(true)
+        service.expectIsFirstLaunch(callCount: 1)
+        service.expectMarkAsLaunched(callCount: 1)
 
         // When
         let result = sut.checkAndMarkFirstLaunch()
@@ -25,13 +25,13 @@ extension DefaultCheckFirstLaunchRepositoryTest {
     }
 
     func test_기존사용자상태_최초실행확인시_false를반환한다() {
-        let service = MockCheckFirstUserService()
+        let service = MockFirstLaunchService()
         let sut = DefaultCheckFirstLaunchRepository(service: service)
 
         // Given
-        service.setFirstUserResult(false)
-        service.expectGetFirstUser(callCount: 1)
-        service.expectSetUser(callCount: 0)
+        service.setIsFirstLaunchResult(false)
+        service.expectIsFirstLaunch(callCount: 1)
+        service.expectMarkAsLaunched(callCount: 0)
 
         // When
         let result = sut.checkAndMarkFirstLaunch()
@@ -45,13 +45,13 @@ extension DefaultCheckFirstLaunchRepositoryTest {
 // MARK: - 상태 변경 검증 케이스
 
 extension DefaultCheckFirstLaunchRepositoryTest {
-    func test_신규사용자상태_최초실행확인시_setUser가호출된다() {
-        let service = MockCheckFirstUserService()
+    func test_신규사용자상태_최초실행확인시_markAsLaunched가호출된다() {
+        let service = MockFirstLaunchService()
         let sut = DefaultCheckFirstLaunchRepository(service: service)
 
         // Given
-        service.setFirstUserResult(true)
-        service.expectSetUser(callCount: 1)
+        service.setIsFirstLaunchResult(true)
+        service.expectMarkAsLaunched(callCount: 1)
 
         // When
         _ = sut.checkAndMarkFirstLaunch()
@@ -60,13 +60,13 @@ extension DefaultCheckFirstLaunchRepositoryTest {
         service.verify()
     }
 
-    func test_기존사용자상태_최초실행확인시_setUser가호출되지않는다() {
-        let service = MockCheckFirstUserService()
+    func test_기존사용자상태_최초실행확인시_markAsLaunched가호출되지않는다() {
+        let service = MockFirstLaunchService()
         let sut = DefaultCheckFirstLaunchRepository(service: service)
 
         // Given
-        service.setFirstUserResult(false)
-        service.expectSetUser(callCount: 0)
+        service.setIsFirstLaunchResult(false)
+        service.expectMarkAsLaunched(callCount: 0)
 
         // When
         _ = sut.checkAndMarkFirstLaunch()
