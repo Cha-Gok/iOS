@@ -2,27 +2,15 @@
 import Core
 import XCTest
 
-final class UpdateFolderUseCaseTest: XCTestCase {
-    private var repository: MockFolderRepository!
-    private var sut: DefaultUpdateFolderUseCase!
-
-    override func setUp() {
-        super.setUp()
-        repository = MockFolderRepository()
-        sut = DefaultUpdateFolderUseCase(repository: repository)
-    }
-
-    override func tearDown() {
-        repository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class UpdateFolderUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension UpdateFolderUseCaseTest {
     func test_정상상태_폴더수정시_업데이트된폴더를반환한다() async throws {
+        let repository = MockFolderRepository()
+        let sut = DefaultUpdateFolderUseCase(repository: repository)
+
         // Given
         let originalFolder = Folder.stub(name: "Old Name")
         let updatedFolder = Folder.stub(
@@ -51,6 +39,9 @@ extension UpdateFolderUseCaseTest {
 
 extension UpdateFolderUseCaseTest {
     func test_너무긴이름상태_폴더수정시_invalidLengthName에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultUpdateFolderUseCase(repository: repository)
+
         // Given
         await repository.expectUpdate(callCount: 0)
         let tooLongName = String(repeating: "a", count: 51)
@@ -71,13 +62,15 @@ extension UpdateFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_유효하지않은이름상태_폴더수정시_invalidName에러를던진다() async throws {
+    func test_유효하지않은이름상태_폴더수정시_invalidName에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultUpdateFolderUseCase(repository: repository)
+
         // Given
         await repository.expectUpdate(callCount: 0)
         let invalidNames = ["", " ", "  \n  ", " 새폴더", "새 폴더 ", "  새 폴더  "]
 
         // When & Then
-        let sut = try XCTUnwrap(sut)
         await withTaskGroup(of: Void.self) { group in
             for name in invalidNames {
                 group.addTask {
@@ -102,6 +95,9 @@ extension UpdateFolderUseCaseTest {
     }
 
     func test_폴더미존재상태_폴더수정시_notFound에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultUpdateFolderUseCase(repository: repository)
+
         // Given
         let folder = Folder(name: "Any")
         await repository.setUpdateResult(.failure(.notFound))
@@ -123,6 +119,9 @@ extension UpdateFolderUseCaseTest {
     }
 
     func test_중복된이름상태_폴더수정시_duplicateName에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultUpdateFolderUseCase(repository: repository)
+
         // Given
         let folder = Folder(name: "New Name")
         await repository.setUpdateResult(.failure(.duplicateName))
@@ -144,6 +143,9 @@ extension UpdateFolderUseCaseTest {
     }
 
     func test_리포지토리수정실패상태_폴더수정시_updateFailed에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultUpdateFolderUseCase(repository: repository)
+
         // Given
         let folder = Folder(name: "Any")
         await repository.setUpdateResult(.failure(.updateFailed))
@@ -165,6 +167,9 @@ extension UpdateFolderUseCaseTest {
     }
 
     func test_리포지토리알수없는에러상태_폴더수정시_unknown에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultUpdateFolderUseCase(repository: repository)
+
         // Given
         let folder = Folder(name: "Any")
         struct DummyError: Error {}
@@ -199,6 +204,9 @@ extension UpdateFolderUseCaseTest {
 
 extension UpdateFolderUseCaseTest {
     func test_작업취소상태_폴더수정시_cancelled에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultUpdateFolderUseCase(repository: repository)
+
         // Given
         let folder = Folder(name: "Any")
         await repository.setUpdateResult(.failure(.cancelled))
@@ -220,9 +228,9 @@ extension UpdateFolderUseCaseTest {
     }
 
     func test_태스크이미취소상태_폴더수정시_즉시cancelled에러를던진다() async {
-        guard let sut else {
-            return XCTFail("sut가 초기화되지 않았습니다.")
-        }
+        let repository = MockFolderRepository()
+        let sut = DefaultUpdateFolderUseCase(repository: repository)
+
         // Given
         let folder = Folder(name: "Any")
         await repository.setUpdateResult(.success(folder))

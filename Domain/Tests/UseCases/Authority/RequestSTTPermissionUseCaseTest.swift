@@ -2,27 +2,15 @@
 import Core
 import XCTest
 
-final class RequestSTTPermissionUseCaseTest: XCTestCase {
-    private var authorityRepository: MockSTTPermissionRepository!
-    private var sut: DefaultRequestSTTPermissionUseCase!
-
-    override func setUp() {
-        super.setUp()
-        authorityRepository = MockSTTPermissionRepository()
-        sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
-    }
-
-    override func tearDown() {
-        authorityRepository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class RequestSTTPermissionUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension RequestSTTPermissionUseCaseTest {
     func test_STT권한미결정상태_권한요청시_authorized를반환한다() async throws {
+        let authorityRepository = MockSTTPermissionRepository()
+        let sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.setRequestResult(.success(.authorized))
         await authorityRepository.expectRequestSTTPermission(callCount: 1)
@@ -36,6 +24,9 @@ extension RequestSTTPermissionUseCaseTest {
     }
 
     func test_STT권한이미거부상태_권한요청시_denied를반환한다() async throws {
+        let authorityRepository = MockSTTPermissionRepository()
+        let sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.setRequestResult(.success(.denied))
         await authorityRepository.expectRequestSTTPermission(callCount: 1)
@@ -53,6 +44,9 @@ extension RequestSTTPermissionUseCaseTest {
 
 extension RequestSTTPermissionUseCaseTest {
     func test_리포지토리에러발생상태_권한요청시_unknown에러를던진다() async {
+        let authorityRepository = MockSTTPermissionRepository()
+        let sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
+
         // Given
         struct DummyError: Error {}
         let expectedError = DummyError()
@@ -82,9 +76,9 @@ extension RequestSTTPermissionUseCaseTest {
 
 extension RequestSTTPermissionUseCaseTest {
     func test_태스크취소상태_권한요청시_cancelled에러를던진다() async throws {
-        guard let sut else {
-            return XCTFail("sut가 초기화되지 않았습니다.")
-        }
+        let authorityRepository = MockSTTPermissionRepository()
+        let sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.expectRequestSTTPermission(callCount: 0)
 

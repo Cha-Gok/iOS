@@ -2,27 +2,15 @@
 import Core
 import XCTest
 
-final class CheckMicrophonePermissionUseCaseTest: XCTestCase {
-    private var authorityRepository: MockMicrophonePermissionRepository!
-    private var sut: DefaultCheckMicrophonePermissionUseCase!
-
-    override func setUp() {
-        super.setUp()
-        authorityRepository = MockMicrophonePermissionRepository()
-        sut = DefaultCheckMicrophonePermissionUseCase(repository: authorityRepository)
-    }
-
-    override func tearDown() {
-        authorityRepository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class CheckMicrophonePermissionUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension CheckMicrophonePermissionUseCaseTest {
     func test_마이크권한허용상태_권한조회시_authorized를반환한다() async throws {
+        let authorityRepository = MockMicrophonePermissionRepository()
+        let sut = DefaultCheckMicrophonePermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.setCheckResult(.success(.authorized))
         await authorityRepository.expectCheckMicrophonePermission(callCount: 1)
@@ -36,6 +24,9 @@ extension CheckMicrophonePermissionUseCaseTest {
     }
 
     func test_마이크권한거부상태_권한조회시_denied를반환한다() async throws {
+        let authorityRepository = MockMicrophonePermissionRepository()
+        let sut = DefaultCheckMicrophonePermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.setCheckResult(.success(.denied))
         await authorityRepository.expectCheckMicrophonePermission(callCount: 1)
@@ -49,6 +40,9 @@ extension CheckMicrophonePermissionUseCaseTest {
     }
 
     func test_마이크권한미결정상태_권한조회시_notDetermined를반환한다() async throws {
+        let authorityRepository = MockMicrophonePermissionRepository()
+        let sut = DefaultCheckMicrophonePermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.setCheckResult(.success(.notDetermined))
         await authorityRepository.expectCheckMicrophonePermission(callCount: 1)
@@ -66,6 +60,9 @@ extension CheckMicrophonePermissionUseCaseTest {
 
 extension CheckMicrophonePermissionUseCaseTest {
     func test_리포지토리에러발생상태_권한조회시_unknown에러를던진다() async {
+        let authorityRepository = MockMicrophonePermissionRepository()
+        let sut = DefaultCheckMicrophonePermissionUseCase(repository: authorityRepository)
+
         // Given
         struct DummyError: Error {}
         let expectedError = DummyError()
@@ -91,9 +88,9 @@ extension CheckMicrophonePermissionUseCaseTest {
     }
 
     func test_태스크취소상태_권한조회시_cancelled에러를던진다() async throws {
-        guard let sut else {
-            return XCTFail("sut가 초기화되지 않았습니다.")
-        }
+        let authorityRepository = MockMicrophonePermissionRepository()
+        let sut = DefaultCheckMicrophonePermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.expectCheckMicrophonePermission(callCount: 0)
 

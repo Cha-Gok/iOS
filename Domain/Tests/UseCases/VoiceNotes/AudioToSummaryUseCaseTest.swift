@@ -2,33 +2,19 @@
 import Core
 import XCTest
 
-final class AudioToSummaryUseCaseTest: XCTestCase {
-    private var sttRepository: MockSTTRepository!
-    private var summaryRepository: MockSummaryRepository!
-    private var sut: DefaultAudioToSummaryUseCase!
-
-    override func setUp() {
-        super.setUp()
-        sttRepository = MockSTTRepository()
-        summaryRepository = MockSummaryRepository()
-        sut = DefaultAudioToSummaryUseCase(
-            sttRepository: sttRepository,
-            summaryRepository: summaryRepository
-        )
-    }
-
-    override func tearDown() {
-        sttRepository = nil
-        summaryRepository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class AudioToSummaryUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension AudioToSummaryUseCaseTest {
     func test_정상상태_음성메모요약요청시_STT및요약결과를포함한객체를반환한다() async throws {
+        let sttRepository = MockSTTRepository()
+        let summaryRepository = MockSummaryRepository()
+        let sut = DefaultAudioToSummaryUseCase(
+            sttRepository: sttRepository,
+            summaryRepository: summaryRepository
+        )
+
         // Given
         let audioURL = URL(fileURLWithPath: "/test.m4a")
         let expectedTranscript = Transcript.stub()
@@ -62,6 +48,13 @@ extension AudioToSummaryUseCaseTest {
 
 extension AudioToSummaryUseCaseTest {
     func test_STT실패상태_음성메모요약요청시_transcribeFailed에러를던진다() async {
+        let sttRepository = MockSTTRepository()
+        let summaryRepository = MockSummaryRepository()
+        let sut = DefaultAudioToSummaryUseCase(
+            sttRepository: sttRepository,
+            summaryRepository: summaryRepository
+        )
+
         // Given
         let audioURL = URL(fileURLWithPath: "/test.m4a")
 
@@ -85,6 +78,13 @@ extension AudioToSummaryUseCaseTest {
     }
 
     func test_요약실패상태_음성메모요약요청시_summarizeFailed에러를던진다() async {
+        let sttRepository = MockSTTRepository()
+        let summaryRepository = MockSummaryRepository()
+        let sut = DefaultAudioToSummaryUseCase(
+            sttRepository: sttRepository,
+            summaryRepository: summaryRepository
+        )
+
         // Given
         let audioURL = URL(fileURLWithPath: "/test.m4a")
         let expectedTranscript = Transcript.stub()
@@ -113,6 +113,13 @@ extension AudioToSummaryUseCaseTest {
     }
 
     func test_알수없는에러발생상태_음성메모요약요청시_unknown에러를던진다() async {
+        let sttRepository = MockSTTRepository()
+        let summaryRepository = MockSummaryRepository()
+        let sut = DefaultAudioToSummaryUseCase(
+            sttRepository: sttRepository,
+            summaryRepository: summaryRepository
+        )
+
         // Given
         let audioURL = URL(fileURLWithPath: "/test.m4a")
         struct DummyError: Error {}
@@ -142,6 +149,13 @@ extension AudioToSummaryUseCaseTest {
 
 extension AudioToSummaryUseCaseTest {
     func test_작업취소상태_음성메모요약요청시_cancelled에러를던진다() async {
+        let sttRepository = MockSTTRepository()
+        let summaryRepository = MockSummaryRepository()
+        let sut = DefaultAudioToSummaryUseCase(
+            sttRepository: sttRepository,
+            summaryRepository: summaryRepository
+        )
+
         // Given
         let audioURL = URL(fileURLWithPath: "/test.m4a")
 
@@ -164,9 +178,13 @@ extension AudioToSummaryUseCaseTest {
     }
 
     func test_태스크이미취소상태_음성메모요약요청시_즉시cancelled에러를던진다() async {
-        guard let sut else {
-            return XCTFail("sut가 초기화되지 않았습니다.")
-        }
+        let sttRepository = MockSTTRepository()
+        let summaryRepository = MockSummaryRepository()
+        let sut = DefaultAudioToSummaryUseCase(
+            sttRepository: sttRepository,
+            summaryRepository: summaryRepository
+        )
+
         // Given
         let audioURL = URL(fileURLWithPath: "/test.m4a")
 

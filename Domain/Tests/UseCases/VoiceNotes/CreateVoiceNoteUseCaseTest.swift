@@ -2,27 +2,15 @@
 import Core
 import XCTest
 
-final class CreateVoiceNoteUseCaseTest: XCTestCase {
-    private var repository: MockVoiceNoteCreateRepository!
-    private var sut: DefaultCreateVoiceNoteUseCase!
-
-    override func setUp() {
-        super.setUp()
-        repository = MockVoiceNoteCreateRepository()
-        sut = DefaultCreateVoiceNoteUseCase(repository: repository)
-    }
-
-    override func tearDown() {
-        repository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class CreateVoiceNoteUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension CreateVoiceNoteUseCaseTest {
     func test_정상상태_음성메모생성시_생성된객체를반환한다() async throws {
+        let repository = MockVoiceNoteCreateRepository()
+        let sut = DefaultCreateVoiceNoteUseCase(repository: repository)
+
         // Given
         let voiceRecord = VoiceRecord.stub()
         let expectedVoiceNote = VoiceNote.stub(voiceRecord: voiceRecord)
@@ -44,6 +32,9 @@ extension CreateVoiceNoteUseCaseTest {
 
 extension CreateVoiceNoteUseCaseTest {
     func test_리포지토리생성실패상태_음성메모생성시_createFailed에러를던진다() async {
+        let repository = MockVoiceNoteCreateRepository()
+        let sut = DefaultCreateVoiceNoteUseCase(repository: repository)
+
         // Given
         let voiceRecord = VoiceRecord.stub()
 
@@ -63,6 +54,9 @@ extension CreateVoiceNoteUseCaseTest {
     }
 
     func test_알수없는에러발생상태_음성메모생성시_unknown에러를던진다() async {
+        let repository = MockVoiceNoteCreateRepository()
+        let sut = DefaultCreateVoiceNoteUseCase(repository: repository)
+
         // Given
         let voiceRecord = VoiceRecord.stub()
         struct DummyError: Error {}
@@ -85,6 +79,9 @@ extension CreateVoiceNoteUseCaseTest {
     }
 
     func test_작업취소상태_음성메모생성시_cancelled에러를던진다() async {
+        let repository = MockVoiceNoteCreateRepository()
+        let sut = DefaultCreateVoiceNoteUseCase(repository: repository)
+
         // Given
         let voiceRecord = VoiceRecord.stub()
 

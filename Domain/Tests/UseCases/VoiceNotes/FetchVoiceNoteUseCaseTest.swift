@@ -2,27 +2,15 @@
 import Core
 import XCTest
 
-final class FetchVoiceNoteUseCaseTest: XCTestCase {
-    private var repository: MockVoiceNoteFetchRepository!
-    private var sut: DefaultFetchVoiceNoteUseCase!
-
-    override func setUp() {
-        super.setUp()
-        repository = MockVoiceNoteFetchRepository()
-        sut = DefaultFetchVoiceNoteUseCase(repository: repository)
-    }
-
-    override func tearDown() {
-        repository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class FetchVoiceNoteUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension FetchVoiceNoteUseCaseTest {
     func test_정상상태_특정폴더내음성메모조회시_리포지토리에서가져온목록을반환한다() async throws {
+        let repository = MockVoiceNoteFetchRepository()
+        let sut = DefaultFetchVoiceNoteUseCase(repository: repository)
+
         // Given
         let folderID = UUID()
         let expectedVoiceNotes = [VoiceNote.stub(folderID: folderID)]
@@ -40,6 +28,9 @@ extension FetchVoiceNoteUseCaseTest {
     }
 
     func test_정상상태_특정ID로음성메모조회시_리포지토리에서가져온객체를반환한다() async throws {
+        let repository = MockVoiceNoteFetchRepository()
+        let sut = DefaultFetchVoiceNoteUseCase(repository: repository)
+
         // Given
         let voiceNoteID = UUID()
         let expectedVoiceNote = VoiceNote.stub(id: voiceNoteID)
@@ -60,6 +51,9 @@ extension FetchVoiceNoteUseCaseTest {
 
 extension FetchVoiceNoteUseCaseTest {
     func test_리포지토리조회실패상태_음성메모조회시_fetchAllFailed에러를던진다() async {
+        let repository = MockVoiceNoteFetchRepository()
+        let sut = DefaultFetchVoiceNoteUseCase(repository: repository)
+
         // Given
         let folderID = UUID()
 
@@ -80,6 +74,9 @@ extension FetchVoiceNoteUseCaseTest {
     }
 
     func test_알수없는에러발생상태_음성메모조회시_unknown에러를던진다() async {
+        let repository = MockVoiceNoteFetchRepository()
+        let sut = DefaultFetchVoiceNoteUseCase(repository: repository)
+
         // Given
         let folderID = UUID()
         struct DummyError: Error {}
@@ -102,6 +99,9 @@ extension FetchVoiceNoteUseCaseTest {
     }
 
     func test_작업취소상태_음성메모조회시_cancelled에러를던진다() async {
+        let repository = MockVoiceNoteFetchRepository()
+        let sut = DefaultFetchVoiceNoteUseCase(repository: repository)
+
         // Given
         let folderID = UUID()
 
