@@ -55,8 +55,7 @@ public actor DefaultWorkSpaceRepository: WorkSpaceRepository {
         }
 
         return Folder(
-            path: rootURL,
-            name: rootURL.lastPathComponent,
+            name: Policy.basicFolderName,
             isDeletable: false
         )
     }

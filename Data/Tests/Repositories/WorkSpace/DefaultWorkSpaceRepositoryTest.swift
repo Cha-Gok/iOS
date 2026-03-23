@@ -38,7 +38,7 @@ extension DefaultWorkSpaceRepositoryTest {
             _ = try await sut.fetchRootURL()
             XCTFail("에러를 throw 해야 합니다.")
         } catch {
-            guard case .unknown = error as? WorkSpaceRootURLRepositoryError else {
+            guard case .unknown = error as WorkSpaceRootURLRepositoryError else {
                 return XCTFail("예상치 못한 에러: \(error)")
             }
         }
@@ -92,8 +92,7 @@ extension DefaultWorkSpaceRepositoryTest {
         let folder = try await sut.fetchOrCreateBasicFolder()
 
         // Then
-        XCTAssertEqual(folder.path, rootURL)
-        XCTAssertEqual(folder.name, "ChaGok")
+        XCTAssertEqual(folder.name, "기본 폴더")
         service.verify()
     }
 
@@ -116,8 +115,7 @@ extension DefaultWorkSpaceRepositoryTest {
         let folder = try await sut.fetchOrCreateBasicFolder()
 
         // Then
-        XCTAssertEqual(folder.path, rootURL)
-        XCTAssertEqual(folder.name, "ChaGok")
+        XCTAssertEqual(folder.name, "기본 폴더")
         service.verify()
     }
 
@@ -140,7 +138,7 @@ extension DefaultWorkSpaceRepositoryTest {
             _ = try await sut.fetchOrCreateBasicFolder()
             XCTFail("createFailed 에러를 throw 해야 합니다.")
         } catch {
-            guard case .createFailed = error as? WorkSpaceBasicFolderRepositoryError else {
+            guard case .createFailed = error as WorkSpaceBasicFolderRepositoryError else {
                 return XCTFail("예상치 못한 에러: \(error)")
             }
         }
