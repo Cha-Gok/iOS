@@ -3,8 +3,10 @@ import XCTest
 
 actor MockSTTService: STTService {
     private var result: Result<String, STTServiceError>?
+
     private var actualCallCount = 0
     private var actualAudioFileURL: URL?
+
     private var expectedCallCount: Int?
     private var expectedAudioFileURL: URL?
 
