@@ -1,7 +1,7 @@
 import Foundation
 
 /// 오디오 녹음 서비스 에러
-public enum AudioRecorderServiceError: LocalizedError, Sendable {
+public enum AudioRecorderServiceError: Error, Sendable {
     /// 이미 녹음이 진행 중인 경우
     case alreadyRecording
     /// 진행 중인 녹음이 없는 경우
@@ -20,27 +20,4 @@ public enum AudioRecorderServiceError: LocalizedError, Sendable {
     case resumeFailed
     /// 알 수 없는 에러
     case unknown(Error)
-
-    public var errorDescription: String? {
-        switch self {
-        case .alreadyRecording:
-            return "이미 녹음이 진행 중입니다."
-        case .notRecording:
-            return "진행 중인 녹음이 없습니다."
-        case .notPaused:
-            return "일시 정지된 녹음이 없습니다."
-        case .sessionActivationFailed:
-            return "다른 앱이 오디오를 사용 중입니다."
-        case .mediaServicesFailed:
-            return "미디어 서비스를 사용할 수 없습니다."
-        case .startFailed:
-            return "녹음 엔진을 시작할 수 없습니다."
-        case .pauseFailed:
-            return "녹음 일시정지에 실패했습니다."
-        case .resumeFailed:
-            return "녹음 재시작에 실패했습니다."
-        case .unknown(let error):
-            return error.localizedDescription
-        }
-    }
 }
