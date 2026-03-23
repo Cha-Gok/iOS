@@ -1,3 +1,4 @@
+import Core
 import Domain
 import Speech
 
@@ -60,6 +61,8 @@ public actor SpeechService: STTPermissionService, STTService {
             throw .recognizerUnavailable
         }
 
+        AppLogger.info("음성 전사를 시작합니다: \(audioFileURL.lastPathComponent)")
+
         let request = SFSpeechURLRecognitionRequest(url: audioFileURL)
 
         do {
@@ -96,6 +99,7 @@ public actor SpeechService: STTPermissionService, STTService {
             guard let result, result.isFinal else { return }
 
             let text = result.bestTranscription.formattedString
+            AppLogger.info("음성 전사가 완료되었습니다. 글자 수: \(text.count)")
             Task { await self.finishTask(text) }
         }
     }
@@ -132,6 +136,7 @@ public actor SpeechService: STTPermissionService, STTService {
         currentContinuation = nil
         currentTask?.cancel()
         currentTask = nil
+        AppLogger.info("음성 전사가 취소되었습니다.")
         continuation?.resume(throwing: STTServiceError.cancelled)
     }
 }
