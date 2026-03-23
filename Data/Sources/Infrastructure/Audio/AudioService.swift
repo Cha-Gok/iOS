@@ -133,6 +133,10 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
     }
 
     private func deactivateSession() async {
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            AppLogger.error(error)
+        }
     }
 }
