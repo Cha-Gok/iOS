@@ -111,7 +111,15 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
             try avSession.setActive(true)
         } catch {
             AppLogger.error(error)
-            throw AudioRecorderServiceError(error)
+            let nsError = error as NSError
+            switch AVAudioSession.ErrorCode(rawValue: nsError.code) {
+            case .insufficientPriority:
+                throw .sessionActivationFailed
+            case .mediaServicesFailed:
+                throw .mediaServicesFailed
+            default:
+                throw .unknown(error)
+            }
         }
     }
 
