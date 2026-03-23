@@ -1,12 +1,12 @@
 import Domain
 
-extension VoiceRecordStartRepositoryError {
+extension VoiceRecordPauseRepositoryError {
     init(_ error: AudioRecorderServiceError) {
         switch error {
-        case .alreadyRecording:
-            self = .alreadyRecording
-        case .sessionActivationFailed, .mediaServicesFailed, .startFailed:
-            self = .startFailed
+        case .notRecording:
+            self = .notRecording
+        case .pauseFailed, .sessionActivationFailed, .mediaServicesFailed:
+            self = .pauseFailed
         case .unknown(let underlying):
             self = .unknown(underlying)
         default:
