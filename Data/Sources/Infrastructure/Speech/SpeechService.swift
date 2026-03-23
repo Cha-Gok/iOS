@@ -55,22 +55,24 @@ public actor SpeechService: STTPermissionService, STTService {
     // MARK: - STTService
 
     public func transcribe(audioFileURL: URL) async throws(STTServiceError) -> String {
+        guard !Task.isCancelled else { throw .cancelled }
         guard currentTask == nil else { throw .alreadyTranscribing }
 
-        guard let recognizer = SFSpeechRecognizer(), recognizer.isAvailable else {
-            throw .recognizerUnavailable
-        }
-
         AppLogger.info("음성 전사를 시작합니다: \(audioFileURL.lastPathComponent)")
-
-        let request = SFSpeechURLRecognitionRequest(url: audioFileURL)
 
         do {
             return try await withTaskCancellationHandler {
                 try await withCheckedThrowingContinuation { continuation in
-                    self.currentContinuation = continuation
-                    let task = makeRecognitionTask(recognizer: recognizer, request: request)
-                    self.currentTask = task
+                    do {
+                        try self.startRecognitionTask(
+                            audioFileURL: audioFileURL,
+                            continuation: continuation
+                        )
+                    } catch let error as STTServiceError {
+                        continuation.resume(throwing: error)
+                    } catch {
+                        continuation.resume(throwing: self.sttServiceError(from: error))
+                    }
                 }
             } onCancel: {
                 Task { await self.cancelCurrentTask() }
@@ -83,6 +85,21 @@ public actor SpeechService: STTPermissionService, STTService {
     }
 
     // MARK: - Private
+
+    private func startRecognitionTask(
+        audioFileURL: URL,
+        continuation: CheckedContinuation<String, any Error>
+    ) throws(STTServiceError) {
+        guard !Task.isCancelled else { throw .cancelled }
+        guard let recognizer = SFSpeechRecognizer(), recognizer.isAvailable else {
+            throw .recognizerUnavailable
+        }
+
+        let request = SFSpeechURLRecognitionRequest(url: audioFileURL)
+
+        currentContinuation = continuation
+        currentTask = makeRecognitionTask(recognizer: recognizer, request: request)
+    }
 
     private func makeRecognitionTask(
         recognizer: SFSpeechRecognizer,
