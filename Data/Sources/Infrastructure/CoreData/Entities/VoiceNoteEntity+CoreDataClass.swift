@@ -55,44 +55,16 @@ public extension VoiceNoteEntity {
 extension VoiceNoteEntity: ManagedObjectMapping {
     public typealias DomainType = VoiceNote
 
-    public enum ChildType: Sendable {
-        case keyword(Keyword)
-        case transcript(Transcript)
-        case summary(Summary)
-    }
-
-    public var children: [ChildType] {
-        var items: [ChildType] = []
-
-        let keywordsDomain = (keywords as? Set<KeywordEntity> ?? []).map { $0.toDomain() }
-        items.append(contentsOf: keywordsDomain.map { .keyword($0) })
-
-        if let t = transcript?.toDomain() {
-            items.append(.transcript(t))
-        }
-        if let s = summary?.toDomain() {
-            items.append(.summary(s))
-        }
-        return items
-    }
-
     public convenience init(domain: VoiceNote, context: NSManagedObjectContext) {
         self.init(context: context)
         insert(from: domain)
     }
 
     public func toDomain() -> VoiceNote {
-        var keys: [Keyword] = []
-        var t: Transcript?
-        var s: Summary?
-
-        for child in children {
-            switch child {
-            case .keyword(let val): keys.append(val)
-            case .transcript(let val): t = val
-            case .summary(let val): s = val
-            }
-        }
+        // 엔티티의 연관 관계를 개별적으로 도메인 모델로 변환
+        let keys = (keywords as? Set<KeywordEntity> ?? []).map { $0.toDomain() }
+        let t = transcript?.toDomain()
+        let s = summary?.toDomain()
 
         return VoiceNote(
             id: id,
@@ -118,21 +90,32 @@ extension VoiceNoteEntity: ManagedObjectMapping {
         // 필요에 따라 Repository 계층이나 별도 매핑 로직에서 처리합니다.
     }
 
-    public static var entityName: String {
-        "VoiceNoteEntity"
+    public static var entityName: CoreDataEntityName {
+        .voiceNote
     }
 
     public static var sortDescriptors: [NSSortDescriptor] {
         [NSSortDescriptor(keyPath: \VoiceNoteEntity.createdAt, ascending: true)]
     }
 
-    public static func identityPredicate(for domain: VoiceNote) -> NSPredicate {
+    public static func identityPredicate(for domain: DomainType) -> NSPredicate {
         NSPredicate(format: "id == %@", domain.id as CVarArg)
     }
 
-    public static func find(for domain: VoiceNote, in context: NSManagedObjectContext) throws -> Self? {
-        let request = NSFetchRequest<Self>(entityName: entityName)
+    public static func identityPredicate(byId id: DomainType.ID) -> NSPredicate {
+        NSPredicate(format: "id == %@", id as CVarArg)
+    }
+
+    public static func find(for domain: DomainType, in context: NSManagedObjectContext) throws -> Self? {
+        let request = NSFetchRequest<Self>(entityName: entityName.rawValue)
         request.predicate = identityPredicate(for: domain)
+        request.fetchLimit = 1
+        return try context.fetch(request).first
+    }
+
+    public static func find(byId id: DomainType.ID, in context: NSManagedObjectContext) throws -> Self? {
+        let request = NSFetchRequest<Self>(entityName: entityName.rawValue)
+        request.predicate = identityPredicate(byId: id)
         request.fetchLimit = 1
         return try context.fetch(request).first
     }
