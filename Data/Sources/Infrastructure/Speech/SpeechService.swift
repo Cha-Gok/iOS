@@ -67,7 +67,10 @@ public actor SpeechService: STTPermissionService, STTService {
                         if let error {
                             Task { await self.failTask(STTServiceError(error)) }
                         } else if let result, result.isFinal {
-                            Task { await self.finishTask(result.bestTranscription.formattedString) }
+                            // SFSpeechRecognitionResult는 Sendable 미준수
+                            // → Task 클로저 캡처 전에 String 추출
+                            let text = result.bestTranscription.formattedString
+                            Task { await self.finishTask(text) }
                         }
                     }
                     self.currentTask = task
