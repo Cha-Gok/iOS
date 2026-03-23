@@ -40,53 +40,28 @@ extension DefaultSTTRepositoryTest {
 // MARK: - 에러 케이스
 
 extension DefaultSTTRepositoryTest {
-    func test_전사실패상태_전사시_transcribeFailed에러를던진다() async throws {
-        // Given
-        await mockService.setResult(.failure(.transcribeFailed))
+    func test_서비스에러상태_전사시_transcribeFailed에러를던진다() async throws {
+        let audioURL = URL(fileURLWithPath: "/test/audio.m4a")
+        let serviceErrors: [STTServiceError] = [
+            .transcribeFailed,
+            .recognizerUnavailable,
+            .alreadyTranscribing
+        ]
 
-        // When & Then
-        do {
-            _ = try await sut.transcribe(audioFileURL: URL(fileURLWithPath: "/test/audio.m4a"))
-            XCTFail("STTRepositoryError.transcribeFailed 에러를 throw 해야 합니다.")
-        } catch {
-            guard case .transcribeFailed = error else {
-                return XCTFail(
-                    "예상한 에러는 STTRepositoryError.transcribeFailed 이지만, 실제 받은 에러는 \(error) 입니다."
-                )
-            }
-        }
-    }
+        for serviceError in serviceErrors {
+            // Given
+            await mockService.setResult(.failure(serviceError))
 
-    func test_인식기불가상태_전사시_transcribeFailed에러를던진다() async throws {
-        // Given
-        await mockService.setResult(.failure(.recognizerUnavailable))
-
-        // When & Then
-        do {
-            _ = try await sut.transcribe(audioFileURL: URL(fileURLWithPath: "/test/audio.m4a"))
-            XCTFail("STTRepositoryError.transcribeFailed 에러를 throw 해야 합니다.")
-        } catch {
-            guard case .transcribeFailed = error else {
-                return XCTFail(
-                    "예상한 에러는 STTRepositoryError.transcribeFailed 이지만, 실제 받은 에러는 \(error) 입니다."
-                )
-            }
-        }
-    }
-
-    func test_이미전사중상태_전사시_transcribeFailed에러를던진다() async throws {
-        // Given
-        await mockService.setResult(.failure(.alreadyTranscribing))
-
-        // When & Then
-        do {
-            _ = try await sut.transcribe(audioFileURL: URL(fileURLWithPath: "/test/audio.m4a"))
-            XCTFail("STTRepositoryError.transcribeFailed 에러를 throw 해야 합니다.")
-        } catch {
-            guard case .transcribeFailed = error else {
-                return XCTFail(
-                    "예상한 에러는 STTRepositoryError.transcribeFailed 이지만, 실제 받은 에러는 \(error) 입니다."
-                )
+            // When & Then
+            do {
+                _ = try await sut.transcribe(audioFileURL: audioURL)
+                XCTFail("STTRepositoryError.transcribeFailed 에러를 throw 해야 합니다. (serviceError: \(serviceError))")
+            } catch {
+                guard case .transcribeFailed = error else {
+                    return XCTFail(
+                        "예상한 에러는 STTRepositoryError.transcribeFailed 이지만, 실제 받은 에러는 \(error) 입니다. (serviceError: \(serviceError))"
+                    )
+                }
             }
         }
     }
