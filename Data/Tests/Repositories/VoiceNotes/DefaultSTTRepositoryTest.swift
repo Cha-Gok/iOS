@@ -2,15 +2,27 @@
 import Domain
 import XCTest
 
-final class DefaultSTTRepositoryTest: XCTestCase {}
+final class DefaultSTTRepositoryTest: XCTestCase {
+    private var mockService: MockSTTService!
+    private var sut: DefaultSTTRepository!
+
+    override func setUp() {
+        super.setUp()
+        mockService = MockSTTService()
+        sut = DefaultSTTRepository(service: mockService)
+    }
+
+    override func tearDown() {
+        mockService = nil
+        sut = nil
+        super.tearDown()
+    }
+}
 
 // MARK: - 성공 케이스
 
 extension DefaultSTTRepositoryTest {
     func test_정상상태_전사시_Transcript를반환한다() async throws {
-        let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
-
         // Given
         let audioURL = URL(fileURLWithPath: "/test/audio.m4a")
         await mockService.setResult(.success("테스트 전사 텍스트"))
@@ -29,9 +41,6 @@ extension DefaultSTTRepositoryTest {
 
 extension DefaultSTTRepositoryTest {
     func test_전사실패상태_전사시_transcribeFailed에러를던진다() async throws {
-        let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
-
         // Given
         await mockService.setResult(.failure(.transcribeFailed))
 
@@ -49,9 +58,6 @@ extension DefaultSTTRepositoryTest {
     }
 
     func test_인식기불가상태_전사시_transcribeFailed에러를던진다() async throws {
-        let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
-
         // Given
         await mockService.setResult(.failure(.recognizerUnavailable))
 
@@ -69,9 +75,6 @@ extension DefaultSTTRepositoryTest {
     }
 
     func test_이미전사중상태_전사시_transcribeFailed에러를던진다() async throws {
-        let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
-
         // Given
         await mockService.setResult(.failure(.alreadyTranscribing))
 
