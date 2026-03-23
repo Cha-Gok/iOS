@@ -1,5 +1,6 @@
 import Core
 import Domain
+import Foundation
 
 /// 음성 인식(STT) 리포지토리 기본 구현체.
 public struct DefaultSTTRepository: STTRepository {
