@@ -2,27 +2,15 @@
 import Core
 import XCTest
 
-final class FetchLanguageUseCaseTest: XCTestCase {
-    private var repository: MockLanguageRepository!
-    private var sut: DefaultFetchLanguageUseCase!
-
-    override func setUp() {
-        super.setUp()
-        repository = MockLanguageRepository()
-        sut = DefaultFetchLanguageUseCase(repository: repository)
-    }
-
-    override func tearDown() {
-        repository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class FetchLanguageUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension FetchLanguageUseCaseTest {
     func test_정상상태_언어조회시_설정된Language를반환한다() async throws {
+        let repository = MockLanguageRepository()
+        let sut = DefaultFetchLanguageUseCase(repository: repository)
+
         // Given
         let expectedLanguage: Language = .ko
         await repository.setFetchResult(.success(expectedLanguage))
@@ -41,6 +29,9 @@ extension FetchLanguageUseCaseTest {
 
 extension FetchLanguageUseCaseTest {
     func test_데이터미존재상태_언어조회시_notFound에러를던진다() async {
+        let repository = MockLanguageRepository()
+        let sut = DefaultFetchLanguageUseCase(repository: repository)
+
         // Given
         await repository.setFetchResult(.failure(.notFound))
         await repository.expectFetch(callCount: 1)
@@ -60,6 +51,9 @@ extension FetchLanguageUseCaseTest {
     }
 
     func test_알수없는에러발생상태_언어조회시_unknown에러를던진다() async {
+        let repository = MockLanguageRepository()
+        let sut = DefaultFetchLanguageUseCase(repository: repository)
+
         // Given
         struct DummyError: Error {}
         await repository.setFetchResult(.failure(.unknown(DummyError())))
@@ -85,6 +79,9 @@ extension FetchLanguageUseCaseTest {
 
 extension FetchLanguageUseCaseTest {
     func test_조회중취소상태_언어조회시_cancelled에러를던진다() async {
+        let repository = MockLanguageRepository()
+        let sut = DefaultFetchLanguageUseCase(repository: repository)
+
         // Given
         await repository.setFetchResult(.failure(.cancelled))
         await repository.expectFetch(callCount: 1)
@@ -103,10 +100,10 @@ extension FetchLanguageUseCaseTest {
         await repository.verify()
     }
 
-    func test_태스크이미취소상태_언어조회시_즉시cancelled에러를던진다() async throws {
-        guard let sut else {
-            return XCTFail("sut가 초기화되지 않았습니다.")
-        }
+    func test_태스크이미취소상태_언어조회시_즉시cancelled에러를던진다() async {
+        let repository = MockLanguageRepository()
+        let sut = DefaultFetchLanguageUseCase(repository: repository)
+
         // Given
         let expectedLanguage: Language = .ko
         await repository.setFetchResult(.success(expectedLanguage))

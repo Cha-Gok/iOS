@@ -2,27 +2,15 @@
 import Core
 import XCTest
 
-final class CreateFolderUseCaseTest: XCTestCase {
-    private var repository: MockFolderRepository!
-    private var sut: DefaultCreateFolderUseCase!
-
-    override func setUp() {
-        super.setUp()
-        repository = MockFolderRepository()
-        sut = DefaultCreateFolderUseCase(repository: repository)
-    }
-
-    override func tearDown() {
-        repository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class CreateFolderUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension CreateFolderUseCaseTest {
     func test_정상상태_폴더생성시_생성된폴더를반환한다() async throws {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
         // Given
         let expectedName = "New Folder"
         let expectedFolder = Folder.stub(name: expectedName)
@@ -42,13 +30,15 @@ extension CreateFolderUseCaseTest {
 // MARK: - 에러 케이스
 
 extension CreateFolderUseCaseTest {
-    func test_유효하지않은이름상태_폴더생성시_invalidName에러를던진다() async throws {
+    func test_유효하지않은이름상태_폴더생성시_invalidName에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
         // Given
         await repository.expectCreate(callCount: 0)
         let invalidNames = ["", " ", "  \n  ", " 새폴더", "새 폴더 ", "  새 폴더  "]
 
         // When & Then
-        let sut = try XCTUnwrap(sut)
         await withTaskGroup(of: Void.self) { group in
             for name in invalidNames {
                 group.addTask {
@@ -72,6 +62,9 @@ extension CreateFolderUseCaseTest {
     }
 
     func test_너무긴이름상태_폴더생성시_invalidLengthName에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
         // Given
         await repository.expectCreate(callCount: 0)
         let tooLongName = String(repeating: "a", count: 51)
@@ -92,6 +85,9 @@ extension CreateFolderUseCaseTest {
     }
 
     func test_중복된이름상태_폴더생성시_duplicateName에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
         // Given
         await repository.setCreateResult(.failure(.duplicateName))
         await repository.expectCreate(callCount: 1)
@@ -112,6 +108,9 @@ extension CreateFolderUseCaseTest {
     }
 
     func test_리포지토리생성실패상태_폴더생성시_createFailed에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
         // Given
         await repository.setCreateResult(.failure(.createFailed))
         await repository.expectCreate(callCount: 1)
@@ -132,6 +131,9 @@ extension CreateFolderUseCaseTest {
     }
 
     func test_리포지토리알수없는에러상태_폴더생성시_unknown에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
         // Given
         struct DummyError: Error {}
         let expectedError = DummyError()
@@ -165,6 +167,9 @@ extension CreateFolderUseCaseTest {
 
 extension CreateFolderUseCaseTest {
     func test_작업취소상태_폴더생성시_cancelled에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
         // Given
         await repository.setCreateResult(.failure(.cancelled))
         await repository.expectCreate(callCount: 1)
@@ -184,10 +189,10 @@ extension CreateFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_태스크이미취소상태_폴더생성시_즉시cancelled에러를던진다() async throws {
-        guard let sut else {
-            return XCTFail("sut가 초기화되지 않았습니다.")
-        }
+    func test_태스크이미취소상태_폴더생성시_즉시cancelled에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
         // Given
         await repository.setCreateResult(
             .success(Folder.stub(name: "test"))

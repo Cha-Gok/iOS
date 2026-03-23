@@ -2,29 +2,15 @@
 import Core
 import XCTest
 
-final class StartRecordingUseCaseTest: XCTestCase {
-    private var recordingRepository: MockVoiceRecordStartRepository!
-    private var sut: DefaultStartRecordingUseCase!
-
-    override func setUp() {
-        super.setUp()
-        recordingRepository = MockVoiceRecordStartRepository()
-        sut = DefaultStartRecordingUseCase(
-            recordingRepository: recordingRepository
-        )
-    }
-
-    override func tearDown() {
-        recordingRepository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class StartRecordingUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension StartRecordingUseCaseTest {
     func test_정상상태_녹음시작시_파형스트림을반환한다() async throws {
+        let recordingRepository = MockVoiceRecordStartRepository()
+        let sut = DefaultStartRecordingUseCase(recordingRepository: recordingRepository)
+
         // Given
         let expectedStream = AsyncStream<Waveform> { continuation in
             continuation.yield(.stub())
@@ -50,6 +36,9 @@ extension StartRecordingUseCaseTest {
 
 extension StartRecordingUseCaseTest {
     func test_리포지토리시작실패상태_녹음시작시_startFailed에러를던진다() async {
+        let recordingRepository = MockVoiceRecordStartRepository()
+        let sut = DefaultStartRecordingUseCase(recordingRepository: recordingRepository)
+
         // Given
         await recordingRepository.setResult(.failure(.startFailed))
         await recordingRepository.expectStartRecording(callCount: 1)
@@ -70,6 +59,9 @@ extension StartRecordingUseCaseTest {
     }
 
     func test_리포지토리알수없는에러상태_녹음시작시_unknown에러를던진다() async {
+        let recordingRepository = MockVoiceRecordStartRepository()
+        let sut = DefaultStartRecordingUseCase(recordingRepository: recordingRepository)
+
         // Given
         struct DummyError: Error {}
         let expectedError = DummyError()
@@ -96,10 +88,10 @@ extension StartRecordingUseCaseTest {
 // MARK: - 취소 케이스
 
 extension StartRecordingUseCaseTest {
-    func test_태스크취소상태_녹음시작시_cancelled에러를던진다() async throws {
-        guard let sut else {
-            return XCTFail("sut가 초기화되지 않았습니다.")
-        }
+    func test_태스크취소상태_녹음시작시_cancelled에러를던진다() async {
+        let recordingRepository = MockVoiceRecordStartRepository()
+        let sut = DefaultStartRecordingUseCase(recordingRepository: recordingRepository)
+
         // Given
         await recordingRepository.expectStartRecording(callCount: 0)
 

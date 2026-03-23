@@ -2,27 +2,15 @@
 import Core
 import XCTest
 
-final class CheckSTTPermissionUseCaseTest: XCTestCase {
-    private var authorityRepository: MockSTTPermissionRepository!
-    private var sut: DefaultCheckSTTPermissionUseCase!
-
-    override func setUp() {
-        super.setUp()
-        authorityRepository = MockSTTPermissionRepository()
-        sut = DefaultCheckSTTPermissionUseCase(repository: authorityRepository)
-    }
-
-    override func tearDown() {
-        authorityRepository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class CheckSTTPermissionUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension CheckSTTPermissionUseCaseTest {
     func test_STT권한허용상태_권한조회시_authorized를반환한다() async throws {
+        let authorityRepository = MockSTTPermissionRepository()
+        let sut = DefaultCheckSTTPermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.setCheckResult(.success(.authorized))
         await authorityRepository.expectCheckSTTPermission(callCount: 1)
@@ -36,6 +24,9 @@ extension CheckSTTPermissionUseCaseTest {
     }
 
     func test_STT권한거부상태_권한조회시_denied를반환한다() async throws {
+        let authorityRepository = MockSTTPermissionRepository()
+        let sut = DefaultCheckSTTPermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.setCheckResult(.success(.denied))
         await authorityRepository.expectCheckSTTPermission(callCount: 1)
@@ -49,6 +40,9 @@ extension CheckSTTPermissionUseCaseTest {
     }
 
     func test_STT권한미결정상태_권한조회시_notDetermined를반환한다() async throws {
+        let authorityRepository = MockSTTPermissionRepository()
+        let sut = DefaultCheckSTTPermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.setCheckResult(.success(.notDetermined))
         await authorityRepository.expectCheckSTTPermission(callCount: 1)
@@ -66,6 +60,9 @@ extension CheckSTTPermissionUseCaseTest {
 
 extension CheckSTTPermissionUseCaseTest {
     func test_리포지토리에러발생상태_권한조회시_unknown에러를던진다() async {
+        let authorityRepository = MockSTTPermissionRepository()
+        let sut = DefaultCheckSTTPermissionUseCase(repository: authorityRepository)
+
         // Given
         struct DummyError: Error {}
         let expectedError = DummyError()
@@ -89,10 +86,10 @@ extension CheckSTTPermissionUseCaseTest {
         await authorityRepository.verify()
     }
 
-    func test_태스크취소상태_권한조회시_cancelled에러를던진다() async throws {
-        guard let sut else {
-            return XCTFail("sut가 초기화되지 않았습니다.")
-        }
+    func test_태스크취소상태_권한조회시_cancelled에러를던진다() async {
+        let authorityRepository = MockSTTPermissionRepository()
+        let sut = DefaultCheckSTTPermissionUseCase(repository: authorityRepository)
+
         // Given
         await authorityRepository.expectCheckSTTPermission(callCount: 0)
 

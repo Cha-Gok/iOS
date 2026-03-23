@@ -2,27 +2,15 @@
 import Core
 import XCTest
 
-final class MoveWasteBasketUseCaseTest: XCTestCase {
-    private var wasteBasketRepository: MockWasteBasketRepository!
-    private var sut: DefaultMoveWasteBasketUseCase!
-
-    override func setUp() {
-        super.setUp()
-        wasteBasketRepository = MockWasteBasketRepository()
-        sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
-    }
-
-    override func tearDown() {
-        wasteBasketRepository = nil
-        sut = nil
-        super.tearDown()
-    }
-}
+final class MoveWasteBasketUseCaseTest: XCTestCase {}
 
 // MARK: - 성공 케이스
 
 extension MoveWasteBasketUseCaseTest {
     func test_정상상태_항목을휴지통으로이동시_리포지토리의이동메서드를호출한다() async throws {
+        let wasteBasketRepository = MockWasteBasketRepository()
+        let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
+
         // Given
         let item: WasteBasketItem = .folder(id: UUID())
         await wasteBasketRepository.setMoveResult(.success(()))
@@ -40,6 +28,9 @@ extension MoveWasteBasketUseCaseTest {
 
 extension MoveWasteBasketUseCaseTest {
     func test_리포지토리이동실패상태_항목을휴지통으로이동시_moveFailed에러를던진다() async {
+        let wasteBasketRepository = MockWasteBasketRepository()
+        let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
+
         // Given
         let item: WasteBasketItem = .folder(id: UUID())
         let method = MoveWasteBasketMethod.single(item: item)
@@ -62,6 +53,9 @@ extension MoveWasteBasketUseCaseTest {
     }
 
     func test_리포지토리알수없는에러상태_항목을휴지통으로이동시_unknown에러를던진다() async {
+        let wasteBasketRepository = MockWasteBasketRepository()
+        let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
+
         // Given
         let item: WasteBasketItem = .folder(id: UUID())
         let method = MoveWasteBasketMethod.single(item: item)
@@ -86,6 +80,9 @@ extension MoveWasteBasketUseCaseTest {
     }
 
     func test_작업취소상태_항목을휴지통으로이동시_cancelled에러를던진다() async {
+        let wasteBasketRepository = MockWasteBasketRepository()
+        let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
+
         // Given
         let item: WasteBasketItem = .folder(id: UUID())
         let method = MoveWasteBasketMethod.single(item: item)
@@ -110,10 +107,10 @@ extension MoveWasteBasketUseCaseTest {
 // MARK: - 취소 케이스
 
 extension MoveWasteBasketUseCaseTest {
-    func test_태스크이미취소상태_항목을휴지통으로이동시_즉시cancelled에러를던진다() async throws {
-        guard let sut else {
-            return XCTFail("sut가 초기화되지 않았습니다.")
-        }
+    func test_태스크이미취소상태_항목을휴지통으로이동시_즉시cancelled에러를던진다() async {
+        let wasteBasketRepository = MockWasteBasketRepository()
+        let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
+
         // Given
         let item: WasteBasketItem = .folder(id: UUID())
         let method = MoveWasteBasketMethod.single(item: item)
