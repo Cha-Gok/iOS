@@ -189,7 +189,7 @@ extension CreateFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_태스크이미취소상태_폴더생성시_즉시cancelled에러를던진다() async throws {
+    func test_태스크이미취소상태_폴더생성시_즉시cancelled에러를던진다() async {
         let repository = MockFolderRepository()
         let sut = DefaultCreateFolderUseCase(repository: repository)
 

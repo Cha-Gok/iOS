@@ -13,8 +13,8 @@ extension ReadFolderUseCaseTest {
 
         // Given
         let expectedFolders = [
-            Folder(name: "Folder 1"),
-            Folder(name: "Folder 2")
+            Folder.stub(name: "Folder 1"),
+            Folder.stub(name: "Folder 2")
         ]
         await repository.setFetchAllResult(.success(expectedFolders))
         await repository.expectFetchAll(callCount: 1)
@@ -140,7 +140,7 @@ extension ReadFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_태스크이미취소상태_폴더조회시_즉시cancelled에러를던진다() async throws {
+    func test_태스크이미취소상태_폴더조회시_즉시cancelled에러를던진다() async {
         let repository = MockFolderRepository()
         let sut = DefaultReadFolderUseCase(repository: repository)
 

@@ -88,7 +88,7 @@ extension StartRecordingUseCaseTest {
 // MARK: - 취소 케이스
 
 extension StartRecordingUseCaseTest {
-    func test_태스크취소상태_녹음시작시_cancelled에러를던진다() async throws {
+    func test_태스크취소상태_녹음시작시_cancelled에러를던진다() async {
         let recordingRepository = MockVoiceRecordStartRepository()
         let sut = DefaultStartRecordingUseCase(recordingRepository: recordingRepository)
 

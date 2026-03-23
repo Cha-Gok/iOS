@@ -75,7 +75,7 @@ extension RequestMicrophonePermissionUseCaseTest {
 // MARK: - 취소 케이스
 
 extension RequestMicrophonePermissionUseCaseTest {
-    func test_태스크취소상태_권한요청시_cancelled에러를던진다() async throws {
+    func test_태스크취소상태_권한요청시_cancelled에러를던진다() async {
         let authorityRepository = MockMicrophonePermissionRepository()
         let sut = DefaultRequestMicrophonePermissionUseCase(repository: authorityRepository)
 

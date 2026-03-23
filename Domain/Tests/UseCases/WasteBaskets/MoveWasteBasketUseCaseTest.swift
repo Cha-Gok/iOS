@@ -107,7 +107,7 @@ extension MoveWasteBasketUseCaseTest {
 // MARK: - 취소 케이스
 
 extension MoveWasteBasketUseCaseTest {
-    func test_태스크이미취소상태_항목을휴지통으로이동시_즉시cancelled에러를던진다() async throws {
+    func test_태스크이미취소상태_항목을휴지통으로이동시_즉시cancelled에러를던진다() async {
         let wasteBasketRepository = MockWasteBasketRepository()
         let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
 

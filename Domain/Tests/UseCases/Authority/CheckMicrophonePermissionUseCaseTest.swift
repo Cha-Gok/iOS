@@ -87,7 +87,7 @@ extension CheckMicrophonePermissionUseCaseTest {
         await authorityRepository.verify()
     }
 
-    func test_태스크취소상태_권한조회시_cancelled에러를던진다() async throws {
+    func test_태스크취소상태_권한조회시_cancelled에러를던진다() async {
         let authorityRepository = MockMicrophonePermissionRepository()
         let sut = DefaultCheckMicrophonePermissionUseCase(repository: authorityRepository)
 

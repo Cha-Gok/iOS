@@ -121,7 +121,7 @@ extension FetchWasteBasketFolderUseCaseTest {
         await wasteBasketRepository.verify()
     }
 
-    func test_태스크이미취소상태_휴지통항목조회시_즉시cancelled에러를던진다() async throws {
+    func test_태스크이미취소상태_휴지통항목조회시_즉시cancelled에러를던진다() async {
         let wasteBasketRepository = MockWasteBasketRepository()
         let sut = DefaultFetchWasteBasketFolderUseCase(repository: wasteBasketRepository)
 

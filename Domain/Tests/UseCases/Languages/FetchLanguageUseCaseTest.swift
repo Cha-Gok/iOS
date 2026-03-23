@@ -100,7 +100,7 @@ extension FetchLanguageUseCaseTest {
         await repository.verify()
     }
 
-    func test_태스크이미취소상태_언어조회시_즉시cancelled에러를던진다() async throws {
+    func test_태스크이미취소상태_언어조회시_즉시cancelled에러를던진다() async {
         let repository = MockLanguageRepository()
         let sut = DefaultFetchLanguageUseCase(repository: repository)
 

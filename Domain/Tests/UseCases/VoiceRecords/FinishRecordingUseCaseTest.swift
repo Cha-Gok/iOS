@@ -116,7 +116,7 @@ extension FinishRecordingUseCaseTest {
         await recordingRepository.verify()
     }
 
-    func test_태스크취소상태_녹음종료시_cancelled에러를던진다() async throws {
+    func test_태스크취소상태_녹음종료시_cancelled에러를던진다() async {
         let recordingRepository = MockVoiceRecordFinishRepository()
         let sut = DefaultFinishRecordingUseCase(recordingRepository: recordingRepository)
 

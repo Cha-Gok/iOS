@@ -45,7 +45,7 @@ extension PauseRecordingUseCaseTest {
         await recordingRepository.verify()
     }
 
-    func test_태스크취소상태_녹음일시정지시_cancelled에러를던진다() async throws {
+    func test_태스크취소상태_녹음일시정지시_cancelled에러를던진다() async {
         let recordingRepository = MockVoiceRecordPauseRepository()
         let sut = DefaultPauseRecordingUseCase(recordingRepository: recordingRepository)
 

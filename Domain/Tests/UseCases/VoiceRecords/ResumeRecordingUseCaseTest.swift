@@ -45,7 +45,7 @@ extension ResumeRecordingUseCaseTest {
         await recordingRepository.verify()
     }
 
-    func test_태스크취소상태_녹음재개시_cancelled에러를던진다() async throws {
+    func test_태스크취소상태_녹음재개시_cancelled에러를던진다() async {
         let recordingRepository = MockVoiceRecordResumeRepository()
         let sut = DefaultResumeRecordingUseCase(recordingRepository: recordingRepository)
 
