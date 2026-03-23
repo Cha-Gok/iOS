@@ -3,6 +3,13 @@ import Speech
 
 /// Speech 프레임워크 기반 음성 서비스
 public actor SpeechService: STTPermissionService, STTService {
+    private enum SpeechRecognitionError {
+        static let frameworkDomain = "com.apple.speech.speechrecognitionframework"
+        static let assistantDomain = "kAFAssistantErrorDomain"
+        static let cancelledCode = 301
+        static let noRecognitionResultCode = 203
+    }
+
     /// 진행 중인 전사 작업
     private var currentTask: SFSpeechRecognitionTask?
     /// onCancel에서 접근하기 위해 actor 프로퍼티로 보관
@@ -57,37 +64,54 @@ public actor SpeechService: STTPermissionService, STTService {
 
         do {
             return try await withTaskCancellationHandler {
-                // withCheckedThrowingContinuation body는 actor executor에서 동기 실행
-                // (Swift 6: isolation: #isolation 상속) → actor 프로퍼티 직접 할당 안전
                 try await withCheckedThrowingContinuation { continuation in
                     self.currentContinuation = continuation
-                    let task = recognizer.recognitionTask(with: request) { [weak self] result, error in
-                        guard let self else { return }
-                        // 에러 우선 확인 (중복 resume 방지)
-                        if let error {
-                            Task { await self.failTask(STTServiceError(error)) }
-                        } else if let result, result.isFinal {
-                            // SFSpeechRecognitionResult는 Sendable 미준수
-                            // → Task 클로저 캡처 전에 String 추출
-                            let text = result.bestTranscription.formattedString
-                            Task { await self.finishTask(text) }
-                        }
-                    }
+                    let task = makeRecognitionTask(recognizer: recognizer, request: request)
                     self.currentTask = task
                 }
             } onCancel: {
-                // SFSpeechRecognitionTask.cancel() 이후 completion handler 호출 미보장
-                // → currentContinuation actor 프로퍼티를 통해 직접 resume
                 Task { await self.cancelCurrentTask() }
             }
         } catch let error as STTServiceError {
             throw error
         } catch {
-            throw STTServiceError(error)
+            throw sttServiceError(from: error)
         }
     }
 
     // MARK: - Private
+
+    private func makeRecognitionTask(
+        recognizer: SFSpeechRecognizer,
+        request: SFSpeechURLRecognitionRequest
+    ) -> SFSpeechRecognitionTask {
+        recognizer.recognitionTask(with: request) { [weak self] result, error in
+            guard let self else { return }
+
+            if let error {
+                Task { await self.failTask(self.sttServiceError(from: error)) }
+                return
+            }
+
+            guard let result, result.isFinal else { return }
+
+            let text = result.bestTranscription.formattedString
+            Task { await self.finishTask(text) }
+        }
+    }
+
+    private func sttServiceError(from error: Error) -> STTServiceError {
+        let nsError = error as NSError
+
+        switch (nsError.domain, nsError.code) {
+        case (SpeechRecognitionError.frameworkDomain, SpeechRecognitionError.cancelledCode):
+            return .cancelled
+        case (SpeechRecognitionError.assistantDomain, SpeechRecognitionError.noRecognitionResultCode):
+            return .transcribeFailed
+        default:
+            return .unknown(error)
+        }
+    }
 
     private func finishTask(_ text: String) {
         let continuation = currentContinuation
