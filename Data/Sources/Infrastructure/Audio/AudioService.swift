@@ -45,6 +45,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
         let (stream, continuation) = AsyncStream.makeStream(of: Waveform.self)
         let inputNode = engine.inputNode
         let format = inputNode.inputFormat(forBus: 0)
+        AppLogger.debug("오디오 포맷: sampleRate=\(format.sampleRate), channels=\(format.channelCount)")
 
         inputNode.installTap(
             onBus: 0,
@@ -69,6 +70,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
 
         do {
             try engine.start()
+            AppLogger.info("녹음 시작")
         } catch {
             AppLogger.error(error)
             continuation.finish()
@@ -86,6 +88,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
 
         engine.pause()
         isPaused = true
+        AppLogger.info("녹음 일시정지")
     }
 
     public func resumeRecording() async throws(AudioRecorderServiceError) {
@@ -97,6 +100,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
         do {
             try engine.start()
             isPaused = false
+            AppLogger.info("녹음 재개")
         } catch {
             AppLogger.error(error)
             throw .resumeFailed
@@ -129,6 +133,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
         engine?.stop()
         engine = nil
         isPaused = false
+        AppLogger.info("녹음 종료")
         Task { await deactivateSession() }
     }
 
