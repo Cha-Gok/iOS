@@ -2,29 +2,23 @@ import Domain
 import Foundation
 
 public struct DefaultLanguageRepository: LanguageRepository {
-    private let service: any LanguageService
+  private let service: any LanguageService
 
-    public init(service: any LanguageService) {
-        self.service = service
-    }
+  public init(service: any LanguageService) {
+    self.service = service
+  }
 
-    public func fetchLanguage() async throws(FetchLanguagesRepositoryError) -> Language {
-        do {
-            if Task.isCancelled { throw FetchLanguagesRepositoryError.cancelled }
-            let rawLanguage = try service.fetchLanguage()
-            return Language(rawValue: rawLanguage) ?? .ko
-        } catch let error as FetchLanguagesRepositoryError {
-            throw error
-        } catch is LanguageServiceError {
-            return .ko
-        } catch {
-            throw .unknown(error)
-        }
-    }
+  public func fetchLanguage() async throws(FetchLanguagesRepositoryError) -> Language {
+    if Task.isCancelled { throw FetchLanguagesRepositoryError.cancelled }
 
-    public func saveLanguage(_ language: Language) async throws(SetLanguagesRepositoryError) {
-        // 1. Task 취소 여부만 체크 (필요 시)
-        if Task.isCancelled { throw .cancelled }
-        service.saveLanguage(language.rawValue)
+    guard let rawLanguage = try? service.fetchLanguage() else {
+      return .ko
     }
+    return Language(rawValue: rawLanguage) ?? .ko
+  }
+
+  public func saveLanguage(_ language: Language) async throws(SetLanguagesRepositoryError) {
+    if Task.isCancelled { throw .cancelled }
+    service.saveLanguage(language.rawValue)
+  }
 }
