@@ -1,8 +1,7 @@
 import Foundation
 
-public struct Folder: Sendable {
+public struct Folder: Sendable, Identifiable {
     public let id: UUID
-    public let path: URL
     public let name: String
     public let createdAt: Date
     public let content: [VoiceNote]
@@ -11,7 +10,6 @@ public struct Folder: Sendable {
 
     public init(
         id: UUID = UUID(),
-        path: URL,
         name: String,
         createdAt: Date = Date.now,
         content: [VoiceNote] = [],
@@ -19,7 +17,6 @@ public struct Folder: Sendable {
         deletedAt: Date? = nil
     ) {
         self.id = id
-        self.path = path
         self.name = name
         self.createdAt = createdAt
         self.content = content

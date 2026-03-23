@@ -24,7 +24,7 @@ final class FetchBasicFolderUseCaseTest: XCTestCase {
 extension FetchBasicFolderUseCaseTest {
     func test_정상상태_기본폴더조회시_기대하는Folder를반환한다() async throws {
         // Given
-        let expectedFolder = Folder(path: URL(fileURLWithPath: "/test"), name: "Basic Folder")
+        let expectedFolder = Folder(name: "Basic Folder")
         await repository.setBasicFolderResult(.success(expectedFolder))
         await repository.expectFetchOrCreateBasicFolder(callCount: 1)
 
@@ -126,7 +126,7 @@ extension FetchBasicFolderUseCaseTest {
         }
         // Given
         await repository.setBasicFolderResult(
-            .success(Folder(path: URL(fileURLWithPath: "/"), name: "test"))
+            .success(Folder(name: "test"))
         )
         await repository.expectFetchOrCreateBasicFolder(callCount: 0)
 

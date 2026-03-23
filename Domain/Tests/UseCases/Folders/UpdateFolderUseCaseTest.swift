@@ -27,7 +27,6 @@ extension UpdateFolderUseCaseTest {
         let originalFolder = Folder.stub(name: "Old Name")
         let updatedFolder = Folder.stub(
             id: originalFolder.id,
-            path: originalFolder.path,
             name: "New Name",
             createdAt: originalFolder.createdAt,
             content: originalFolder.content,
@@ -55,7 +54,7 @@ extension UpdateFolderUseCaseTest {
         // Given
         await repository.expectUpdate(callCount: 0)
         let tooLongName = String(repeating: "a", count: 51)
-        let folder: Folder = .init(path: URL.applicationSupportDirectory, name: tooLongName)
+        let folder: Folder = .init(name: tooLongName)
 
         // When & Then
         do {
@@ -82,7 +81,7 @@ extension UpdateFolderUseCaseTest {
         await withTaskGroup(of: Void.self) { group in
             for name in invalidNames {
                 group.addTask {
-                    let folder = Folder(path: URL(fileURLWithPath: "/"), name: name)
+                    let folder = Folder(name: name)
                     do {
                         _ = try await sut.execute(folder)
                         XCTFail(
@@ -104,7 +103,7 @@ extension UpdateFolderUseCaseTest {
 
     func test_폴더미존재상태_폴더수정시_notFound에러를던진다() async {
         // Given
-        let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
+        let folder = Folder(name: "Any")
         await repository.setUpdateResult(.failure(.notFound))
         await repository.expectUpdate(callCount: 1)
 
@@ -125,7 +124,7 @@ extension UpdateFolderUseCaseTest {
 
     func test_중복된이름상태_폴더수정시_duplicateName에러를던진다() async {
         // Given
-        let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "New Name")
+        let folder = Folder(name: "New Name")
         await repository.setUpdateResult(.failure(.duplicateName))
         await repository.expectUpdate(callCount: 1)
 
@@ -146,7 +145,7 @@ extension UpdateFolderUseCaseTest {
 
     func test_리포지토리수정실패상태_폴더수정시_updateFailed에러를던진다() async {
         // Given
-        let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
+        let folder = Folder(name: "Any")
         await repository.setUpdateResult(.failure(.updateFailed))
         await repository.expectUpdate(callCount: 1)
 
@@ -167,7 +166,7 @@ extension UpdateFolderUseCaseTest {
 
     func test_리포지토리알수없는에러상태_폴더수정시_unknown에러를던진다() async {
         // Given
-        let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
+        let folder = Folder(name: "Any")
         struct DummyError: Error {}
         let expectedError = DummyError()
         await repository.setUpdateResult(.failure(.unknown(expectedError)))
@@ -201,7 +200,7 @@ extension UpdateFolderUseCaseTest {
 extension UpdateFolderUseCaseTest {
     func test_작업취소상태_폴더수정시_cancelled에러를던진다() async {
         // Given
-        let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
+        let folder = Folder(name: "Any")
         await repository.setUpdateResult(.failure(.cancelled))
         await repository.expectUpdate(callCount: 1)
 
@@ -225,7 +224,7 @@ extension UpdateFolderUseCaseTest {
             return XCTFail("sut가 초기화되지 않았습니다.")
         }
         // Given
-        let folder = Folder(path: URL(fileURLWithPath: "/test"), name: "Any")
+        let folder = Folder(name: "Any")
         await repository.setUpdateResult(.success(folder))
         await repository.expectUpdate(callCount: 0)
 
