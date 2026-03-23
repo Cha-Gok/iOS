@@ -90,6 +90,42 @@ extension DefaultSTTRepositoryTest {
             }
         }
     }
+
+    func test_서비스취소에러상태_전사시_cancelled에러를던진다() async throws {
+        // Given
+        // STTServiceError.cancelled (서비스 레벨 취소) → STTRepositoryError.cancelled 매핑 검증
+        await mockService.setResult(.failure(.cancelled))
+
+        // When & Then
+        do {
+            _ = try await sut.transcribe(audioFileURL: URL(fileURLWithPath: "/test/audio.m4a"))
+            XCTFail("STTRepositoryError.cancelled 에러를 throw 해야 합니다.")
+        } catch {
+            guard case .cancelled = error else {
+                return XCTFail(
+                    "예상한 에러는 STTRepositoryError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
+        }
+    }
+
+    func test_알수없는에러상태_전사시_unknown에러를던진다() async throws {
+        // Given
+        let underlyingError = NSError(domain: "TestDomain", code: -1)
+        await mockService.setResult(.failure(.unknown(underlyingError)))
+
+        // When & Then
+        do {
+            _ = try await sut.transcribe(audioFileURL: URL(fileURLWithPath: "/test/audio.m4a"))
+            XCTFail("STTRepositoryError.unknown 에러를 throw 해야 합니다.")
+        } catch {
+            guard case .unknown = error else {
+                return XCTFail(
+                    "예상한 에러는 STTRepositoryError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
+                )
+            }
+        }
+    }
 }
 
 // MARK: - 취소 케이스
