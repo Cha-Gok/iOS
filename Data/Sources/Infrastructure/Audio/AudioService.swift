@@ -79,7 +79,8 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
     }
 
     public func pauseRecording() async throws(AudioRecorderServiceError) {
-        guard let engine, isPaused == false else { throw .notRecording }
+        guard let engine else { throw .notRecording }
+        guard isPaused == false else { throw .pauseFailed }
 
         guard engine.isRunning else { throw .pauseFailed }
 
