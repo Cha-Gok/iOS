@@ -1,6 +1,6 @@
 import Foundation
 
-public struct VoiceNote: Sendable, Identifiable {
+public struct VoiceNote: Sendable, Identifiable, Equatable {
     public let id: UUID
     public let title: String
     public let createdAt: Date
