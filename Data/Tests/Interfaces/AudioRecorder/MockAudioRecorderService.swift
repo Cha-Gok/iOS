@@ -6,14 +6,17 @@ actor MockAudioRecorderService: AudioRecorderService {
     private var startResult: Result<AsyncStream<Waveform>, AudioRecorderServiceError>?
     private var pauseResult: Result<Void, AudioRecorderServiceError>?
     private var resumeResult: Result<Void, AudioRecorderServiceError>?
+    private var finishResult: Result<RecordedAudio, AudioRecorderServiceError>?
 
     private var startCallCount = 0
     private var pauseCallCount = 0
     private var resumeCallCount = 0
+    private var finishCallCount = 0
 
     private var expectedStartCallCount: Int?
     private var expectedPauseCallCount: Int?
     private var expectedResumeCallCount: Int?
+    private var expectedFinishCallCount: Int?
 
     func setStartResult(_ result: Result<AsyncStream<Waveform>, AudioRecorderServiceError>) {
         startResult = result
@@ -25,6 +28,10 @@ actor MockAudioRecorderService: AudioRecorderService {
 
     func setResumeResult(_ result: Result<Void, AudioRecorderServiceError>) {
         resumeResult = result
+    }
+
+    func setFinishResult(_ result: Result<RecordedAudio, AudioRecorderServiceError>) {
+        finishResult = result
     }
 
     func expectStart(callCount: Int) {
@@ -39,6 +46,10 @@ actor MockAudioRecorderService: AudioRecorderService {
         expectedResumeCallCount = callCount
     }
 
+    func expectFinish(callCount: Int) {
+        expectedFinishCallCount = callCount
+    }
+
     func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expectedStartCallCount {
             XCTAssertEqual(startCallCount, expectedStartCallCount, file: file, line: line)
@@ -48,6 +59,9 @@ actor MockAudioRecorderService: AudioRecorderService {
         }
         if let expectedResumeCallCount {
             XCTAssertEqual(resumeCallCount, expectedResumeCallCount, file: file, line: line)
+        }
+        if let expectedFinishCallCount {
+            XCTAssertEqual(finishCallCount, expectedFinishCallCount, file: file, line: line)
         }
     }
 
@@ -76,5 +90,14 @@ actor MockAudioRecorderService: AudioRecorderService {
             throw .resumeFailed
         }
         _ = try resumeResult.get()
+    }
+
+    func finishRecording() async throws(AudioRecorderServiceError) -> RecordedAudio {
+        finishCallCount += 1
+        guard let finishResult else {
+            XCTFail("finishResult가 설정되지 않았습니다. setFinishResult()를 먼저 호출하세요.")
+            throw .finishFailed
+        }
+        return try finishResult.get()
     }
 }
