@@ -2,15 +2,30 @@ import AVFoundation
 import Core
 import Domain
 
-/// AVAudioSession 및 AVAudioEngine 기반 오디오 서비스
+/// AVAudioSession 및 AVAudioRecorder 기반 오디오 서비스
 public actor AudioService: MicrophonePermissionService, AudioRecorderService {
-    private var engine: AVAudioEngine?
+    /// 파형 업데이트 주기 (나노초 단위, 기본값 0.1초)
+    private let waveformUpdateInterval: UInt64 = 100_000_000
+    /// 내부 오디오 레코더 인스턴스
+    private var recorder: AVAudioRecorder?
+    /// 현재 녹음 중인 파일의 저장 경로
+    private var recordingFilePath: URL?
+    /// 녹음 시작 일시
+    private var recordingCreatedAt: Date?
+    /// 파형 데이터 스트림을 제어하기 위한 Continuation
+    private var waveformContinuation: AsyncStream<Waveform>.Continuation?
+    /// 주기적으로 파형을 업데이트하는 비동기 작업
+    private var waveformTask: Task<Void, Never>?
+    /// 녹음 일시정지 상태 여부
     private var isPaused = false
+    /// 녹음 종료 절차가 진행 중인지 여부
+    private var isFinishing = false
 
     public init() {}
 
     // MARK: - MicrophonePermissionService
 
+    /// 기기의 마이크 접근 권한 상태를 확인합니다.
     public func checkPermission() async -> PermissionStatus {
         switch AVAudioApplication.shared.recordPermission {
         case .granted:
@@ -24,6 +39,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
         }
     }
 
+    /// 사용자에게 마이크 접근 권한을 요청합니다.
     public func requestPermission() async -> PermissionStatus {
         let granted = await withCheckedContinuation { continuation in
             AVAudioApplication.requestRecordPermission { granted in
@@ -35,80 +51,122 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
 
     // MARK: - AudioRecorderService
 
+    /// 오디오 녹음을 시작하고 실시간 파형(Waveform) 데이터 스트림을 반환합니다.
     public func startRecording() async throws(AudioRecorderServiceError) -> AsyncStream<Waveform> {
-        guard engine == nil else { throw .alreadyRecording }
+        guard recorder == nil else { throw .alreadyRecording }
+        guard AVAudioApplication.shared.recordPermission == .granted else {
+            throw .startFailed
+        }
         try await activateSession()
-        let engine = AVAudioEngine()
-        self.engine = engine
-        isPaused = false
 
-        let (stream, continuation) = AsyncStream.makeStream(of: Waveform.self)
-        let inputNode = engine.inputNode
-        let format = inputNode.inputFormat(forBus: 0)
-        AppLogger.debug("오디오 포맷: sampleRate=\(format.sampleRate), channels=\(format.channelCount)")
-
-        inputNode.installTap(
-            onBus: 0,
-            bufferSize: AVAudioFrameCount(Policy.waveformTapBufferSize),
-            format: format
-        ) { buffer, _ in
-            guard let channelData = buffer.floatChannelData?[0] else { return }
-            let frameLength = Int(buffer.frameLength)
-            let stride = max(1, frameLength / Policy.waveformSamplesPerBuffer)
-            var samples: [Float] = []
-            var index = 0
-            while index < frameLength, samples.count < Policy.waveformSamplesPerBuffer {
-                samples.append(abs(channelData[index]))
-                index += stride
-            }
-            continuation.yield(Waveform(amplitudes: samples))
-        }
-
-        continuation.onTermination = { [weak self] _ in
-            Task { await self?.stopEngine() }
-        }
-
+        let recordingFilePath: URL
+        let recordingCreatedAt = Date.now
         do {
-            try engine.start()
-            AppLogger.info("녹음 시작")
+            recordingFilePath = try makeRecordingFilePath(createdAt: recordingCreatedAt)
         } catch {
-            AppLogger.error(error)
-            continuation.finish()
+            await deactivateSession()
+            throw error
+        }
+
+        let recorder: AVAudioRecorder
+        do {
+            recorder = try makeRecorder(filePath: recordingFilePath)
+        } catch {
+            await deactivateSession()
+            throw error
+        }
+
+        let (waveformStream, waveformContinuation) = AsyncStream.makeStream(
+            of: Waveform.self,
+            bufferingPolicy: .bufferingNewest(Policy.waveformStreamBufferLimit)
+        )
+        waveformContinuation.onTermination = { [weak self] _ in
+            Task { await self?.handleWaveformTermination() }
+        }
+
+        guard recorder.record() else {
+            waveformContinuation.finish()
+            discardRecordingFile(at: recordingFilePath)
+            await deactivateSession()
             throw .startFailed
         }
 
-        return stream
+        self.recorder = recorder
+        self.recordingFilePath = recordingFilePath
+        self.recordingCreatedAt = recordingCreatedAt
+        self.waveformContinuation = waveformContinuation
+        waveformTask = Task { [weak self] in
+            await self?.streamWaveform()
+        }
+        isPaused = false
+        isFinishing = false
+
+        AppLogger.info("녹음 시작")
+        return waveformStream
     }
 
+    /// 현재 진행 중인 녹음을 정상적으로 종료하고 저장된 오디오 결과물을 반환합니다.
+    public func finishRecording() async throws(AudioRecorderServiceError) -> RecordedAudio {
+        guard let recorder, let recordingFilePath, let recordingCreatedAt else {
+            throw .notRecording
+        }
+
+        isFinishing = true
+        closeWaveformStream()
+        recorder.stop()
+        await stopWaveformTask()
+
+        let result = buildRecordedAudio(
+            filePath: recordingFilePath,
+            createdAt: recordingCreatedAt
+        )
+
+        clearRecordingSession()
+        await deactivateSession()
+        AppLogger.info("녹음 종료")
+
+        switch result {
+        case .success(let recordedAudio):
+            guard FileManager.default.fileExists(atPath: recordedAudio.audioFilePath.path) else {
+                discardRecordingFile(at: recordingFilePath)
+                throw .finishFailed
+            }
+            return recordedAudio
+        case .failure(let error):
+            discardRecordingFile(at: recordingFilePath)
+            throw error
+        }
+    }
+
+    /// 진행 중인 녹음을 일시정지합니다.
     public func pauseRecording() async throws(AudioRecorderServiceError) {
-        guard let engine else { throw .notRecording }
+        guard let recorder else { throw .notRecording }
         guard isPaused == false else { throw .pauseFailed }
+        guard recorder.isRecording else { throw .pauseFailed }
 
-        guard engine.isRunning else { throw .pauseFailed }
-
-        engine.pause()
+        recorder.pause()
         isPaused = true
         AppLogger.info("녹음 일시정지")
     }
 
+    /// 일시정지된 녹음을 다시 재개합니다.
     public func resumeRecording() async throws(AudioRecorderServiceError) {
-        guard let engine else { throw .notPaused }
+        guard let recorder else { throw .notPaused }
         guard isPaused else { throw .notPaused }
 
         try await activateSession()
 
-        do {
-            try engine.start()
-            isPaused = false
-            AppLogger.info("녹음 재개")
-        } catch {
-            AppLogger.error(error)
+        guard recorder.record() else {
             throw .resumeFailed
         }
+
+        isPaused = false
+        AppLogger.info("녹음 재개")
     }
 
     // MARK: - Private
 
+    /// 오디오 세션을 녹음 모드로 활성화합니다.
     private func activateSession() async throws(AudioRecorderServiceError) {
         let avSession = AVAudioSession.sharedInstance()
         do {
@@ -128,13 +186,161 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
         }
     }
 
-    private func stopEngine() {
-        engine?.inputNode.removeTap(onBus: 0)
-        engine?.stop()
-        engine = nil
-        isPaused = false
+    /// 녹음 파일이 저장될 디렉토리 및 파일명(타임스탬프 기반)을 생성합니다.
+    private func makeRecordingFilePath(createdAt: Date) throws(AudioRecorderServiceError) -> URL {
+        do {
+            let applicationSupportDirectory = URL.applicationSupportDirectory
+            try FileManager.default.createDirectory(
+                at: applicationSupportDirectory,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+            let fileName = "\(Int(createdAt.timeIntervalSince1970 * 1000)).m4a"
+            return applicationSupportDirectory.appendingPathComponent(fileName)
+        } catch {
+            AppLogger.error(error)
+            throw .startFailed
+        }
+    }
+
+    /// 지정된 경로에 오디오 파일을 저장하도록 레코더를 생성하고 초기 설정을 수행합니다.
+    private func makeRecorder(filePath: URL) throws(AudioRecorderServiceError) -> AVAudioRecorder {
+        do {
+            let recorder = try AVAudioRecorder(url: filePath, settings: makeRecordingSettings())
+            recorder.isMeteringEnabled = true
+            recorder.prepareToRecord()
+            return recorder
+        } catch {
+            AppLogger.error(error)
+            throw .startFailed
+        }
+    }
+
+    /// 지정된 주기마다 레코더의 현재 음량 데이터를 측정하여 파형 스트림으로 방출(yield)합니다.
+    private func streamWaveform() async {
+        while Task.isCancelled == false {
+            guard let recorder else { return }
+            guard isFinishing == false else { return }
+
+            if isPaused {
+                try? await Task.sleep(nanoseconds: waveformUpdateInterval)
+                continue
+            }
+
+            guard recorder.isRecording else {
+                await handleUnexpectedRecorderStop()
+                return
+            }
+
+            recorder.updateMeters()
+            waveformContinuation?.yield(Self.makeWaveform(from: recorder))
+
+            try? await Task.sleep(nanoseconds: waveformUpdateInterval)
+        }
+    }
+
+    /// 전화 수신, 다른 앱 실행 등으로 인해 예기치 않게 레코더가 중단되었을 때의 방어 처리를 수행합니다.
+    private func handleUnexpectedRecorderStop() async {
+        guard recorder != nil else { return }
+        guard isPaused == false else { return }
+        guard isFinishing == false else { return }
+        await discardCurrentRecording()
+    }
+
+    /// 파형 스트림이 외부 요인에 의해 종료(Termination)되었을 때 녹음을 중단합니다.
+    private func handleWaveformTermination() async {
+        guard isFinishing == false else { return }
+        await discardCurrentRecording()
+    }
+
+    /// 현재 진행 중이던 녹음 작업을 중단하고, 세션 정리 및 임시 파일을 삭제합니다.
+    private func discardCurrentRecording() async {
+        guard let recorder, let recordingFilePath else { return }
+
+        closeWaveformStream()
+        recorder.stop()
+        await stopWaveformTask()
+
+        clearRecordingSession()
+        discardRecordingFile(at: recordingFilePath)
+        await deactivateSession()
         AppLogger.info("녹음 종료")
-        Task { await deactivateSession() }
+    }
+
+    /// 저장된 오디오 파일을 읽어들여 재생 시간 등의 메타데이터가 포함된 객체를 생성합니다.
+    private func buildRecordedAudio(
+        filePath: URL,
+        createdAt: Date
+    )
+        -> Result<RecordedAudio, AudioRecorderServiceError>
+    {
+        do {
+            let audioFile = try AVAudioFile(forReading: filePath)
+            let duration = audioFile.processingFormat.sampleRate > 0
+                ? Double(audioFile.length) / audioFile.processingFormat.sampleRate
+                : Date.now.timeIntervalSince(createdAt)
+
+            let recordedAudio = RecordedAudio(
+                createdAt: createdAt,
+                audioFilePath: filePath,
+                duration: duration
+            )
+            return .success(recordedAudio)
+        } catch {
+            AppLogger.error(error)
+            return .failure(.finishFailed)
+        }
+    }
+
+    /// 특정 경로에 저장된 녹음 파일을 삭제하여 파일 시스템을 정리합니다.
+    private func discardRecordingFile(at filePath: URL?) {
+        guard let filePath else { return }
+
+        do {
+            if FileManager.default.fileExists(atPath: filePath.path) {
+                try FileManager.default.removeItem(at: filePath)
+            }
+        } catch {
+            AppLogger.error(error)
+        }
+    }
+
+    private func closeWaveformStream() {
+        waveformContinuation?.finish()
+        waveformContinuation = nil
+    }
+
+    private func stopWaveformTask() async {
+        let waveformTask = waveformTask
+        self.waveformTask = nil
+        waveformTask?.cancel()
+        await waveformTask?.value
+    }
+
+    private func clearRecordingSession() {
+        recorder = nil
+        recordingFilePath = nil
+        recordingCreatedAt = nil
+        waveformContinuation = nil
+        waveformTask = nil
+        isPaused = false
+        isFinishing = false
+    }
+
+    private func makeRecordingSettings() -> [String: Any] {
+        [
+            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+            AVSampleRateKey: 44100,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderBitRateKey: 64000
+        ]
+    }
+
+    private nonisolated static func makeWaveform(from recorder: AVAudioRecorder) -> Waveform {
+        let averagePower = recorder.averagePower(forChannel: 0)
+        let normalizedPower = max(0, min(1, pow(10, averagePower / 20)))
+        let amplitudes = Array(repeating: normalizedPower, count: Policy.waveformSamplesPerBuffer)
+        return Waveform(amplitudes: amplitudes)
     }
 
     private func deactivateSession() async {
