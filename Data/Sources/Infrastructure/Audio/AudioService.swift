@@ -16,6 +16,8 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
     private var waveformContinuation: AsyncStream<Waveform>.Continuation?
     /// 주기적으로 파형을 업데이트하는 비동기 작업
     private var waveformTask: Task<Void, Never>?
+    /// 내부 오디오 레코더 델리게이트
+    private var recorderDelegate: RecorderDelegate?
     /// 녹음 일시정지 상태 여부
     private var isPaused = false
     /// 녹음 종료 절차가 진행 중인지 여부
@@ -76,6 +78,13 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
             throw error
         }
 
+        let delegate = RecorderDelegate { [weak self] successfully in
+            Task {
+                await self?.handleRecordingFinished(successfully: successfully)
+            }
+        }
+        recorder.delegate = delegate
+
         let (waveformStream, waveformContinuation) = AsyncStream.makeStream(
             of: Waveform.self,
             bufferingPolicy: .bufferingNewest(Policy.waveformStreamBufferLimit)
@@ -91,6 +100,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
             throw .startFailed
         }
 
+        recorderDelegate = delegate
         self.recorder = recorder
         self.recordingFilePath = recordingFilePath
         self.recordingCreatedAt = recordingCreatedAt
@@ -166,6 +176,20 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
 
     // MARK: - Private
 
+    /// 내부 오디오 레코더 이벤트를 처리하기 위한 델리게이트
+    private final class RecorderDelegate: NSObject, AVAudioRecorderDelegate, @unchecked Sendable {
+        let onDidFinishRecording: @Sendable (Bool) -> Void
+
+        init(onDidFinishRecording: @escaping @Sendable (Bool) -> Void) {
+            self.onDidFinishRecording = onDidFinishRecording
+            super.init()
+        }
+
+        func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+            onDidFinishRecording(flag)
+        }
+    }
+
     /// 오디오 세션을 녹음 모드로 활성화합니다.
     private func activateSession() async throws(AudioRecorderServiceError) {
         let avSession = AVAudioSession.sharedInstance()
@@ -227,22 +251,18 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
                 continue
             }
 
-            guard recorder.isRecording else {
-                await handleUnexpectedRecorderStop()
-                return
+            if recorder.isRecording {
+                recorder.updateMeters()
+                waveformContinuation?.yield(Self.makeWaveform(from: recorder))
             }
-
-            recorder.updateMeters()
-            waveformContinuation?.yield(Self.makeWaveform(from: recorder))
 
             try? await Task.sleep(nanoseconds: waveformUpdateInterval)
         }
     }
 
-    /// 전화 수신, 다른 앱 실행 등으로 인해 예기치 않게 레코더가 중단되었을 때의 방어 처리를 수행합니다.
-    private func handleUnexpectedRecorderStop() async {
+    /// 시스템이나 외부 요인(예: 전화 수신)에 의해 예기치 않게 녹음이 중단되었을 때의 방어 처리를 수행합니다.
+    private func handleRecordingFinished(successfully flag: Bool) async {
         guard recorder != nil else { return }
-        guard isPaused == false else { return }
         guard isFinishing == false else { return }
         await discardCurrentRecording()
     }
@@ -257,6 +277,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
     private func discardCurrentRecording() async {
         guard let recorder, let recordingFilePath else { return }
 
+        isFinishing = true
         closeWaveformStream()
         recorder.stop()
         await stopWaveformTask()
@@ -288,7 +309,7 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
             return .success(recordedAudio)
         } catch {
             AppLogger.error(error)
-            return .failure(.finishFailed)
+            return .failure(.encodingFailed)
         }
     }
 
@@ -318,7 +339,9 @@ public actor AudioService: MicrophonePermissionService, AudioRecorderService {
     }
 
     private func clearRecordingSession() {
+        recorder?.delegate = nil
         recorder = nil
+        recorderDelegate = nil
         recordingFilePath = nil
         recordingCreatedAt = nil
         waveformContinuation = nil
