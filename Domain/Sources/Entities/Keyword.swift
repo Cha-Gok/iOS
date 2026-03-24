@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Keyword: Sendable, Identifiable {
+public struct Keyword: Sendable, Identifiable, Equatable {
     public let id: UUID
     public let noteId: UUID
     public let word: String
