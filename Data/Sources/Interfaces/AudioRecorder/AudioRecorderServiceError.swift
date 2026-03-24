@@ -18,6 +18,10 @@ public enum AudioRecorderServiceError: Error, Sendable {
     case pauseFailed
     /// 녹음 재시작에 실패한 경우
     case resumeFailed
+    /// 녹음 종료 및 저장에 실패한 경우
+    case finishFailed
+    /// 오디오 파일 인코딩에 실패한 경우
+    case encodingFailed
     /// 알 수 없는 에러
     case unknown(Error)
 }
