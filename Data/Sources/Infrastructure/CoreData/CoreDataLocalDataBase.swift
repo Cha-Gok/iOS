@@ -43,7 +43,8 @@ public actor CoreDataLocalDataBase<MO: ManagedObjectMapping>: LocalDataBase {
         }
 
         do {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            try await withCheckedThrowingContinuation {
+                (continuation: CheckedContinuation<Void, Error>) in
                 newContainer.loadPersistentStores { _, error in
                     if let error {
                         continuation.resume(throwing: error)
@@ -61,7 +62,33 @@ public actor CoreDataLocalDataBase<MO: ManagedObjectMapping>: LocalDataBase {
         // 1. 컨테이너 등록
         container = newContainer
         // 2. 스토어 로드 완료 후 백그라운드 컨텍스트 생성
-        backgroundContext = newContainer.newBackgroundContext()
+        let context = newContainer.newBackgroundContext()
+        context.automaticallyMergesChangesFromParent = true
+        backgroundContext = context
+    }
+
+    /// 기존 컨테이너와 컨텍스트를 공유하여 초기화합니다.
+    init(existingContainer: NSPersistentContainer, existingContext: NSManagedObjectContext? = nil) {
+        container = existingContainer
+        if let context = existingContext {
+            backgroundContext = context
+        } else {
+            let newContext = existingContainer.newBackgroundContext()
+            newContext.automaticallyMergesChangesFromParent = true
+            backgroundContext = newContext
+        }
+    }
+
+    /// 동일한 영구 저장소를 공유하는 다른 엔티티 타입의 데이터베이스를 생성합니다.
+    /// - Parameter shareContext: true일 경우 현재 DB의 백그라운드 컨텍스트를 공유합니다. (테스트 시 사용)
+    public func makeSibling<OtherMO: ManagedObjectMapping>(
+        for type: OtherMO.Type = OtherMO.self,
+        shareContext: Bool = false
+    ) -> CoreDataLocalDataBase<OtherMO> {
+        CoreDataLocalDataBase<OtherMO>(
+            existingContainer: container,
+            existingContext: shareContext ? backgroundContext : nil
+        )
     }
 }
 
@@ -77,6 +104,7 @@ public extension CoreDataLocalDataBase {
                 try backgroundContext.save()
                 return managedObject.toDomain()
             } catch {
+                AppLogger.error(error)
                 throw CoreDataStorageError.createFailed
             }
         }
@@ -123,7 +151,7 @@ public extension CoreDataLocalDataBase {
                     throw CoreDataStorageError.updateFailed
                 }
 
-                managedObject.insert(from: item)
+                managedObject.update(from: item)
 
                 try backgroundContext.save()
                 return managedObject.toDomain()
