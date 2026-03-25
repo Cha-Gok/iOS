@@ -136,10 +136,6 @@ public actor FileManagerStorageService: StorageService {
 
         do {
             let data = try Data(contentsOf: fileURL)
-            if Task.isCancelled {
-                AppLogger.debug("작업 취소됨: load (로드 후)")
-                throw StorageServiceError.cancelled
-            }
             AppLogger.debug("파일 로드 성공: \(fileURL.path) (\(data.count) bytes)")
             return data
         } catch {
