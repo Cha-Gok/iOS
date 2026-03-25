@@ -4,8 +4,9 @@ public let bundleId = "com.yongms.ChaGokChaGok"
 public let displayName = "차곡"
 public let version = "1.0.0"
 public let build = "1"
-public let iOSVersion = "17.0"
+public let iOSVersion = "26.0"
 public let deploymentTargets: DeploymentTargets = .iOS(iOSVersion)
+public let style = "Dark"
 
 public let settings: Settings = .settings(
     base: [
