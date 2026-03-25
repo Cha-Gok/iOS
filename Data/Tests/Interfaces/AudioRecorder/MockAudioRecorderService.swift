@@ -18,6 +18,13 @@ actor MockAudioRecorderService: AudioRecorderService {
     private var expectedResumeCallCount: Int?
     private var expectedFinishCallCount: Int?
 
+    private var checkPermissionResult: PermissionStatus?
+    private var requestPermissionResult: PermissionStatus?
+    private var checkPermissionCallCount = 0
+    private var requestPermissionCallCount = 0
+    private var expectedCheckPermissionCallCount: Int?
+    private var expectedRequestPermissionCallCount: Int?
+
     func setStartResult(_ result: Result<AsyncStream<Waveform>, AudioRecorderServiceError>) {
         startResult = result
     }
@@ -32,6 +39,14 @@ actor MockAudioRecorderService: AudioRecorderService {
 
     func setFinishResult(_ result: Result<RecordedAudio, AudioRecorderServiceError>) {
         finishResult = result
+    }
+
+    func setCheckResult(_ state: PermissionStatus) {
+        checkPermissionResult = state
+    }
+
+    func setRequestResult(_ state: PermissionStatus) {
+        requestPermissionResult = state
     }
 
     func expectStart(callCount: Int) {
@@ -50,6 +65,14 @@ actor MockAudioRecorderService: AudioRecorderService {
         expectedFinishCallCount = callCount
     }
 
+    func expectCheckPermission(callCount: Int) {
+        expectedCheckPermissionCallCount = callCount
+    }
+
+    func expectRequestPermission(callCount: Int) {
+        expectedRequestPermissionCallCount = callCount
+    }
+
     func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expectedStartCallCount {
             XCTAssertEqual(startCallCount, expectedStartCallCount, file: file, line: line)
@@ -62,6 +85,12 @@ actor MockAudioRecorderService: AudioRecorderService {
         }
         if let expectedFinishCallCount {
             XCTAssertEqual(finishCallCount, expectedFinishCallCount, file: file, line: line)
+        }
+        if let expectedCheckPermissionCallCount {
+            XCTAssertEqual(checkPermissionCallCount, expectedCheckPermissionCallCount, file: file, line: line)
+        }
+        if let expectedRequestPermissionCallCount {
+            XCTAssertEqual(requestPermissionCallCount, expectedRequestPermissionCallCount, file: file, line: line)
         }
     }
 
@@ -99,5 +128,15 @@ actor MockAudioRecorderService: AudioRecorderService {
             throw .finishFailed
         }
         return try finishResult.get()
+    }
+
+    func checkPermission() async -> PermissionStatus {
+        checkPermissionCallCount += 1
+        return checkPermissionResult ?? .notDetermined
+    }
+
+    func requestPermission() async -> PermissionStatus {
+        requestPermissionCallCount += 1
+        return requestPermissionResult ?? .notDetermined
     }
 }

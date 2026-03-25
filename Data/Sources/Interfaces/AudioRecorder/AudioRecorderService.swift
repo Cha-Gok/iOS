@@ -18,4 +18,10 @@ public protocol AudioRecorderService: Sendable {
     /// - Returns: 저장된 녹음 오디오 정보
     /// - Throws: `AudioRecorderServiceError` 녹음 상태가 아니거나 저장/인코딩 실패 시
     func finishRecording() async throws(AudioRecorderServiceError) -> RecordedAudio
+
+    /// 기기의 마이크 접근 권한 상태를 확인합니다.
+    func checkPermission() async -> PermissionStatus
+
+    /// 사용자에게 마이크 접근 권한을 요청합니다.
+    func requestPermission() async -> PermissionStatus
 }

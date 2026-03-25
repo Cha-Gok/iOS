@@ -28,7 +28,7 @@ public enum FinishRecordingUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    init(_ error: VoiceRecordFinishRepositoryError) {
+    init(_ error: VoiceRecordRepositoryError) {
         switch error {
         case .notRecording:
             self = .notRecording
@@ -38,7 +38,9 @@ public enum FinishRecordingUseCaseError: LocalizedError, Sendable {
             self = .encodingFailed
         case .cancelled:
             self = .cancelled
-        case .unknown(let error):
+        case .unknown(let innerError):
+            self = .unknown(innerError)
+        default:
             self = .unknown(error)
         }
     }

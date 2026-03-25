@@ -3,7 +3,7 @@ import Core
 import Domain
 
 /// AVAudioSession 및 AVAudioRecorder 기반 오디오 서비스
-public actor AudioService: MicrophonePermissionService, AudioRecorderService {
+public actor AudioService: AudioRecorderService {
     /// 파형 업데이트 주기 (나노초 단위, 기본값 0.1초)
     private let waveformUpdateInterval: UInt64 = 100_000_000
     /// 내부 오디오 레코더 인스턴스
