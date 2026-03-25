@@ -45,7 +45,8 @@ private let appTarget = Target.target(
             ),
             "UIApplicationSceneManifest": Plist.Value.dictionary([
                 "UIApplicationSupportsMultipleScenes": .boolean(false)
-            ])
+            ]),
+            "UIUserInterfaceStyle": Plist.Value(stringLiteral: style)
         ]
     ),
     sources: ["Sources/**/*.swift"],
