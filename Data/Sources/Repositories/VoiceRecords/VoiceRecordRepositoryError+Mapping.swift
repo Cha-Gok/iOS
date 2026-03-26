@@ -23,4 +23,25 @@ extension VoiceRecordRepositoryError {
             self = .unknown(underlying)
         }
     }
+
+    init(_ error: StorageServiceError) {
+        switch error {
+        case .cancelled:
+            self = .cancelled
+        default:
+            self = .finishFailed
+        }
+    }
+
+    init(_ error: Error) {
+        if let repositoryError = error as? VoiceRecordRepositoryError {
+            self = repositoryError
+        } else if let audioError = error as? AudioRecorderServiceError {
+            self = .init(audioError)
+        } else if let storageError = error as? StorageServiceError {
+            self = .init(storageError)
+        } else {
+            self = .unknown(error)
+        }
+    }
 }
