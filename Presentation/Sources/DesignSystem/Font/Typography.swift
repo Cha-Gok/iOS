@@ -62,23 +62,14 @@ public extension UILabel {
     ///   - typography: 글씨체, 행간 , 자간 복합적인 열겨형 데이터
     func setTypography(text: String? = nil, style typography: Typography) {
         let textToUse = text ?? self.text ?? ""
-        font = typography.font
 
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineHeightMultiple = typography.lineHeightMultiple
-
-        let attributedString = NSMutableAttributedString(string: textToUse)
-        attributedString.addAttribute(
-            .paragraphStyle,
-            value: paragraphStyle,
-            range: NSRange(location: 0, length: attributedString.length)
-        )
-        attributedString.addAttribute(
-            .kern,
-            value: typography.letterSpacing,
-            range: NSRange(location: 0, length: attributedString.length)
-        )
-
-        attributedText = attributedString
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: typography.font,
+            .paragraphStyle: paragraphStyle,
+            .kern: typography.letterSpacing
+        ]
+        attributedText = NSAttributedString(string: textToUse, attributes: attributes)
     }
 }
