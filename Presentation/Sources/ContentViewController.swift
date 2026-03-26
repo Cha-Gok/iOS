@@ -15,8 +15,7 @@ public final class ContentViewController: UIViewController {
 
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Hello, World!"
-        label.font = .preferredFont(forTextStyle: .body)
+        label.setTypography(text: "hello world", style: .header1)
         view.addSubview(label)
 
         NSLayoutConstraint.activate([
@@ -24,4 +23,8 @@ public final class ContentViewController: UIViewController {
             label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
+}
+
+#Preview {
+    ContentViewController()
 }
