@@ -1,5 +1,6 @@
 @testable import Data
 import Domain
+import Foundation
 import XCTest
 
 actor MockAudioRecorderService: AudioRecorderService {
@@ -94,7 +95,7 @@ actor MockAudioRecorderService: AudioRecorderService {
         }
     }
 
-    func startRecording() async throws(AudioRecorderServiceError) -> AsyncStream<Waveform> {
+    func startRecording(at filePath: URL) async throws(AudioRecorderServiceError) -> AsyncStream<Waveform> {
         startCallCount += 1
         guard let startResult else {
             XCTFail("startResult가 설정되지 않았습니다. setStartResult()를 먼저 호출하세요.")
