@@ -54,25 +54,17 @@ public actor AudioService: AudioRecorderService {
     // MARK: - AudioRecorderService
 
     /// 오디오 녹음을 시작하고 실시간 파형(Waveform) 데이터 스트림을 반환합니다.
-    public func startRecording() async throws(AudioRecorderServiceError) -> AsyncStream<Waveform> {
+    public func startRecording(at filePath: URL) async throws(AudioRecorderServiceError) -> AsyncStream<Waveform> {
         guard recorder == nil else { throw .alreadyRecording }
         guard AVAudioApplication.shared.recordPermission == .granted else {
             throw .startFailed
         }
         try await activateSession()
 
-        let recordingFilePath: URL
         let recordingCreatedAt = Date.now
-        do {
-            recordingFilePath = try makeRecordingFilePath(createdAt: recordingCreatedAt)
-        } catch {
-            await deactivateSession()
-            throw error
-        }
-
         let recorder: AVAudioRecorder
         do {
-            recorder = try makeRecorder(filePath: recordingFilePath)
+            recorder = try makeRecorder(filePath: filePath)
         } catch {
             await deactivateSession()
             throw error
@@ -102,7 +94,7 @@ public actor AudioService: AudioRecorderService {
 
         recorderDelegate = delegate
         self.recorder = recorder
-        self.recordingFilePath = recordingFilePath
+        recordingFilePath = filePath
         self.recordingCreatedAt = recordingCreatedAt
         self.waveformContinuation = waveformContinuation
         waveformTask = Task { [weak self] in
@@ -207,23 +199,6 @@ public actor AudioService: AudioRecorderService {
             default:
                 throw .unknown(error)
             }
-        }
-    }
-
-    /// 녹음 파일이 저장될 디렉토리 및 파일명(타임스탬프 기반)을 생성합니다.
-    private func makeRecordingFilePath(createdAt: Date) throws(AudioRecorderServiceError) -> URL {
-        do {
-            let applicationSupportDirectory = URL.applicationSupportDirectory
-            try FileManager.default.createDirectory(
-                at: applicationSupportDirectory,
-                withIntermediateDirectories: true,
-                attributes: nil
-            )
-            let fileName = "\(Int(createdAt.timeIntervalSince1970 * 1000)).m4a"
-            return applicationSupportDirectory.appendingPathComponent(fileName)
-        } catch {
-            AppLogger.error(error)
-            throw .startFailed
         }
     }
 
