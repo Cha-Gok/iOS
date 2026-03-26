@@ -2,6 +2,8 @@ import Domain
 import Foundation
 
 public final class DefaultFirstLaunchService: FirstLaunchService {
+    public init() {}
+
     public func markAsLaunched() {
         UserDefaults.standard.set(true, forKey: Policy.isExistingUserKey)
     }
