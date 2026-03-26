@@ -1,11 +1,17 @@
 import Core
 import Domain
+import Foundation
 
 public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
     private let audioService: any AudioRecorderService
+    private let storageService: any StorageService
 
-    public init(audioService: any AudioRecorderService) {
+    public init(
+        audioService: any AudioRecorderService,
+        storageService: any StorageService
+    ) {
         self.audioService = audioService
+        self.storageService = storageService
     }
 
     public func checkMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus {
@@ -21,7 +27,9 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
     public func startRecording() async throws(VoiceRecordRepositoryError) -> AsyncStream<Waveform> {
         if Task.isCancelled { throw .cancelled }
         do {
-            return try await audioService.startRecording()
+            let fileName = "\(Int(Date.now.timeIntervalSince1970 * 1000)).m4a"
+            let tempURL = try await storageService.generateTemporaryURL(fileName: fileName)
+            return try await audioService.startRecording(at: tempURL)
         } catch {
             AppLogger.error(error)
             throw VoiceRecordRepositoryError(error)
@@ -50,11 +58,28 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
 
     public func finishRecording() async throws(VoiceRecordRepositoryError) -> VoiceRecord {
         if Task.isCancelled { throw .cancelled }
+
+        let recorded: RecordedAudio
         do {
-            let recorded = try await audioService.finishRecording()
+            recorded = try await audioService.finishRecording()
+        } catch {
+            AppLogger.error(error)
+            throw VoiceRecordRepositoryError(error)
+        }
+
+        if Task.isCancelled { throw .cancelled }
+
+        do {
+            let fileName = recorded.audioFilePath.lastPathComponent
+            let permanentURL = try await storageService.moveFile(
+                from: recorded.audioFilePath,
+                toDirectory: "VoiceRecords",
+                fileName: fileName
+            )
+
             return VoiceRecord(
                 createdAt: recorded.createdAt,
-                audioFilePath: recorded.audioFilePath,
+                audioFilePath: permanentURL,
                 duration: recorded.duration
             )
         } catch {
