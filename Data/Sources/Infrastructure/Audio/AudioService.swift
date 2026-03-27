@@ -87,7 +87,6 @@ public actor AudioService: AudioRecorderService {
 
         guard recorder.record() else {
             waveformContinuation.finish()
-            discardRecordingFile(at: recordingFilePath)
             await deactivateSession()
             throw .startFailed
         }
@@ -129,13 +128,8 @@ public actor AudioService: AudioRecorderService {
 
         switch result {
         case .success(let recordedAudio):
-            guard FileManager.default.fileExists(atPath: recordedAudio.audioFilePath.path) else {
-                discardRecordingFile(at: recordingFilePath)
-                throw .finishFailed
-            }
             return recordedAudio
         case .failure(let error):
-            discardRecordingFile(at: recordingFilePath)
             throw error
         }
     }
@@ -164,6 +158,10 @@ public actor AudioService: AudioRecorderService {
 
         isPaused = false
         AppLogger.info("녹음 재개")
+    }
+
+    public func currentRecordingURL() async -> URL? {
+        recordingFilePath
     }
 
     // MARK: - Private
@@ -239,18 +237,18 @@ public actor AudioService: AudioRecorderService {
     private func handleRecordingFinished(successfully flag: Bool) async {
         guard recorder != nil else { return }
         guard isFinishing == false else { return }
-        await discardCurrentRecording()
+        await stopRecordingSession()
     }
 
     /// 파형 스트림이 외부 요인에 의해 종료(Termination)되었을 때 녹음을 중단합니다.
     private func handleWaveformTermination() async {
         guard isFinishing == false else { return }
-        await discardCurrentRecording()
+        await stopRecordingSession()
     }
 
-    /// 현재 진행 중이던 녹음 작업을 중단하고, 세션 정리 및 임시 파일을 삭제합니다.
-    private func discardCurrentRecording() async {
-        guard let recorder, let recordingFilePath else { return }
+    /// 현재 진행 중이던 녹음 작업을 중단하고 정리를 수행합니다.
+    private func stopRecordingSession() async {
+        guard let recorder else { return }
 
         isFinishing = true
         closeWaveformStream()
@@ -258,9 +256,8 @@ public actor AudioService: AudioRecorderService {
         await stopWaveformTask()
 
         clearRecordingSession()
-        discardRecordingFile(at: recordingFilePath)
         await deactivateSession()
-        AppLogger.info("녹음 종료")
+        AppLogger.info("녹음 중단")
     }
 
     /// 저장된 오디오 파일을 읽어들여 재생 시간 등의 메타데이터가 포함된 객체를 생성합니다.
@@ -285,19 +282,6 @@ public actor AudioService: AudioRecorderService {
         } catch {
             AppLogger.error(error)
             return .failure(.encodingFailed)
-        }
-    }
-
-    /// 특정 경로에 저장된 녹음 파일을 삭제하여 파일 시스템을 정리합니다.
-    private func discardRecordingFile(at filePath: URL?) {
-        guard let filePath else { return }
-
-        do {
-            if FileManager.default.fileExists(atPath: filePath.path) {
-                try FileManager.default.removeItem(at: filePath)
-            }
-        } catch {
-            AppLogger.error(error)
         }
     }
 

@@ -131,6 +131,16 @@ actor MockAudioRecorderService: AudioRecorderService {
         return try finishResult.get()
     }
 
+    private var currentURLResult: URL?
+
+    func setCurrentURL(_ url: URL?) {
+        currentURLResult = url
+    }
+
+    func currentRecordingURL() async -> URL? {
+        currentURLResult
+    }
+
     func checkPermission() async -> PermissionStatus {
         checkPermissionCallCount += 1
         return checkPermissionResult ?? .notDetermined

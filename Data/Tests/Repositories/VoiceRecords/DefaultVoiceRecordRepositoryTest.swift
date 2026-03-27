@@ -42,6 +42,7 @@ extension DefaultVoiceRecordRepositoryTest {
             .setStartResult(Result<AsyncStream<Waveform>, AudioRecorderServiceError>
                 .failure(AudioRecorderServiceError.startFailed))
         await audioService.expectStart(callCount: 1)
+        await storageService.expectDelete(callCount: 1)
 
         // When & Then
         do {
@@ -53,6 +54,7 @@ extension DefaultVoiceRecordRepositoryTest {
             }
         }
         await audioService.verify()
+        await storageService.verify()
     }
 
     func test_태스크취소상태_녹음시작시_cancelled에러를던진다() async throws {
@@ -268,18 +270,21 @@ extension DefaultVoiceRecordRepositoryTest {
         await audioService
             .setFinishResult(Result<RecordedAudio, AudioRecorderServiceError>
                 .failure(AudioRecorderServiceError.encodingFailed))
+        await audioService.setCurrentURL(URL(fileURLWithPath: "/temp/path.m4a"))
         await audioService.expectFinish(callCount: 1)
+        await storageService.expectDelete(callCount: 1)
 
         // When & Then
         do {
             _ = try await sut.finishRecording()
-            XCTFail("VoiceRecordRepositoryError.encodingFailed 에러를 throw 해야 합니다.")
+            XCTFail("VoiceRecordRepositoryError.finishFailed 에러를 throw 해야 합니다.")
         } catch {
-            guard case .encodingFailed = error else {
-                return XCTFail("예상한 에러는 VoiceRecordRepositoryError.encodingFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
+            guard case .finishFailed = error else {
+                return XCTFail("예상한 에러는 VoiceRecordRepositoryError.finishFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
         await audioService.verify()
+        await storageService.verify()
     }
 
     func test_태스크취소상태_녹음종료시_cancelled에러를던진다() async throws {

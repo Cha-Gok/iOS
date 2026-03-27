@@ -26,11 +26,19 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
 
     public func startRecording() async throws(VoiceRecordRepositoryError) -> AsyncStream<Waveform> {
         if Task.isCancelled { throw .cancelled }
+        let tempURL: URL
         do {
             let fileName = "\(Int(Date.now.timeIntervalSince1970 * 1000)).m4a"
-            let tempURL = try await storageService.generateTemporaryURL(fileName: fileName)
+            tempURL = try await storageService.generateTemporaryURL(fileName: fileName)
+        } catch {
+            AppLogger.error(error)
+            throw VoiceRecordRepositoryError(error)
+        }
+
+        do {
             return try await audioService.startRecording(at: tempURL)
         } catch {
+            try? await storageService.delete(fileURL: tempURL)
             AppLogger.error(error)
             throw VoiceRecordRepositoryError(error)
         }
@@ -63,6 +71,9 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
         do {
             recorded = try await audioService.finishRecording()
         } catch {
+            if let currentURL = await audioService.currentRecordingURL() {
+                try? await storageService.delete(fileURL: currentURL)
+            }
             AppLogger.error(error)
             throw VoiceRecordRepositoryError(error)
         }
