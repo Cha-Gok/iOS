@@ -31,7 +31,15 @@ private let presentationTarget = Target.target(
     product: .framework,
     bundleId: "\(bundleId).Presentation",
     deploymentTargets: deploymentTargets,
-    infoPlist: .default,
+    infoPlist: .extendingDefault(
+        with: [
+            "UIAppFonts": .array([
+                "Pretendard-Bold.otf",
+                "Pretendard-Medium.otf",
+                "Pretendard-Regular.otf"
+            ])
+        ]
+    ),
     sources: ["Sources/**/*.swift"],
     resources: ["Resources/**"],
     scripts: [
