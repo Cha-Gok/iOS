@@ -14,11 +14,13 @@ public enum RequestMicrophonePermissionUseCaseError: LocalizedError, Sendable {
         }
     }
 
-    init(_ error: MicrophonePermissionRepositoryError) {
+    init(_ error: VoiceRecordRepositoryError) {
         switch error {
         case .cancelled:
             self = .cancelled
-        case .unknown(let error):
+        case .unknown(let innerError):
+            self = .unknown(innerError)
+        default:
             self = .unknown(error)
         }
     }

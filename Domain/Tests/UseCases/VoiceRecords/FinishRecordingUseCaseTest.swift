@@ -8,12 +8,12 @@ final class FinishRecordingUseCaseTest: XCTestCase {}
 
 extension FinishRecordingUseCaseTest {
     func test_정상상태_녹음종료시_생성된VoiceRecord를반환한다() async throws {
-        let recordingRepository = MockVoiceRecordFinishRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultFinishRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
         let expectedRecord = VoiceRecord.stub()
-        await recordingRepository.setResult(.success(expectedRecord))
+        await recordingRepository.setFinishResult(.success(expectedRecord))
         await recordingRepository.expectFinishRecording(callCount: 1)
 
         // When
@@ -31,11 +31,11 @@ extension FinishRecordingUseCaseTest {
 
 extension FinishRecordingUseCaseTest {
     func test_녹음중아닌상태_녹음종료시_notRecording에러를던진다() async {
-        let recordingRepository = MockVoiceRecordFinishRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultFinishRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
-        await recordingRepository.setResult(.failure(.notRecording))
+        await recordingRepository.setFinishResult(.failure(.notRecording))
         await recordingRepository.expectFinishRecording(callCount: 1)
 
         // When & Then
@@ -52,11 +52,11 @@ extension FinishRecordingUseCaseTest {
     }
 
     func test_리포지토리종료실패상태_녹음종료시_finishFailed에러를던진다() async {
-        let recordingRepository = MockVoiceRecordFinishRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultFinishRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
-        await recordingRepository.setResult(.failure(.finishFailed))
+        await recordingRepository.setFinishResult(.failure(.finishFailed))
         await recordingRepository.expectFinishRecording(callCount: 1)
 
         // When & Then
@@ -73,11 +73,11 @@ extension FinishRecordingUseCaseTest {
     }
 
     func test_인코딩실패상태_녹음종료시_encodingFailed에러를던진다() async {
-        let recordingRepository = MockVoiceRecordFinishRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultFinishRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
-        await recordingRepository.setResult(.failure(.encodingFailed))
+        await recordingRepository.setFinishResult(.failure(.encodingFailed))
         await recordingRepository.expectFinishRecording(callCount: 1)
 
         // When & Then
@@ -94,12 +94,12 @@ extension FinishRecordingUseCaseTest {
     }
 
     func test_알수없는에러발생상태_녹음종료시_unknown에러를던진다() async {
-        let recordingRepository = MockVoiceRecordFinishRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultFinishRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
         let underlyingError = NSError(domain: "Test", code: 404)
-        await recordingRepository.setResult(.failure(.unknown(underlyingError)))
+        await recordingRepository.setFinishResult(.failure(.unknown(underlyingError)))
         await recordingRepository.expectFinishRecording(callCount: 1)
 
         // When & Then
@@ -117,11 +117,11 @@ extension FinishRecordingUseCaseTest {
     }
 
     func test_태스크취소상태_녹음종료시_cancelled에러를던진다() async {
-        let recordingRepository = MockVoiceRecordFinishRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultFinishRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
-        await recordingRepository.setResult(.success(.stub()))
+        await recordingRepository.setFinishResult(.success(.stub()))
         await recordingRepository.expectFinishRecording(callCount: 0)
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }

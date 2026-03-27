@@ -11,9 +11,9 @@ public protocol FinishRecordingUseCase: Sendable {
 }
 
 public struct DefaultFinishRecordingUseCase: FinishRecordingUseCase {
-    private let recordingRepository: VoiceRecordFinishRepository
+    private let recordingRepository: VoiceRecordRepository
 
-    public init(recordingRepository: VoiceRecordFinishRepository) {
+    public init(recordingRepository: VoiceRecordRepository) {
         self.recordingRepository = recordingRepository
     }
 

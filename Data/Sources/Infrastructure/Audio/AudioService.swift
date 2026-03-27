@@ -3,13 +3,13 @@ import Core
 import Domain
 
 /// AVAudioSession 및 AVAudioEngine 기반 오디오 서비스
-public actor AudioService: MicrophonePermissionService, AudioRecorderService {
+public actor AudioService: AudioRecorderService {
     private var engine: AVAudioEngine?
     private var isPaused = false
 
     public init() {}
 
-    // MARK: - MicrophonePermissionService
+    // MARK: - Permission
 
     public func checkPermission() async -> PermissionStatus {
         switch AVAudioApplication.shared.recordPermission {
