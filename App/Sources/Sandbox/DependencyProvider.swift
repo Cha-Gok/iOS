@@ -9,6 +9,7 @@ public actor DependencyProvider {
     private var dependency: SandboxDependency?
     // infrastructure
     private var audioService: AudioRecorderService?
+    private var storageService: StorageService?
     private var folderDB: CoreDataLocalDataBase<FolderEntity>?
     private var firstlaunchService: FirstLaunchService?
     private var sttPermissionService: STTPermissionService?
@@ -38,6 +39,7 @@ extension DependencyProvider {
     private func makeInfrastructure() async throws {
         folderDB = try await CoreDataLocalDataBase<FolderEntity>(inMemory: true)
         audioService = AudioService()
+        storageService = FileManagerStorageService()
         firstlaunchService = DefaultFirstLaunchService()
         sttPermissionService = SpeechService()
         languageService = LanguageSettingService()
@@ -49,7 +51,9 @@ extension DependencyProvider {
             let folderDB,
             let firstlaunchService,
             let sttPermissionService,
-            let languageService
+            let languageService,
+            let audioService,
+            let storageService
         else {
             throw NSError(domain: "리포지토리를 못 만들었습니다.", code: -1)
         }
@@ -57,7 +61,10 @@ extension DependencyProvider {
         sttPermissionRepository = DefaultSTTPermissionRepository(service: sttPermissionService)
         languageRepository = DefaultLanguageRepository(service: languageService)
         folderRepository = DefaultFolderRepository(database: folderDB)
-        voiceRecordRepository = StubVoiceRecordRepository()
+        voiceRecordRepository = DefaultVoiceRecordRepository(
+            audioService: audioService,
+            storageService: storageService
+        )
     }
 
     /// 외부에서 의존성 주입을 트리거하는 함수
