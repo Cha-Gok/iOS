@@ -11,19 +11,14 @@ public actor DependencyProvider {
     private var audioService: AudioRecorderService?
     private var folderDB: CoreDataLocalDataBase<FolderEntity>?
     private var firstlaunchService: FirstLaunchService?
-    private var microphonePermissionService: MicrophonePermissionService?
     private var sttPermissionService: STTPermissionService?
     private var languageService: LanguageService?
     // repository
     private var checkFirstLaunchRepository: CheckFirstLaunchRepository?
-    private var microphonePermissionRepository: MicrophonePermissionRepository?
     private var sttPermissionRepository: STTPermissionRepository?
     private var languageRepository: LanguageRepository?
     private var folderRepository: FolderRepository?
-
-    private var recordStartRepository: VoiceRecordStartRepository?
-    private var recordPauseRepository: VoiceRecordPauseRepository?
-    private var recordResumeRepository: VoiceRecordResumeRepository?
+    private var voiceRecordRepository: VoiceRecordRepository?
 
     public init() {}
 
@@ -44,7 +39,6 @@ extension DependencyProvider {
         folderDB = try await CoreDataLocalDataBase<FolderEntity>(inMemory: true)
         audioService = AudioService()
         firstlaunchService = DefaultFirstLaunchService()
-        microphonePermissionService = AudioService()
         sttPermissionService = SpeechService()
         languageService = LanguageSettingService()
     }
@@ -53,22 +47,17 @@ extension DependencyProvider {
     private func makeRepository() async throws {
         guard
             let folderDB,
-            let audioService,
             let firstlaunchService,
-            let microphonePermissionService,
             let sttPermissionService,
             let languageService
         else {
             throw NSError(domain: "리포지토리를 못 만들었습니다.", code: -1)
         }
         checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(service: firstlaunchService)
-        microphonePermissionRepository = DefaultMicrophonePermissionRepository(service: microphonePermissionService)
         sttPermissionRepository = DefaultSTTPermissionRepository(service: sttPermissionService)
         languageRepository = DefaultLanguageRepository(service: languageService)
         folderRepository = DefaultFolderRepository(database: folderDB)
-        recordStartRepository = DefaultVoiceRecordStartRepository(service: audioService)
-        recordPauseRepository = DefaultVoiceRecordPauseRepository(service: audioService)
-        recordResumeRepository = DefaultVoiceRecordResumeRepository(service: audioService)
+        voiceRecordRepository = StubVoiceRecordRepository()
     }
 
     /// 외부에서 의존성 주입을 트리거하는 함수
@@ -80,13 +69,10 @@ extension DependencyProvider {
             try await makeRepository()
             // dependency 생성
             guard let checkFirstLaunchRepository,
-                  let microphonePermissionRepository,
                   let sttPermissionRepository,
                   let languageRepository,
                   let folderRepository,
-                  let recordStartRepository,
-                  let recordPauseRepository,
-                  let recordResumeRepository
+                  let voiceRecordRepository
             else {
                 throw NSError(domain: "의존성 생성에 필요한 리포지토리가 없습니다.", code: -2)
             }
@@ -96,13 +82,13 @@ extension DependencyProvider {
                     repository: checkFirstLaunchRepository
                 ),
                 checkMicrophonePermissionUseCase: DefaultCheckMicrophonePermissionUseCase(
-                    repository: microphonePermissionRepository
+                    repository: voiceRecordRepository
                 ),
                 checkSTTPermissionUseCase: DefaultCheckSTTPermissionUseCase(
                     repository: sttPermissionRepository
                 ),
                 requestMicrophonePermissionUseCase: DefaultRequestMicrophonePermissionUseCase(
-                    repository: microphonePermissionRepository
+                    repository: voiceRecordRepository
                 ),
                 requestSTTPermissionUseCase: DefaultRequestSTTPermissionUseCase(
                     repository: sttPermissionRepository
@@ -112,9 +98,9 @@ extension DependencyProvider {
                 createFolderUseCase: DefaultCreateFolderUseCase(repository: folderRepository),
                 readFolderUseCase: DefaultReadFolderUseCase(repository: folderRepository),
                 updateFolderUseCase: DefaultUpdateFolderUseCase(repository: folderRepository),
-                startRecordingUseCase: DefaultStartRecordingUseCase(recordingRepository: recordStartRepository),
-                pauseRecordingUseCase: DefaultPauseRecordingUseCase(recordingRepository: recordPauseRepository),
-                resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: recordResumeRepository)
+                startRecordingUseCase: DefaultStartRecordingUseCase(recordingRepository: voiceRecordRepository),
+                pauseRecordingUseCase: DefaultPauseRecordingUseCase(recordingRepository: voiceRecordRepository),
+                resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: voiceRecordRepository)
             )
         } catch {
             AppLogger.error(error)

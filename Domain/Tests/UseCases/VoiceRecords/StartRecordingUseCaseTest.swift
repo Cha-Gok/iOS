@@ -8,7 +8,7 @@ final class StartRecordingUseCaseTest: XCTestCase {}
 
 extension StartRecordingUseCaseTest {
     func test_정상상태_녹음시작시_파형스트림을반환한다() async throws {
-        let recordingRepository = MockVoiceRecordStartRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultStartRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
@@ -16,7 +16,7 @@ extension StartRecordingUseCaseTest {
             continuation.yield(.stub())
             continuation.finish()
         }
-        await recordingRepository.setResult(.success(expectedStream))
+        await recordingRepository.setStartResult(.success(expectedStream))
         await recordingRepository.expectStartRecording(callCount: 1)
 
         // When
@@ -36,11 +36,11 @@ extension StartRecordingUseCaseTest {
 
 extension StartRecordingUseCaseTest {
     func test_리포지토리시작실패상태_녹음시작시_startFailed에러를던진다() async {
-        let recordingRepository = MockVoiceRecordStartRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultStartRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
-        await recordingRepository.setResult(.failure(.startFailed))
+        await recordingRepository.setStartResult(.failure(.startFailed))
         await recordingRepository.expectStartRecording(callCount: 1)
 
         // When & Then
@@ -59,13 +59,13 @@ extension StartRecordingUseCaseTest {
     }
 
     func test_리포지토리알수없는에러상태_녹음시작시_unknown에러를던진다() async {
-        let recordingRepository = MockVoiceRecordStartRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultStartRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
         struct DummyError: Error {}
         let expectedError = DummyError()
-        await recordingRepository.setResult(.failure(.unknown(expectedError)))
+        await recordingRepository.setStartResult(.failure(.unknown(expectedError)))
         await recordingRepository.expectStartRecording(callCount: 1)
 
         // When & Then
@@ -89,7 +89,7 @@ extension StartRecordingUseCaseTest {
 
 extension StartRecordingUseCaseTest {
     func test_태스크취소상태_녹음시작시_cancelled에러를던진다() async {
-        let recordingRepository = MockVoiceRecordStartRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultStartRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given

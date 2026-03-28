@@ -10,9 +10,9 @@ public protocol ResumeRecordingUseCase: Sendable {
 }
 
 public struct DefaultResumeRecordingUseCase: ResumeRecordingUseCase {
-    private let recordingRepository: VoiceRecordResumeRepository
+    private let recordingRepository: VoiceRecordRepository
 
-    public init(recordingRepository: VoiceRecordResumeRepository) {
+    public init(recordingRepository: VoiceRecordRepository) {
         self.recordingRepository = recordingRepository
     }
 

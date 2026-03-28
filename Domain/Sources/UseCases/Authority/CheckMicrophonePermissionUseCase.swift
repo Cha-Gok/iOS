@@ -10,9 +10,9 @@ public protocol CheckMicrophonePermissionUseCase: Sendable {
 
 /// 녹음 전 마이크 권한을 요청 또는 확인 합니다.
 public struct DefaultCheckMicrophonePermissionUseCase: CheckMicrophonePermissionUseCase {
-    private let repository: MicrophonePermissionRepository
+    private let repository: VoiceRecordRepository
 
-    public init(repository: MicrophonePermissionRepository) {
+    public init(repository: VoiceRecordRepository) {
         self.repository = repository
     }
 

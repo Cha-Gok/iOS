@@ -15,4 +15,10 @@ public enum Policy {
     public static let appSelectedLanguageKey: String = "app_selected_language"
     /// 기존 사용자 여부를 확인하기 위한 UserDefaults 키
     public static let isExistingUserKey: String = "isExistingUser"
+
+    /// 녹음 PCM 버퍼 스트림의 최대 대기 개수 (초과 시 최신값 유지)
+    public static let audioBufferStreamBufferLimit: Int = 8
+
+    /// UI 파형 스트림의 최대 대기 개수 (초과 시 최신값 유지)
+    public static let waveformStreamBufferLimit: Int = 8
 }

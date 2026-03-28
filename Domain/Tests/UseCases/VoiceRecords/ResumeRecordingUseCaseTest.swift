@@ -7,11 +7,11 @@ final class ResumeRecordingUseCaseTest: XCTestCase {}
 
 extension ResumeRecordingUseCaseTest {
     func test_정상상태_녹음재개시_리포지토리의재개메서드를호출한다() async throws {
-        let recordingRepository = MockVoiceRecordResumeRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultResumeRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
-        await recordingRepository.setResult(.success(()))
+        await recordingRepository.setResumeResult(.success(()))
         await recordingRepository.expectResumeRecording(callCount: 1)
 
         // When
@@ -26,11 +26,11 @@ extension ResumeRecordingUseCaseTest {
 
 extension ResumeRecordingUseCaseTest {
     func test_일시정지상태아닌경우_녹음재개시_notPaused에러를던진다() async {
-        let recordingRepository = MockVoiceRecordResumeRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultResumeRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
-        await recordingRepository.setResult(.failure(.notPaused))
+        await recordingRepository.setResumeResult(.failure(.notPaused))
         await recordingRepository.expectResumeRecording(callCount: 1)
 
         // When & Then
@@ -46,7 +46,7 @@ extension ResumeRecordingUseCaseTest {
     }
 
     func test_태스크취소상태_녹음재개시_cancelled에러를던진다() async {
-        let recordingRepository = MockVoiceRecordResumeRepository()
+        let recordingRepository = MockVoiceRecordRepository()
         let sut = DefaultResumeRecordingUseCase(recordingRepository: recordingRepository)
 
         // Given
