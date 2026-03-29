@@ -45,7 +45,9 @@ final class GlassButton: UIButton {
         guard isShadow else { return }
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = Constant.shadowOpacity
-        layer.shadowOffset = CGSize(width: Constant.shadowOffsetWidth, height: Constant.shadowOffsetHeight)
+        layer.shadowOffset = CGSize(
+            width: Constant.shadowOffsetWidth, height: Constant.shadowOffsetHeight
+        )
         layer.shadowRadius = cornerRadius
 
         layer.shadowPath =
@@ -107,14 +109,14 @@ extension GlassButton {
         automaticallyUpdatesConfiguration = false
     }
 
-    /// 그림자 적용 여부를 토글합니다. 그림자가 필요 없는 경우 호출하여 비활성화합니다.
-    func setShadow() {
-        isShadow.toggle()
+    /// 그림자 적용 여부를 판단합니다. 그림자가 필요 없는 경우 호출하여 비활성화합니다.
+    func setShadow(_ val: Bool) {
+        isShadow = val
     }
 
     /// Policy에 정의된 Capsule CornerRadius 값을 버튼 모서리에 전역으로 지정합니다.
     /// 알약처럼 둥근 모서리 디자인이 요구될 경우 호출하세요.
-    func setCornerRadius() {
+    func setCapsuleCornerRadius() {
         cornerRadius = Constant.capsuleCornerRadius
         setNeedsUpdateConfiguration()
     }

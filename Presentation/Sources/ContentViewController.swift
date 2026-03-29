@@ -3,7 +3,7 @@ import UIKit
 public final class ContentViewController: UIViewController {
     let closeButton: GlassButton = {
         let b = GlassButton.close("닫기")
-        b.setCornerRadius()
+        b.setCapsuleCornerRadius()
 
         return b
     }()
