@@ -31,7 +31,7 @@ final class Pagenation: UIStackView {
 
         for _ in 0 ..< totalSteps {
             let step = createStep()
-            step.backgroundColor = UIColor.gray300 // 기본 배경색
+            step.backgroundColor = UIColor.gray400 // 기본 배경색
             addArrangedSubview(step)
         }
 
