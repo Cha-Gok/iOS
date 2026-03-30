@@ -4,10 +4,12 @@ import Foundation
 /// 오디오-요약 유스케이스 프로토콜.
 public protocol AudioToSummaryUseCase: Sendable {
     /// 오디오 파일을 분석하여 전사·키워드·요약 결과를 반환합니다.
-    /// - Parameter audioFileURL: 분석할 오디오 파일의 URL
+    /// - Parameters:
+    ///   - audioFileURL: 분석할 오디오 파일의 URL
+    ///   - language: 요약 및 키워드 생성에 사용할 출력 언어
     /// - Returns: 전사, 키워드, 요약이 포함된 `AudioToSummaryResult`
     /// - Throws: `AudioToSummaryUseCaseError` (전사·요약 실패)
-    func execute(audioFileURL: URL) async throws(AudioToSummaryUseCaseError) -> AudioToSummaryResult
+    func execute(audioFileURL: URL, language: Language) async throws(AudioToSummaryUseCaseError) -> AudioToSummaryResult
 }
 
 public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
@@ -22,7 +24,7 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
         self.summaryRepository = summaryRepository
     }
 
-    public func execute(audioFileURL: URL) async throws(AudioToSummaryUseCaseError)
+    public func execute(audioFileURL: URL, language: Language) async throws(AudioToSummaryUseCaseError)
         -> AudioToSummaryResult
     {
         do {
@@ -32,7 +34,7 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
 
             try Task.checkCancellation()
 
-            let (keywords, summary) = try await summaryRepository.summarize(transcript: transcript)
+            let (keywords, summary) = try await summaryRepository.summarize(transcript: transcript, language: language)
 
             try Task.checkCancellation()
 
