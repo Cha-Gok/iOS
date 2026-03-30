@@ -30,4 +30,5 @@ public protocol SandboxDependency: Sendable {
     var startRecordingUseCase: StartRecordingUseCase { get }
     var pauseRecordingUseCase: PauseRecordingUseCase { get }
     var resumeRecordingUseCase: ResumeRecordingUseCase { get }
+    var finishRecordingUseCase: FinishRecordingUseCase { get }
 }

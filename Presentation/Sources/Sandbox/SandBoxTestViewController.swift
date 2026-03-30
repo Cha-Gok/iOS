@@ -5,6 +5,7 @@ import UIKit
 public final class SandBoxTestViewController: UIViewController {
     private let dependency: SandboxDependency
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private let waveformView = WaveformDisplayView()
     private var folder: Folder?
 
     public init(dependency: SandboxDependency) {
@@ -31,9 +32,17 @@ public final class SandBoxTestViewController: UIViewController {
         tableView.register(UseCaseTestCell.self, forCellReuseIdentifier: UseCaseTestCell.identifier)
         tableView.translatesAutoresizingMaskIntoConstraints = false
 
+        waveformView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(waveformView)
         view.addSubview(tableView)
+
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            waveformView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            waveformView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            waveformView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            waveformView.heightAnchor.constraint(equalToConstant: 80),
+
+            tableView.topAnchor.constraint(equalTo: waveformView.bottomAnchor, constant: 10),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
@@ -150,19 +159,32 @@ extension SandBoxTestViewController {
 
     private var recordingItems: [TestItem] {
         [
-            TestItem(title: "녹음 시작 (Start)", action: { dep in
-                _ = try await dep.startRecordingUseCase.execute()
-                return "녹음 스트림 시작됨"
+            TestItem(title: "녹음 시작 (Start)", action: { [weak self] dep in
+                let stream = try await dep.startRecordingUseCase.execute()
+                self?.waveformView.reset()
+                // 스트림을 소비하는 Task를 실행하여 녹음이 계속됨을 확인 (디버그 로그)
+                Task {
+                    for await waveform in stream {
+                        self?.waveformView.update(with: waveform)
+                    }
+                    print("Sandbox: 파형 스트림 수신 종료")
+                }
+                return "녹음 세션 시작됨 (파형 스트림 생성 완료)"
             }),
 
-            TestItem(title: "녹음 중지 (Stop)", action: { dep in
+            TestItem(title: "녹음 일시정지 (Pause)", action: { dep in
                 try await dep.pauseRecordingUseCase.execute()
-                return "녹음 스트림 중지됨"
+                return "녹음 일시정지됨"
             }),
 
             TestItem(title: "녹음 재시작 (Resume)", action: { dep in
                 try await dep.resumeRecordingUseCase.execute()
-                return "녹음 스트림 재개됨"
+                return "녹음 재개됨"
+            }),
+
+            TestItem(title: "녹음 종료 및 저장 (Finish)", action: { dep in
+                let recorded = try await dep.finishRecordingUseCase.execute()
+                return "완료!\n경로: \(recorded.audioFilePath.lastPathComponent)\n길이: \(String(format: "%.1f", recorded.duration))초"
             })
         ]
     }

@@ -107,7 +107,8 @@ extension DependencyProvider {
                 updateFolderUseCase: DefaultUpdateFolderUseCase(repository: folderRepository),
                 startRecordingUseCase: DefaultStartRecordingUseCase(recordingRepository: voiceRecordRepository),
                 pauseRecordingUseCase: DefaultPauseRecordingUseCase(recordingRepository: voiceRecordRepository),
-                resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: voiceRecordRepository)
+                resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: voiceRecordRepository),
+                finishRecordingUseCase: DefaultFinishRecordingUseCase(recordingRepository: voiceRecordRepository)
             )
         } catch {
             AppLogger.error(error)
