@@ -1,6 +1,22 @@
 import UIKit
 
 public final class ContentViewController: UIViewController {
+    let closeButton: GlassButton = {
+        let b = GlassButton.close("닫기")
+        b.setCapsuleCornerRadius()
+
+        return b
+    }()
+
+    let primaryButton: GlassButton = .primary("실행")
+
+    lazy var alert: AlertView = .init(
+        title: "title",
+        subTitle: "description title",
+        closeButton: closeButton,
+        primaryButton: primaryButton
+    )
+
     override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
     }
@@ -11,16 +27,12 @@ public final class ContentViewController: UIViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
-
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.setTypography(text: "hello world", style: .header1)
-        view.addSubview(label)
+        view.backgroundColor = UIColor.gray300
+        view.addSubview(alert)
 
         NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            alert.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            alert.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
 }
