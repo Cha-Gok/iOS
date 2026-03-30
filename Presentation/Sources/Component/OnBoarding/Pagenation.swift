@@ -2,17 +2,14 @@ import Foundation
 import UIKit
 
 final class Pagenation: UIStackView {
-    /// 현재 활성화된 스텝을 저장합니다 (0부터 시작)
-    private(set) var currentStep: Int = 0 {
-        didSet {
-            updateSteps()
-        }
-    }
+    /// 현재 활성화된 인덱스를 저장합니다 (0부터 시작)
+    private(set) var currentIndex: Int
 
     private let totalSteps = Constant.pagenationTotalValue
     private let indicatorView = UIView()
 
-    override init(frame: CGRect) {
+    init(currentIndex: Int, frame: CGRect = .zero) {
+        self.currentIndex = currentIndex
         super.init(frame: frame)
         setup()
     }
@@ -44,10 +41,10 @@ final class Pagenation: UIStackView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        guard arrangedSubviews.indices.contains(currentStep) else { return }
+        guard arrangedSubviews.indices.contains(currentIndex) else { return }
 
         // 인디케이터가 현재 스텝의 프레임을 따라가도록 설정
-        indicatorView.frame = arrangedSubviews[currentStep].frame
+        indicatorView.frame = arrangedSubviews[currentIndex].frame
     }
 
     /// 현재 스텝에 맞게 인디케이터를 부드럽게 이동시킵니다.
@@ -75,19 +72,22 @@ extension Pagenation {
 
     /// 다음 스텝으로 진행합니다. 이미 마지막 스텝인 경우 아무 동작도 하지 않습니다.
     func next() {
-        guard currentStep < totalSteps - Constant.pagenationMoveCount else { return }
-        currentStep += Constant.pagenationMoveCount
+        guard currentIndex < totalSteps - Constant.pagenationMoveCount else { return }
+        currentIndex += Constant.pagenationMoveCount
+        updateSteps()
     }
 
     /// 이전 스텝으로 되돌아갑니다. 이미 가장 첫 번째 스텝인 경우 아무 동작도 하지 않습니다.
     func prev() {
-        guard currentStep > 0 else { return }
-        currentStep -= Constant.pagenationMoveCount
+        guard currentIndex > 0 else { return }
+        currentIndex -= Constant.pagenationMoveCount
+        updateSteps()
     }
 
     /// 스텝을 건너뛰어 맨 마지막 스텝 상태로 단번에 이동합니다.
     func skip() {
-        guard currentStep != totalSteps - Constant.pagenationMoveCount else { return }
-        currentStep = totalSteps - Constant.pagenationMoveCount
+        guard currentIndex != totalSteps - Constant.pagenationMoveCount else { return }
+        currentIndex = totalSteps - Constant.pagenationMoveCount
+        updateSteps()
     }
 }
