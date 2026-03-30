@@ -1,9 +1,9 @@
-import Core
-import Foundation
-import FoundationModels
+#if canImport(FoundationModels)
+    import FoundationModels
 
-@Generable
-struct SummaryGenerationResult {
-    let keywords: [String]
-    let summary: String
-}
+    @Generable
+    struct SummaryGenerationResult {
+        let keywords: [String]
+        let summary: String
+    }
+#endif
