@@ -240,10 +240,13 @@ public actor AudioService: AudioRecorderService {
         await stopRecordingSession()
     }
 
-    /// 파형 스트림이 외부 요인에 의해 종료(Termination)되었을 때 녹음을 중단합니다.
+    /// 파형 스트림이 외부 요인에 의해 종료(Termination)되었을 때 관련 작업을 정리합니다.
+    /// 녹음 자체는 명시적인 `finishRecording()` 호출 시에만 종료되며, 스트림 해제(예: 화면 이탈)는 녹음 중단 사유가 되지 않습니다.
     private func handleWaveformTermination() async {
         guard isFinishing == false else { return }
-        await stopRecordingSession()
+        closeWaveformStream()
+        await stopWaveformTask()
+        AppLogger.info("파형 스트림 종료 (녹음은 계속 유지됨)")
     }
 
     /// 현재 진행 중이던 녹음 작업을 중단하고 정리를 수행합니다.
