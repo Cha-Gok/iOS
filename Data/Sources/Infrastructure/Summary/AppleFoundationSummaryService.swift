@@ -17,8 +17,7 @@ public actor AppleFoundationSummaryService: SummaryService {
         let model = SystemLanguageModel.default
         guard model.isAvailable else { throw .modelUnavailable }
 
-        /// 세션 생성
-        // TODO: - Change instruction
+        // 세션 생성
         let session = LanguageModelSession(
             model: model,
             instructions: """
