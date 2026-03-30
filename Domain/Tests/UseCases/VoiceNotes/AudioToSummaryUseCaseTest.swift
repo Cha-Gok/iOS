@@ -30,7 +30,7 @@ extension AudioToSummaryUseCaseTest {
         )
 
         // When
-        let result = try await sut.execute(audioFileURL: audioURL)
+        let result = try await sut.execute(audioFileURL: audioURL, language: .ko)
 
         // Then
         XCTAssertEqual(result.transcript.text, expectedTranscript.text)
@@ -64,7 +64,7 @@ extension AudioToSummaryUseCaseTest {
 
         // When & Then
         do {
-            _ = try await sut.execute(audioFileURL: audioURL)
+            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
             XCTFail("AudioToSummaryUseCaseError.transcribeFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .transcribeFailed = error else {
@@ -99,7 +99,7 @@ extension AudioToSummaryUseCaseTest {
 
         // When & Then
         do {
-            _ = try await sut.execute(audioFileURL: audioURL)
+            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
             XCTFail("AudioToSummaryUseCaseError.summarizeFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .summarizeFailed = error else {
@@ -130,7 +130,7 @@ extension AudioToSummaryUseCaseTest {
 
         // When & Then
         do {
-            _ = try await sut.execute(audioFileURL: audioURL)
+            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
             XCTFail("AudioToSummaryUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
             guard case .unknown(let underlyingError) = error else {
@@ -164,7 +164,7 @@ extension AudioToSummaryUseCaseTest {
 
         // When & Then
         do {
-            _ = try await sut.execute(audioFileURL: audioURL)
+            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
             XCTFail("AudioToSummaryUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
             guard case .cancelled = error else {
@@ -193,7 +193,7 @@ extension AudioToSummaryUseCaseTest {
         // When & Then
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            _ = try await sut.execute(audioFileURL: audioURL)
+            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
         }
 
         do {
