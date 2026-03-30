@@ -20,6 +20,7 @@ actor DefaultSandboxDependency: SandboxDependency {
     let startRecordingUseCase: any Domain.StartRecordingUseCase
     let pauseRecordingUseCase: any Domain.PauseRecordingUseCase
     let resumeRecordingUseCase: any Domain.ResumeRecordingUseCase
+    let finishRecordingUseCase: any Domain.FinishRecordingUseCase
 
     init(
         checkFirstLaunchUseCase: any CheckFirstLaunchUseCase,
@@ -34,7 +35,8 @@ actor DefaultSandboxDependency: SandboxDependency {
         updateFolderUseCase: any Domain.UpdateFolderUseCase,
         startRecordingUseCase: any Domain.StartRecordingUseCase,
         pauseRecordingUseCase: any Domain.PauseRecordingUseCase,
-        resumeRecordingUseCase: any Domain.ResumeRecordingUseCase
+        resumeRecordingUseCase: any Domain.ResumeRecordingUseCase,
+        finishRecordingUseCase: any Domain.FinishRecordingUseCase
     ) {
         self.checkFirstLaunchUseCase = checkFirstLaunchUseCase
         self.checkMicrophonePermissionUseCase = checkMicrophonePermissionUseCase
@@ -49,5 +51,6 @@ actor DefaultSandboxDependency: SandboxDependency {
         self.startRecordingUseCase = startRecordingUseCase
         self.pauseRecordingUseCase = pauseRecordingUseCase
         self.resumeRecordingUseCase = resumeRecordingUseCase
+        self.finishRecordingUseCase = finishRecordingUseCase
     }
 }
