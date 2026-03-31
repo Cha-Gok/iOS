@@ -47,7 +47,7 @@ extension DefaultCheckFirstLaunchRepositoryTest {
         _ = sut.checkAndMarkFirstLaunch()
 
         // Then
-        XCTAssertTrue(store.bool(forKey: Policy.isExistingUserKey))
+        XCTAssertTrue(store.bool(forKey: Policy.isExistingUserKey) == true)
     }
 
     func test_기존사용자상태_최초실행확인시_isExistingUser키가변경되지않는다() {
@@ -60,6 +60,6 @@ extension DefaultCheckFirstLaunchRepositoryTest {
         _ = sut.checkAndMarkFirstLaunch()
 
         // Then: 값은 여전히 true (변경 없음)
-        XCTAssertTrue(store.bool(forKey: Policy.isExistingUserKey))
+        XCTAssertTrue(store.bool(forKey: Policy.isExistingUserKey) == true)
     }
 }

@@ -8,8 +8,8 @@ public struct UserDefaultsKeyValueStoreService: KeyValueStoreService {
         self.defaults = defaults
     }
 
-    public func bool(forKey key: String) -> Bool {
-        defaults.bool(forKey: key)
+    public func bool(forKey key: String) -> Bool? {
+        defaults.object(forKey: key) as? Bool
     }
 
     public func string(forKey key: String) -> String? {

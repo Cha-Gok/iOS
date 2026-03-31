@@ -9,7 +9,7 @@ public struct DefaultCheckFirstLaunchRepository: CheckFirstLaunchRepository {
     }
 
     public func checkAndMarkFirstLaunch() -> Bool {
-        let isFirstLaunch = !store.bool(forKey: Policy.isExistingUserKey)
+        let isFirstLaunch = store.bool(forKey: Policy.isExistingUserKey) != true
         if isFirstLaunch {
             store.set(true, forKey: Policy.isExistingUserKey)
         }
