@@ -76,6 +76,7 @@ extension SandBoxTestViewController {
         case language
         case folders
         case recording
+        case summary
 
         var title: String {
             switch self {
@@ -83,6 +84,7 @@ extension SandBoxTestViewController {
             case .language: return "언어"
             case .folders: return "폴더"
             case .recording: return "녹음"
+            case .summary: return "요약"
             }
         }
     }
@@ -188,6 +190,14 @@ extension SandBoxTestViewController {
             })
         ]
     }
+
+    private var summaryItems: [TestItem] {
+        [
+            TestItem(title: "샘플 텍스트 요약 실행", action: { dep in
+                try await dep.runSummarySandbox()
+            })
+        ]
+    }
 }
 
 extension SandBoxTestViewController: UITableViewDataSource, UITableViewDelegate {
@@ -202,6 +212,7 @@ extension SandBoxTestViewController: UITableViewDataSource, UITableViewDelegate 
         case .language: return languageItems.count
         case .folders: return folderItems.count
         case .recording: return recordingItems.count
+        case .summary: return summaryItems.count
         }
     }
 
@@ -224,6 +235,7 @@ extension SandBoxTestViewController: UITableViewDataSource, UITableViewDelegate 
         case .language: languageItems[indexPath.row]
         case .folders: folderItems[indexPath.row]
         case .recording: recordingItems[indexPath.row]
+        case .summary: summaryItems[indexPath.row]
         }
 
         cell.configure(with: item.title)

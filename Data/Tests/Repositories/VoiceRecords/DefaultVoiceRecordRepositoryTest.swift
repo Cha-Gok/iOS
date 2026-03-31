@@ -5,7 +5,7 @@ import XCTest
 
 final class DefaultVoiceRecordRepositoryTest: XCTestCase {}
 
-// MARK: - Start Recording
+// MARK: - 녹음 시작 케이스
 
 extension DefaultVoiceRecordRepositoryTest {
     func test_정상상태_녹음시작시_서비스의startRecording을호출한다() async throws {
@@ -84,7 +84,7 @@ extension DefaultVoiceRecordRepositoryTest {
     }
 }
 
-// MARK: - Pause Recording
+// MARK: - 녹음 일시정지 케이스
 
 extension DefaultVoiceRecordRepositoryTest {
     func test_정상상태_녹음일시정지시_서비스의pauseRecording을호출한다() async throws {
@@ -151,7 +151,7 @@ extension DefaultVoiceRecordRepositoryTest {
     }
 }
 
-// MARK: - Resume Recording
+// MARK: - 녹음 재개 케이스
 
 extension DefaultVoiceRecordRepositoryTest {
     func test_정상상태_녹음재개시_서비스의resumeRecording을호출한다() async throws {
@@ -218,7 +218,7 @@ extension DefaultVoiceRecordRepositoryTest {
     }
 }
 
-// MARK: - Finish Recording
+// MARK: - 녹음 종료 케이스
 
 extension DefaultVoiceRecordRepositoryTest {
     func test_정상상태_녹음종료시_서비스결과를반환하고파일을이동한다() async throws {
@@ -315,7 +315,7 @@ extension DefaultVoiceRecordRepositoryTest {
     }
 }
 
-// MARK: - Check Permission
+// MARK: - 권한 확인 케이스
 
 extension DefaultVoiceRecordRepositoryTest {
     func test_마이크권한허용상태_권한조회시_authorized를반환한다() async throws {
@@ -375,7 +375,7 @@ extension DefaultVoiceRecordRepositoryTest {
     }
 }
 
-// MARK: - Request Permission
+// MARK: - 권한 요청 케이스
 
 extension DefaultVoiceRecordRepositoryTest {
     func test_마이크권한허용상태_권한요청시_authorized를반환한다() async throws {

@@ -21,6 +21,7 @@ actor DefaultSandboxDependency: SandboxDependency {
     let pauseRecordingUseCase: any Domain.PauseRecordingUseCase
     let resumeRecordingUseCase: any Domain.ResumeRecordingUseCase
     let finishRecordingUseCase: any Domain.FinishRecordingUseCase
+    let runSummarySandbox: @Sendable () async throws -> String
 
     init(
         checkFirstLaunchUseCase: any CheckFirstLaunchUseCase,
@@ -36,7 +37,8 @@ actor DefaultSandboxDependency: SandboxDependency {
         startRecordingUseCase: any Domain.StartRecordingUseCase,
         pauseRecordingUseCase: any Domain.PauseRecordingUseCase,
         resumeRecordingUseCase: any Domain.ResumeRecordingUseCase,
-        finishRecordingUseCase: any Domain.FinishRecordingUseCase
+        finishRecordingUseCase: any Domain.FinishRecordingUseCase,
+        runSummarySandbox: @escaping @Sendable () async throws -> String
     ) {
         self.checkFirstLaunchUseCase = checkFirstLaunchUseCase
         self.checkMicrophonePermissionUseCase = checkMicrophonePermissionUseCase
@@ -52,5 +54,6 @@ actor DefaultSandboxDependency: SandboxDependency {
         self.pauseRecordingUseCase = pauseRecordingUseCase
         self.resumeRecordingUseCase = resumeRecordingUseCase
         self.finishRecordingUseCase = finishRecordingUseCase
+        self.runSummarySandbox = runSummarySandbox
     }
 }

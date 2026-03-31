@@ -3,7 +3,7 @@ import Domain
 import Speech
 
 /// Speech 프레임워크 기반 음성 서비스
-public actor SpeechService: STTPermissionService, STTService {
+public actor SpeechService: STTService {
     private enum SpeechRecognitionError {
         static let frameworkDomain = "com.apple.speech.speechrecognitionframework"
         static let assistantDomain = "kAFAssistantErrorDomain"
