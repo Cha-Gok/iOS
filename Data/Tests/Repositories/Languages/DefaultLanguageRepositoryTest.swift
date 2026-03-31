@@ -48,10 +48,11 @@ extension DefaultLanguageRepositoryTest {
         let sut = DefaultLanguageRepository(service: service)
 
         // Given
-        service.expectSave(language: "en", callCount: 1)
+        let language = Language.en
+        service.expectSave(language: language.rawValue, callCount: 1)
 
         // When
-        try await sut.saveLanguage(.en)
+        try await sut.saveLanguage(language)
 
         // Then
         service.verify()

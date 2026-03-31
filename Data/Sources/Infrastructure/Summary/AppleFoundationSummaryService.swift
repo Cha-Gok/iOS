@@ -27,7 +27,7 @@ public actor AppleFoundationSummaryService: SummaryService {
                 instructions: """
                 You summarize transcript text.
                 Extract 3 to 5 concise keywords.
-                Write a short summary in \(summaryOutputLanguage(for: language)).
+                Write a short summary in \(language.rawValue).
                 Return content that matches the schema.
                 """
             )
@@ -48,7 +48,20 @@ public actor AppleFoundationSummaryService: SummaryService {
 
             } catch let error as LanguageModelSession.GenerationError {
                 AppLogger.error(error)
-                throw mapGenerationError(error)
+                switch error {
+                case .assetsUnavailable:
+                    throw .modelUnavailable
+                case .unsupportedLanguageOrLocale:
+                    throw .unsupportedLanguage
+                case .rateLimited:
+                    throw .rateLimited
+                case .decodingFailure:
+                    throw .invalidResponse
+                case .concurrentRequests, .exceededContextWindowSize, .guardrailViolation, .refusal, .unsupportedGuide:
+                    throw .summarizeFailed
+                @unknown default:
+                    throw .unknown(error)
+                }
             } catch {
                 AppLogger.error(error)
                 throw .unknown(error)
@@ -69,32 +82,4 @@ public actor AppleFoundationSummaryService: SummaryService {
             throw .modelUnavailable
         #endif
     }
-
-    #if canImport(FoundationModels)
-        private func summaryOutputLanguage(for language: Language) -> String {
-            switch language {
-            case .ko:
-                return "Korean"
-            case .en:
-                return "English"
-            }
-        }
-
-        private func mapGenerationError(_ error: LanguageModelSession.GenerationError) -> SummaryServiceError {
-            switch error {
-            case .assetsUnavailable:
-                return .modelUnavailable
-            case .unsupportedLanguageOrLocale:
-                return .unsupportedLanguage
-            case .rateLimited:
-                return .rateLimited
-            case .decodingFailure:
-                return .invalidResponse
-            case .concurrentRequests, .exceededContextWindowSize, .guardrailViolation, .refusal, .unsupportedGuide:
-                return .summarizeFailed
-            @unknown default:
-                return .unknown(error)
-            }
-        }
-    #endif
 }
