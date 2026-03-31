@@ -34,7 +34,7 @@ actor MockSummaryRepository: SummaryRepository {
         }
     }
 
-    func summarize(transcript: Transcript) async throws(SummaryRepositoryError) -> (
+    func summarize(transcript: Transcript, language: Language) async throws(SummaryRepositoryError) -> (
         keywords: [Keyword], summary: Summary
     ) {
         actualCallCount += 1

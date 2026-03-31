@@ -16,7 +16,8 @@ public protocol SandboxDependency: Sendable {
 
     // WasteBasket (구현체 미 구현)
 
-    // VoiceNote (구현체 미 구현)
+    /// VoiceNote (구현체 미 구현)
+    var runSummarySandbox: @Sendable () async throws -> String { get }
 
     // Language
     var fetchLanguageUseCase: FetchLanguageUseCase { get }
