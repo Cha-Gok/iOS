@@ -3,7 +3,7 @@ import Domain
 import Foundation
 import XCTest
 
-final class DefaultSummaryRepositoryTests: XCTestCase {
+final class DefaultSummaryRepositoryTest: XCTestCase {
     private var repository: DefaultSummaryRepository!
     private var mockService: MockSummaryService!
 
