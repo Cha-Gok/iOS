@@ -3,13 +3,17 @@ import UIKit
 
 final class Pagenation: UIStackView {
     /// 현재 활성화된 인덱스를 저장합니다 (0부터 시작)
-    private(set) var currentIndex: Int
-
-    private let totalSteps = Constant.pagenationTotalValue
+    var currentIndex: Int
+    private let maxIndex: Int
     private let indicatorView = UIView()
 
-    init(currentIndex: Int, frame: CGRect = .zero) {
+    init(
+        currentIndex: Int,
+        maxIndex: Int,
+        frame: CGRect = .zero
+    ) {
         self.currentIndex = currentIndex
+        self.maxIndex = maxIndex
         super.init(frame: frame)
         setup()
     }
@@ -26,7 +30,7 @@ final class Pagenation: UIStackView {
         alignment = .center
         translatesAutoresizingMaskIntoConstraints = false
 
-        for _ in 0 ..< totalSteps {
+        for _ in 0 ..< maxIndex {
             let step = createStep()
             step.backgroundColor = UIColor.gray400 // 기본 배경색
             addArrangedSubview(step)
@@ -34,9 +38,6 @@ final class Pagenation: UIStackView {
 
         indicatorView.backgroundColor = UIColor.gray950
         addSubview(indicatorView)
-
-        // 초기 상태 업데이트
-        updateSteps()
     }
 
     override func layoutSubviews() {
@@ -45,15 +46,6 @@ final class Pagenation: UIStackView {
 
         // 인디케이터가 현재 스텝의 프레임을 따라가도록 설정
         indicatorView.frame = arrangedSubviews[currentIndex].frame
-    }
-
-    /// 현재 스텝에 맞게 인디케이터를 부드럽게 이동시킵니다.
-    private func updateSteps() {
-        setNeedsLayout()
-
-        UIView.animate(withDuration: Constant.animationDuration, delay: 0, options: .curveEaseInOut) {
-            self.layoutIfNeeded()
-        }
     }
 }
 
@@ -68,26 +60,5 @@ extension Pagenation {
         step.heightAnchor.constraint(equalToConstant: Constant.pagenationHeight).isActive = true
 
         return step
-    }
-
-    /// 다음 스텝으로 진행합니다. 이미 마지막 스텝인 경우 아무 동작도 하지 않습니다.
-    func next() {
-        guard currentIndex < totalSteps - Constant.pagenationMoveCount else { return }
-        currentIndex += Constant.pagenationMoveCount
-        updateSteps()
-    }
-
-    /// 이전 스텝으로 되돌아갑니다. 이미 가장 첫 번째 스텝인 경우 아무 동작도 하지 않습니다.
-    func prev() {
-        guard currentIndex > 0 else { return }
-        currentIndex -= Constant.pagenationMoveCount
-        updateSteps()
-    }
-
-    /// 스텝을 건너뛰어 맨 마지막 스텝 상태로 단번에 이동합니다.
-    func skip() {
-        guard currentIndex != totalSteps - Constant.pagenationMoveCount else { return }
-        currentIndex = totalSteps - Constant.pagenationMoveCount
-        updateSteps()
     }
 }
