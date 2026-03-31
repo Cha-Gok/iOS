@@ -13,7 +13,6 @@ public actor DependencyProvider {
     private var folderDB: CoreDataLocalDataBase<FolderEntity>?
     private var keyValueStore: KeyValueStoreService?
     private var sttPermissionService: STTPermissionService?
-    private var languageService: LanguageService?
     private var summaryService: SummaryService?
     // repository
     private var checkFirstLaunchRepository: CheckFirstLaunchRepository?
@@ -43,7 +42,6 @@ extension DependencyProvider {
         storageService = FileManagerStorageService()
         keyValueStore = UserDefaultsKeyValueStoreService()
         sttPermissionService = SpeechService()
-        languageService = LanguageSettingService()
         summaryService = AppleFoundationSummaryService()
     }
 
@@ -53,7 +51,6 @@ extension DependencyProvider {
             let folderDB,
             let keyValueStore,
             let sttPermissionService,
-            let languageService,
             let audioService,
             let storageService
         else {
@@ -61,7 +58,7 @@ extension DependencyProvider {
         }
         checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: keyValueStore)
         sttPermissionRepository = DefaultSTTPermissionRepository(service: sttPermissionService)
-        languageRepository = DefaultLanguageRepository(service: languageService)
+        languageRepository = DefaultLanguageRepository(store: keyValueStore)
         folderRepository = DefaultFolderRepository(database: folderDB)
         voiceRecordRepository = DefaultVoiceRecordRepository(
             audioService: audioService,
