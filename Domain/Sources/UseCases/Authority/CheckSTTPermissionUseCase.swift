@@ -10,9 +10,9 @@ public protocol CheckSTTPermissionUseCase: Sendable {
 
 /// 녹음 전 STT 권한을 요청 또는 확인 합니다.
 public struct DefaultCheckSTTPermissionUseCase: CheckSTTPermissionUseCase {
-    private let repository: STTPermissionRepository
+    private let repository: any STTRepository
 
-    public init(repository: STTPermissionRepository) {
+    public init(repository: any STTRepository) {
         self.repository = repository
     }
 

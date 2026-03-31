@@ -8,7 +8,7 @@ final class RequestSTTPermissionUseCaseTest: XCTestCase {}
 
 extension RequestSTTPermissionUseCaseTest {
     func test_STT권한미결정상태_권한요청시_authorized를반환한다() async throws {
-        let authorityRepository = MockSTTPermissionRepository()
+        let authorityRepository = MockSTTRepository()
         let sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
 
         // Given
@@ -24,7 +24,7 @@ extension RequestSTTPermissionUseCaseTest {
     }
 
     func test_STT권한이미거부상태_권한요청시_denied를반환한다() async throws {
-        let authorityRepository = MockSTTPermissionRepository()
+        let authorityRepository = MockSTTRepository()
         let sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
 
         // Given
@@ -44,7 +44,7 @@ extension RequestSTTPermissionUseCaseTest {
 
 extension RequestSTTPermissionUseCaseTest {
     func test_리포지토리에러발생상태_권한요청시_unknown에러를던진다() async {
-        let authorityRepository = MockSTTPermissionRepository()
+        let authorityRepository = MockSTTRepository()
         let sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
 
         // Given
@@ -76,7 +76,7 @@ extension RequestSTTPermissionUseCaseTest {
 
 extension RequestSTTPermissionUseCaseTest {
     func test_태스크취소상태_권한요청시_cancelled에러를던진다() async {
-        let authorityRepository = MockSTTPermissionRepository()
+        let authorityRepository = MockSTTRepository()
         let sut = DefaultRequestSTTPermissionUseCase(repository: authorityRepository)
 
         // Given

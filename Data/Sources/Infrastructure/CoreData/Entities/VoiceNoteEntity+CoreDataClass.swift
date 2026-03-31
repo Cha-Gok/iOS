@@ -53,18 +53,18 @@ public extension VoiceNoteEntity {
 }
 
 extension VoiceNoteEntity: ManagedObjectMapping {
-    public typealias DomainType = VoiceNote
+    public typealias ModelType = VoiceNote
 
-    public convenience init(domain: VoiceNote, context: NSManagedObjectContext) {
+    public convenience init(model: VoiceNote, context: NSManagedObjectContext) throws {
         self.init(context: context)
-        insert(from: domain)
+        try insert(from: model)
     }
 
-    public func toDomain() -> VoiceNote {
+    public func toModel() -> VoiceNote {
         // 엔티티의 연관 관계를 개별적으로 도메인 모델로 변환
-        let keys = (keywords as? Set<KeywordEntity> ?? []).map { $0.toDomain() }
-        let t = transcript?.toDomain()
-        let s = summary?.toDomain()
+        let keys = (keywords as? Set<KeywordEntity> ?? []).map { $0.toModel() }
+        let t = transcript?.toModel()
+        let s = summary?.toModel()
 
         return VoiceNote(
             id: id,
@@ -72,7 +72,7 @@ extension VoiceNoteEntity: ManagedObjectMapping {
             createdAt: createdAt,
             updatedAt: updatedAt,
             folderID: folder.id,
-            voiceRecord: voiceRecord.toDomain(),
+            voiceRecord: voiceRecord.toModel(),
             keywords: keys,
             transcript: t,
             summary: s,
@@ -80,76 +80,79 @@ extension VoiceNoteEntity: ManagedObjectMapping {
         )
     }
 
-    public func insert(from domain: VoiceNote) {
-        id = domain.id
-        title = domain.title
-        createdAt = domain.createdAt
-        updatedAt = domain.updatedAt
-        deletedAt = domain.deletedAt
+    public func insert(from model: VoiceNote) throws {
+        id = model.id
+        title = model.title
+        createdAt = model.createdAt
+        updatedAt = model.updatedAt
+        deletedAt = model.deletedAt
 
         guard let context = managedObjectContext else { return }
 
         // 1. Folder Relationship (필수 — folderID에 해당하는 폴더는 반드시 존재)
-        if let existingFolder = try? FolderEntity.find(byId: domain.folderID, in: context) {
+        if let existingFolder = try? FolderEntity.find(byId: model.folderID, in: context) {
             folder = existingFolder
         } else {
-            assertionFailure("⚠️ folderID(\(domain.folderID))에 해당하는 폴더가 없습니다.")
+            throw CoreDataStorageError.relationNotFound("Folder(\(model.folderID))")
         }
 
         // 2. VoiceRecord (위임)
-        let record = VoiceRecordEntity(domain: domain.voiceRecord, context: context)
+        let record = try VoiceRecordEntity(model: model.voiceRecord, context: context)
         record.voiceNote = self
         voiceRecord = record
 
         // 3. Transcript (위임)
-        if let t = domain.transcript {
-            let tEntity = TranscriptEntity(domain: t, context: context)
+        if let t = model.transcript {
+            let tEntity = try TranscriptEntity(model: t, context: context)
             tEntity.voiceNote = self
             transcript = tEntity
         }
 
         // 4. Summary (위임)
-        if let s = domain.summary {
-            let sEntity = SummaryEntity(domain: s, context: context)
+        if let s = model.summary {
+            let sEntity = try SummaryEntity(model: s, context: context)
             sEntity.voiceNote = self
             summary = sEntity
         }
 
         // 5. Keywords (위임)
-        let keywordEntities = domain.keywords.map { keywordDomain -> KeywordEntity in
-            let keywordEntity = KeywordEntity(domain: keywordDomain, context: context)
+        var keywordEntities: [KeywordEntity] = []
+        for keywordModel in model.keywords {
+            let keywordEntity = try KeywordEntity(model: keywordModel, context: context)
             keywordEntity.voiceNote = self
-            return keywordEntity
+            keywordEntities.append(keywordEntity)
         }
         keywords = NSSet(array: keywordEntities)
     }
 
-    public func update(from domain: VoiceNote) {
+    public func update(from model: VoiceNote) throws {
         // 1. 전체 데이터가 동일하면 즉시 종료 (최적화)
-        if toDomain() == domain { return }
+        if toModel() == model { return }
 
         // 2. 기본 필드 수정
-        title = domain.title
-        updatedAt = domain.updatedAt
-        deletedAt = domain.deletedAt
+        title = model.title
+        updatedAt = model.updatedAt
+        deletedAt = model.deletedAt
 
         guard let context = managedObjectContext else { return }
 
         // 3. Folder 관계 (변경 시에만)
-        if folder.id != domain.folderID {
-            if let newFolder = try? FolderEntity.find(byId: domain.folderID, in: context) {
+        if folder.id != model.folderID {
+            if let newFolder = try? FolderEntity.find(byId: model.folderID, in: context) {
                 folder = newFolder
+            } else {
+                throw CoreDataStorageError.relationNotFound("Folder(\(model.folderID))")
             }
         }
 
         // --- 비즈니스 시나리오 순서: Transcript 생성 후 Summary/Keywords 생성 ---
 
         // 4. Transcript 업데이트
-        if let tDomain = domain.transcript {
+        if let tModel = model.transcript {
             if let tEntity = transcript {
-                tEntity.update(from: tDomain)
+                try tEntity.update(from: tModel)
             } else {
-                let tEntity = TranscriptEntity(domain: tDomain, context: context)
+                let tEntity = try TranscriptEntity(model: tModel, context: context)
                 tEntity.voiceNote = self
                 transcript = tEntity
             }
@@ -159,11 +162,11 @@ extension VoiceNoteEntity: ManagedObjectMapping {
         }
 
         // 5. Summary 업데이트
-        if let sDomain = domain.summary {
+        if let sModel = model.summary {
             if let sEntity = summary {
-                sEntity.update(from: sDomain)
+                try sEntity.update(from: sModel)
             } else {
-                let sEntity = SummaryEntity(domain: sDomain, context: context)
+                let sEntity = try SummaryEntity(model: sModel, context: context)
                 sEntity.voiceNote = self
                 summary = sEntity
             }
@@ -174,7 +177,7 @@ extension VoiceNoteEntity: ManagedObjectMapping {
 
         // 6. Keywords 업데이트 (위임 위주 Diff)
         let currentKeywords = (keywords as? Set<KeywordEntity>) ?? []
-        let newWordSet = Set(domain.keywords.map(\.word))
+        let newWordSet = Set(model.keywords.map(\.word))
 
         // (1) 삭제 처리
         for entity in currentKeywords {
@@ -185,9 +188,9 @@ extension VoiceNoteEntity: ManagedObjectMapping {
 
         // (2) 추가 처리 (자식 객체 스스로 매핑하도록 위임)
         let currentWordSet = Set(currentKeywords.map(\.word))
-        for keywordDomain in domain.keywords {
-            if !currentWordSet.contains(keywordDomain.word) {
-                let newKeyword = KeywordEntity(domain: keywordDomain, context: context)
+        for keywordModel in model.keywords {
+            if !currentWordSet.contains(keywordModel.word) {
+                let newKeyword = try KeywordEntity(model: keywordModel, context: context)
                 newKeyword.voiceNote = self
                 addToKeywords(newKeyword)
             }
@@ -200,31 +203,5 @@ extension VoiceNoteEntity: ManagedObjectMapping {
 
     public static var sortDescriptors: [NSSortDescriptor] {
         [NSSortDescriptor(keyPath: \VoiceNoteEntity.updatedAt, ascending: false)]
-    }
-
-    public static func identityPredicate(for domain: DomainType) -> NSPredicate {
-        NSPredicate(format: "id == %@", domain.id as CVarArg)
-    }
-
-    public static func identityPredicate(byId id: DomainType.ID) -> NSPredicate {
-        NSPredicate(format: "id == %@", id as CVarArg)
-    }
-
-    public static func find(for domain: DomainType, in context: NSManagedObjectContext) throws
-        -> Self?
-    {
-        let request = NSFetchRequest<Self>(entityName: entityName.rawValue)
-        request.predicate = identityPredicate(for: domain)
-        request.fetchLimit = 1
-        return try context.fetch(request).first
-    }
-
-    public static func find(byId id: DomainType.ID, in context: NSManagedObjectContext) throws
-        -> Self?
-    {
-        let request = NSFetchRequest<Self>(entityName: entityName.rawValue)
-        request.predicate = identityPredicate(byId: id)
-        request.fetchLimit = 1
-        return try context.fetch(request).first
     }
 }

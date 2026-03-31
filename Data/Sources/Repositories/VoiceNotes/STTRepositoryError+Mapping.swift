@@ -7,8 +7,8 @@ extension STTRepositoryError {
             self = .cancelled
         case .alreadyTranscribing, .recognizerUnavailable, .transcribeFailed:
             self = .transcribeFailed
-        case .unknown(let e):
-            self = .unknown(e)
+        case .unknown(let error):
+            self = .unknown(error)
         }
     }
 }

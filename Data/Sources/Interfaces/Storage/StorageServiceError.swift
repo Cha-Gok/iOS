@@ -8,7 +8,7 @@ public enum StorageServiceError: LocalizedError, Sendable {
     case writeFailed
     case deleteFailed
     case cancelled
-    case unknown(Error)
+    case unknown(any Error)
 
     public var errorDescription: String? {
         switch self {
@@ -27,7 +27,7 @@ public enum StorageServiceError: LocalizedError, Sendable {
         case .cancelled:
             return "작업이 취소되었습니다."
         case .unknown(let error):
-            return error.localizedDescription
+            return "알 수 없는 에러가 발생했습니다: \(error.localizedDescription)"
         }
     }
 }

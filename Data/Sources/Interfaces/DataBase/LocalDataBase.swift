@@ -4,27 +4,30 @@ public protocol LocalDataBase<Domain>: Sendable {
     /// 리포지토리가 다루는 도메인 모델 타입
     associatedtype Domain: Identifiable, Sendable where Domain.ID: Sendable
 
+    /// 데이터베이스 작업 시 발생할 수 있는 에러 타입
+    associatedtype StoreError: Error
+
     /// 새로운 항목을 데이터베이스에 생성하고 저장합니다.
     /// - Parameter item: 저장할 도메인 데이터 모델
     /// - Returns: 저장 완료된 도메인 데이터 모델
-    func create(_ item: Domain) async throws -> Domain
+    func create(_ item: Domain) async throws(StoreError) -> Domain
 
     /// 데이터베이스에 저장된 하나의 데이터를 조회합니다.
     /// - Parameter id: 특정 도메인 데이터 모델 ID
     /// - Returns: 조회 완료된 도메인 객체 모델
-    func fetch(byId id: Domain.ID) async throws -> Domain
+    func fetch(byId id: Domain.ID) async throws(StoreError) -> Domain
 
     /// 데이터베이스에 저장된 모든 데이터를 조회합니다.
     /// - Returns: 전체 도메인 데이터 리스트
-    func fetchAll() async throws -> [Domain]
+    func fetchAll() async throws(StoreError) -> [Domain]
 
     /// 기존의 데이터를 업데이트합니다.
     /// - Parameter item: 업데이트할 정보가 담긴 도메인 데이터 모델
     /// - Returns: 업데이트 완료된 도메인 데이터 모델
-    func update(_ item: Domain) async throws -> Domain
+    func update(_ item: Domain) async throws(StoreError) -> Domain
 
     /// 기존의 데이터를 데이터베이스에서 삭제합니다.
     /// - Parameter id: 삭제할 항목 정보를 담은 도메인 데이터 모델의 ID
     /// - Returns: 삭제된 도메인 데이터 모델
-    func delete(byId id: Domain.ID) async throws -> Domain
+    func delete(byId id: Domain.ID) async throws(StoreError) -> Domain
 }

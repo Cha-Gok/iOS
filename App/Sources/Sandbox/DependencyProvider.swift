@@ -16,7 +16,7 @@ public actor DependencyProvider {
     private var summaryService: SummaryService?
     // repository
     private var checkFirstLaunchRepository: CheckFirstLaunchRepository?
-    private var sttPermissionRepository: STTPermissionRepository?
+    private var sttRepository: (any STTRepository)?
     private var languageRepository: LanguageRepository?
     private var folderRepository: FolderRepository?
     private var voiceRecordRepository: VoiceRecordRepository?
@@ -57,7 +57,7 @@ extension DependencyProvider {
             throw NSError(domain: "리포지토리를 못 만들었습니다.", code: -1)
         }
         checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: keyValueStore)
-        sttPermissionRepository = DefaultSTTRepository(service: sttService)
+        sttRepository = DefaultSTTRepository(service: sttService)
         languageRepository = DefaultLanguageRepository(store: keyValueStore)
         folderRepository = DefaultFolderRepository(database: folderDB)
         voiceRecordRepository = DefaultVoiceRecordRepository(
@@ -75,7 +75,7 @@ extension DependencyProvider {
             try await makeRepository()
             // dependency 생성
             guard let checkFirstLaunchRepository,
-                  let sttPermissionRepository,
+                  let sttRepository,
                   let languageRepository,
                   let folderRepository,
                   let voiceRecordRepository,
@@ -92,13 +92,13 @@ extension DependencyProvider {
                     repository: voiceRecordRepository
                 ),
                 checkSTTPermissionUseCase: DefaultCheckSTTPermissionUseCase(
-                    repository: sttPermissionRepository
+                    repository: sttRepository
                 ),
                 requestMicrophonePermissionUseCase: DefaultRequestMicrophonePermissionUseCase(
                     repository: voiceRecordRepository
                 ),
                 requestSTTPermissionUseCase: DefaultRequestSTTPermissionUseCase(
-                    repository: sttPermissionRepository
+                    repository: sttRepository
                 ),
                 fetchLanguageUseCase: DefaultFetchLanguageUseCase(repository: languageRepository),
                 selectLanguageUseCase: DefaultSelectLanguageUseCase(repository: languageRepository),

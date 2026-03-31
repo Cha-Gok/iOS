@@ -13,10 +13,18 @@ private final class BundleInfo: Sendable {
 /// actor로 선언되어 스레드 안전성을 보장하며, 내부적으로 backgroundContext를 사용하여 작업을 처리합니다.
 public actor CoreDataLocalDataBase<MO: ManagedObjectMapping>: LocalDataBase {
     /// 해당 스토리지에서 다루는 도메인 모델 타입
-    public typealias Domain = MO.DomainType
+    public typealias Domain = MO.ModelType
+    public typealias StoreError = CoreDataStorageError
 
-    let container: NSPersistentContainer
-    let backgroundContext: NSManagedObjectContext
+    private let container: NSPersistentContainer
+    private let backgroundContext: NSManagedObjectContext
+
+    #if DEBUG
+        /// 테스트용 컨테이너 (Unit Test 전용)
+        var testContainer: NSPersistentContainer {
+            container
+        }
+    #endif
 
     /// Core Data 스토리지를 초기화하고 모델 파일을 로드합니다.
     /// - Parameter inMemory: 메모리 상에서만 동작할지 여부 (테스트 용도)
@@ -68,7 +76,7 @@ public actor CoreDataLocalDataBase<MO: ManagedObjectMapping>: LocalDataBase {
     }
 
     /// 기존 컨테이너와 컨텍스트를 공유하여 초기화합니다.
-    init(existingContainer: NSPersistentContainer, existingContext: NSManagedObjectContext? = nil) {
+    private init(existingContainer: NSPersistentContainer, existingContext: NSManagedObjectContext? = nil) {
         container = existingContainer
         if let context = existingContext {
             backgroundContext = context
@@ -95,90 +103,124 @@ public actor CoreDataLocalDataBase<MO: ManagedObjectMapping>: LocalDataBase {
 // MARK: - CoreData ( C, R, U )
 
 public extension CoreDataLocalDataBase {
-    func create(_ item: Domain) async throws -> Domain {
+    func create(_ item: Domain) async throws(StoreError) -> Domain {
         let backgroundContext = backgroundContext
 
-        return try await backgroundContext.perform {
-            do {
-                let managedObject = MO(domain: item, context: backgroundContext)
-                try backgroundContext.save()
-                return managedObject.toDomain()
-            } catch {
-                AppLogger.error(error)
-                throw CoreDataStorageError.createFailed
+        do {
+            return try await backgroundContext.perform {
+                do {
+                    let managedObject = try MO(model: item, context: backgroundContext)
+                    try backgroundContext.save()
+                    return managedObject.toModel()
+                } catch {
+                    AppLogger.error(error)
+                    throw CoreDataStorageError.createFailed
+                }
             }
+        } catch let error as StoreError {
+            throw error
+        } catch {
+            throw .unknown(error)
         }
     }
 
-    func fetch(byId id: Domain.ID) async throws -> Domain {
+    func fetch(byId id: Domain.ID) async throws(StoreError) -> Domain {
         let backgroundContext = backgroundContext
-        return try await backgroundContext.perform {
-            do {
-                guard let entity = try MO.find(byId: id, in: backgroundContext) else {
+        do {
+            return try await backgroundContext.perform {
+                do {
+                    guard let entity = try MO.find(byId: id, in: backgroundContext) else {
+                        throw CoreDataStorageError.fetchFailed
+                    }
+                    return entity.toModel()
+                } catch let error as CoreDataStorageError {
+                    throw error
+                } catch {
+                    AppLogger.error(error)
                     throw CoreDataStorageError.fetchFailed
                 }
-                return entity.toDomain()
-            } catch {
-                AppLogger.error(error)
-                throw CoreDataStorageError.fetchFailed
             }
+        } catch let error as StoreError {
+            throw error
+        } catch {
+            throw .unknown(error)
         }
     }
 
-    func fetchAll() async throws -> [Domain] {
+    func fetchAll() async throws(StoreError) -> [Domain] {
         let backgroundContext = backgroundContext
 
-        return try await backgroundContext.perform {
-            do {
-                let request = NSFetchRequest<MO>(entityName: MO.entityName.rawValue)
-                request.sortDescriptors = MO.sortDescriptors
+        do {
+            return try await backgroundContext.perform {
+                do {
+                    let request = NSFetchRequest<MO>(entityName: MO.entityName.rawValue)
+                    request.sortDescriptors = MO.sortDescriptors
 
-                let entities = try backgroundContext.fetch(request)
-                return entities.map { $0.toDomain() }
-            } catch {
-                AppLogger.error(error)
-                throw CoreDataStorageError.fetchAllFailed
+                    let entities = try backgroundContext.fetch(request)
+                    return entities.map { $0.toModel() }
+                } catch {
+                    AppLogger.error(error)
+                    throw CoreDataStorageError.fetchAllFailed
+                }
             }
+        } catch let error as StoreError {
+            throw error
+        } catch {
+            throw .unknown(error)
         }
     }
 
-    func update(_ item: Domain) async throws -> Domain {
+    func update(_ item: Domain) async throws(StoreError) -> Domain {
         let backgroundContext = backgroundContext
 
-        return try await backgroundContext.perform {
-            do {
-                guard let managedObject = try MO.find(for: item, in: backgroundContext) else {
+        do {
+            return try await backgroundContext.perform {
+                do {
+                    guard let managedObject = try MO.find(for: item, in: backgroundContext) else {
+                        throw CoreDataStorageError.updateFailed
+                    }
+
+                    try managedObject.update(from: item)
+
+                    try backgroundContext.save()
+                    return managedObject.toModel()
+                } catch let error as CoreDataStorageError {
+                    throw error
+                } catch {
+                    AppLogger.error(error)
                     throw CoreDataStorageError.updateFailed
                 }
-
-                managedObject.update(from: item)
-
-                try backgroundContext.save()
-                return managedObject.toDomain()
-            } catch {
-                AppLogger.error(error)
-                throw CoreDataStorageError.updateFailed
             }
+        } catch let error as StoreError {
+            throw error
+        } catch {
+            throw .unknown(error)
         }
     }
 
-    func delete(byId id: Domain.ID) async throws -> Domain {
+    func delete(byId id: Domain.ID) async throws(StoreError) -> Domain {
         let backgroundContext = backgroundContext
 
-        return try await backgroundContext.perform {
-            do {
-                guard let managedObject = try MO.find(byId: id, in: backgroundContext) else {
+        do {
+            return try await backgroundContext.perform {
+                do {
+                    guard let managedObject = try MO.find(byId: id, in: backgroundContext) else {
+                        throw CoreDataStorageError.deleteFailed
+                    }
+
+                    let domainModel = managedObject.toModel()
+                    backgroundContext.delete(managedObject)
+                    try backgroundContext.save()
+                    return domainModel
+                } catch {
+                    AppLogger.error(error)
                     throw CoreDataStorageError.deleteFailed
                 }
-
-                let domainModel = managedObject.toDomain()
-                backgroundContext.delete(managedObject)
-                try backgroundContext.save()
-                return domainModel
-            } catch {
-                AppLogger.error(error)
-                throw CoreDataStorageError.deleteFailed
             }
+        } catch let error as StoreError {
+            throw error
+        } catch {
+            throw .unknown(error)
         }
     }
 }

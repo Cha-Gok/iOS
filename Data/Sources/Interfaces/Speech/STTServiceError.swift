@@ -11,7 +11,7 @@ public enum STTServiceError: LocalizedError, Sendable {
     /// 전사 중 오류 발생
     case transcribeFailed
     /// 알 수 없는 에러
-    case unknown(Error)
+    case unknown(any Error)
 
     public var errorDescription: String? {
         switch self {
@@ -24,7 +24,7 @@ public enum STTServiceError: LocalizedError, Sendable {
         case .transcribeFailed:
             return "음성 인식에 실패했습니다."
         case .unknown(let error):
-            return error.localizedDescription
+            return "알 수 없는 에러가 발생했습니다: \(error.localizedDescription)"
         }
     }
 }
