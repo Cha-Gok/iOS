@@ -148,10 +148,19 @@ private final class LanguageItemView: UIView {
 
     // MARK: - Update Properties
 
+    private func languageText() -> String {
+        switch language {
+        case .ko:
+            return "한국어 (기본설정)"
+        case .en:
+            return "영어"
+        }
+    }
+
     func setSelected(_ selected: Bool) {
         isSelected = selected
         innerIndicatorView.backgroundColor = selected ? .point600 : .gray900
         titleLabel.textColor = selected ? .gray900 : .gray750
-        titleLabel.setTypography(text: language.text, style: .subtitle1)
+        titleLabel.setTypography(text: languageText(), style: .subtitle1)
     }
 }
