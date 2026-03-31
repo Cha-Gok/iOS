@@ -47,27 +47,22 @@ public final class OnBoardingViewController: UIViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        // title value 업데이트
-        vm.updateTitle()
-        // Button 업데이트
-        switch vm.currentStep {
-        case .finish:
-            primaryButton.configurationUpdateHandler = { [weak self] configuration in
-                configuration.configuration?.title = self?.vm.primaryButtonTitle
-                configuration.configuration?.baseBackgroundColor = UIColor.point600
-                configuration.configuration?.baseForegroundColor = UIColor.gray900
-            }
-            secondButton.isUserInteractionEnabled = false
-        default:
-            primaryButton.configurationUpdateHandler = { [weak self] configuration in
-                configuration.configuration?.title = self?.vm.primaryButtonTitle
-                configuration.configuration?.baseBackgroundColor = UIColor.point200
-                    .withAlphaComponent(Constant.backgroundOpacity)
-                configuration.configuration?.baseForegroundColor = UIColor.gray900
-            }
-            secondButton.isUserInteractionEnabled = true
-        }
+
+        // 버튼 상태 업데이트
+        primaryButton.configuration?.title = vm.primaryButtonTitle
         secondButton.configuration?.title = vm.secondButtonTitle
+        secondButton.isUserInteractionEnabled = vm.isSecondButtonEnabled
+
+        primaryButton.configurationUpdateHandler = { [weak self] configuration in
+            guard let self else { return }
+            let bgColor = vm.isFinalStep ? UIColor.point600 : UIColor.point200
+                .withAlphaComponent(Constant.backgroundOpacity)
+
+            configuration.configuration?.title = vm.primaryButtonTitle
+            configuration.configuration?.baseBackgroundColor = bgColor
+            configuration.configuration?.baseForegroundColor = UIColor.gray900
+        }
+
         // pagenation 업데이트
         pagenation.currentIndex = vm.currentStep.rawValue
         pagenation.setNeedsLayout()
@@ -195,7 +190,7 @@ extension OnBoardingViewController {
     /// first, second, micPermission 은 OnBoardingCardView로 화면 구성
     /// finish 만 다른 컴포넌트 화면을 사용합니다.
     func createPages() -> [UIView] {
-        Step.allCases.map { step in
+        vm.steps.map { step in
             switch step {
             case .first, .second, .micPermission:
                 let item = step.item

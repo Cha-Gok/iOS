@@ -28,9 +28,32 @@ final class OnBoardingViewModel {
 
     private(set) var currentStep: Step = .first
 
-    private(set) var primaryButtonTitle: String = "다음"
+    var steps: [Step] {
+        Step.allCases
+    }
 
-    private(set) var secondButtonTitle: String = "건너뛰기"
+    var primaryButtonTitle: String {
+        currentStep == .finish ? "시작하기" : "다음"
+    }
+
+    var secondButtonTitle: String {
+        switch currentStep {
+        case .first:
+            return "건너뛰기"
+        case .finish:
+            return ""
+        default:
+            return "이전"
+        }
+    }
+
+    var isSecondButtonEnabled: Bool {
+        currentStep != .finish
+    }
+
+    var isFinalStep: Bool {
+        currentStep == .finish
+    }
 
     private(set) var language: Language = .ko
 
@@ -50,22 +73,6 @@ final class OnBoardingViewModel {
 
     func getMaxIndex() -> Int {
         Step.allCases.count
-    }
-
-    func updateTitle() {
-        switch currentStep {
-        case .first:
-            primaryButtonTitle = "다음"
-            secondButtonTitle = "건너뛰기"
-        case .second:
-            secondButtonTitle = "이전"
-        case .finish:
-            primaryButtonTitle = "시작하기"
-            secondButtonTitle = ""
-        default:
-            primaryButtonTitle = "다음"
-            secondButtonTitle = "이전"
-        }
     }
 
     /// 향 후 제거 ( 미 구현 )
