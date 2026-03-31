@@ -11,10 +11,11 @@ public final class OnBoardingViewController: UIViewController {
     // MARK: - Component
 
     private lazy var pagenation: Pagenation = .init(
-        currentIndex: vm.currentStep.rawValue
+        currentIndex: vm.currentStep.rawValue,
+        maxIndex: vm.getMaxIndex()
     )
 
-    private lazy var pagingView: OnBoardingPagingView = .init(pages: createPages())
+    private lazy var pagingView: OnBoardingPagingView = .init(pages: vm.createPages())
 
     private lazy var primaryButton: GlassButton = .default(vm.primaryButtonTitle)
 
@@ -44,37 +45,18 @@ public final class OnBoardingViewController: UIViewController {
         setupButtons()
     }
 
-    override public func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-        primaryButton.configuration?.title = vm.primaryButtonTitle
-        secondButton.configuration?.title = vm.secondButtonTitle
-        if vm.currentStep == .finish {
-            primaryButton.configure(
-                vm.primaryButtonTitle,
-                typography: .subtitle1,
-                backgroundColor: UIColor.point600,
-                foregroundColor: .white
-            )
-            secondButton.isUserInteractionEnabled = false
-        } else {
-            primaryButton.configure(
-                vm.primaryButtonTitle,
-                typography: .subtitle1,
-                border: GlassButton.Border(color: UIColor.gray600, width: Constant.borderWidth),
-                backgroundColor: UIColor.point200.withAlphaComponent(Constant.backgroundOpacity),
-                foregroundColor: UIColor.gray900
-            )
-            secondButton.isUserInteractionEnabled = true
-        }
-        guard vm.currentStep == .micPermission else { return }
-        // 마이크 권한 요청 로직
-        print("마이크 요청을 하는가")
-    }
-
     override public func updateProperties() {
         super.updateProperties()
         // title value 업데이트
         vm.updateTitle()
+        // Button 업데이트
+        vm.updateButtonConfiguration(
+            primaryButton: primaryButton,
+            secondButton: secondButton
+        )
+        // pagenation 업데이트
+        pagenation.currentIndex = vm.currentStep.rawValue
+        pagenation.setNeedsLayout()
     }
 
     // MARK: - Set up
@@ -104,33 +86,14 @@ public final class OnBoardingViewController: UIViewController {
         primaryButton.addAction(
             UIAction { [weak self] _ in
                 guard let self else { return }
-                switch vm.currentStep {
-                case .finish:
-                    vm.getTest() // test 목적
-                    AppLogger.info("마지막 시작하기 버튼 기능이 들어가야 합니다.")
-                default: // 다음
-                    let nextIndex = vm.currentStep.rawValue + 1
-                    guard nextIndex < Step.allCases.count else { return }
-                    let offsetX = CGFloat(nextIndex) * pagingView.frame.width
-                    pagingView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
-                }
+                vm.primaryButtonAction(pagingView: pagingView)
             }, for: .touchUpInside
         )
 
         secondButton.addAction(
             UIAction { [weak self] _ in
                 guard let self else { return }
-                switch vm.currentStep {
-                case .first: // 건너뛰기
-                    let nextIndex = Step.finish.rawValue
-                    let offsetX = CGFloat(nextIndex) * pagingView.frame.width
-                    pagingView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
-                default: // 뒤로가기
-                    let nextIndex = vm.currentStep.rawValue - 1
-                    guard nextIndex < Step.allCases.count else { return }
-                    let offsetX = CGFloat(nextIndex) * pagingView.frame.width
-                    pagingView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
-                }
+                vm.secondButtonAction(pagingView: pagingView)
             }, for: .touchUpInside
         )
     }
@@ -161,7 +124,10 @@ public final class OnBoardingViewController: UIViewController {
 
     private func setupPagenationConstraint() {
         NSLayoutConstraint.activate([
-            pagenation.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            pagenation.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor,
+                constant: Constant.onBoardingPaginationTopMargin
+            ),
             pagenation.leadingAnchor.constraint(
                 equalTo: view.leadingAnchor,
                 constant: Constant.onBoardingHorizontalPadding
@@ -203,65 +169,19 @@ public final class OnBoardingViewController: UIViewController {
     }
 }
 
-// MARK: - Helper
-
-extension OnBoardingViewController {
-    /// 스크롤 뷰의 현재 offset을 기준으로 currentStep과 pagenation을 동기화합니다.
-    /// 스와이프(1칸)든 건너뛰기(여러 칸)든 모든 페이지 전환이 이 함수를 통해 처리됩니다.
-    private func syncPageState(from scrollView: UIScrollView) {
-        let newStep = Int(round(scrollView.contentOffset.x / scrollView.frame.width))
-        guard newStep != vm.currentStep.rawValue else { return }
-
-        let diff = newStep - vm.currentStep.rawValue
-
-        if diff > 1 {
-            pagenation.skip()
-        } else if diff == 1 {
-            pagenation.next()
-        } else {
-            pagenation.prev()
-        }
-        vm.setCurrentStep(newStep)
-    }
-
-    /// first, second, micPermission 은 OnBoardingCardView로 화면 구성
-    /// finish 만 다른 컴포넌트 화면을 사용합니다.
-    private func createPages() -> [UIView] {
-        Step.allCases.map { step in
-            switch step {
-            case .first, .second, .micPermission:
-                let item = step.item
-                return OnBoardingCardView(
-                    headline: item.headline,
-                    body: item.body,
-                    image: UIImage(named: item.image ?? "", in: Bundle(for: OnBoardingCardView.self), with: nil)
-                )
-            case .finish:
-                let item = step.item
-                return OnBoardingFinishView(
-                    headline: item.headline,
-                    body: item.body,
-                    selectedLanguage: vm.language,
-                    onLanguageChanged: { [weak self] lang in
-                        self?.vm.setLanguage(lang)
-                    }
-                )
-            }
-        }
-    }
-}
-
 // MARK: - UIScrollViewDelegate
 
 extension OnBoardingViewController: UIScrollViewDelegate {
     /// 사용자가 손으로 스와이프해서 멈췄을 때
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        syncPageState(from: scrollView)
+        let nextStep = Int(round(scrollView.contentOffset.x / scrollView.frame.width))
+        vm.syncPageState(nextStep: nextStep)
     }
 
     /// setContentOffset(animated: true)로 코드 스크롤이 끝났을 때
     public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        syncPageState(from: scrollView)
+        let nextStep = Int(round(scrollView.contentOffset.x / scrollView.frame.width))
+        vm.syncPageState(nextStep: nextStep)
     }
 }
 
