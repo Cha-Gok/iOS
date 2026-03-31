@@ -3,43 +3,40 @@ import Domain
 import Foundation
 import XCTest
 
-final class DefaultSummaryRepositoryTest: XCTestCase {
-    private var repository: DefaultSummaryRepository!
-    private var mockService: MockSummaryService!
+final class DefaultSummaryRepositoryTest: XCTestCase {}
 
-    override func setUp() {
-        super.setUp()
-        mockService = MockSummaryService()
-        repository = DefaultSummaryRepository(service: mockService)
-    }
+// MARK: - 성공 케이스
 
-    override func tearDown() {
-        repository = nil
-        mockService = nil
-        super.tearDown()
-    }
+extension DefaultSummaryRepositoryTest {
+    func test_정상상태_요약시_도메인엔티티로변환하여반환한다() async throws {
+        let mockService = MockSummaryService()
+        let sut = DefaultSummaryRepository(service: mockService)
 
-    func test_summarize_성공할_경우_도메인_엔티티로_변환하여_반환한다() async throws {
         // Given
         let transcript = Transcript(id: UUID(), text: "원본 텍스트입니다.")
         let language: Language = .ko
         let expectedKeywords = ["키워드1", "키워드2"]
-        let expectedSummary = "요약된 텍스트입니다."
-
-        await mockService.setResult(.success((keywords: expectedKeywords, summary: expectedSummary)))
+        let expectedSummaryText = "요약된 텍스트입니다."
+        await mockService.setResult(.success((keywords: expectedKeywords, summary: expectedSummaryText)))
 
         // When
-        let (keywords, summary) = try await repository.summarize(transcript: transcript, language: language)
+        let (keywords, summary) = try await sut.summarize(transcript: transcript, language: language)
 
         // Then
         XCTAssertEqual(keywords.count, expectedKeywords.count)
         XCTAssertEqual(keywords[0].word, "키워드1")
-        XCTAssertEqual(summary.text, expectedSummary)
-
+        XCTAssertEqual(summary.text, expectedSummaryText)
         await mockService.verify(expectedCallCount: 1, expectedText: transcript.text, expectedLanguage: language)
     }
+}
 
-    func test_summarize_서비스가_실패할_경우_도메인_에러를_던진다() async {
+// MARK: - 에러 케이스
+
+extension DefaultSummaryRepositoryTest {
+    func test_서비스실패상태_요약시_summarizeFailed에러를던진다() async {
+        let mockService = MockSummaryService()
+        let sut = DefaultSummaryRepository(service: mockService)
+
         // Given
         let transcript = Transcript(id: UUID(), text: "원본 텍스트입니다.")
         let language: Language = .en
@@ -47,23 +44,40 @@ final class DefaultSummaryRepositoryTest: XCTestCase {
 
         // When & Then
         do {
-            _ = try await repository.summarize(transcript: transcript, language: language)
-            XCTFail("에러가 발생해야 합니다.")
-        } catch {}
-
+            _ = try await sut.summarize(transcript: transcript, language: language)
+            XCTFail("SummaryRepositoryError.summarizeFailed 에러를 throw 해야 합니다.")
+        } catch {
+            guard case .summarizeFailed = error else {
+                return XCTFail("예상한 에러는 SummaryRepositoryError.summarizeFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
+            }
+        }
         await mockService.verify(expectedCallCount: 1, expectedLanguage: language)
     }
+}
 
-    func test_summarize_취소될_경우_cancelled_에러를_던진다() async {
-        // Given
-        let transcript = Transcript(id: UUID(), text: "원본 텍스트입니다.")
-        let language: Language = .ko
-        await mockService.setResult(.failure(.cancelled))
+// MARK: - 취소 케이스
+
+extension DefaultSummaryRepositoryTest {
+    func test_태스크취소상태_요약시_cancelled에러를던진다() async throws {
+        let mockService = MockSummaryService()
+        let sut = DefaultSummaryRepository(service: mockService)
+
+        // Given (서비스 호출 전에 Task가 취소되므로 result 설정 불필요)
+
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await sut.summarize(transcript: Transcript(id: UUID(), text: "텍스트"), language: .ko)
+        }
 
         // When & Then
         do {
-            _ = try await repository.summarize(transcript: transcript, language: language)
-            XCTFail("에러가 발생해야 합니다.")
-        } catch {}
+            _ = try await task.value
+            XCTFail("SummaryRepositoryError.cancelled 에러를 throw 해야 합니다.")
+        } catch {
+            guard case .cancelled = error as? SummaryRepositoryError else {
+                return XCTFail("예상한 에러는 SummaryRepositoryError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
+            }
+        }
+        await mockService.verify(expectedCallCount: 0)
     }
 }
