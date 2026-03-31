@@ -29,7 +29,7 @@ final class OnBoardingFinishView: UIStackView {
     }()
 
     private let languagePicker: LanguagePicker
-    var onLanguageChanged: ((Language) -> Void)?
+    private var onLanguageChanged: ((Language) -> Void)?
 
     /// 남는 수직 공간을 흡수하는 빈 뷰 (OnBoardingCardView의 imageContainer 역할)
     private let spacerView = UIView()
