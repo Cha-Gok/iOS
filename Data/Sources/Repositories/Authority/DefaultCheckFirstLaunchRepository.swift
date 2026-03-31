@@ -1,10 +1,10 @@
 import Domain
 import Foundation
 
-public final class DefaultCheckFirstLaunchRepository: CheckFirstLaunchRepository {
-    private let service: FirstLaunchService
+public struct DefaultCheckFirstLaunchRepository: CheckFirstLaunchRepository {
+    private let service: any FirstLaunchService
 
-    public init(service: FirstLaunchService) {
+    public init(service: any FirstLaunchService) {
         self.service = service
     }
 
