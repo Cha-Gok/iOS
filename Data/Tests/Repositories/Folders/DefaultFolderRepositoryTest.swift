@@ -3,11 +3,11 @@ import CoreData
 import Domain
 import XCTest
 
-final class DefaultFolderRepositoryTests: XCTestCase {}
+final class DefaultFolderRepositoryTest: XCTestCase {}
 
 // MARK: - 폴더 생성 에러 및 취소 케이스
 
-extension DefaultFolderRepositoryTests {
+extension DefaultFolderRepositoryTest {
     func test_정상적인이름일때_폴더생성시_성공한폴더를반환한다() async throws {
         let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(database: mock)
@@ -74,7 +74,7 @@ extension DefaultFolderRepositoryTests {
 
 // MARK: - 폴더 조회 성공 및 실패 케이스
 
-extension DefaultFolderRepositoryTests {
+extension DefaultFolderRepositoryTest {
     func test_폴더목록이존재할때_전체조회시_폴더리스트를반환한다() async throws {
         let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(database: mock)
@@ -143,7 +143,7 @@ extension DefaultFolderRepositoryTests {
 
 // MARK: - 폴더 수정 성공 및 실패 케이스
 
-extension DefaultFolderRepositoryTests {
+extension DefaultFolderRepositoryTest {
     func test_폴더정보가수정되었을때_업데이트요청시_수정된폴더를반환한다() async throws {
         let mock = MockFolderLocalDataBase()
         let sut = DefaultFolderRepository(database: mock)

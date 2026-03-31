@@ -11,9 +11,8 @@ public actor DependencyProvider {
     private var audioService: AudioRecorderService?
     private var storageService: StorageService?
     private var folderDB: CoreDataLocalDataBase<FolderEntity>?
-    private var firstlaunchService: FirstLaunchService?
-    private var sttPermissionService: STTPermissionService?
-    private var languageService: LanguageService?
+    private var keyValueStore: KeyValueStoreService?
+    private var sttService: (any STTService)?
     private var summaryService: SummaryService?
     // repository
     private var checkFirstLaunchRepository: CheckFirstLaunchRepository?
@@ -41,9 +40,8 @@ extension DependencyProvider {
         folderDB = try await CoreDataLocalDataBase<FolderEntity>(inMemory: true)
         audioService = AudioService()
         storageService = FileManagerStorageService()
-        firstlaunchService = DefaultFirstLaunchService()
-        sttPermissionService = SpeechService()
-        languageService = LanguageSettingService()
+        keyValueStore = UserDefaultsKeyValueStoreService()
+        sttService = SpeechService()
         summaryService = AppleFoundationSummaryService()
     }
 
@@ -51,17 +49,16 @@ extension DependencyProvider {
     private func makeRepository() async throws {
         guard
             let folderDB,
-            let firstlaunchService,
-            let sttPermissionService,
-            let languageService,
+            let keyValueStore,
+            let sttService,
             let audioService,
             let storageService
         else {
             throw NSError(domain: "리포지토리를 못 만들었습니다.", code: -1)
         }
-        checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(service: firstlaunchService)
-        sttPermissionRepository = DefaultSTTPermissionRepository(service: sttPermissionService)
-        languageRepository = DefaultLanguageRepository(service: languageService)
+        checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: keyValueStore)
+        sttPermissionRepository = DefaultSTTRepository(service: sttService)
+        languageRepository = DefaultLanguageRepository(store: keyValueStore)
         folderRepository = DefaultFolderRepository(database: folderDB)
         voiceRecordRepository = DefaultVoiceRecordRepository(
             audioService: audioService,
