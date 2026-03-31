@@ -2,7 +2,6 @@ import Core
 import Domain
 import Foundation
 import Observation
-import UIKit
 
 @Observable
 @MainActor
@@ -69,35 +68,13 @@ final class OnBoardingViewModel {
         }
     }
 
+    /// 향 후 제거 ( 미 구현 )
     func getTest() {
         debugPrint("currentStep: \(currentStep)")
         debugPrint("language: \(language)")
     }
 
-    // MARK: - Update Button
-
-    func updateButtonConfiguration(primaryButton: GlassButton, secondButton: UIButton) {
-        switch currentStep {
-        case .finish:
-            primaryButton.configurationUpdateHandler = { [weak self] configuration in
-                configuration.configuration?.title = self?.primaryButtonTitle
-                configuration.configuration?.baseBackgroundColor = UIColor.point600
-                configuration.configuration?.baseForegroundColor = UIColor.gray900
-            }
-            secondButton.isUserInteractionEnabled = false
-        default:
-            primaryButton.configurationUpdateHandler = { [weak self] configuration in
-                configuration.configuration?.title = self?.primaryButtonTitle
-                configuration.configuration?.baseBackgroundColor = UIColor.point200
-                    .withAlphaComponent(Constant.backgroundOpacity)
-                configuration.configuration?.baseForegroundColor = UIColor.gray900
-            }
-            secondButton.isUserInteractionEnabled = true
-        }
-        secondButton.configuration?.title = secondButtonTitle
-    }
-
-    func primaryButtonAction(pagingView: OnBoardingPagingView) {
+    func primaryButtonAction(scrollAction: (Int) -> Void) {
         guard !isPaging else { return }
         switch currentStep {
         case .finish:
@@ -111,25 +88,22 @@ final class OnBoardingViewModel {
             let nextIndex = currentStep.rawValue + 1
             guard nextIndex < Step.allCases.count else { return }
             isPaging = true
-            let offsetX = CGFloat(nextIndex) * pagingView.frame.width
-            pagingView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
+            scrollAction(nextIndex)
         }
     }
 
-    func secondButtonAction(pagingView: OnBoardingPagingView) {
+    func secondButtonAction(scrollAction: (Int) -> Void) {
         guard !isPaging else { return }
         switch currentStep {
         case .first: // 건너뛰기
             let nextIndex = Step.finish.rawValue
             isPaging = true
-            let offsetX = CGFloat(nextIndex) * pagingView.frame.width
-            pagingView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
+            scrollAction(nextIndex)
         default: // 뒤로가기
             let nextIndex = currentStep.rawValue - 1
             guard nextIndex >= 0 else { return }
             isPaging = true
-            let offsetX = CGFloat(nextIndex) * pagingView.frame.width
-            pagingView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
+            scrollAction(nextIndex)
         }
     }
 }
@@ -150,32 +124,6 @@ extension OnBoardingViewModel {
             currentStep = currentStep.next()
         } else {
             currentStep = currentStep.prev()
-        }
-    }
-
-    /// first, second, micPermission 은 OnBoardingCardView로 화면 구성
-    /// finish 만 다른 컴포넌트 화면을 사용합니다.
-    func createPages() -> [UIView] {
-        Step.allCases.map { step in
-            switch step {
-            case .first, .second, .micPermission:
-                let item = step.item
-                return OnBoardingCardView(
-                    headline: item.headline,
-                    body: item.body,
-                    image: UIImage(named: item.image ?? "", in: Bundle(for: OnBoardingCardView.self), with: nil)
-                )
-            case .finish:
-                let item = step.item
-                return OnBoardingFinishView(
-                    headline: item.headline,
-                    body: item.body,
-                    selectedLanguage: language,
-                    onLanguageChanged: { [weak self] lang in
-                        self?.setLanguage(lang)
-                    }
-                )
-            }
         }
     }
 }
