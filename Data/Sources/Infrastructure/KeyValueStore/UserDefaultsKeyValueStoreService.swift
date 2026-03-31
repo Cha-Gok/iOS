@@ -1,7 +1,7 @@
 import Foundation
 
 /// UserDefaults 기반 KeyValueStoreService 구현체.
-public struct UserDefaultsKeyValueStoreService: KeyValueStoreService {
+public struct UserDefaultsKeyValueStoreService: KeyValueStoreService, @unchecked Sendable {
     private let defaults: UserDefaults
 
     public init(defaults: UserDefaults = .standard) {
