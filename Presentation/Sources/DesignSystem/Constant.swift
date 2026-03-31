@@ -106,6 +106,9 @@ public extension Constant {
 
     /// OnBoarding 라벨 최대 줄 수 (2)
     static let onBoardingLabelNumberOfLines: Int = 2
+
+    /// OnBoarding 페이지네이션 상단 여백 (52)
+    static let onBoardingPaginationTopMargin: CGFloat = 52
 }
 
 // MARK: - LanguagePicker Constants
