@@ -12,7 +12,7 @@ public actor DependencyProvider {
     private var storageService: StorageService?
     private var folderDB: CoreDataLocalDataBase<FolderEntity>?
     private var keyValueStore: KeyValueStoreService?
-    private var sttPermissionService: STTPermissionService?
+    private var sttService: (any STTService)?
     private var summaryService: SummaryService?
     // repository
     private var checkFirstLaunchRepository: CheckFirstLaunchRepository?
@@ -41,7 +41,7 @@ extension DependencyProvider {
         audioService = AudioService()
         storageService = FileManagerStorageService()
         keyValueStore = UserDefaultsKeyValueStoreService()
-        sttPermissionService = SpeechService()
+        sttService = SpeechService()
         summaryService = AppleFoundationSummaryService()
     }
 
@@ -50,14 +50,14 @@ extension DependencyProvider {
         guard
             let folderDB,
             let keyValueStore,
-            let sttPermissionService,
+            let sttService,
             let audioService,
             let storageService
         else {
             throw NSError(domain: "리포지토리를 못 만들었습니다.", code: -1)
         }
         checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: keyValueStore)
-        sttPermissionRepository = DefaultSTTPermissionRepository(service: sttPermissionService)
+        sttPermissionRepository = DefaultSTTRepository(service: sttService)
         languageRepository = DefaultLanguageRepository(store: keyValueStore)
         folderRepository = DefaultFolderRepository(database: folderDB)
         voiceRecordRepository = DefaultVoiceRecordRepository(
