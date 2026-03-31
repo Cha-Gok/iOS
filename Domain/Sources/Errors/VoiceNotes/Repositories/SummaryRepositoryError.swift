@@ -7,7 +7,7 @@ public enum SummaryRepositoryError: LocalizedError, Sendable {
     /// 취소됨.
     case cancelled
     /// 알 수 없는 에러.
-    case unknown(Error)
+    case unknown(any Error)
 
     public var errorDescription: String? {
         switch self {
@@ -16,7 +16,7 @@ public enum SummaryRepositoryError: LocalizedError, Sendable {
         case .cancelled:
             return nil
         case .unknown(let error):
-            return error.localizedDescription
+            return "알 수 없는 에러가 발생했습니다: \(error.localizedDescription)"
         }
     }
 }
