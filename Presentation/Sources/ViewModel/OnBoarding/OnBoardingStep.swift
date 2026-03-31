@@ -75,4 +75,37 @@ enum Step: Int, CaseIterable, Equatable {
             )
         }
     }
+
+    func next() -> Self {
+        switch self {
+        case .first:
+            return .second
+        case .second:
+            return .micPermission
+        case .micPermission:
+            return .finish
+        case .finish:
+            return .finish
+        }
+    }
+
+    func prev() -> Self {
+        switch self {
+        case .first:
+            return .first
+        case .second:
+            return .first
+        case .micPermission:
+            return .second
+        case .finish:
+            return .micPermission
+        }
+    }
+
+    func skip() -> Self {
+        if self == .first {
+            return .finish
+        }
+        return self
+    }
 }
