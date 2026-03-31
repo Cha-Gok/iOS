@@ -19,19 +19,6 @@ enum Step: Int, CaseIterable, Equatable {
     case micPermission
     case finish
 
-    var rawValue: Int {
-        switch self {
-        case .first:
-            return 0
-        case .second:
-            return 1
-        case .micPermission:
-            return 2
-        case .finish:
-            return 3
-        }
-    }
-
     static func matchingStep(_ val: Int) -> Step {
         switch val {
         case 0:
