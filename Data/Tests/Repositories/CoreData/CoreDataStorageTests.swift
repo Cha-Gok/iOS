@@ -13,7 +13,7 @@ final class CoreDataStorageTests: XCTestCase {
         let database = try await CoreDataLocalDataBase<FolderEntity>(inMemory: true)
 
         // Then
-        let container = await database.container
+        let container = await database.testContainer
         XCTAssertEqual(container.name, "ChaGok")
         XCTAssertEqual(container.persistentStoreDescriptions.first?.type, NSInMemoryStoreType)
         XCTAssertTrue(container.viewContext.automaticallyMergesChangesFromParent)
