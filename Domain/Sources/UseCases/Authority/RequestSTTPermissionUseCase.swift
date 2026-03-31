@@ -11,9 +11,9 @@ public protocol RequestSTTPermissionUseCase: Sendable {
 
 /// STT 권한을 요청합니다.
 public struct DefaultRequestSTTPermissionUseCase: RequestSTTPermissionUseCase {
-    private let repository: STTPermissionRepository
+    private let repository: any STTRepository
 
-    public init(repository: STTPermissionRepository) {
+    public init(repository: any STTRepository) {
         self.repository = repository
     }
 
