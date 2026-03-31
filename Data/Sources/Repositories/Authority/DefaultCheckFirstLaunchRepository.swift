@@ -2,19 +2,17 @@ import Domain
 import Foundation
 
 public struct DefaultCheckFirstLaunchRepository: CheckFirstLaunchRepository {
-    private let service: any FirstLaunchService
+    private let store: any KeyValueStoreService
 
-    public init(service: any FirstLaunchService) {
-        self.service = service
+    public init(store: any KeyValueStoreService) {
+        self.store = store
     }
 
     public func checkAndMarkFirstLaunch() -> Bool {
-        let isFirstLaunch: Bool = service.isFirstLaunch()
-        if isFirstLaunch { // 신규 사용자
-            service.markAsLaunched()
-            return true
+        let isFirstLaunch = !store.bool(forKey: Policy.isExistingUserKey)
+        if isFirstLaunch {
+            store.set(true, forKey: Policy.isExistingUserKey)
         }
-
         return isFirstLaunch
     }
 }

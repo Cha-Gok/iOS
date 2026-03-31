@@ -8,70 +8,58 @@ final class DefaultCheckFirstLaunchRepositoryTest: XCTestCase {}
 
 extension DefaultCheckFirstLaunchRepositoryTest {
     func test_신규사용자상태_최초실행확인시_true를반환한다() {
-        let service = MockFirstLaunchService()
-        let sut = DefaultCheckFirstLaunchRepository(service: service)
+        let store = MockKeyValueStoreService()
+        let sut = DefaultCheckFirstLaunchRepository(store: store)
 
-        // Given
-        service.setIsFirstLaunchResult(true)
-        service.expectIsFirstLaunch(callCount: 1)
-        service.expectMarkAsLaunched(callCount: 1)
+        // Given: isExistingUserKey 미설정 → bool(forKey:) == false → isFirstLaunch == true
 
         // When
         let result = sut.checkAndMarkFirstLaunch()
 
         // Then
         XCTAssertTrue(result)
-        service.verify()
     }
 
     func test_기존사용자상태_최초실행확인시_false를반환한다() {
-        let service = MockFirstLaunchService()
-        let sut = DefaultCheckFirstLaunchRepository(service: service)
-
-        // Given
-        service.setIsFirstLaunchResult(false)
-        service.expectIsFirstLaunch(callCount: 1)
-        service.expectMarkAsLaunched(callCount: 0)
+        let store = MockKeyValueStoreService()
+        // Given: 기존 사용자 — isExistingUserKey 사전 설정
+        store.set(true, forKey: Policy.isExistingUserKey)
+        let sut = DefaultCheckFirstLaunchRepository(store: store)
 
         // When
         let result = sut.checkAndMarkFirstLaunch()
 
         // Then
         XCTAssertFalse(result)
-        service.verify()
     }
 }
 
 // MARK: - 상태 변경 검증 케이스
 
 extension DefaultCheckFirstLaunchRepositoryTest {
-    func test_신규사용자상태_최초실행확인시_markAsLaunched가호출된다() {
-        let service = MockFirstLaunchService()
-        let sut = DefaultCheckFirstLaunchRepository(service: service)
+    func test_신규사용자상태_최초실행확인시_isExistingUser키가true로설정된다() {
+        let store = MockKeyValueStoreService()
+        let sut = DefaultCheckFirstLaunchRepository(store: store)
 
-        // Given
-        service.setIsFirstLaunchResult(true)
-        service.expectMarkAsLaunched(callCount: 1)
+        // Given: isExistingUserKey 미설정
 
         // When
         _ = sut.checkAndMarkFirstLaunch()
 
         // Then
-        service.verify()
+        XCTAssertTrue(store.bool(forKey: Policy.isExistingUserKey))
     }
 
-    func test_기존사용자상태_최초실행확인시_markAsLaunched가호출되지않는다() {
-        let service = MockFirstLaunchService()
-        let sut = DefaultCheckFirstLaunchRepository(service: service)
-
-        // Given
-        service.setIsFirstLaunchResult(false)
-        service.expectMarkAsLaunched(callCount: 0)
+    func test_기존사용자상태_최초실행확인시_isExistingUser키가변경되지않는다() {
+        let store = MockKeyValueStoreService()
+        // Given: 기존 사용자
+        store.set(true, forKey: Policy.isExistingUserKey)
+        let sut = DefaultCheckFirstLaunchRepository(store: store)
 
         // When
         _ = sut.checkAndMarkFirstLaunch()
 
-        // Then
-        service.verify()
+        // Then: 값은 여전히 true (변경 없음)
+        XCTAssertTrue(store.bool(forKey: Policy.isExistingUserKey))
     }
 }
