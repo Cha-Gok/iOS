@@ -15,7 +15,7 @@ public final class OnBoardingViewController: UIViewController {
         maxIndex: vm.getMaxIndex()
     )
 
-    private lazy var pagingView: OnBoardingPagingView = .init(pages: vm.createPages())
+    private lazy var pagingView: OnBoardingPagingView = .init(pages: createPages())
 
     private lazy var primaryButton: GlassButton = .default(vm.primaryButtonTitle)
 
@@ -50,10 +50,24 @@ public final class OnBoardingViewController: UIViewController {
         // title value 업데이트
         vm.updateTitle()
         // Button 업데이트
-        vm.updateButtonConfiguration(
-            primaryButton: primaryButton,
-            secondButton: secondButton
-        )
+        switch vm.currentStep {
+        case .finish:
+            primaryButton.configurationUpdateHandler = { [weak self] configuration in
+                configuration.configuration?.title = self?.vm.primaryButtonTitle
+                configuration.configuration?.baseBackgroundColor = UIColor.point600
+                configuration.configuration?.baseForegroundColor = UIColor.gray900
+            }
+            secondButton.isUserInteractionEnabled = false
+        default:
+            primaryButton.configurationUpdateHandler = { [weak self] configuration in
+                configuration.configuration?.title = self?.vm.primaryButtonTitle
+                configuration.configuration?.baseBackgroundColor = UIColor.point200
+                    .withAlphaComponent(Constant.backgroundOpacity)
+                configuration.configuration?.baseForegroundColor = UIColor.gray900
+            }
+            secondButton.isUserInteractionEnabled = true
+        }
+        secondButton.configuration?.title = vm.secondButtonTitle
         // pagenation 업데이트
         pagenation.currentIndex = vm.currentStep.rawValue
         pagenation.setNeedsLayout()
@@ -86,14 +100,20 @@ public final class OnBoardingViewController: UIViewController {
         primaryButton.addAction(
             UIAction { [weak self] _ in
                 guard let self else { return }
-                vm.primaryButtonAction(pagingView: pagingView)
+                vm.primaryButtonAction { index in
+                    let offsetX = CGFloat(index) * pagingView.frame.width
+                    pagingView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
+                }
             }, for: .touchUpInside
         )
 
         secondButton.addAction(
             UIAction { [weak self] _ in
                 guard let self else { return }
-                vm.secondButtonAction(pagingView: pagingView)
+                vm.secondButtonAction { index in
+                    let offsetX = CGFloat(index) * pagingView.frame.width
+                    pagingView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
+                }
             }, for: .touchUpInside
         )
     }
@@ -166,6 +186,36 @@ public final class OnBoardingViewController: UIViewController {
             ),
             primaryButton.heightAnchor.constraint(equalToConstant: Constant.commonButtonHeight)
         ])
+    }
+}
+
+// MARK: - Heloper Function
+
+extension OnBoardingViewController {
+    /// first, second, micPermission 은 OnBoardingCardView로 화면 구성
+    /// finish 만 다른 컴포넌트 화면을 사용합니다.
+    func createPages() -> [UIView] {
+        Step.allCases.map { step in
+            switch step {
+            case .first, .second, .micPermission:
+                let item = step.item
+                return OnBoardingCardView(
+                    headline: item.headline,
+                    body: item.body,
+                    image: UIImage(named: item.image ?? "", in: Bundle(for: OnBoardingCardView.self), with: nil)
+                )
+            case .finish:
+                let item = step.item
+                return OnBoardingFinishView(
+                    headline: item.headline,
+                    body: item.body,
+                    selectedLanguage: vm.language,
+                    onLanguageChanged: { [weak self] lang in
+                        self?.vm.setLanguage(lang)
+                    }
+                )
+            }
+        }
     }
 }
 
