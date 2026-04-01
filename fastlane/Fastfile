@@ -16,17 +16,6 @@
 default_platform(:ios)
 
 platform :ios do
-  before_all do
-    app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_PRIVATE_KEY"],
-      is_key_content_base64: false,
-      in_house: false
-    )
-    sh("cd .. && tuist generate --no-open")
-  end
-
   desc "코드 사이닝 인증서 및 프로비저닝 프로파일 동기화"
   lane :sync_certificates do |options|
     match(type: options[:type] || "appstore")
@@ -34,7 +23,15 @@ platform :ios do
 
   desc "TestFlight 베타 배포"
   lane :beta do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_PRIVATE_KEY"],
+      is_key_content_base64: false,
+      in_house: false
+    )
     sync_certificates
+    sh("cd .. && tuist generate --no-open")
     build_app(
       scheme: "App",
       export_method: "app-store"
@@ -44,7 +41,15 @@ platform :ios do
 
   desc "App Store 배포"
   lane :release do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_PRIVATE_KEY"],
+      is_key_content_base64: false,
+      in_house: false
+    )
     sync_certificates
+    sh("cd .. && tuist generate --no-open")
     build_app(
       scheme: "App",
       export_method: "app-store"
