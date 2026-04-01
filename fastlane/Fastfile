@@ -60,6 +60,7 @@ platform :ios do
     build_app(
       workspace: "ChaGok.xcworkspace",
       scheme: "App",
+      clean: true,
       export_method: "app-store",
       xcargs: "CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=78QTJM9AD7 CODE_SIGNING_REQUIRED=YES MARKETING_VERSION=#{marketing_version} CURRENT_PROJECT_VERSION=#{options[:build_number]}",
       export_options: {
