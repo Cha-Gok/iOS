@@ -82,3 +82,4 @@ CLAUDE.md
 ### Fastlane ###
 fastlane/.env.secret
 fastlane/.env.*.secret
+fastlane/*.p8
