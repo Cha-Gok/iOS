@@ -29,7 +29,7 @@ platform :ios do
 
   desc "코드 사이닝 인증서 및 프로비저닝 프로파일 동기화"
   lane :sync_certificates do |options|
-    match(type: options[:type] || "appstore", readonly: is_ci)
+    match(type: options[:type] || "appstore")
   end
 
   desc "TestFlight 베타 배포"
