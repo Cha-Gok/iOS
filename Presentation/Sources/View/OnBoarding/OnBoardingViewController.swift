@@ -59,7 +59,6 @@ public final class OnBoardingViewController: UIViewController {
 
         // pagenation 업데이트
         pagenation.currentIndex = vm.currentStep.rawValue
-        pagenation.setNeedsLayout()
     }
 
     // MARK: - Set up

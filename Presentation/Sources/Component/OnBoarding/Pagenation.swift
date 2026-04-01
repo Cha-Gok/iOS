@@ -3,7 +3,12 @@ import UIKit
 
 final class Pagenation: UIStackView {
     /// 현재 활성화된 인덱스를 저장합니다 (0부터 시작)
-    var currentIndex: Int
+    var currentIndex: Int {
+        didSet {
+            setNeedsLayout()
+        }
+    }
+
     private let maxIndex: Int
     private let indicatorView = UIView()
 
