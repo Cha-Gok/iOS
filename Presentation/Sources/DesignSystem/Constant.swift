@@ -16,7 +16,10 @@ public enum Constant {
     static let borderWidth: CGFloat = 1.0
 
     /// Animation Duration 값
-    static let animationDuration: CGFloat = 0.3
+    static let animationDuration: CGFloat = 0.15
+
+    /// 공용 버튼 높이 상수 값 (46)
+    static let commonButtonHeight: CGFloat = 54
 }
 
 // MARK: - GlassButton Constants
@@ -75,4 +78,51 @@ public extension Constant {
 
     /// Pagenation Total Count 값
     static let pagenationTotalValue: Int = 4
+}
+
+// MARK: - OnBoarding Constants
+
+public extension Constant {
+    /// OnBoarding 카드 뷰 공통 수평 패딩 (20)
+    static let onBoardingHorizontalPadding: CGFloat = 20
+
+    /// OnBoarding 버튼 공통 수평 패딩 (16)
+    static let onBoardingButtonHorizontalPadding: CGFloat = 16
+
+    /// OnBoarding 컨텐츠 요소 간 간격 (32)
+    static let onBoardingContentSpacing: CGFloat = 32
+
+    /// OnBoarding 페이지네이션과 페이징뷰 사이의 상단 여백 (105)
+    static let onBoardingPagingViewTopMargin: CGFloat = 105
+
+    /// OnBoarding 페이징뷰와 버튼 사이의 하단 여백 (16)
+    static let onBoardingPagingViewBottomMargin: CGFloat = 16
+
+    /// OnBoarding 버튼 간 상하 간격 (8)
+    static let onBoardingButtonSpacing: CGFloat = 8
+
+    /// OnBoardingCardView 바디 라벨과 이미지 사이의 특수 간격 (36)
+    static let onBoardingCardImageTopSpacing: CGFloat = 36
+
+    /// OnBoarding 라벨 최대 줄 수 (2)
+    static let onBoardingLabelNumberOfLines: Int = 2
+
+    /// OnBoarding 페이지네이션 상단 여백 (52)
+    static let onBoardingPaginationTopMargin: CGFloat = 52
+}
+
+// MARK: - LanguagePicker Constants
+
+public extension Constant {
+    /// LanguagePicker 아이템 간 간격 (8)
+    static let languagePickerSpacing: CGFloat = 8
+
+    /// LanguagePicker 라디오 버튼 크기 (16)
+    static let languagePickerIndicatorSize: CGFloat = 16
+
+    /// LanguagePicker 선택된 내부 점 크기 (10)
+    static let languagePickerInnerIndicatorSize: CGFloat = 10
+
+    /// LanguagePicker 라디오 버튼과 텍스트 사이 간격 (6)
+    static let languagePickerTitleSpacing: CGFloat = 6
 }

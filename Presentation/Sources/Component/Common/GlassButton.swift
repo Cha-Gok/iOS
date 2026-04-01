@@ -106,7 +106,6 @@ extension GlassButton {
         }
 
         configuration = config
-        automaticallyUpdatesConfiguration = false
     }
 
     /// 그림자 적용 여부를 판단합니다. 그림자가 필요 없는 경우 호출하여 비활성화합니다.
