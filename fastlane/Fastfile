@@ -23,7 +23,9 @@ platform :ios do
 
   def marketing_version
     config = File.read("../Tuist/ProjectDescriptionHelpers/Config.swift")
-    config.match(/public let version = "(.+)"/)[1]
+    match_data = config.match(/public let version = "(.+)"/)
+    UI.user_error!("Config.swift에서 version을 찾을 수 없습니다.") unless match_data
+    match_data[1]
   end
 
   desc "TestFlight 베타 배포"
