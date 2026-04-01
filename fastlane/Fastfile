@@ -57,13 +57,14 @@ platform :ios do
       is_key_content_base64: false,
       in_house: false
     )
+    new_build_number = latest_testflight_build_number(version: marketing_version) + 1
     sync_certificates
     sh("cd .. && tuist generate --no-open")
     build_app(
       workspace: "ChaGok.xcworkspace",
       scheme: "App",
       export_method: "app-store",
-      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='match AppStore com.yongms.ChaGokChaGok' CODE_SIGNING_REQUIRED=YES"
+      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='match AppStore com.yongms.ChaGokChaGok' CODE_SIGNING_REQUIRED=YES MARKETING_VERSION=#{marketing_version} CURRENT_PROJECT_VERSION=#{new_build_number}"
     )
     upload_to_app_store
   end
