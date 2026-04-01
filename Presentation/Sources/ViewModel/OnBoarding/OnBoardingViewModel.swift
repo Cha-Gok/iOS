@@ -61,10 +61,6 @@ final class OnBoardingViewModel {
 
     // MARK: - Setters
 
-    func setCurrentStep(_ val: Int) {
-        currentStep = Step.matchingStep(val)
-    }
-
     func setLanguage(_ val: Language) {
         language = val
     }
@@ -75,23 +71,12 @@ final class OnBoardingViewModel {
         Step.allCases.count
     }
 
-    /// 향 후 제거 ( 미 구현 )
-    func getTest() {
-        debugPrint("currentStep: \(currentStep)")
-        debugPrint("language: \(language)")
-    }
-
     func primaryButtonAction(scrollAction: (Int) -> Void) {
         guard !isPaging else { return }
         switch currentStep {
         case .finish:
-            getTest() // test 목적
             AppLogger.info("마지막 시작하기 버튼 기능이 들어가야 합니다.")
         default: // 다음
-            if currentStep == .micPermission {
-                // 마이크 권한 요청 로직
-                print("마이크 요청을 하는가")
-            }
             let nextIndex = currentStep.rawValue + 1
             guard nextIndex < Step.allCases.count else { return }
             isPaging = true
@@ -123,14 +108,10 @@ extension OnBoardingViewModel {
     func syncPageState(nextStep: Int) {
         defer { isPaging = false }
         guard nextStep != currentStep.rawValue else { return }
-        let diff = nextStep - currentStep.rawValue
-
-        if diff > 1 {
-            currentStep = currentStep.skip()
-        } else if diff == 1 {
-            currentStep = currentStep.next()
-        } else {
-            currentStep = currentStep.prev()
+        currentStep = Step.matchingStep(nextStep)
+        if currentStep == .micPermission {
+            // 마이크 권한 요청 로직
+            AppLogger.info("마이크 요청을 해야 합니다.")
         }
     }
 }

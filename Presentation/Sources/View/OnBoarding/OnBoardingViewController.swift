@@ -52,16 +52,10 @@ public final class OnBoardingViewController: UIViewController {
         primaryButton.configuration?.title = vm.primaryButtonTitle
         secondButton.configuration?.title = vm.secondButtonTitle
         secondButton.isUserInteractionEnabled = vm.isSecondButtonEnabled
+        primaryButton.configuration?.baseBackgroundColor = vm.isFinalStep ? UIColor.point600 : UIColor.point200
+            .withAlphaComponent(Constant.backgroundOpacity)
 
-        primaryButton.configurationUpdateHandler = { [weak self] configuration in
-            guard let self else { return }
-            let bgColor = vm.isFinalStep ? UIColor.point600 : UIColor.point200
-                .withAlphaComponent(Constant.backgroundOpacity)
-
-            configuration.configuration?.title = vm.primaryButtonTitle
-            configuration.configuration?.baseBackgroundColor = bgColor
-            configuration.configuration?.baseForegroundColor = UIColor.gray900
-        }
+        primaryButton.configuration?.baseForegroundColor = UIColor.gray900
 
         // pagenation 업데이트
         pagenation.currentIndex = vm.currentStep.rawValue
@@ -184,12 +178,12 @@ public final class OnBoardingViewController: UIViewController {
     }
 }
 
-// MARK: - Heloper Function
+// MARK: - Helper Function
 
 extension OnBoardingViewController {
     /// first, second, micPermission 은 OnBoardingCardView로 화면 구성
     /// finish 만 다른 컴포넌트 화면을 사용합니다.
-    func createPages() -> [UIView] {
+    private func createPages() -> [UIView] {
         vm.steps.map { step in
             switch step {
             case .first, .second, .micPermission:
