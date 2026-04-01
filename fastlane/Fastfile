@@ -61,7 +61,7 @@ platform :ios do
       workspace: "ChaGok.xcworkspace",
       scheme: "App",
       export_method: "app-store",
-      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='match AppStore com.yongms.ChaGokChaGok' CODE_SIGNING_REQUIRED=YES MARKETING_VERSION=#{marketing_version} CURRENT_PROJECT_VERSION=#{options[:build_number]}"
+      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='match AppStore com.yongms.ChaGokChaGok' DEVELOPMENT_TEAM=78QTJM9AD7 CODE_SIGNING_REQUIRED=YES MARKETING_VERSION=#{marketing_version} CURRENT_PROJECT_VERSION=#{options[:build_number]}"
     )
   end
 end
