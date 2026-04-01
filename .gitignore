@@ -78,3 +78,7 @@ buildServer.json
 
 ### Claude ###
 CLAUDE.md
+
+### Fastlane ###
+fastlane/.env.secret
+fastlane/.env.*.secret
