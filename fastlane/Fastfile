@@ -30,6 +30,7 @@ platform :ios do
 
   desc "TestFlight 베타 배포"
   lane :beta do
+    setup_ci
     setup_api_key
     sync_certificates
     build_ipa(build_number: ENV["BUILD_NUMBER"])
