@@ -15,6 +15,8 @@ public let settings: Settings = .settings(
         "PRODUCT_BUNDLE_DISPLAY_NAME": SettingValue(stringLiteral: displayName),
         "MARKETING_VERSION": SettingValue(stringLiteral: version),
         "CURRENT_PROJECT_VERSION": SettingValue(stringLiteral: build),
+        // iPhone 전용 앱 (iPad 아이콘 불필요)
+        "TARGETED_DEVICE_FAMILY": "1",
         // CI 시뮬레이터 빌드 시 Development Team 없이 빌드 가능
         "CODE_SIGN_IDENTITY": "",
         "CODE_SIGNING_REQUIRED": "NO",
