@@ -35,8 +35,8 @@ private let appTarget = Target.target(
     infoPlist: .extendingDefault(
         with: [
             "CFBundleDisplayName": Plist.Value(stringLiteral: displayName),
-            "CFBundleShortVersionString": Plist.Value(stringLiteral: version),
-            "CFBundleVersion": Plist.Value(stringLiteral: build),
+            "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+            "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
             "UILaunchScreen": Plist.Value(
                 dictionaryLiteral: (
                     "UIColorName", Plist.Value(stringLiteral: "")
