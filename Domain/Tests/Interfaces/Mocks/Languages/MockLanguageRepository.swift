@@ -2,7 +2,9 @@
 import Foundation
 import XCTest
 
-actor MockLanguageRepository: LanguageRepository {
+public actor MockLanguageRepository: LanguageRepository {
+    public init() {}
+
     private var fetchResult: Result<Language, FetchLanguagesRepositoryError>?
     private var saveResult: Result<Void, SetLanguagesRepositoryError>?
 
@@ -15,24 +17,24 @@ actor MockLanguageRepository: LanguageRepository {
 
     private var lastSavedLanguage: Language?
 
-    func setFetchResult(_ result: Result<Language, FetchLanguagesRepositoryError>) {
+    public func setFetchResult(_ result: Result<Language, FetchLanguagesRepositoryError>) {
         fetchResult = result
     }
 
-    func setSaveResult(_ result: Result<Void, SetLanguagesRepositoryError>) {
+    public func setSaveResult(_ result: Result<Void, SetLanguagesRepositoryError>) {
         saveResult = result
     }
 
-    func expectFetch(callCount: Int) {
+    public func expectFetch(callCount: Int) {
         expectedFetchCallCount = callCount
     }
 
-    func expectSave(language: Language? = nil, callCount: Int) {
+    public func expectSave(language: Language? = nil, callCount: Int) {
         expectedSaveCallCount = callCount
         expectedLastSavedLanguage = language
     }
 
-    func verify(file: StaticString = #filePath, line: UInt = #line) {
+    public func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedFetchCallCount {
             XCTAssertEqual(
                 fetchCallCount,
@@ -63,7 +65,7 @@ actor MockLanguageRepository: LanguageRepository {
         }
     }
 
-    func fetchLanguage() async throws(FetchLanguagesRepositoryError) -> Language {
+    public func fetchLanguage() async throws(FetchLanguagesRepositoryError) -> Language {
         fetchCallCount += 1
 
         switch fetchResult {
@@ -78,7 +80,7 @@ actor MockLanguageRepository: LanguageRepository {
         }
     }
 
-    func saveLanguage(_ language: Language) async throws(SetLanguagesRepositoryError) {
+    public func saveLanguage(_ language: Language) async throws(SetLanguagesRepositoryError) {
         saveCallCount += 1
         lastSavedLanguage = language
 
