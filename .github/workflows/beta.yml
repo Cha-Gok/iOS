@@ -4,6 +4,9 @@ on:
   push:
     branches: ["dev"]
 
+permissions:
+  id-token: write
+
 jobs:
   beta:
     runs-on: macos-26
