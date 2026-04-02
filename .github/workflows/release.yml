@@ -9,9 +9,34 @@ permissions:
   pull-requests: read
 
 jobs:
-  release:
+  app-store:
+    name: Deploy to App Store
+    runs-on: macos-26
+    env:
+      TUIST_XDG_STATE_HOME: /tmp/tuist-state
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: jdx/mise-action@v4
+
+      - name: Tuist auth login
+        run: tuist auth login
+
+      - name: Tuist setup cache
+        run: tuist setup cache
+
+      - name: Deploy to App Store
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: bundle exec fastlane release
+
+  github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    needs: app-store
     steps:
       - name: Checkout
         uses: actions/checkout@v4
