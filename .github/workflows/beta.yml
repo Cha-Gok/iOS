@@ -18,6 +18,9 @@ jobs:
 
       - uses: jdx/mise-action@v4
 
+      - name: Install Ruby gems
+        run: bundle install
+
       - name: Tuist auth login
         run: tuist auth login
 
