@@ -2,7 +2,9 @@
 import Core
 import XCTest
 
-actor MockVoiceRecordRepository: VoiceRecordRepository {
+public actor MockVoiceRecordRepository: VoiceRecordRepository {
+    public init() {}
+
     private var startResult: Result<AsyncStream<Waveform>, VoiceRecordRepositoryError>?
     private var pauseResult: Result<Void, VoiceRecordRepositoryError>?
     private var resumeResult: Result<Void, VoiceRecordRepositoryError>?
@@ -24,55 +26,55 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
     private var expectedCheckPermissionCallCount: Int?
     private var expectedRequestPermissionCallCount: Int?
 
-    func setStartResult(_ result: Result<AsyncStream<Waveform>, VoiceRecordRepositoryError>) {
+    public func setStartResult(_ result: Result<AsyncStream<Waveform>, VoiceRecordRepositoryError>) {
         startResult = result
     }
 
-    func setPauseResult(_ result: Result<Void, VoiceRecordRepositoryError>) {
+    public func setPauseResult(_ result: Result<Void, VoiceRecordRepositoryError>) {
         pauseResult = result
     }
 
-    func setResumeResult(_ result: Result<Void, VoiceRecordRepositoryError>) {
+    public func setResumeResult(_ result: Result<Void, VoiceRecordRepositoryError>) {
         resumeResult = result
     }
 
-    func setFinishResult(_ result: Result<VoiceRecord, VoiceRecordRepositoryError>) {
+    public func setFinishResult(_ result: Result<VoiceRecord, VoiceRecordRepositoryError>) {
         finishResult = result
     }
 
-    func setCheckPermissionResult(_ result: Result<PermissionStatus, VoiceRecordRepositoryError>) {
+    public func setCheckPermissionResult(_ result: Result<PermissionStatus, VoiceRecordRepositoryError>) {
         checkPermissionResult = result
     }
 
-    func setRequestPermissionResult(_ result: Result<PermissionStatus, VoiceRecordRepositoryError>) {
+    public func setRequestPermissionResult(_ result: Result<PermissionStatus, VoiceRecordRepositoryError>) {
         requestPermissionResult = result
     }
 
-    func expectStartRecording(callCount: Int) {
+    public func expectStartRecording(callCount: Int) {
         expectedStartRecordingCallCount = callCount
     }
 
-    func expectPauseRecording(callCount: Int) {
+    public func expectPauseRecording(callCount: Int) {
         expectedPauseRecordingCallCount = callCount
     }
 
-    func expectResumeRecording(callCount: Int) {
+    public func expectResumeRecording(callCount: Int) {
         expectedResumeRecordingCallCount = callCount
     }
 
-    func expectFinishRecording(callCount: Int) {
+    public func expectFinishRecording(callCount: Int) {
         expectedFinishRecordingCallCount = callCount
     }
 
-    func expectCheckPermission(callCount: Int) {
+    public func expectCheckPermission(callCount: Int) {
         expectedCheckPermissionCallCount = callCount
     }
 
-    func expectRequestPermission(callCount: Int) {
+    public func expectRequestPermission(callCount: Int) {
         expectedRequestPermissionCallCount = callCount
     }
 
-    func verify(file: StaticString = #filePath, line: UInt = #line) {
+    public func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedStartRecordingCallCount {
             XCTAssertEqual(actualStartRecordingCallCount, expected, "startRecording 호출 횟수 불일치", file: file, line: line)
         }
@@ -117,7 +119,7 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
         }
     }
 
-    func startRecording() async throws(VoiceRecordRepositoryError) -> AsyncStream<Waveform> {
+    public func startRecording() async throws(VoiceRecordRepositoryError) -> AsyncStream<Waveform> {
         if Task.isCancelled { throw .cancelled }
         actualStartRecordingCallCount += 1
         switch startResult {
@@ -129,7 +131,7 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
         }
     }
 
-    func pauseRecording() async throws(VoiceRecordRepositoryError) {
+    public func pauseRecording() async throws(VoiceRecordRepositoryError) {
         if Task.isCancelled { throw .cancelled }
         actualPauseRecordingCallCount += 1
         switch pauseResult {
@@ -141,7 +143,7 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
         }
     }
 
-    func resumeRecording() async throws(VoiceRecordRepositoryError) {
+    public func resumeRecording() async throws(VoiceRecordRepositoryError) {
         if Task.isCancelled { throw .cancelled }
         actualResumeRecordingCallCount += 1
         switch resumeResult {
@@ -153,7 +155,7 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
         }
     }
 
-    func finishRecording() async throws(VoiceRecordRepositoryError) -> VoiceRecord {
+    public func finishRecording() async throws(VoiceRecordRepositoryError) -> VoiceRecord {
         if Task.isCancelled { throw .cancelled }
         actualFinishRecordingCallCount += 1
         switch finishResult {
@@ -165,7 +167,7 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
         }
     }
 
-    func checkMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus {
+    public func checkMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus {
         if Task.isCancelled { throw .cancelled }
         actualCheckPermissionCallCount += 1
         switch checkPermissionResult {
@@ -177,7 +179,7 @@ actor MockVoiceRecordRepository: VoiceRecordRepository {
         }
     }
 
-    func requestMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus {
+    public func requestMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus {
         if Task.isCancelled { throw .cancelled }
         actualRequestPermissionCallCount += 1
         switch requestPermissionResult {

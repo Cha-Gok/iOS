@@ -5,24 +5,31 @@ import Observation
 
 @Observable
 @MainActor
-final class OnBoardingViewModel {
+public final class OnBoardingViewModel {
     // MARK: - UseCase
 
-    //  let fetchLanguageUseCase: FetchLanguageUseCase
-    //  let selectLanguageUseCase: SelectLanguageUseCase
-    //  let requestMicrophonePermissionUseCase: RequestMicrophonePermissionUseCase
+    let selectLanguageUseCase: SelectLanguageUseCase
+    let checkMicrophonePermissionUseCase: CheckMicrophonePermissionUseCase
+    let requestMicrophonePermissionUseCase: RequestMicrophonePermissionUseCase
+    let checkFirstLaunchUseCase: CheckFirstLaunchUseCase
 
     // MARK: - 생성자
 
-    //  init(
-//    fetchLanguageUseCase: FetchLanguageUseCase,
-//    selectLanguageUseCase: SelectLanguageUseCase,
-//    requestMicrophonePermissionUseCase: RequestMicrophonePermissionUseCase
-    //  ) {
-//    self.fetchLanguageUseCase = fetchLanguageUseCase
-//    self.selectLanguageUseCase = selectLanguageUseCase
-//    self.requestMicrophonePermissionUseCase = requestMicrophonePermissionUseCase
-    //  }
+    public init(
+        selectLanguageUseCase: SelectLanguageUseCase,
+        checkMicrophonePermissionUseCase: CheckMicrophonePermissionUseCase,
+        requestMicrophonePermissionUseCase: RequestMicrophonePermissionUseCase,
+        checkFirstLaunchUseCase: CheckFirstLaunchUseCase
+    ) {
+        self.selectLanguageUseCase = selectLanguageUseCase
+        self.checkMicrophonePermissionUseCase = checkMicrophonePermissionUseCase
+        self.requestMicrophonePermissionUseCase = requestMicrophonePermissionUseCase
+        self.checkFirstLaunchUseCase = checkFirstLaunchUseCase
+    }
+
+    // MARK: - Routing
+
+    public var onFinishOnBoarding: (() -> Void)?
 
     // MARK: - State
 
@@ -75,7 +82,13 @@ final class OnBoardingViewModel {
         guard !isPaging else { return }
         switch currentStep {
         case .finish:
-            AppLogger.info("마지막 시작하기 버튼 기능이 들어가야 합니다.")
+            Task {
+                await finishOnBoarding()
+                _ = checkFirstLaunchUseCase.execute() // 기존 사용자 전환
+                // 모든 완료 작업이 끝났으므로 해당 클로저를 호출해 화면 전환을 알립니다.
+                onFinishOnBoarding?()
+            }
+
         default: // 다음
             let nextIndex = currentStep.rawValue + 1
             guard nextIndex < Step.allCases.count else { return }
@@ -111,7 +124,32 @@ extension OnBoardingViewModel {
         currentStep = Step.matchingStep(nextStep)
         if currentStep == .micPermission {
             // 마이크 권한 요청 로직
-            AppLogger.info("마이크 요청을 해야 합니다.")
+            Task {
+                await requestPermission()
+            }
+        }
+    }
+}
+
+// MARK: - UseCase 비동기 함수
+
+extension OnBoardingViewModel {
+    func requestPermission() async {
+        do {
+            let status: PermissionStatus = try await checkMicrophonePermissionUseCase.execute()
+            if status == .notDetermined {
+                _ = try await requestMicrophonePermissionUseCase.execute()
+            }
+        } catch {
+            AppLogger.error(error)
+        }
+    }
+
+    func finishOnBoarding() async {
+        do {
+            try await selectLanguageUseCase.execute(lang: language)
+        } catch {
+            AppLogger.error(error)
         }
     }
 }

@@ -72,7 +72,10 @@ private let presentationTestsTarget = Target.target(
             basedOnDependencyAnalysis: false
         )
     ],
-    dependencies: [.target(name: "Presentation")]
+    dependencies: [
+        .target(name: "Presentation"),
+        .project(target: "DomainTests", path: "../Domain")
+    ]
 )
 
 let project = Project(
