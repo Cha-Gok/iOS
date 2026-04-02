@@ -29,6 +29,11 @@ jobs:
       - name: Tuist setup cache
         run: tuist setup cache
 
+      - name: Sync Certificates
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: bundle exec fastlane sync_certificates type:appstore
+
       - name: Deploy to App Store
         env:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
