@@ -41,7 +41,7 @@ platform :ios do
   desc "App Store 배포"
   lane :release do
     setup_api_key
-    new_build_number = latest_testflight_build_number(version: marketing_version) + 1
+    new_build_number = latest_testflight_build_number + 1
     sync_certificates
     build_ipa(build_number: new_build_number.to_s)
     upload_to_app_store
