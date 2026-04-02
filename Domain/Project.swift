@@ -49,7 +49,7 @@ private let domainTarget = Target.target(
 private let domainTestsTarget = Target.target(
     name: "DomainTests",
     destinations: .iOS,
-    product: .unitTests,
+    product: .framework,
     bundleId: "\(bundleId).DomainTests",
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
@@ -62,7 +62,10 @@ private let domainTestsTarget = Target.target(
             basedOnDependencyAnalysis: false
         )
     ],
-    dependencies: [.target(name: "Domain")]
+    dependencies: [
+        .target(name: "Domain"),
+        .xctest
+    ]
 )
 
 let project = Project(
