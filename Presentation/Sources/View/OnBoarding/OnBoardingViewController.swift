@@ -6,7 +6,17 @@ import UIKit
 public final class OnBoardingViewController: UIViewController {
     // MARK: - State
 
-    private let vm: OnBoardingViewModel = .init()
+    private let vm: OnBoardingViewModel
+
+    public init(vm: OnBoardingViewModel) {
+        self.vm = vm
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     // MARK: - Component
 
@@ -223,6 +233,6 @@ extension OnBoardingViewController: UIScrollViewDelegate {
     }
 }
 
-#Preview {
-    OnBoardingViewController()
-}
+// #Preview {
+//    OnBoardingViewController()
+// }

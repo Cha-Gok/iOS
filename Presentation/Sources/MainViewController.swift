@@ -1,6 +1,6 @@
 import UIKit
 
-public final class ContentViewController: UIViewController {
+public final class MainViewController: UIViewController {
     let closeButton: GlassButton = {
         let b = GlassButton.close("닫기")
         b.setCapsuleCornerRadius()
@@ -38,5 +38,5 @@ public final class ContentViewController: UIViewController {
 }
 
 #Preview {
-    ContentViewController()
+    MainViewController()
 }
