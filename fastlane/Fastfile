@@ -31,19 +31,19 @@ platform :ios do
   desc "TestFlight 베타 배포"
   lane :beta do
     setup_ci
-    api_key = setup_api_key
+    setup_api_key
     sync_certificates
-    build_number = latest_testflight_build_number(api_key: api_key) + 1
-    build_ipa(build_number: build_number.to_s)
+    build_number = Time.now.utc.strftime("%Y%m%d%H%M")
+    build_ipa(build_number: build_number)
     upload_to_testflight(skip_waiting_for_build_processing: true)
   end
 
   desc "App Store 배포"
   lane :release do
-    api_key = setup_api_key
-    new_build_number = latest_testflight_build_number(api_key: api_key) + 1
+    setup_api_key
     sync_certificates
-    build_ipa(build_number: new_build_number.to_s)
+    build_number = Time.now.utc.strftime("%Y%m%d%H%M")
+    build_ipa(build_number: build_number)
     upload_to_app_store
   end
 
