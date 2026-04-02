@@ -3,9 +3,19 @@ import Domain
 import Foundation
 import Observation
 
+@MainActor
+public protocol NavigationDelegate: AnyObject {
+    /// 온보딩 완료 시 화면 전환을 호출합니다.
+    func finishOnBoarding()
+}
+
 @Observable
 @MainActor
 public final class OnBoardingViewModel {
+    // MARK: - Delegate
+
+    public weak var navDelegate: NavigationDelegate?
+
     // MARK: - UseCase
 
     let selectLanguageUseCase: SelectLanguageUseCase
@@ -26,10 +36,6 @@ public final class OnBoardingViewModel {
         self.requestMicrophonePermissionUseCase = requestMicrophonePermissionUseCase
         self.checkFirstLaunchUseCase = checkFirstLaunchUseCase
     }
-
-    // MARK: - Routing
-
-    public var onFinishOnBoarding: (() -> Void)?
 
     // MARK: - State
 
@@ -77,7 +83,11 @@ public final class OnBoardingViewModel {
     func getMaxIndex() -> Int {
         Step.allCases.count
     }
+}
 
+// MARK: - Button Actions
+
+extension OnBoardingViewModel {
     func primaryButtonAction(scrollAction: (Int) -> Void) {
         guard !isPaging else { return }
         switch currentStep {
@@ -86,7 +96,7 @@ public final class OnBoardingViewModel {
                 await finishOnBoarding()
                 _ = checkFirstLaunchUseCase.execute() // 기존 사용자 전환
                 // 모든 완료 작업이 끝났으므로 해당 클로저를 호출해 화면 전환을 알립니다.
-                onFinishOnBoarding?()
+                navDelegate?.finishOnBoarding()
             }
 
         default: // 다음
@@ -101,7 +111,7 @@ public final class OnBoardingViewModel {
         guard !isPaging else { return }
         switch currentStep {
         case .first: // 건너뛰기
-            let nextIndex = Step.finish.rawValue
+            let nextIndex = Step.micPermission.rawValue
             isPaging = true
             scrollAction(nextIndex)
         default: // 뒤로가기
