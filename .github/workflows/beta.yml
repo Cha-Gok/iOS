@@ -11,6 +11,7 @@ permissions:
 jobs:
   beta:
     runs-on: macos-26
+    environment: FastLane
     env:
       TUIST_XDG_STATE_HOME: /tmp/tuist-state
     steps:
@@ -30,6 +31,7 @@ jobs:
       - name: Sync Certificates
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.GIT_AUTHORIZATION }}
         run: bundle exec fastlane sync_certificates type:appstore
 
       - name: Deploy to TestFlight
