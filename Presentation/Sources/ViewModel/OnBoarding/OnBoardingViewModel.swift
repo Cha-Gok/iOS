@@ -4,7 +4,7 @@ import Foundation
 import Observation
 
 @MainActor
-public protocol NavigationDelegate: AnyObject {
+public protocol OnboardingCoordinatorDelegate: AnyObject {
     /// 온보딩 완료 시 화면 전환을 호출합니다.
     func finishOnBoarding()
 }
@@ -14,7 +14,7 @@ public protocol NavigationDelegate: AnyObject {
 public final class OnBoardingViewModel {
     // MARK: - Delegate
 
-    public weak var navDelegate: NavigationDelegate?
+    public weak var navDelegate: OnboardingCoordinatorDelegate?
 
     // MARK: - UseCase
 

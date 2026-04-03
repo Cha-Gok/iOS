@@ -40,7 +40,7 @@ final class AppCoordinator: BaseCoordinator<UINavigationController> {
 
 // MARK: - Navigation Delegate
 
-extension AppCoordinator: NavigationDelegate {
+extension AppCoordinator: OnboardingCoordinatorDelegate {
     /// 온보딩 화면에서 메인 화면으로 넘어가는 Navigation 함수
     func finishOnBoarding() {
         startMain()

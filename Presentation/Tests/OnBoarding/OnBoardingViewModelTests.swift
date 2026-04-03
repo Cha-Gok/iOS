@@ -4,7 +4,7 @@ import DomainTests
 import XCTest
 
 @MainActor
-final class MockNavigationDelegate: NavigationDelegate {
+final class MockNavigationDelegate: OnboardingCoordinatorDelegate {
     var finishOnBoardingCalled = false
     var finishOnBoardingExpectation: XCTestExpectation?
 
