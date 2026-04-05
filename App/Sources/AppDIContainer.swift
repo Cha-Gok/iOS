@@ -52,7 +52,15 @@ public final class AppDIContainer {
     // MARK: - 메인 플로우
 
     public func makeMainTabViewController() -> MainTabViewController {
-        return MainTabViewController()
+        let recordVC = RecordingViewController()
+        let mainVC = MainViewController()
+        let folderVC = FolderViewController()
+
+        return MainTabViewController(
+            recordVC: recordVC,
+            mainVC: mainVC,
+            folderVC: folderVC
+        )
     }
 }
 

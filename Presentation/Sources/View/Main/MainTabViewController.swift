@@ -1,9 +1,25 @@
 import UIKit
 
 public final class MainTabViewController: UITabBarController {
-    private lazy var recordVC = RecordingViewController()
-    private lazy var mainVC = MainViewController()
-    private lazy var folderVC = FolderViewController()
+    private let recordVC: RecordingViewController
+    private let mainVC: MainViewController
+    private let folderVC: FolderViewController
+
+    public init(
+        recordVC: RecordingViewController,
+        mainVC: MainViewController,
+        folderVC: FolderViewController
+    ) {
+        self.recordVC = recordVC
+        self.mainVC = mainVC
+        self.folderVC = folderVC
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override public func viewDidLoad() {
         super.viewDidLoad()

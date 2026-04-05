@@ -1,7 +1,7 @@
 import UIKit
 
-class FolderViewController: UIViewController {
-    override func viewDidLoad() {
+public final class FolderViewController: UIViewController {
+    override public func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.warning
     }
