@@ -33,7 +33,7 @@ final class AppCoordinator: BaseCoordinator<UINavigationController> {
     }
 
     private func startMain() {
-        let mainVC = dependencyContainer.makeMainViewController()
+        let mainVC = dependencyContainer.makeMainTabViewController()
         presenter.setViewControllers([mainVC], animated: false)
     }
 }

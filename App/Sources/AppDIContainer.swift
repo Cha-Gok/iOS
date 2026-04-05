@@ -51,9 +51,16 @@ public final class AppDIContainer {
 
     // MARK: - 메인 플로우
 
-    public func makeMainViewController() -> MainViewController {
-        // ContentViewController 생성에 필요한 DI
-        return MainViewController()
+    public func makeMainTabViewController() -> MainTabViewController {
+        let recordVC = RecordingViewController()
+        let mainVC = MainViewController()
+        let folderVC = FolderViewController()
+
+        return MainTabViewController(
+            recordVC: recordVC,
+            mainVC: mainVC,
+            folderVC: folderVC
+        )
     }
 }
 
