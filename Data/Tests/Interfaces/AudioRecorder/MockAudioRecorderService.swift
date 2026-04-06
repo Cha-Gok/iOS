@@ -13,11 +13,13 @@ actor MockAudioRecorderService: AudioRecorderService {
     private var pauseCallCount = 0
     private var resumeCallCount = 0
     private var finishCallCount = 0
+    private var cancelCallCount = 0
 
     private var expectedStartCallCount: Int?
     private var expectedPauseCallCount: Int?
     private var expectedResumeCallCount: Int?
     private var expectedFinishCallCount: Int?
+    private var expectedCancelCallCount: Int?
 
     private var checkPermissionResult: PermissionStatus?
     private var requestPermissionResult: PermissionStatus?
@@ -66,6 +68,10 @@ actor MockAudioRecorderService: AudioRecorderService {
         expectedFinishCallCount = callCount
     }
 
+    func expectCancel(callCount: Int) {
+        expectedCancelCallCount = callCount
+    }
+
     func expectCheckPermission(callCount: Int) {
         expectedCheckPermissionCallCount = callCount
     }
@@ -86,6 +92,9 @@ actor MockAudioRecorderService: AudioRecorderService {
         }
         if let expectedFinishCallCount {
             XCTAssertEqual(finishCallCount, expectedFinishCallCount, file: file, line: line)
+        }
+        if let expectedCancelCallCount {
+            XCTAssertEqual(cancelCallCount, expectedCancelCallCount, file: file, line: line)
         }
         if let expectedCheckPermissionCallCount {
             XCTAssertEqual(checkPermissionCallCount, expectedCheckPermissionCallCount, file: file, line: line)
@@ -129,6 +138,11 @@ actor MockAudioRecorderService: AudioRecorderService {
             throw .finishFailed
         }
         return try finishResult.get()
+    }
+
+    func cancelRecording() async {
+        cancelCallCount += 1
+        currentURLResult = nil
     }
 
     private var currentURLResult: URL?
