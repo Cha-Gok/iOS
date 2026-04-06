@@ -1,7 +1,7 @@
 @testable import Domain
 import Foundation
 
-extension VoiceRecord {
+public extension VoiceRecord {
     static func stub(
         id: UUID = UUID(),
         createdAt: Date = Date(),

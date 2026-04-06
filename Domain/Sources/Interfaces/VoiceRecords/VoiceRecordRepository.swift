@@ -30,4 +30,8 @@ public protocol VoiceRecordRepository: Sendable {
     /// - Throws: `VoiceRecordRepositoryError.notRecording`, `VoiceRecordRepositoryError.finishFailed`,
     /// `VoiceRecordRepositoryError.encodingFailed`
     func finishRecording() async throws(VoiceRecordRepositoryError) -> VoiceRecord
+
+    /// 진행 중인 녹음을 취소하고 임시 파일을 삭제합니다.
+    /// - Throws: `VoiceRecordRepositoryError.cancelled`
+    func cancelRecording() async throws(VoiceRecordRepositoryError)
 }

@@ -33,12 +33,23 @@ final class AppCoordinator: BaseCoordinator<UINavigationController> {
     }
 
     private func startMain() {
-        let mainVC = dependencyContainer.makeMainTabViewController()
+        let mainVC = dependencyContainer.makeMainViewController()
+        mainVC.onRecordingButtonTapped = { [weak self] in
+            self?.presentRecording()
+        }
         presenter.setViewControllers([mainVC], animated: false)
     }
-}
 
-// MARK: - Navigation Delegate
+    private func presentRecording() {
+        let coordinator = RecordingCoordinator(
+            dependencyContainer: dependencyContainer,
+            parentCoordinator: self
+        )
+        store(coordinator: coordinator)
+        coordinator.start()
+        presenter.present(coordinator.presenter, animated: true)
+    }
+}
 
 extension AppCoordinator: OnboardingCoordinatorDelegate {
     /// 온보딩 화면에서 메인 화면으로 넘어가는 Navigation 함수
