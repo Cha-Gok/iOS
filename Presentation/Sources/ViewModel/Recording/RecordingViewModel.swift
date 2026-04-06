@@ -54,7 +54,7 @@ public final class RecordingViewModel {
     private let resumeRecordingUseCase: ResumeRecordingUseCase
     private let finishRecordingUseCase: FinishRecordingUseCase
 
-    weak var coordinator: RecordingCoordinating?
+    public weak var coordinator: RecordingCoordinating?
 
     private(set) var state: State = .init()
     private var waveformTask: Task<Void, Never>?
@@ -100,7 +100,7 @@ public final class RecordingViewModel {
                     send(.errorOccurred(error))
                 }
             }
-        case let .errorOccurred(error):
+        case .errorOccurred(let error):
             state.errorMessage = error.localizedDescription
         }
     }
