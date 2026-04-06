@@ -1,0 +1,169 @@
+import Domain
+import Foundation
+
+@MainActor
+public protocol RecordingCoordinating: AnyObject {
+    func cancelRecording()
+    func finishRecording(voiceRecord: VoiceRecord)
+}
+
+@MainActor
+@Observable
+public final class RecordingViewModel {
+    struct State: Equatable {
+        enum RecordingState {
+            case idle
+            case recording
+            case paused
+        }
+
+        let title: String = "새 기록"
+        let recordingStartDate: Date = .now
+        var recordingDuration: TimeInterval = 0
+        var amplitude: Float = 0
+        var recordingState: RecordingState = .idle
+        var errorMessage: String?
+
+        var displayStartDate: String {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "ko_KR")
+            formatter.dateFormat = "yyyy.MM.dd · a HH:mm"
+
+            return formatter.string(from: recordingStartDate)
+        }
+
+        var displayDuration: String {
+            let duration = Int(recordingDuration)
+            let hours = duration / 3600
+            let minutes = (duration % 3600) / 60
+            let seconds = duration % 60
+
+            return String(format: "%02d : %02d : %02d", hours, minutes, seconds)
+        }
+    }
+
+    public enum Action {
+        case recordButtonTapped
+        case cancelButtonTapped
+        case finishButtonTapped
+        case errorOccurred(Error)
+    }
+
+    private let startRecordingUseCase: StartRecordingUseCase
+    private let pauseRecordingUseCase: PauseRecordingUseCase
+    private let resumeRecordingUseCase: ResumeRecordingUseCase
+    private let finishRecordingUseCase: FinishRecordingUseCase
+
+    weak var coordinator: RecordingCoordinating?
+
+    private(set) var state: State = .init()
+    private var waveformTask: Task<Void, Never>?
+    private var timerTask: Task<Void, Never>?
+
+    public init(
+        startRecordingUseCase: StartRecordingUseCase,
+        pauseRecordingUseCase: PauseRecordingUseCase,
+        resumeRecordingUseCase: ResumeRecordingUseCase,
+        finishRecordingUseCase: FinishRecordingUseCase
+    ) {
+        self.startRecordingUseCase = startRecordingUseCase
+        self.pauseRecordingUseCase = pauseRecordingUseCase
+        self.resumeRecordingUseCase = resumeRecordingUseCase
+        self.finishRecordingUseCase = finishRecordingUseCase
+    }
+
+    public func send(_ action: Action) {
+        switch action {
+        case .recordButtonTapped:
+            switch state.recordingState {
+            case .paused:
+                resumeRecording()
+            case .recording:
+                pauseRecording()
+            case .idle:
+                startRecording()
+            }
+        case .cancelButtonTapped:
+            stopTimer()
+            waveformTask?.cancel()
+            waveformTask = nil
+            coordinator?.cancelRecording()
+        case .finishButtonTapped:
+            Task {
+                do {
+                    stopTimer()
+                    waveformTask?.cancel()
+                    waveformTask = nil
+                    let voiceRecord = try await finishRecordingUseCase.execute()
+                    coordinator?.finishRecording(voiceRecord: voiceRecord)
+                } catch {
+                    send(.errorOccurred(error))
+                }
+            }
+        case let .errorOccurred(error):
+            state.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func startRecording() {
+        Task {
+            do {
+                let waveformStream = try await startRecordingUseCase.execute()
+                state.recordingState = .recording
+                startTimer()
+
+                waveformTask?.cancel()
+                waveformTask = Task { [weak self] in
+                    guard let self else { return }
+
+                    for await waveform in waveformStream {
+                        state.amplitude = waveform.amplitudes.last ?? 0
+                    }
+                }
+            } catch {
+                state.recordingState = .idle
+                send(.errorOccurred(error))
+            }
+        }
+    }
+
+    private func pauseRecording() {
+        Task {
+            do {
+                try await pauseRecordingUseCase.execute()
+                stopTimer()
+                state.recordingState = .paused
+            } catch {
+                send(.errorOccurred(error))
+            }
+        }
+    }
+
+    private func resumeRecording() {
+        Task {
+            do {
+                try await resumeRecordingUseCase.execute()
+                startTimer()
+                state.recordingState = .recording
+            } catch {
+                send(.errorOccurred(error))
+            }
+        }
+    }
+
+    private func startTimer() {
+        timerTask?.cancel()
+        timerTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled, let self else { return }
+                state.recordingDuration += 1
+            }
+        }
+    }
+
+    private func stopTimer() {
+        timerTask?.cancel()
+        timerTask = nil
+    }
+}
