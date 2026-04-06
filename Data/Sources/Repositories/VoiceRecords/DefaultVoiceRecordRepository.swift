@@ -64,6 +64,15 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
         }
     }
 
+    public func cancelRecording() async throws(VoiceRecordRepositoryError) {
+        if Task.isCancelled { throw .cancelled }
+        let currentURL = await audioService.currentRecordingURL()
+        await audioService.cancelRecording()
+        if let currentURL {
+            try? await storageService.delete(fileURL: currentURL)
+        }
+    }
+
     public func finishRecording() async throws(VoiceRecordRepositoryError) -> VoiceRecord {
         if Task.isCancelled { throw .cancelled }
 
