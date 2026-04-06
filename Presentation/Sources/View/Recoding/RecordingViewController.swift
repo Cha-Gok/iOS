@@ -87,7 +87,7 @@ public final class RecordingViewController: UIViewController {
             action: #selector(cancelButtonTapped)
         )
 
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .done,
             target: self,
             action: #selector(finishButtonTapped)
