@@ -121,9 +121,8 @@ public final class RecordingViewModel {
 
                 waveformTask?.cancel()
                 waveformTask = Task { [weak self] in
-                    guard let self else { return }
-
                     for await waveform in waveformStream {
+                        guard let self else { break }
                         state.amplitude = waveform.amplitudes.last ?? 0
                     }
                 }
