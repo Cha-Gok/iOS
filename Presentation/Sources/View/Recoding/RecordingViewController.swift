@@ -45,7 +45,9 @@ public final class RecordingViewController: UIViewController {
             UIImage.SymbolConfiguration(pointSize: 22, weight: .semibold),
             forImageIn: .normal
         )
-        button.addTarget(self, action: #selector(recordButtonTapped), for: .touchUpInside)
+        button.addAction(UIAction { [weak self] _ in
+            self?.viewModel.send(.recordButtonTapped)
+        }, for: .touchUpInside)
 
         return button
     }()
@@ -82,15 +84,17 @@ public final class RecordingViewController: UIViewController {
 
     private func setupNavigation() {
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .cancel,
-            target: self,
-            action: #selector(cancelButtonTapped)
+            systemItem: .cancel,
+            primaryAction: UIAction { [weak self] _ in
+                self?.viewModel.send(.cancelButtonTapped)
+            }
         )
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .done,
-            target: self,
-            action: #selector(finishButtonTapped)
+            systemItem: .done,
+            primaryAction: UIAction { [weak self] _ in
+                self?.viewModel.send(.finishButtonTapped)
+            }
         )
     }
 
@@ -135,20 +139,5 @@ public final class RecordingViewController: UIViewController {
         case .paused:
             return "play.fill"
         }
-    }
-
-    @objc
-    private func recordButtonTapped() {
-        viewModel.send(.recordButtonTapped)
-    }
-
-    @objc
-    private func cancelButtonTapped() {
-        viewModel.send(.cancelButtonTapped)
-    }
-
-    @objc
-    private func finishButtonTapped() {
-        viewModel.send(.finishButtonTapped)
     }
 }
