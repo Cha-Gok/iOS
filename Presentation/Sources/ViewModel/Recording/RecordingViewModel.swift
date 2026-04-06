@@ -18,7 +18,7 @@ public final class RecordingViewModel {
         }
 
         let title: String = "새 기록"
-        let recordingStartDate: Date = .now
+        var recordingStartDate: Date = .now
         var recordingDuration: TimeInterval = 0
         var amplitude: Float = 0
         var recordingState: RecordingState = .idle
@@ -53,6 +53,7 @@ public final class RecordingViewModel {
     private let pauseRecordingUseCase: PauseRecordingUseCase
     private let resumeRecordingUseCase: ResumeRecordingUseCase
     private let finishRecordingUseCase: FinishRecordingUseCase
+    private let cancelRecordingUseCase: CancelRecordingUseCase
 
     public weak var coordinator: RecordingCoordinating?
 
@@ -64,12 +65,14 @@ public final class RecordingViewModel {
         startRecordingUseCase: StartRecordingUseCase,
         pauseRecordingUseCase: PauseRecordingUseCase,
         resumeRecordingUseCase: ResumeRecordingUseCase,
-        finishRecordingUseCase: FinishRecordingUseCase
+        finishRecordingUseCase: FinishRecordingUseCase,
+        cancelRecordingUseCase: CancelRecordingUseCase
     ) {
         self.startRecordingUseCase = startRecordingUseCase
         self.pauseRecordingUseCase = pauseRecordingUseCase
         self.resumeRecordingUseCase = resumeRecordingUseCase
         self.finishRecordingUseCase = finishRecordingUseCase
+        self.cancelRecordingUseCase = cancelRecordingUseCase
     }
 
     public func send(_ action: Action) {
@@ -87,7 +90,10 @@ public final class RecordingViewModel {
             stopTimer()
             waveformTask?.cancel()
             waveformTask = nil
-            coordinator?.cancelRecording()
+            Task {
+                try? await cancelRecordingUseCase.execute()
+                coordinator?.cancelRecording()
+            }
         case .finishButtonTapped:
             Task {
                 do {
@@ -109,6 +115,7 @@ public final class RecordingViewModel {
         Task {
             do {
                 let waveformStream = try await startRecordingUseCase.execute()
+                state.recordingStartDate = .now
                 state.recordingState = .recording
                 startTimer()
 

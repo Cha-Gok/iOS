@@ -68,7 +68,8 @@ public final class AppDIContainer {
             startRecordingUseCase: DefaultStartRecordingUseCase(recordingRepository: voiceRecordRepository),
             pauseRecordingUseCase: DefaultPauseRecordingUseCase(recordingRepository: voiceRecordRepository),
             resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: voiceRecordRepository),
-            finishRecordingUseCase: DefaultFinishRecordingUseCase(recordingRepository: voiceRecordRepository)
+            finishRecordingUseCase: DefaultFinishRecordingUseCase(recordingRepository: voiceRecordRepository),
+            cancelRecordingUseCase: DefaultCancelRecordingUseCase(recordingRepository: voiceRecordRepository)
         )
         viewModel.coordinator = coordinator
 
