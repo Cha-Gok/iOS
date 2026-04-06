@@ -160,24 +160,13 @@ public actor AudioService: AudioRecorderService {
         AppLogger.info("녹음 재개")
     }
 
-    public func currentRecordingURL() async -> URL? {
-        recordingFilePath
+    /// 진행 중인 녹음을 취소하고 내부 상태를 정리합니다. 임시 파일 삭제는 Repository가 담당합니다.
+    public func cancelRecording() async {
+        await stopRecordingSession()
     }
 
-    // MARK: - Private
-
-    /// 내부 오디오 레코더 이벤트를 처리하기 위한 델리게이트
-    private final class RecorderDelegate: NSObject, AVAudioRecorderDelegate, @unchecked Sendable {
-        let onDidFinishRecording: @Sendable (Bool) -> Void
-
-        init(onDidFinishRecording: @escaping @Sendable (Bool) -> Void) {
-            self.onDidFinishRecording = onDidFinishRecording
-            super.init()
-        }
-
-        func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
-            onDidFinishRecording(flag)
-        }
+    public func currentRecordingURL() async -> URL? {
+        recordingFilePath
     }
 
     /// 오디오 세션을 녹음 모드로 활성화합니다.
@@ -267,9 +256,7 @@ public actor AudioService: AudioRecorderService {
     private func buildRecordedAudio(
         filePath: URL,
         createdAt: Date
-    )
-        -> Result<RecordedAudio, AudioRecorderServiceError>
-    {
+    ) -> Result<RecordedAudio, AudioRecorderServiceError> {
         do {
             let audioFile = try AVAudioFile(forReading: filePath)
             let duration = audioFile.processingFormat.sampleRate > 0
@@ -334,5 +321,21 @@ public actor AudioService: AudioRecorderService {
         } catch {
             AppLogger.error(error)
         }
+    }
+}
+
+// MARK: - RecorderDelegate
+
+/// 내부 오디오 레코더 이벤트를 처리하기 위한 델리게이트
+private final class RecorderDelegate: NSObject, AVAudioRecorderDelegate, @unchecked Sendable {
+    let onDidFinishRecording: @Sendable (Bool) -> Void
+
+    init(onDidFinishRecording: @escaping @Sendable (Bool) -> Void) {
+        self.onDidFinishRecording = onDidFinishRecording
+        super.init()
+    }
+
+    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+        onDidFinishRecording(flag)
     }
 }
