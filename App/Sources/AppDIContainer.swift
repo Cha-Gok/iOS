@@ -8,20 +8,16 @@ import UIKit
 /// 외부 라이브러리에 의존하지 않고 생성자 주입(Constructor Injection) 방식으로 객체를 조립합니다.
 @MainActor
 public final class AppDIContainer {
-    // 전역적으로 공유되어야 하는 네트워크 관련 객체 역이나 로컬 캐시, DB 레이어 등을 이곳에서 1번만 초기화하여 들고 있도록 구성할 수 있습니다.
-    // 예: private lazy var networkService = DefaultNetworkService()
     private lazy var store = UserDefaultsKeyValueStoreService()
+    private lazy var audioService = AudioService()
+    private lazy var storageService = FileManagerStorageService()
+
     public init() {}
 
     // MARK: - 온보딩 플로우 (Presentation)
 
     /// OnBoarding 화면을 시작할 때 호출될 Factory 메서드
     public func makeOnBoardingViewController() -> OnBoardingViewController {
-        // [1] InfraStructure (외부 환경/서비스)
-
-        let audioService = AudioService()
-        let storageService = FileManagerStorageService()
-
         // [2] Repository (Data Layer)
         let languageRepository = DefaultLanguageRepository(store: store)
         let voiceRecordRepository = DefaultVoiceRecordRepository(
@@ -56,9 +52,6 @@ public final class AppDIContainer {
     }
 
     public func makeRecordingViewController(coordinator: RecordingCoordinating) -> RecordingViewController {
-        let audioService = AudioService()
-        let storageService = FileManagerStorageService()
-
         let voiceRecordRepository = DefaultVoiceRecordRepository(
             audioService: audioService,
             storageService: storageService
