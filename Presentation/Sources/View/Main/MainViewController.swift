@@ -1,12 +1,30 @@
 import UIKit
 
 public final class MainViewController: UIViewController {
+    public var onRecordingButtonTapped: (() -> Void)?
+
+    private lazy var recordingButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.layer.cornerRadius = 32
+        button.clipsToBounds = true
+        button.backgroundColor = .gray950
+        button.tintColor = .gray50
+        button.setPreferredSymbolConfiguration(
+            UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold),
+            forImageIn: .normal
+        )
+        button.setImage(UIImage(systemName: "mic.fill"), for: .normal)
+        button.addTarget(self, action: #selector(recordingButtonTapped), for: .touchUpInside)
+        return button
+    }()
+
     private let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        let c = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        c.translatesAutoresizingMaskIntoConstraints = false
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
 
-        return c
+        return collectionView
     }()
 
     let colors: [[UIColor]] = [
@@ -18,10 +36,26 @@ public final class MainViewController: UIViewController {
         super.viewDidLoad()
         setup()
         setupCollectionView()
+        setupRecordingButton()
     }
 
     private func setup() {
         view.backgroundColor = .gray200
+    }
+
+    private func setupRecordingButton() {
+        view.addSubview(recordingButton)
+        NSLayoutConstraint.activate([
+            recordingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            recordingButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
+            recordingButton.widthAnchor.constraint(equalToConstant: 64),
+            recordingButton.heightAnchor.constraint(equalToConstant: 64)
+        ])
+    }
+
+    @objc
+    private func recordingButtonTapped() {
+        onRecordingButtonTapped?()
     }
 
     private func setupCollectionView() {
