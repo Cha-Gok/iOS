@@ -1,4 +1,3 @@
-import Domain
 import Presentation
 import UIKit
 
@@ -42,22 +41,13 @@ final class AppCoordinator: BaseCoordinator<UINavigationController> {
     }
 
     private func presentRecording() {
-        let recordingVC = dependencyContainer.makeRecordingViewController(coordinator: self)
-        let nav = UINavigationController(rootViewController: recordingVC)
-        nav.modalPresentationStyle = .fullScreen
-        presenter.present(nav, animated: true)
-    }
-}
-
-// MARK: - Navigation Delegate
-
-extension AppCoordinator: RecordingCoordinating {
-    func cancelRecording() {
-        presenter.dismiss(animated: true)
-    }
-
-    func finishRecording(voiceRecord: VoiceRecord) {
-        presenter.dismiss(animated: true)
+        let coordinator = RecordingCoordinator(
+            dependencyContainer: dependencyContainer,
+            parentCoordinator: self
+        )
+        store(coordinator: coordinator)
+        coordinator.start()
+        presenter.present(coordinator.presenter, animated: true)
     }
 }
 
