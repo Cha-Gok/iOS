@@ -122,7 +122,7 @@ public final class RecordingViewController: UIViewController {
             recordButton.widthAnchor.constraint(equalToConstant: 120),
             recordButton.heightAnchor.constraint(equalToConstant: 60),
             recordButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            recordButton.topAnchor.constraint(greaterThanOrEqualTo: durationLabel.bottomAnchor, constant: 48),
+            recordButton.topAnchor.constraint(greaterThanOrEqualTo: durationLabel.bottomAnchor, constant: 48)
         ])
     }
 
