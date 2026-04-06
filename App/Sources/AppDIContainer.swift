@@ -51,16 +51,28 @@ public final class AppDIContainer {
 
     // MARK: - 메인 플로우
 
-    public func makeMainTabViewController() -> MainTabViewController {
-        let recordVC = RecordingViewController()
-        let mainVC = MainViewController()
-        let folderVC = FolderViewController()
+    public func makeMainViewController() -> MainViewController {
+        MainViewController()
+    }
 
-        return MainTabViewController(
-            recordVC: recordVC,
-            mainVC: mainVC,
-            folderVC: folderVC
+    public func makeRecordingViewController(coordinator: RecordingCoordinating) -> RecordingViewController {
+        let audioService = AudioService()
+        let storageService = FileManagerStorageService()
+
+        let voiceRecordRepository = DefaultVoiceRecordRepository(
+            audioService: audioService,
+            storageService: storageService
         )
+
+        let viewModel = RecordingViewModel(
+            startRecordingUseCase: DefaultStartRecordingUseCase(recordingRepository: voiceRecordRepository),
+            pauseRecordingUseCase: DefaultPauseRecordingUseCase(recordingRepository: voiceRecordRepository),
+            resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: voiceRecordRepository),
+            finishRecordingUseCase: DefaultFinishRecordingUseCase(recordingRepository: voiceRecordRepository)
+        )
+        viewModel.coordinator = coordinator
+
+        return RecordingViewController(viewModel: viewModel)
     }
 }
 
