@@ -18,29 +18,35 @@ public final class OnBoardingViewModel {
 
     // MARK: - UseCase
 
-    let selectLanguageUseCase: SelectLanguageUseCase
-    let checkMicrophonePermissionUseCase: CheckMicrophonePermissionUseCase
-    let requestMicrophonePermissionUseCase: RequestMicrophonePermissionUseCase
-    let checkFirstLaunchUseCase: CheckFirstLaunchUseCase
+    let selectLanguageUseCase: any SelectLanguageUseCase
+    let checkMicrophonePermissionUseCase: any CheckMicrophonePermissionUseCase
+    let requestMicrophonePermissionUseCase: any RequestMicrophonePermissionUseCase
+    let completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase
+    let createFolderUseCase: any CreateFolderUseCase
 
     // MARK: - 생성자
 
     public init(
-        selectLanguageUseCase: SelectLanguageUseCase,
-        checkMicrophonePermissionUseCase: CheckMicrophonePermissionUseCase,
-        requestMicrophonePermissionUseCase: RequestMicrophonePermissionUseCase,
-        checkFirstLaunchUseCase: CheckFirstLaunchUseCase
+        selectLanguageUseCase: any SelectLanguageUseCase,
+        checkMicrophonePermissionUseCase: any CheckMicrophonePermissionUseCase,
+        requestMicrophonePermissionUseCase: any RequestMicrophonePermissionUseCase,
+        completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase,
+        createFolderUseCase: any CreateFolderUseCase
     ) {
         self.selectLanguageUseCase = selectLanguageUseCase
         self.checkMicrophonePermissionUseCase = checkMicrophonePermissionUseCase
         self.requestMicrophonePermissionUseCase = requestMicrophonePermissionUseCase
-        self.checkFirstLaunchUseCase = checkFirstLaunchUseCase
+        self.completeFirstLaunchUseCase = completeFirstLaunchUseCase
+        self.createFolderUseCase = createFolderUseCase
     }
 
     // MARK: - State
 
     private(set) var currentStep: Step = .first
+    private(set) var errorMessage: String?
+    private(set) var language: Language = .ko
 
+    private var isPaging: Bool = false
     var steps: [Step] {
         Step.allCases
     }
@@ -68,10 +74,6 @@ public final class OnBoardingViewModel {
         currentStep == .finish
     }
 
-    private(set) var language: Language = .ko
-
-    private var isPaging: Bool = false
-
     // MARK: - Setters
 
     func setLanguage(_ val: Language) {
@@ -92,13 +94,7 @@ extension OnBoardingViewModel {
         guard !isPaging else { return }
         switch currentStep {
         case .finish:
-            Task {
-                await finishOnBoarding()
-                _ = checkFirstLaunchUseCase.execute() // 기존 사용자 전환
-                // 모든 완료 작업이 끝났으므로 해당 클로저를 호출해 화면 전환을 알립니다.
-                navDelegate?.finishOnBoarding()
-            }
-
+            finishOnBoarding()
         default: // 다음
             let nextIndex = currentStep.rawValue + 1
             guard nextIndex < Step.allCases.count else { return }
@@ -133,10 +129,7 @@ extension OnBoardingViewModel {
         guard nextStep != currentStep.rawValue else { return }
         currentStep = Step.matchingStep(nextStep)
         if currentStep == .micPermission {
-            // 마이크 권한 요청 로직
-            Task {
-                await requestPermission()
-            }
+            requestPermission()
         }
     }
 }
@@ -144,22 +137,31 @@ extension OnBoardingViewModel {
 // MARK: - UseCase 비동기 함수
 
 extension OnBoardingViewModel {
-    func requestPermission() async {
-        do {
-            let status: PermissionStatus = try await checkMicrophonePermissionUseCase.execute()
-            if status == .notDetermined {
-                _ = try await requestMicrophonePermissionUseCase.execute()
+    private func requestPermission() {
+        Task {
+            do {
+                let status: PermissionStatus = try await checkMicrophonePermissionUseCase.execute()
+                if status == .notDetermined {
+                    _ = try await requestMicrophonePermissionUseCase.execute()
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+                AppLogger.error(error)
             }
-        } catch {
-            AppLogger.error(error)
         }
     }
 
-    func finishOnBoarding() async {
-        do {
-            try await selectLanguageUseCase.execute(lang: language)
-        } catch {
-            AppLogger.error(error)
+    private func finishOnBoarding() {
+        Task {
+            do {
+                try await selectLanguageUseCase.execute(lang: language)
+                _ = try await createFolderUseCase.execute(name: Policy.defaultFolderName)
+                _ = completeFirstLaunchUseCase.execute()
+                navDelegate?.finishOnBoarding()
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
+            }
         }
     }
 }
