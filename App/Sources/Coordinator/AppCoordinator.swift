@@ -4,10 +4,11 @@ import UIKit
 @MainActor
 final class AppCoordinator: BaseCoordinator<UINavigationController> {
     let window: UIWindow
-    let dependencyContainer: AppDIContainer = .init()
+    let dependencyContainer: AppDIContainer
 
-    init(window: UIWindow) {
+    init(window: UIWindow, dependencyContainer: AppDIContainer) {
         self.window = window
+        self.dependencyContainer = dependencyContainer
         let presenter = UINavigationController()
         presenter.isToolbarHidden = true
         presenter.isNavigationBarHidden = true
@@ -18,17 +19,15 @@ final class AppCoordinator: BaseCoordinator<UINavigationController> {
     }
 
     override func start() {
-        let firstUser: Bool = dependencyContainer.checkFirstLaunchUser()
-        if firstUser {
-            startOnBoarding()
-        } else {
-            startMain()
-        }
+        let checkFirstLaunchUseCase = dependencyContainer.makeCheckFirstLaunchUseCase()
+        let isFirstLaunch = checkFirstLaunchUseCase.checkIsFirstLaunch()
+        isFirstLaunch ? startOnBoarding() : startMain()
     }
 
     private func startOnBoarding() {
-        let onBoardingVC = dependencyContainer.makeOnBoardingViewController()
-        onBoardingVC.vm.navDelegate = self
+        let onBoardingViewModel = dependencyContainer.makeOnBoardingViewModel()
+        onBoardingViewModel.navDelegate = self
+        let onBoardingVC = OnBoardingViewController(vm: onBoardingViewModel)
         presenter.setViewControllers([onBoardingVC], animated: false)
     }
 

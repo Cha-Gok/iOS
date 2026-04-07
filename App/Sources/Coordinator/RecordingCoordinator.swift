@@ -18,7 +18,9 @@ final class RecordingCoordinator: BaseCoordinator<UINavigationController> {
     }
 
     override func start() {
-        let recordingVC = dependencyContainer.makeRecordingViewController(coordinator: self)
+        let viewModel = dependencyContainer.makeRecordingViewModel()
+        viewModel.coordinator = self
+        let recordingVC = RecordingViewController(viewModel: viewModel)
         presenter.modalPresentationStyle = .fullScreen
         presenter.setViewControllers([recordingVC], animated: false)
     }
