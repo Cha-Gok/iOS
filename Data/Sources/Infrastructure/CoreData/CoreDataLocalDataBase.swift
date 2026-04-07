@@ -3,38 +3,27 @@ import CoreData
 
 /// Data 레이어의 번들에서 모델을 찾기 위해 클로저 내에서만 사용하는 클래스입니다.
 private final class BundleInfo: Sendable {
-    static let EntityName: String = "ChaGok"
-    static let ExtensionName: String = "momd"
+    static let modelName: String = "ChaGok"
 }
 
 /// Core Data 기반의 범용 로컬 데이터베이스입니다.
 /// 단일 NSPersistentContainer를 관리하며, 메서드 레벨 제네릭을 통해 모든 엔티티 타입을 처리합니다.
-/// actor로 선언되어 스레드 안전성을 보장하며, 내부적으로 backgroundContext를 사용하여 작업을 처리합니다.
-public actor CoreDataLocalDataBase {
+public final class CoreDataLocalDataBase: @unchecked Sendable {
     private let container: NSPersistentContainer
     private let backgroundContext: NSManagedObjectContext
-
-    #if DEBUG
-        /// 테스트용 컨테이너 (Unit Test 전용)
-        var testContainer: NSPersistentContainer {
-            container
-        }
-    #endif
 
     /// Core Data 스토리지를 초기화하고 모델 파일을 로드합니다.
     /// - Parameter inMemory: 메모리 상에서만 동작할지 여부 (테스트 용도)
     public init(inMemory: Bool = false) async throws(CoreDataStorageError) {
         let bundle = Bundle(for: BundleInfo.self)
 
-        // 모델 파일(.momd) 경로 확인 및 로드
-        guard let modelURL = bundle.url(forResource: BundleInfo.EntityName, withExtension: BundleInfo.ExtensionName),
-              let model = NSManagedObjectModel(contentsOf: modelURL)
-        else { throw .resourceNotFound }
+        guard let model = NSManagedObjectModel.mergedModel(from: [bundle]) else {
+            throw .resourceNotFound
+        }
 
-        let newContainer = NSPersistentContainer(name: BundleInfo.EntityName, managedObjectModel: model)
+        let newContainer = NSPersistentContainer(name: BundleInfo.modelName, managedObjectModel: model)
 
         if inMemory {
-            // 메모리 스토어 설정 (데이터가 영구 저장되지 않음)
             let description = NSPersistentStoreDescription()
             description.type = NSInMemoryStoreType
             newContainer.persistentStoreDescriptions = [description]
@@ -54,14 +43,8 @@ public actor CoreDataLocalDataBase {
             throw .initializeFailed
         }
 
-        newContainer.viewContext.automaticallyMergesChangesFromParent = true
-
-        // 1. 컨테이너 등록
         container = newContainer
-        // 2. 스토어 로드 완료 후 백그라운드 컨텍스트 생성
-        let context = newContainer.newBackgroundContext()
-        context.automaticallyMergesChangesFromParent = true
-        backgroundContext = context
+        backgroundContext = newContainer.newBackgroundContext()
     }
 }
 
