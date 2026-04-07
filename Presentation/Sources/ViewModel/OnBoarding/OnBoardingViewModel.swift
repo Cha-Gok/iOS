@@ -94,6 +94,7 @@ extension OnBoardingViewModel {
         guard !isPaging else { return }
         switch currentStep {
         case .finish:
+            isPaging = true
             finishOnBoarding()
         default: // 다음
             let nextIndex = currentStep.rawValue + 1
@@ -159,6 +160,7 @@ extension OnBoardingViewModel {
                 _ = completeFirstLaunchUseCase.execute()
                 navDelegate?.finishOnBoarding()
             } catch {
+                isPaging = false
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
             }
