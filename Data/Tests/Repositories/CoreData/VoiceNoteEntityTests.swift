@@ -397,7 +397,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         do {
             _ = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
             XCTFail("삭제 후 조회 시 에러가 발생해야 합니다.")
-        } catch let error as CoreDataStorageError {
+        } catch {
             guard case .fetchFailed = error else {
                 return XCTFail("예상한 에러는 .fetchFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
