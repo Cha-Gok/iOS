@@ -6,7 +6,6 @@ public enum CoreDataStorageError: LocalizedError, Sendable {
     case resourceNotFound
     /// 영구 저장소(Persistent Store) 로드 및 초기화 실패
     case initializeFailed
-
     /// 데이터 생성(Create) 실패
     case createFailed
     /// 데이터 조회(Fetch) 실패

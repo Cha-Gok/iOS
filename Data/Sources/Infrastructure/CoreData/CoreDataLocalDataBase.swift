@@ -8,7 +8,7 @@ private final class BundleInfo: Sendable {
 
 /// Core Data 기반의 범용 로컬 데이터베이스입니다.
 /// 단일 NSPersistentContainer를 관리하며, 메서드 레벨 제네릭을 통해 모든 엔티티 타입을 처리합니다.
-public final class CoreDataLocalDataBase: @unchecked Sendable {
+public final class CoreDataLocalDataBase: Sendable {
     private let container: NSPersistentContainer
     private let backgroundContext: NSManagedObjectContext
 
