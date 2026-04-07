@@ -35,6 +35,7 @@ public final class AppDIContainer {
         repository: checkFirstLaunchRepository
     )
     private lazy var createFolderUseCase = DefaultCreateFolderUseCase(repository: folderRepository)
+    private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(repository: folderRepository)
 
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
@@ -53,7 +54,7 @@ public final class AppDIContainer {
             checkMicrophonePermissionUseCase: checkMicrophonePermissionUseCase,
             requestMicrophonePermissionUseCase: requestMicrophonePermissionUseCase,
             completeFirstLaunchUseCase: completeFirstLaunchUseCase,
-            createFolderUseCase: createFolderUseCase
+            createDefaultFolderUseCase: createDefaultFolderUseCase
         )
     }
 

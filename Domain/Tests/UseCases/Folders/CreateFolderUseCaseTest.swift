@@ -26,21 +26,23 @@ extension CreateFolderUseCaseTest {
         await repository.verify()
     }
 
-    func test_기본폴더이름상태_폴더생성시_삭제불가능한폴더로생성한다() async throws {
+    func test_기본폴더이름상태_폴더생성시_reservedName에러를던진다() async {
         let repository = MockFolderRepository()
         let sut = DefaultCreateFolderUseCase(repository: repository)
 
         // Given
-        let expectedFolder = Folder.stub(name: Policy.defaultFolderName, isDeletable: false)
-        await repository.setCreateResult(.success(expectedFolder))
-        await repository.expectCreate(name: Policy.defaultFolderName, isDeletable: false, callCount: 1)
+        await repository.expectCreate(callCount: 0)
 
-        // When
-        let folder = try await sut.execute(name: Policy.defaultFolderName)
+        // When & Then
+        do {
+            _ = try await sut.execute(name: Policy.defaultFolderName)
+            XCTFail("CreateFolderUseCaseError.reservedName 에러를 throw 해야 합니다.")
+        } catch CreateFolderUseCaseError.reservedName {
+            // Success
+        } catch {
+            return XCTFail("예상한 에러는 CreateFolderUseCaseError.reservedName 이지만, 실제 받은 에러는 \(error) 입니다.")
+        }
 
-        // Then
-        XCTAssertEqual(folder.name, Policy.defaultFolderName)
-        XCTAssertFalse(folder.isDeletable)
         await repository.verify()
     }
 }

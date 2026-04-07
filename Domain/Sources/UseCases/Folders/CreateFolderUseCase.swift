@@ -31,9 +31,12 @@ public struct DefaultCreateFolderUseCase: CreateFolderUseCase {
         // 폴더 이름 제한
         guard trimName.count <= Policy.maxNameLength else { throw .invalidLengthName }
 
+        // 예약어 차단
+        guard trimName != Policy.defaultFolderName else { throw .reservedName }
+
         let folder = Folder(
             name: trimName,
-            isDeletable: trimName != Policy.defaultFolderName
+            isDeletable: true
         )
 
         do {

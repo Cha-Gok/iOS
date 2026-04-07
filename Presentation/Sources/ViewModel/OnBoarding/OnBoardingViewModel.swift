@@ -22,7 +22,7 @@ public final class OnBoardingViewModel {
     let checkMicrophonePermissionUseCase: any CheckMicrophonePermissionUseCase
     let requestMicrophonePermissionUseCase: any RequestMicrophonePermissionUseCase
     let completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase
-    let createFolderUseCase: any CreateFolderUseCase
+    let createDefaultFolderUseCase: any CreateDefaultFolderUseCase
 
     // MARK: - 생성자
 
@@ -31,13 +31,13 @@ public final class OnBoardingViewModel {
         checkMicrophonePermissionUseCase: any CheckMicrophonePermissionUseCase,
         requestMicrophonePermissionUseCase: any RequestMicrophonePermissionUseCase,
         completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase,
-        createFolderUseCase: any CreateFolderUseCase
+        createDefaultFolderUseCase: any CreateDefaultFolderUseCase
     ) {
         self.selectLanguageUseCase = selectLanguageUseCase
         self.checkMicrophonePermissionUseCase = checkMicrophonePermissionUseCase
         self.requestMicrophonePermissionUseCase = requestMicrophonePermissionUseCase
         self.completeFirstLaunchUseCase = completeFirstLaunchUseCase
-        self.createFolderUseCase = createFolderUseCase
+        self.createDefaultFolderUseCase = createDefaultFolderUseCase
     }
 
     // MARK: - State
@@ -156,7 +156,7 @@ extension OnBoardingViewModel {
         Task {
             do {
                 try await selectLanguageUseCase.execute(lang: language)
-                _ = try await createFolderUseCase.execute(name: Policy.defaultFolderName)
+                _ = try await createDefaultFolderUseCase.execute()
                 _ = completeFirstLaunchUseCase.execute()
                 navDelegate?.finishOnBoarding()
             } catch {
