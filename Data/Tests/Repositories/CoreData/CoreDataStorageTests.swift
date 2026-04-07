@@ -10,10 +10,10 @@ final class CoreDataStorageTests: XCTestCase {
 
     func test_인메모리모드일때_스토리지초기화시_정상적으로세팅된다() async throws {
         // Given
-        let database = try await CoreDataLocalDataBase<FolderEntity>(inMemory: true)
+        let store = try await CoreDataStore(inMemory: true)
 
         // Then
-        let container = await database.testContainer
+        let container = await store.testContainer
         XCTAssertEqual(container.name, "ChaGok")
         XCTAssertEqual(container.persistentStoreDescriptions.first?.type, NSInMemoryStoreType)
         XCTAssertTrue(container.viewContext.automaticallyMergesChangesFromParent)
