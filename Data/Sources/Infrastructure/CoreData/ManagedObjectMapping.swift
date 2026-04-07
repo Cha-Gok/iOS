@@ -27,13 +27,13 @@ public protocol ManagedObjectMapping: NSManagedObject {
     static func identityPredicate(for model: ModelType) -> NSPredicate
 
     /// 특정 모델을 찾기 위한 식별자 기반의 프레디케이트를 생성합니다.
-    static func identityPredicate(byId id: ModelType.ID) -> NSPredicate
+    static func identityPredicate(byID id: ModelType.ID) -> NSPredicate
 
     /// 컨텍스트 내에서 특정 모델에 해당하는 엔티티를 검색합니다.
     static func find(for model: ModelType, in context: NSManagedObjectContext) throws -> Self?
 
     /// 컨텍스트 내에서 특정 모델ID를 통해 해당하는 엔티티를 검색합니다.
-    static func find(byId id: ModelType.ID, in context: NSManagedObjectContext) throws -> Self?
+    static func find(byID id: ModelType.ID, in context: NSManagedObjectContext) throws -> Self?
 }
 
 public extension ManagedObjectMapping {
@@ -45,7 +45,7 @@ public extension ManagedObjectMapping {
 
     /// 모델 기반 기본 Predicate 생성
     static func identityPredicate(for model: ModelType) -> NSPredicate {
-        identityPredicate(byId: model.id)
+        identityPredicate(byID: model.id)
     }
 
     /// 단일 엔티티 검색 (by model)
@@ -57,9 +57,9 @@ public extension ManagedObjectMapping {
     }
 
     /// 단일 엔티티 검색 (by id)
-    static func find(byId id: ModelType.ID, in context: NSManagedObjectContext) throws -> Self? {
+    static func find(byID id: ModelType.ID, in context: NSManagedObjectContext) throws -> Self? {
         let request = NSFetchRequest<Self>(entityName: entityName.rawValue)
-        request.predicate = identityPredicate(byId: id)
+        request.predicate = identityPredicate(byID: id)
         request.fetchLimit = 1
         return try context.fetch(request).first
     }
@@ -67,7 +67,7 @@ public extension ManagedObjectMapping {
 
 public extension ManagedObjectMapping where ModelType.ID == UUID {
     /// UUID 식별자를 가지는 모델을 위한 Predicate 기본값
-    static func identityPredicate(byId id: ModelType.ID) -> NSPredicate {
+    static func identityPredicate(byID id: ModelType.ID) -> NSPredicate {
         NSPredicate(format: "id == %@", id as CVarArg)
     }
 }

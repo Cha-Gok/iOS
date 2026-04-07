@@ -90,7 +90,7 @@ extension VoiceNoteEntity: ManagedObjectMapping {
         guard let context = managedObjectContext else { return }
 
         // 1. Folder Relationship (필수 — folderID에 해당하는 폴더는 반드시 존재)
-        if let existingFolder = try? FolderEntity.find(byId: model.folderID, in: context) {
+        if let existingFolder = try? FolderEntity.find(byID: model.folderID, in: context) {
             folder = existingFolder
         } else {
             throw CoreDataStorageError.relationNotFound("Folder(\(model.folderID))")
@@ -138,7 +138,7 @@ extension VoiceNoteEntity: ManagedObjectMapping {
 
         // 3. Folder 관계 (변경 시에만)
         if folder.id != model.folderID {
-            if let newFolder = try? FolderEntity.find(byId: model.folderID, in: context) {
+            if let newFolder = try? FolderEntity.find(byID: model.folderID, in: context) {
                 folder = newFolder
             } else {
                 throw CoreDataStorageError.relationNotFound("Folder(\(model.folderID))")

@@ -24,7 +24,7 @@ extension KeywordEntity: ManagedObjectMapping {
     public func toModel() -> ModelType {
         Keyword(
             id: id,
-            noteId: voiceNote.id,
+            noteID: voiceNote.id,
             word: word
         )
     }
