@@ -1,7 +1,7 @@
 @testable import Domain
 import XCTest
 
-actor MockFolderRepository: FolderRepository {
+public actor MockFolderRepository: FolderRepository {
     // Results
     private var createResult: Result<Folder, FolderRepositoryError>?
     private var fetchAllResult: Result<[Folder], FolderRepositoryError>?
@@ -24,39 +24,41 @@ actor MockFolderRepository: FolderRepository {
     private var expectedName: String?
     private var expectedFolderID: UUID?
 
+    public init() {}
+
     // MARK: - Setup
 
-    func setCreateResult(_ result: Result<Folder, FolderRepositoryError>) {
+    public func setCreateResult(_ result: Result<Folder, FolderRepositoryError>) {
         createResult = result
     }
 
-    func setFetchAllResult(_ result: Result<[Folder], FolderRepositoryError>) {
+    public func setFetchAllResult(_ result: Result<[Folder], FolderRepositoryError>) {
         fetchAllResult = result
     }
 
-    func setUpdateResult(_ result: Result<Folder, FolderRepositoryError>) {
+    public func setUpdateResult(_ result: Result<Folder, FolderRepositoryError>) {
         updateResult = result
     }
 
     // MARK: - Expectations
 
-    func expectCreate(name: String? = nil, callCount: Int) {
+    public func expectCreate(name: String? = nil, callCount: Int) {
         expectedName = name
         expectedCreateCallCount = callCount
     }
 
-    func expectFetchAll(callCount: Int) {
+    public func expectFetchAll(callCount: Int) {
         expectedFetchAllCallCount = callCount
     }
 
-    func expectUpdate(folderID: UUID? = nil, callCount: Int) {
+    public func expectUpdate(folderID: UUID? = nil, callCount: Int) {
         expectedFolderID = folderID
         expectedUpdateCallCount = callCount
     }
 
     // MARK: - Verification
 
-    func verify(file: StaticString = #filePath, line: UInt = #line) {
+    public func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedCreateCallCount {
             XCTAssertEqual(
                 createCallCount, expected, "생성 호출 횟수가 일치하지 않습니다.", file: file, line: line
@@ -87,7 +89,7 @@ actor MockFolderRepository: FolderRepository {
 
     // MARK: - FolderRepository
 
-    func create(name: String) async throws(FolderRepositoryError) -> Folder {
+    public func create(name: String) async throws(FolderRepositoryError) -> Folder {
         createCallCount += 1
         actualName = name
 
@@ -103,7 +105,7 @@ actor MockFolderRepository: FolderRepository {
         }
     }
 
-    func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
+    public func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
         fetchAllCallCount += 1
 
         switch fetchAllResult {
@@ -118,7 +120,7 @@ actor MockFolderRepository: FolderRepository {
         }
     }
 
-    func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
+    public func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
         updateCallCount += 1
         actualFolder = folder
 
