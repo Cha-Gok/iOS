@@ -14,7 +14,7 @@ public final class CoreDataLocalDataBase: @unchecked Sendable {
 
     /// Core Data 스토리지를 초기화하고 모델 파일을 로드합니다.
     /// - Parameter inMemory: 메모리 상에서만 동작할지 여부 (테스트 용도)
-    public init(inMemory: Bool = false) async throws(CoreDataStorageError) {
+    public init(inMemory: Bool = false) throws(CoreDataStorageError) {
         let bundle = Bundle(for: BundleInfo.self)
 
         guard let model = NSManagedObjectModel.mergedModel(from: [bundle]) else {
@@ -29,17 +29,13 @@ public final class CoreDataLocalDataBase: @unchecked Sendable {
             newContainer.persistentStoreDescriptions = [description]
         }
 
-        do {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                newContainer.loadPersistentStores { _, error in
-                    if let error {
-                        continuation.resume(throwing: error)
-                    } else {
-                        continuation.resume()
-                    }
-                }
-            }
-        } catch {
+        var initializationError: Error?
+        newContainer.loadPersistentStores { _, error in
+            initializationError = error
+        }
+
+        if let initializationError {
+            AppLogger.error(initializationError)
             throw .initializeFailed
         }
 

@@ -10,7 +10,7 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     /// 단일 CoreDataLocalDataBase로 모든 엔티티를 처리합니다.
     private func makeStore() async throws -> CoreDataLocalDataBase {
-        try await CoreDataLocalDataBase(inMemory: true)
+        try CoreDataLocalDataBase(inMemory: true)
     }
 
     private func makeVoiceRecord(
