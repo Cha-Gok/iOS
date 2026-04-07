@@ -6,8 +6,7 @@ public enum CoreDataStorageError: LocalizedError, Sendable {
     case resourceNotFound
     /// 영구 저장소(Persistent Store) 로드 및 초기화 실패
     case initializeFailed
-    /// 정의되지 않은 기타 에러
-    case unknown(any Error)
+
     /// 데이터 생성(Create) 실패
     case createFailed
     /// 데이터 조회(Fetch) 실패
@@ -27,8 +26,6 @@ public enum CoreDataStorageError: LocalizedError, Sendable {
             return "모델 파일(.momd)을 찾을 수 없습니다."
         case .initializeFailed:
             return "영구 저장소(Persistent Store) 로드 및 초기화에 실패했습니다."
-        case .unknown(let error):
-            return "알 수 없는 에러가 발생했습니다: \(error.localizedDescription)"
         case .createFailed:
             return "데이터 생성에 실패했습니다."
         case .fetchFailed:
