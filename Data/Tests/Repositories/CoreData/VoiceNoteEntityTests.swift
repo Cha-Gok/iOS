@@ -8,14 +8,9 @@ import XCTest
 final class VoiceNoteEntityTests: XCTestCase {
     // MARK: - Helpers
 
-    /// VoiceNote는 반드시 Folder가 먼저 존재해야 하므로, 동일 컨테이너를 공유하는 두 DB를 생성합니다.
-    private func makeDatabases() async throws -> (
-        voiceNoteDB: CoreDataLocalDataBase<VoiceNoteEntity>,
-        folderDB: CoreDataLocalDataBase<FolderEntity>
-    ) {
-        let voiceNoteDB = try await CoreDataLocalDataBase<VoiceNoteEntity>(inMemory: true)
-        let folderDB = await voiceNoteDB.makeSibling(for: FolderEntity.self, shareContext: true)
-        return (voiceNoteDB, folderDB)
+    /// 단일 CoreDataLocalDataBase로 모든 엔티티를 처리합니다.
+    private func makeStore() async throws -> CoreDataLocalDataBase {
+        try CoreDataLocalDataBase(inMemory: true)
     }
 
     private func makeVoiceRecord(
@@ -50,14 +45,14 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_VoiceNote생성후_조회시_모든속성과관계가복원된다() async throws {
         // Given
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "테스트 폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let voiceRecord = makeVoiceRecord(duration: 120.5)
         let keywords = [
-            Keyword(noteId: UUID(), word: "Swift"),
-            Keyword(noteId: UUID(), word: "CoreData")
+            Keyword(noteID: UUID(), word: "Swift"),
+            Keyword(noteID: UUID(), word: "CoreData")
         ]
         let transcript = Transcript(text: "안녕하세요, 테스트입니다.")
         let summary = Summary(text: "테스트 요약")
@@ -72,8 +67,8 @@ final class VoiceNoteEntityTests: XCTestCase {
         )
 
         // When
-        _ = try await voiceNoteDB.create(voiceNote)
-        let fetched = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // Then — 기본 속성 검증
         XCTAssertEqual(fetched.id, voiceNote.id)
@@ -105,12 +100,12 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_VoiceNote수정후_다시조회시_제목변경이반영된다() async throws {
         // Given
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let voiceNote = makeVoiceNote(title: "Original Title", folderID: folder.id)
-        _ = try await voiceNoteDB.create(voiceNote)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // When
         let updatedNote = VoiceNote(
@@ -125,10 +120,10 @@ final class VoiceNoteEntityTests: XCTestCase {
             summary: voiceNote.summary,
             deletedAt: voiceNote.deletedAt
         )
-        _ = try await voiceNoteDB.update(updatedNote)
+        _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.title, "Updated Title")
     }
 
@@ -136,16 +131,16 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_Transcript가없는상태에서_Transcript추가시_정상적으로반영된다() async throws {
         // Given — Transcript 없이 생성
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let voiceNote = makeVoiceNote(
             title: "전사본 추가",
             folderID: folder.id,
             transcript: nil
         )
-        _ = try await voiceNoteDB.create(voiceNote)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // When — Transcript를 추가하여 update
         let transcript = Transcript(text: "전사 완료된 텍스트")
@@ -161,10 +156,10 @@ final class VoiceNoteEntityTests: XCTestCase {
             summary: voiceNote.summary,
             deletedAt: voiceNote.deletedAt
         )
-        _ = try await voiceNoteDB.update(updatedNote)
+        _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertNotNil(fetched.transcript)
         XCTAssertEqual(fetched.transcript?.text, "전사 완료된 텍스트")
     }
@@ -173,9 +168,9 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_전사본만있는상태에서_요약과키워드추가시_모두정상반영된다() async throws {
         // Given — Transcript만 있는 상태로 생성
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let transcript = Transcript(text: "전사된 텍스트")
         let voiceNote = makeVoiceNote(
@@ -183,13 +178,13 @@ final class VoiceNoteEntityTests: XCTestCase {
             folderID: folder.id,
             transcript: transcript
         )
-        _ = try await voiceNoteDB.create(voiceNote)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // When — Summary와 Keywords를 추가하여 update
         let summary = Summary(text: "요약 텍스트")
         let keywords = [
-            Keyword(noteId: voiceNote.id, word: "AI"),
-            Keyword(noteId: voiceNote.id, word: "전사")
+            Keyword(noteID: voiceNote.id, word: "AI"),
+            Keyword(noteID: voiceNote.id, word: "전사")
         ]
         let updatedNote = VoiceNote(
             id: voiceNote.id,
@@ -203,10 +198,10 @@ final class VoiceNoteEntityTests: XCTestCase {
             summary: summary,
             deletedAt: voiceNote.deletedAt
         )
-        _ = try await voiceNoteDB.update(updatedNote)
+        _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.transcript?.text, "전사된 텍스트")
         XCTAssertEqual(fetched.summary?.text, "요약 텍스트")
         XCTAssertEqual(fetched.keywords.count, 2)
@@ -219,19 +214,19 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_키워드목록이변경될때_업데이트시_삭제와추가가모두반영된다() async throws {
         // Given — 키워드 A, B로 생성
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let voiceNote = makeVoiceNote(
             title: "키워드 Diff",
             folderID: folder.id,
             keywords: [
-                Keyword(noteId: UUID(), word: "A"),
-                Keyword(noteId: UUID(), word: "B")
+                Keyword(noteID: UUID(), word: "A"),
+                Keyword(noteID: UUID(), word: "B")
             ]
         )
-        _ = try await voiceNoteDB.create(voiceNote)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // When — 키워드 B를 삭제하고 C를 추가 (A, C)
         let updatedNote = VoiceNote(
@@ -242,17 +237,17 @@ final class VoiceNoteEntityTests: XCTestCase {
             folderID: voiceNote.folderID,
             voiceRecord: voiceNote.voiceRecord,
             keywords: [
-                Keyword(noteId: voiceNote.id, word: "A"),
-                Keyword(noteId: voiceNote.id, word: "C")
+                Keyword(noteID: voiceNote.id, word: "A"),
+                Keyword(noteID: voiceNote.id, word: "C")
             ],
             transcript: voiceNote.transcript,
             summary: voiceNote.summary,
             deletedAt: voiceNote.deletedAt
         )
-        _ = try await voiceNoteDB.update(updatedNote)
+        _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.keywords.count, 2)
         let words = Set(fetched.keywords.map(\.word))
         XCTAssertTrue(words.contains("A"), "기존 키워드 A는 유지되어야 합니다.")
@@ -264,19 +259,19 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_동일데이터로_업데이트시_변경없이정상동작한다() async throws {
         // Given
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let voiceNote = makeVoiceNote(title: "변경 없음", folderID: folder.id)
-        _ = try await voiceNoteDB.create(voiceNote)
-        let original = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
+        let original = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // When — 동일한 데이터로 update (toDomain() == domain이므로 조기 반환)
-        _ = try await voiceNoteDB.update(original)
+        _ = try await store.update(original, as: VoiceNoteEntity.self)
 
         // Then — 여전히 동일
-        let fetched = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.title, "변경 없음")
     }
 
@@ -284,9 +279,9 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_폴더존재상태에서_VoiceNote생성시_정상저장된다() async throws {
         // Given — 폴더를 먼저 생성한 뒤 VoiceNote 저장
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "필수 관계 폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let voiceNote = makeVoiceNote(
             title: "Relationship 포함",
@@ -295,10 +290,10 @@ final class VoiceNoteEntityTests: XCTestCase {
         )
 
         // When
-        let saved = try await voiceNoteDB.create(voiceNote)
+        let saved = try await store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await voiceNoteDB.fetch(byId: saved.id)
+        let fetched = try await store.fetch(byID: saved.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.id, voiceNote.id)
         XCTAssertEqual(fetched.title, "Relationship 포함")
         XCTAssertEqual(fetched.folderID, folder.id)
@@ -308,9 +303,9 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_여러노트가존재할때_전체조회시_수정일내림차순으로정렬된다() async throws {
         // Given
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "정렬 폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let now = Date()
         let noteOldest = VoiceNote(
@@ -336,12 +331,12 @@ final class VoiceNoteEntityTests: XCTestCase {
         )
 
         // 의도적으로 순서를 뒤섞어 생성
-        _ = try await voiceNoteDB.create(noteNewest)
-        _ = try await voiceNoteDB.create(noteOldest)
-        _ = try await voiceNoteDB.create(noteMiddle)
+        _ = try await store.create(noteNewest, as: VoiceNoteEntity.self)
+        _ = try await store.create(noteOldest, as: VoiceNoteEntity.self)
+        _ = try await store.create(noteMiddle, as: VoiceNoteEntity.self)
 
         // When
-        let allNotes = try await voiceNoteDB.fetchAll()
+        let allNotes = try await store.fetchAll(VoiceNoteEntity.self)
 
         // Then — updatedAt descending
         XCTAssertEqual(allNotes.count, 3)
@@ -354,9 +349,9 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_DB에저장후_조회시_원본도메인객체와동일하다() async throws {
         // Given
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "동일성 폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let voiceNote = makeVoiceNote(
             title: "도메인 동일성",
@@ -365,8 +360,8 @@ final class VoiceNoteEntityTests: XCTestCase {
         )
 
         // When
-        _ = try await voiceNoteDB.create(voiceNote)
-        let restored = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
+        let restored = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // Then
         XCTAssertEqual(restored.id, voiceNote.id)
@@ -388,21 +383,21 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_VoiceNote삭제후_다시조회시_fetchFailed에러를던진다() async throws {
         // Given
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "삭제 폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let voiceNote = makeVoiceNote(title: "삭제 대상", folderID: folder.id)
-        _ = try await voiceNoteDB.create(voiceNote)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // When
-        _ = try await voiceNoteDB.delete(byId: voiceNote.id)
+        _ = try await store.delete(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // Then
         do {
-            _ = try await voiceNoteDB.fetch(byId: voiceNote.id)
+            _ = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
             XCTFail("삭제 후 조회 시 에러가 발생해야 합니다.")
-        } catch let error as CoreDataStorageError {
+        } catch {
             guard case .fetchFailed = error else {
                 return XCTFail("예상한 에러는 .fetchFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
@@ -413,9 +408,9 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_선택적관계가nil인노트를_생성후조회시_nil로정상복원된다() async throws {
         // Given
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "Optional 폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let voiceNote = makeVoiceNote(
             title: "Optional 없음",
@@ -425,8 +420,8 @@ final class VoiceNoteEntityTests: XCTestCase {
         )
 
         // When
-        _ = try await voiceNoteDB.create(voiceNote)
-        let fetched = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // Then
         XCTAssertNil(fetched.transcript)
@@ -437,9 +432,9 @@ final class VoiceNoteEntityTests: XCTestCase {
 
     func test_Transcript가있는노트에서_이를nil로변경후업데이트시_삭제가정상반영된다() async throws {
         // Given — Transcript가 있는 상태로 생성
-        let (voiceNoteDB, folderDB) = try await makeDatabases()
+        let store = try await makeStore()
         let folder = Folder(name: "폴더")
-        _ = try await folderDB.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         let transcript = Transcript(text: "삭제될 전사본")
         let voiceNote = makeVoiceNote(
@@ -447,7 +442,7 @@ final class VoiceNoteEntityTests: XCTestCase {
             folderID: folder.id,
             transcript: transcript
         )
-        _ = try await voiceNoteDB.create(voiceNote)
+        _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // When — Transcript를 nil로 설정하여 update
         let updatedNote = VoiceNote(
@@ -462,10 +457,10 @@ final class VoiceNoteEntityTests: XCTestCase {
             summary: voiceNote.summary,
             deletedAt: voiceNote.deletedAt
         )
-        _ = try await voiceNoteDB.update(updatedNote)
+        _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await voiceNoteDB.fetch(byId: voiceNote.id)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertNil(fetched.transcript, "Transcript가 nil로 정상 삭제되어야 합니다.")
     }
 }

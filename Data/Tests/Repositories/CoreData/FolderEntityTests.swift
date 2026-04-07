@@ -8,18 +8,8 @@ import XCTest
 final class FolderEntityTests: XCTestCase {
     // MARK: - Helpers
 
-    private func makeFolderDB() async throws -> CoreDataLocalDataBase<FolderEntity> {
-        try await CoreDataLocalDataBase<FolderEntity>(inMemory: true)
-    }
-
-    /// Folder와 VoiceNote가 동일 컨텍스트를 공유해야 관계 동기화를 검증할 수 있습니다.
-    private func makeDatabases() async throws -> (
-        folderDB: CoreDataLocalDataBase<FolderEntity>,
-        voiceNoteDB: CoreDataLocalDataBase<VoiceNoteEntity>
-    ) {
-        let folderDB = try await CoreDataLocalDataBase<FolderEntity>(inMemory: true)
-        let voiceNoteDB = await folderDB.makeSibling(for: VoiceNoteEntity.self, shareContext: true)
-        return (folderDB, voiceNoteDB)
+    private func makeStore() async throws -> CoreDataLocalDataBase {
+        try CoreDataLocalDataBase(inMemory: true)
     }
 
     private func makeFolder(
@@ -38,13 +28,13 @@ final class FolderEntityTests: XCTestCase {
 
     func test_폴더를생성후_ID로조회시_모든속성이유지된다() async throws {
         // Given
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let deletedDate = Date.now
         let folder = Folder(name: "속성 유지 폴더", deletedAt: deletedDate)
 
         // When
-        _ = try await database.create(folder)
-        let fetched = try await database.fetch(byId: folder.id)
+        _ = try await store.create(folder, as: FolderEntity.self)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
 
         // Then
         XCTAssertEqual(fetched.id, folder.id)
@@ -62,15 +52,15 @@ final class FolderEntityTests: XCTestCase {
 
     func test_여러폴더존재시_전체조회시_모든폴더가반환된다() async throws {
         // Given
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let folders = (1 ... 5).map { makeFolder(name: "Folder \($0)") }
 
         for folder in folders {
-            _ = try await database.create(folder)
+            _ = try await store.create(folder, as: FolderEntity.self)
         }
 
         // When
-        let allFolders = try await database.fetchAll()
+        let allFolders = try await store.fetchAll(FolderEntity.self)
 
         // Then
         XCTAssertEqual(allFolders.count, 5)
@@ -86,9 +76,9 @@ final class FolderEntityTests: XCTestCase {
 
     func test_폴더수정후_다시조회시_수정값이반영된다() async throws {
         // Given
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let folder = makeFolder(name: "Original")
-        _ = try await database.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         // When
         let updatedFolder = Folder(
@@ -98,10 +88,10 @@ final class FolderEntityTests: XCTestCase {
             isDeletable: false,
             deletedAt: Date.now
         )
-        _ = try await database.update(updatedFolder)
+        _ = try await store.update(updatedFolder, as: FolderEntity.self)
 
         // Then
-        let fetched = try await database.fetch(byId: folder.id)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
         XCTAssertEqual(fetched.name, "Updated")
         XCTAssertEqual(fetched.isDeletable, false)
         XCTAssertNotNil(fetched.deletedAt)
@@ -111,9 +101,9 @@ final class FolderEntityTests: XCTestCase {
 
     func test_이름만변경후_업데이트시_정상반영된다() async throws {
         // Given — Folder.update(from:)는 스칼라 속성만 비교하므로 voiceNotes를 로드하지 않음
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let folder = makeFolder(name: "Before")
-        _ = try await database.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         // When — 이름만 변경
         let renamed = Folder(
@@ -123,10 +113,10 @@ final class FolderEntityTests: XCTestCase {
             isDeletable: folder.isDeletable,
             deletedAt: folder.deletedAt
         )
-        _ = try await database.update(renamed)
+        _ = try await store.update(renamed, as: FolderEntity.self)
 
         // Then — 이름만 정상 변경 확인
-        let fetched = try await database.fetch(byId: folder.id)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
         XCTAssertEqual(fetched.name, "After")
         XCTAssertEqual(fetched.isDeletable, folder.isDeletable)
     }
@@ -135,9 +125,9 @@ final class FolderEntityTests: XCTestCase {
 
     func test_동일데이터로_업데이트시_변경없이정상동작한다() async throws {
         // Given
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let folder = makeFolder(name: "Same")
-        _ = try await database.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         // When — 동일한 값으로 update (내부적으로 조기 반환)
         let sameFolder = Folder(
@@ -147,10 +137,10 @@ final class FolderEntityTests: XCTestCase {
             isDeletable: folder.isDeletable,
             deletedAt: folder.deletedAt
         )
-        _ = try await database.update(sameFolder)
+        _ = try await store.update(sameFolder, as: FolderEntity.self)
 
         // Then — 여전히 동일한 값
-        let fetched = try await database.fetch(byId: folder.id)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
         XCTAssertEqual(fetched.name, "Same")
     }
 
@@ -158,18 +148,18 @@ final class FolderEntityTests: XCTestCase {
 
     func test_폴더삭제후_다시조회시_fetchFailed에러를던진다() async throws {
         // Given
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let folder = makeFolder(name: "곧 삭제될 폴더")
-        _ = try await database.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         // When
-        _ = try await database.delete(byId: folder.id)
+        _ = try await store.delete(byID: folder.id, as: FolderEntity.self)
 
         // Then
         do {
-            _ = try await database.fetch(byId: folder.id)
+            _ = try await store.fetch(byID: folder.id, as: FolderEntity.self)
             XCTFail("삭제 후 조회 시 에러가 발생해야 합니다.")
-        } catch let error as CoreDataStorageError {
+        } catch {
             guard case .fetchFailed = error else {
                 return XCTFail("예상한 에러는 .fetchFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
@@ -180,19 +170,19 @@ final class FolderEntityTests: XCTestCase {
 
     func test_여러폴더존재시_전체조회시_생성일내림차순으로정렬된다() async throws {
         // Given
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let now = Date()
         let newest = Folder(name: "Newest", createdAt: now)
         let middle = Folder(name: "Middle", createdAt: now.addingTimeInterval(-100))
         let oldest = Folder(name: "Oldest", createdAt: now.addingTimeInterval(-200))
 
         // 의도적으로 순서를 뒤섞어 생성
-        _ = try await database.create(newest)
-        _ = try await database.create(oldest)
-        _ = try await database.create(middle)
+        _ = try await store.create(newest, as: FolderEntity.self)
+        _ = try await store.create(oldest, as: FolderEntity.self)
+        _ = try await store.create(middle, as: FolderEntity.self)
 
         // When
-        let allFolders = try await database.fetchAll()
+        let allFolders = try await store.fetchAll(FolderEntity.self)
 
         // Then — createdAt descending
         XCTAssertEqual(allFolders.count, 3)
@@ -205,13 +195,13 @@ final class FolderEntityTests: XCTestCase {
 
     func test_DB에저장후_조회시_원본도메인객체와동일하다() async throws {
         // Given
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let deletedDate = Date.now
         let folder = Folder(name: "도메인 동일성", isDeletable: false, deletedAt: deletedDate)
 
         // When
-        _ = try await database.create(folder)
-        let restored = try await database.fetch(byId: folder.id)
+        _ = try await store.create(folder, as: FolderEntity.self)
+        let restored = try await store.fetch(byID: folder.id, as: FolderEntity.self)
 
         // Then
         XCTAssertEqual(restored.id, folder.id)
@@ -229,11 +219,11 @@ final class FolderEntityTests: XCTestCase {
 
     func test_필수값만있는폴더로_생성시_기본값이정상할당된다() async throws {
         // Given
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let minimalFolder = Folder(name: "Minimal")
 
         // When
-        let saved = try await database.create(minimalFolder)
+        let saved = try await store.create(minimalFolder, as: FolderEntity.self)
 
         // Then
         XCTAssertEqual(saved.id, minimalFolder.id)
@@ -247,12 +237,12 @@ final class FolderEntityTests: XCTestCase {
 
     func test_조회된엔티티에서_toDomain호출시_content가빈배열이다() async throws {
         // Given — FolderEntity.toDomain()은 성능 최적화를 위해 content를 빈 배열로 반환
-        let database = try await makeFolderDB()
+        let store = try await makeStore()
         let folder = makeFolder(name: "빈 content 검증")
-        _ = try await database.create(folder)
+        _ = try await store.create(folder, as: FolderEntity.self)
 
         // When
-        let fetched = try await database.fetch(byId: folder.id)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
 
         // Then — content는 항상 빈 배열 (별도 fetch로 voiceNotes를 가져와야 함)
         XCTAssertTrue(fetched.content.isEmpty)

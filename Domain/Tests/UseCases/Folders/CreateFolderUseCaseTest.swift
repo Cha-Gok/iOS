@@ -15,7 +15,7 @@ extension CreateFolderUseCaseTest {
         let expectedName = "New Folder"
         let expectedFolder = Folder.stub(name: expectedName)
         await repository.setCreateResult(.success(expectedFolder))
-        await repository.expectCreate(name: expectedName, callCount: 1)
+        await repository.expectCreate(name: expectedName, isDeletable: true, callCount: 1)
 
         // When
         let folder = try await sut.execute(name: expectedName)
@@ -23,6 +23,26 @@ extension CreateFolderUseCaseTest {
         // Then
         XCTAssertEqual(folder.name, expectedName)
         XCTAssertEqual(folder.id, expectedFolder.id)
+        await repository.verify()
+    }
+
+    func test_기본폴더이름상태_폴더생성시_reservedName에러를던진다() async {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
+        // Given
+        await repository.expectCreate(callCount: 0)
+
+        // When & Then
+        do {
+            _ = try await sut.execute(name: Policy.defaultFolderName)
+            XCTFail("CreateFolderUseCaseError.reservedName 에러를 throw 해야 합니다.")
+        } catch CreateFolderUseCaseError.reservedName {
+            // Success
+        } catch {
+            return XCTFail("예상한 에러는 CreateFolderUseCaseError.reservedName 이지만, 실제 받은 에러는 \(error) 입니다.")
+        }
+
         await repository.verify()
     }
 }

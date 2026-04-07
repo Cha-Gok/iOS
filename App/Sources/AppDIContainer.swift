@@ -1,3 +1,4 @@
+import Core
 import Data
 import Domain
 import Foundation
@@ -8,41 +9,53 @@ import UIKit
 /// 외부 라이브러리에 의존하지 않고 생성자 주입(Constructor Injection) 방식으로 객체를 조립합니다.
 @MainActor
 public final class AppDIContainer {
+    /// InfraStructure
     private lazy var store = UserDefaultsKeyValueStoreService()
     private lazy var audioService = AudioService()
     private lazy var storageService = FileManagerStorageService()
+    private let localDataBase: CoreDataLocalDataBase
 
-    public init() {}
+    /// Repository
+    private lazy var languageRepository = DefaultLanguageRepository(store: store)
+    private lazy var voiceRecordRepository = DefaultVoiceRecordRepository(
+        audioService: audioService,
+        storageService: storageService
+    )
+    private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
+    private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
+
+    /// UseCase
+    private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(repository: languageRepository)
+    private lazy var checkMicrophonePermissionUseCase =
+        DefaultCheckMicrophonePermissionUseCase(repository: voiceRecordRepository)
+    private lazy var requestMicrophonePermissionUseCase =
+        DefaultRequestMicrophonePermissionUseCase(repository: voiceRecordRepository)
+    private lazy var checkFirstLaunchUseCase = DefaultCheckFirstLaunchUseCase(repository: checkFirstLaunchRepository)
+    private lazy var completeFirstLaunchUseCase = DefaultCompleteFirstLaunchUseCase(
+        repository: checkFirstLaunchRepository
+    )
+    private lazy var createFolderUseCase = DefaultCreateFolderUseCase(repository: folderRepository)
+    private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(repository: folderRepository)
+
+    public init() throws {
+        localDataBase = try CoreDataLocalDataBase()
+    }
 
     // MARK: - 온보딩 플로우 (Presentation)
 
+    func makeCheckFirstLaunchUseCase() -> CheckFirstLaunchUseCase {
+        checkFirstLaunchUseCase
+    }
+
     /// OnBoarding 화면을 시작할 때 호출될 Factory 메서드
-    public func makeOnBoardingViewController() -> OnBoardingViewController {
-        // [2] Repository (Data Layer)
-        let languageRepository = DefaultLanguageRepository(store: store)
-        let voiceRecordRepository = DefaultVoiceRecordRepository(
-            audioService: audioService,
-            storageService: storageService
-        )
-        let checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
-
-        // [3] UseCase (Domain Layer)
-
-        let selectLanguageUseCase = DefaultSelectLanguageUseCase(repository: languageRepository)
-        let checkMicrophonePermissionUseCase =
-            DefaultCheckMicrophonePermissionUseCase(repository: voiceRecordRepository)
-        let requestMicrophonePermissionUseCase =
-            DefaultRequestMicrophonePermissionUseCase(repository: voiceRecordRepository)
-        let checkFirstLaunchUseCase = DefaultCheckFirstLaunchUseCase(repository: checkFirstLaunchRepository)
-
-        let viewModel = OnBoardingViewModel(
+    public func makeOnBoardingViewModel() -> OnBoardingViewModel {
+        OnBoardingViewModel(
             selectLanguageUseCase: selectLanguageUseCase,
             checkMicrophonePermissionUseCase: checkMicrophonePermissionUseCase,
             requestMicrophonePermissionUseCase: requestMicrophonePermissionUseCase,
-            checkFirstLaunchUseCase: checkFirstLaunchUseCase
+            completeFirstLaunchUseCase: completeFirstLaunchUseCase,
+            createDefaultFolderUseCase: createDefaultFolderUseCase
         )
-
-        return OnBoardingViewController(vm: viewModel)
     }
 
     // MARK: - 메인 플로우
@@ -51,32 +64,13 @@ public final class AppDIContainer {
         MainViewController()
     }
 
-    public func makeRecordingViewController(coordinator: RecordingCoordinating) -> RecordingViewController {
-        let voiceRecordRepository = DefaultVoiceRecordRepository(
-            audioService: audioService,
-            storageService: storageService
-        )
-
-        let viewModel = RecordingViewModel(
+    public func makeRecordingViewModel() -> RecordingViewModel {
+        RecordingViewModel(
             startRecordingUseCase: DefaultStartRecordingUseCase(recordingRepository: voiceRecordRepository),
             pauseRecordingUseCase: DefaultPauseRecordingUseCase(recordingRepository: voiceRecordRepository),
             resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: voiceRecordRepository),
             finishRecordingUseCase: DefaultFinishRecordingUseCase(recordingRepository: voiceRecordRepository),
             cancelRecordingUseCase: DefaultCancelRecordingUseCase(recordingRepository: voiceRecordRepository)
         )
-        viewModel.coordinator = coordinator
-
-        return RecordingViewController(viewModel: viewModel)
-    }
-}
-
-public extension AppDIContainer {
-    // MARK: - 공통 유즈케이스 (App)
-
-    func checkFirstLaunchUser() -> Bool {
-        let repository = DefaultCheckFirstLaunchRepository(store: store)
-        let useCase = DefaultCheckFirstLaunchUseCase(repository: repository)
-
-        return useCase.checkIsFirstLaunch()
     }
 }

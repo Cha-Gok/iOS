@@ -1,7 +1,7 @@
 @testable import Domain
 import XCTest
 
-actor MockFolderRepository: FolderRepository {
+public actor MockFolderRepository: FolderRepository {
     // Results
     private var createResult: Result<Folder, FolderRepositoryError>?
     private var fetchAllResult: Result<[Folder], FolderRepositoryError>?
@@ -13,7 +13,7 @@ actor MockFolderRepository: FolderRepository {
     private var updateCallCount = 0
 
     // 인자 검증
-    private var actualName: String?
+    private var actualCreatedFolder: Folder?
     private var actualFolder: Folder?
 
     // Expected Values
@@ -21,50 +21,70 @@ actor MockFolderRepository: FolderRepository {
     private var expectedFetchAllCallCount: Int?
     private var expectedUpdateCallCount: Int?
 
-    private var expectedName: String?
+    private var expectedCreateName: String?
+    private var expectedCreateIsDeletable: Bool?
     private var expectedFolderID: UUID?
+
+    public init() {}
 
     // MARK: - Setup
 
-    func setCreateResult(_ result: Result<Folder, FolderRepositoryError>) {
+    public func setCreateResult(_ result: Result<Folder, FolderRepositoryError>) {
         createResult = result
     }
 
-    func setFetchAllResult(_ result: Result<[Folder], FolderRepositoryError>) {
+    public func setFetchAllResult(_ result: Result<[Folder], FolderRepositoryError>) {
         fetchAllResult = result
     }
 
-    func setUpdateResult(_ result: Result<Folder, FolderRepositoryError>) {
+    public func setUpdateResult(_ result: Result<Folder, FolderRepositoryError>) {
         updateResult = result
     }
 
     // MARK: - Expectations
 
-    func expectCreate(name: String? = nil, callCount: Int) {
-        expectedName = name
+    public func expectCreate(name: String? = nil, isDeletable: Bool? = nil, callCount: Int) {
+        expectedCreateName = name
+        expectedCreateIsDeletable = isDeletable
         expectedCreateCallCount = callCount
     }
 
-    func expectFetchAll(callCount: Int) {
+    public func expectFetchAll(callCount: Int) {
         expectedFetchAllCallCount = callCount
     }
 
-    func expectUpdate(folderID: UUID? = nil, callCount: Int) {
+    public func expectUpdate(folderID: UUID? = nil, callCount: Int) {
         expectedFolderID = folderID
         expectedUpdateCallCount = callCount
     }
 
     // MARK: - Verification
 
-    func verify(file: StaticString = #filePath, line: UInt = #line) {
+    public func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedCreateCallCount {
             XCTAssertEqual(
                 createCallCount, expected, "생성 호출 횟수가 일치하지 않습니다.", file: file, line: line
             )
         }
 
-        if let expectedName {
-            XCTAssertEqual(actualName, expectedName, "생성 이름 인자가 일치하지 않습니다.", file: file, line: line)
+        if let expectedCreateName {
+            XCTAssertEqual(
+                actualCreatedFolder?.name,
+                expectedCreateName,
+                "생성 이름 인자가 일치하지 않습니다.",
+                file: file,
+                line: line
+            )
+        }
+
+        if let expectedCreateIsDeletable {
+            XCTAssertEqual(
+                actualCreatedFolder?.isDeletable,
+                expectedCreateIsDeletable,
+                "생성 삭제 가능 여부 인자가 일치하지 않습니다.",
+                file: file,
+                line: line
+            )
         }
 
         if let expected = expectedFetchAllCallCount {
@@ -87,9 +107,9 @@ actor MockFolderRepository: FolderRepository {
 
     // MARK: - FolderRepository
 
-    func create(name: String) async throws(FolderRepositoryError) -> Folder {
+    public func create(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
         createCallCount += 1
-        actualName = name
+        actualCreatedFolder = folder
 
         switch createResult {
         case .success(let folder):
@@ -103,7 +123,7 @@ actor MockFolderRepository: FolderRepository {
         }
     }
 
-    func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
+    public func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
         fetchAllCallCount += 1
 
         switch fetchAllResult {
@@ -118,7 +138,7 @@ actor MockFolderRepository: FolderRepository {
         }
     }
 
-    func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
+    public func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
         updateCallCount += 1
         actualFolder = folder
 

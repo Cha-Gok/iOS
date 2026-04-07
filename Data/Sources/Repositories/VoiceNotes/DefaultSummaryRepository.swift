@@ -19,7 +19,7 @@ public struct DefaultSummaryRepository: SummaryRepository {
             let (keywords, summaryText) = try await service.summarize(text: transcript.text, language: language)
 
             // Domain 엔티티로 변환
-            let keywordEntities = keywords.map { Keyword(noteId: transcript.id, word: $0) }
+            let keywordEntities = keywords.map { Keyword(noteID: transcript.id, word: $0) }
             let summaryEntity = Summary(text: summaryText)
 
             return (keywordEntities, summaryEntity)
