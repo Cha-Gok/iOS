@@ -20,39 +20,22 @@ final class AppCoordinator: BaseCoordinator<UINavigationController> {
 
     override func start() {
         let checkFirstLaunchUseCase = dependencyContainer.makeCheckFirstLaunchUseCase()
-        let isFirstLaunch = checkFirstLaunchUseCase.checkIsFirstLaunch()
-        isFirstLaunch ? startOnBoarding() : startMain()
+        if checkFirstLaunchUseCase.checkIsFirstLaunch() {
+            startOnboarding()
+        } else {
+            startMain()
+        }
     }
 
-    private func startOnBoarding() {
-        let onBoardingViewModel = dependencyContainer.makeOnBoardingViewModel()
-        onBoardingViewModel.navDelegate = self
-        let onBoardingVC = OnBoardingViewController(vm: onBoardingViewModel)
+    private func startOnboarding() {
+        let viewModel = dependencyContainer.makeOnBoardingViewModel()
+        viewModel.navDelegate = self
+        let onBoardingVC = OnBoardingViewController(vm: viewModel)
         presenter.setViewControllers([onBoardingVC], animated: false)
     }
 
-    private func startMain() {
-        let mainVC = dependencyContainer.makeMainViewController()
-        mainVC.onRecordingButtonTapped = { [weak self] in
-            self?.presentRecording()
-        }
-        presenter.setViewControllers([mainVC], animated: false)
-    }
-
-    private func presentRecording() {
-        let coordinator = RecordingCoordinator(
-            dependencyContainer: dependencyContainer,
-            parentCoordinator: self
-        )
-        store(coordinator: coordinator)
-        coordinator.start()
-        presenter.present(coordinator.presenter, animated: true)
-    }
-}
-
-extension AppCoordinator: OnboardingCoordinatorDelegate {
-    /// 온보딩 화면에서 메인 화면으로 넘어가는 Navigation 함수
-    func finishOnBoarding() {
+    func showMain() {
+        clearChildCoordinator()
         startMain()
 
         UIView.transition(
@@ -62,5 +45,22 @@ extension AppCoordinator: OnboardingCoordinatorDelegate {
             animations: nil,
             completion: nil
         )
+    }
+
+    private func startMain() {
+        let coordinator = MainCoordinator(
+            presenter: presenter,
+            dependencyContainer: dependencyContainer
+        )
+        store(coordinator: coordinator)
+        coordinator.start()
+    }
+}
+
+// MARK: - OnboardingCoordinatorDelegate
+
+extension AppCoordinator: OnboardingCoordinatorDelegate {
+    func finishOnBoarding() {
+        showMain()
     }
 }
