@@ -34,7 +34,7 @@ final class FolderEntityTests: XCTestCase {
 
         // When
         _ = try await store.create(folder, as: FolderEntity.self)
-        let fetched = try await store.fetch(byId: folder.id, as: FolderEntity.self)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
 
         // Then
         XCTAssertEqual(fetched.id, folder.id)
@@ -91,7 +91,7 @@ final class FolderEntityTests: XCTestCase {
         _ = try await store.update(updatedFolder, as: FolderEntity.self)
 
         // Then
-        let fetched = try await store.fetch(byId: folder.id, as: FolderEntity.self)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
         XCTAssertEqual(fetched.name, "Updated")
         XCTAssertEqual(fetched.isDeletable, false)
         XCTAssertNotNil(fetched.deletedAt)
@@ -116,7 +116,7 @@ final class FolderEntityTests: XCTestCase {
         _ = try await store.update(renamed, as: FolderEntity.self)
 
         // Then — 이름만 정상 변경 확인
-        let fetched = try await store.fetch(byId: folder.id, as: FolderEntity.self)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
         XCTAssertEqual(fetched.name, "After")
         XCTAssertEqual(fetched.isDeletable, folder.isDeletable)
     }
@@ -140,7 +140,7 @@ final class FolderEntityTests: XCTestCase {
         _ = try await store.update(sameFolder, as: FolderEntity.self)
 
         // Then — 여전히 동일한 값
-        let fetched = try await store.fetch(byId: folder.id, as: FolderEntity.self)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
         XCTAssertEqual(fetched.name, "Same")
     }
 
@@ -153,11 +153,11 @@ final class FolderEntityTests: XCTestCase {
         _ = try await store.create(folder, as: FolderEntity.self)
 
         // When
-        _ = try await store.delete(byId: folder.id, as: FolderEntity.self)
+        _ = try await store.delete(byID: folder.id, as: FolderEntity.self)
 
         // Then
         do {
-            _ = try await store.fetch(byId: folder.id, as: FolderEntity.self)
+            _ = try await store.fetch(byID: folder.id, as: FolderEntity.self)
             XCTFail("삭제 후 조회 시 에러가 발생해야 합니다.")
         } catch let error as CoreDataStorageError {
             guard case .fetchFailed = error else {
@@ -201,7 +201,7 @@ final class FolderEntityTests: XCTestCase {
 
         // When
         _ = try await store.create(folder, as: FolderEntity.self)
-        let restored = try await store.fetch(byId: folder.id, as: FolderEntity.self)
+        let restored = try await store.fetch(byID: folder.id, as: FolderEntity.self)
 
         // Then
         XCTAssertEqual(restored.id, folder.id)
@@ -242,7 +242,7 @@ final class FolderEntityTests: XCTestCase {
         _ = try await store.create(folder, as: FolderEntity.self)
 
         // When
-        let fetched = try await store.fetch(byId: folder.id, as: FolderEntity.self)
+        let fetched = try await store.fetch(byID: folder.id, as: FolderEntity.self)
 
         // Then — content는 항상 빈 배열 (별도 fetch로 voiceNotes를 가져와야 함)
         XCTAssertTrue(fetched.content.isEmpty)

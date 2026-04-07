@@ -51,8 +51,8 @@ final class VoiceNoteEntityTests: XCTestCase {
 
         let voiceRecord = makeVoiceRecord(duration: 120.5)
         let keywords = [
-            Keyword(noteId: UUID(), word: "Swift"),
-            Keyword(noteId: UUID(), word: "CoreData")
+            Keyword(noteID: UUID(), word: "Swift"),
+            Keyword(noteID: UUID(), word: "CoreData")
         ]
         let transcript = Transcript(text: "안녕하세요, 테스트입니다.")
         let summary = Summary(text: "테스트 요약")
@@ -68,7 +68,7 @@ final class VoiceNoteEntityTests: XCTestCase {
 
         // When
         _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
-        let fetched = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // Then — 기본 속성 검증
         XCTAssertEqual(fetched.id, voiceNote.id)
@@ -123,7 +123,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.title, "Updated Title")
     }
 
@@ -159,7 +159,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertNotNil(fetched.transcript)
         XCTAssertEqual(fetched.transcript?.text, "전사 완료된 텍스트")
     }
@@ -183,8 +183,8 @@ final class VoiceNoteEntityTests: XCTestCase {
         // When — Summary와 Keywords를 추가하여 update
         let summary = Summary(text: "요약 텍스트")
         let keywords = [
-            Keyword(noteId: voiceNote.id, word: "AI"),
-            Keyword(noteId: voiceNote.id, word: "전사")
+            Keyword(noteID: voiceNote.id, word: "AI"),
+            Keyword(noteID: voiceNote.id, word: "전사")
         ]
         let updatedNote = VoiceNote(
             id: voiceNote.id,
@@ -201,7 +201,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.transcript?.text, "전사된 텍스트")
         XCTAssertEqual(fetched.summary?.text, "요약 텍스트")
         XCTAssertEqual(fetched.keywords.count, 2)
@@ -222,8 +222,8 @@ final class VoiceNoteEntityTests: XCTestCase {
             title: "키워드 Diff",
             folderID: folder.id,
             keywords: [
-                Keyword(noteId: UUID(), word: "A"),
-                Keyword(noteId: UUID(), word: "B")
+                Keyword(noteID: UUID(), word: "A"),
+                Keyword(noteID: UUID(), word: "B")
             ]
         )
         _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
@@ -237,8 +237,8 @@ final class VoiceNoteEntityTests: XCTestCase {
             folderID: voiceNote.folderID,
             voiceRecord: voiceNote.voiceRecord,
             keywords: [
-                Keyword(noteId: voiceNote.id, word: "A"),
-                Keyword(noteId: voiceNote.id, word: "C")
+                Keyword(noteID: voiceNote.id, word: "A"),
+                Keyword(noteID: voiceNote.id, word: "C")
             ],
             transcript: voiceNote.transcript,
             summary: voiceNote.summary,
@@ -247,7 +247,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.keywords.count, 2)
         let words = Set(fetched.keywords.map(\.word))
         XCTAssertTrue(words.contains("A"), "기존 키워드 A는 유지되어야 합니다.")
@@ -265,13 +265,13 @@ final class VoiceNoteEntityTests: XCTestCase {
 
         let voiceNote = makeVoiceNote(title: "변경 없음", folderID: folder.id)
         _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
-        let original = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let original = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // When — 동일한 데이터로 update (toDomain() == domain이므로 조기 반환)
         _ = try await store.update(original, as: VoiceNoteEntity.self)
 
         // Then — 여전히 동일
-        let fetched = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.title, "변경 없음")
     }
 
@@ -293,7 +293,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         let saved = try await store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await store.fetch(byId: saved.id, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: saved.id, as: VoiceNoteEntity.self)
         XCTAssertEqual(fetched.id, voiceNote.id)
         XCTAssertEqual(fetched.title, "Relationship 포함")
         XCTAssertEqual(fetched.folderID, folder.id)
@@ -361,7 +361,7 @@ final class VoiceNoteEntityTests: XCTestCase {
 
         // When
         _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
-        let restored = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let restored = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // Then
         XCTAssertEqual(restored.id, voiceNote.id)
@@ -391,11 +391,11 @@ final class VoiceNoteEntityTests: XCTestCase {
         _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // When
-        _ = try await store.delete(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        _ = try await store.delete(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // Then
         do {
-            _ = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+            _ = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
             XCTFail("삭제 후 조회 시 에러가 발생해야 합니다.")
         } catch let error as CoreDataStorageError {
             guard case .fetchFailed = error else {
@@ -421,7 +421,7 @@ final class VoiceNoteEntityTests: XCTestCase {
 
         // When
         _ = try await store.create(voiceNote, as: VoiceNoteEntity.self)
-        let fetched = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
 
         // Then
         XCTAssertNil(fetched.transcript)
@@ -460,7 +460,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         _ = try await store.update(updatedNote, as: VoiceNoteEntity.self)
 
         // Then
-        let fetched = try await store.fetch(byId: voiceNote.id, as: VoiceNoteEntity.self)
+        let fetched = try await store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertNil(fetched.transcript, "Transcript가 nil로 정상 삭제되어야 합니다.")
     }
 }

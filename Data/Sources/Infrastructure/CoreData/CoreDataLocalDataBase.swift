@@ -27,14 +27,9 @@ public actor CoreDataLocalDataBase {
         let bundle = Bundle(for: BundleInfo.self)
 
         // 모델 파일(.momd) 경로 확인 및 로드
-        guard
-            let modelURL = bundle.url(
-                forResource: BundleInfo.EntityName, withExtension: BundleInfo.ExtensionName
-            ),
-            let model = NSManagedObjectModel(contentsOf: modelURL)
-        else {
-            throw .resourceNotFound
-        }
+        guard let modelURL = bundle.url(forResource: BundleInfo.EntityName, withExtension: BundleInfo.ExtensionName),
+              let model = NSManagedObjectModel(contentsOf: modelURL)
+        else { throw .resourceNotFound }
 
         let newContainer = NSPersistentContainer(name: BundleInfo.EntityName, managedObjectModel: model)
 
@@ -46,8 +41,7 @@ public actor CoreDataLocalDataBase {
         }
 
         do {
-            try await withCheckedThrowingContinuation {
-                (continuation: CheckedContinuation<Void, Error>) in
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 newContainer.loadPersistentStores { _, error in
                     if let error {
                         continuation.resume(throwing: error)
@@ -75,133 +69,88 @@ public actor CoreDataLocalDataBase {
 
 public extension CoreDataLocalDataBase {
     func create<MO: ManagedObjectMapping>(
-        _ item: MO.ModelType, as entity: MO.Type
+        _ item: MO.ModelType,
+        as entity: MO.Type
     ) async throws(CoreDataStorageError) -> MO.ModelType {
-        let backgroundContext = backgroundContext
-
         do {
-            return try await backgroundContext.perform {
-                do {
-                    let managedObject = try MO(model: item, context: backgroundContext)
-                    try backgroundContext.save()
-                    return managedObject.toModel()
-                } catch {
-                    AppLogger.error(error)
-                    throw CoreDataStorageError.createFailed
-                }
+            return try await backgroundContext.perform { [backgroundContext] in
+                let managedObject = try MO(model: item, context: backgroundContext)
+                try backgroundContext.save()
+                return managedObject.toModel()
             }
-        } catch let error as CoreDataStorageError {
-            throw error
         } catch {
-            throw .unknown(error)
+            AppLogger.error(error)
+            throw .createFailed
         }
     }
 
     func fetch<MO: ManagedObjectMapping>(
-        byId id: MO.ModelType.ID, as entity: MO.Type
+        byID id: MO.ModelType.ID,
+        as entity: MO.Type
     ) async throws(CoreDataStorageError) -> MO.ModelType {
-        let backgroundContext = backgroundContext
         do {
-            return try await backgroundContext.perform {
-                do {
-                    guard let entity = try MO.find(byId: id, in: backgroundContext) else {
-                        throw CoreDataStorageError.fetchFailed
-                    }
-                    return entity.toModel()
-                } catch let error as CoreDataStorageError {
-                    throw error
-                } catch {
-                    AppLogger.error(error)
+            return try await backgroundContext.perform { [backgroundContext] in
+                guard let entity = try MO.find(byID: id, in: backgroundContext) else {
                     throw CoreDataStorageError.fetchFailed
                 }
+                return entity.toModel()
             }
-        } catch let error as CoreDataStorageError {
-            throw error
         } catch {
-            throw .unknown(error)
+            AppLogger.error(error)
+            throw .fetchFailed
         }
     }
 
-    func fetchAll<MO: ManagedObjectMapping>(
-        _ entity: MO.Type
-    ) async throws(CoreDataStorageError) -> [MO.ModelType] {
-        let backgroundContext = backgroundContext
-
+    func fetchAll<MO: ManagedObjectMapping>(_ entity: MO.Type) async throws(CoreDataStorageError) -> [MO.ModelType] {
         do {
-            return try await backgroundContext.perform {
-                do {
-                    let request = NSFetchRequest<MO>(entityName: MO.entityName.rawValue)
-                    request.sortDescriptors = MO.sortDescriptors
-
-                    let entities = try backgroundContext.fetch(request)
-                    return entities.map { $0.toModel() }
-                } catch {
-                    AppLogger.error(error)
-                    throw CoreDataStorageError.fetchAllFailed
-                }
+            return try await backgroundContext.perform { [backgroundContext] in
+                let request = NSFetchRequest<MO>(entityName: MO.entityName.rawValue)
+                request.sortDescriptors = MO.sortDescriptors
+                let entities = try backgroundContext.fetch(request)
+                return entities.map { $0.toModel() }
             }
-        } catch let error as CoreDataStorageError {
-            throw error
         } catch {
-            throw .unknown(error)
+            AppLogger.error(error)
+            throw .fetchAllFailed
         }
     }
 
     func update<MO: ManagedObjectMapping>(
-        _ item: MO.ModelType, as entity: MO.Type
+        _ item: MO.ModelType,
+        as entity: MO.Type
     ) async throws(CoreDataStorageError) -> MO.ModelType {
-        let backgroundContext = backgroundContext
-
         do {
-            return try await backgroundContext.perform {
-                do {
-                    guard let managedObject = try MO.find(for: item, in: backgroundContext) else {
-                        throw CoreDataStorageError.updateFailed
-                    }
-
-                    try managedObject.update(from: item)
-
-                    try backgroundContext.save()
-                    return managedObject.toModel()
-                } catch let error as CoreDataStorageError {
-                    throw error
-                } catch {
-                    AppLogger.error(error)
+            return try await backgroundContext.perform { [backgroundContext] in
+                guard let managedObject = try MO.find(for: item, in: backgroundContext) else {
                     throw CoreDataStorageError.updateFailed
                 }
+                try managedObject.update(from: item)
+                try backgroundContext.save()
+                return managedObject.toModel()
             }
-        } catch let error as CoreDataStorageError {
-            throw error
         } catch {
-            throw .unknown(error)
+            AppLogger.error(error)
+            throw .updateFailed
         }
     }
 
     func delete<MO: ManagedObjectMapping>(
-        byId id: MO.ModelType.ID, as entity: MO.Type
+        byID id: MO.ModelType.ID,
+        as entity: MO.Type
     ) async throws(CoreDataStorageError) -> MO.ModelType {
-        let backgroundContext = backgroundContext
-
         do {
-            return try await backgroundContext.perform {
-                do {
-                    guard let managedObject = try MO.find(byId: id, in: backgroundContext) else {
-                        throw CoreDataStorageError.deleteFailed
-                    }
-
-                    let domainModel = managedObject.toModel()
-                    backgroundContext.delete(managedObject)
-                    try backgroundContext.save()
-                    return domainModel
-                } catch {
-                    AppLogger.error(error)
+            return try await backgroundContext.perform { [backgroundContext] in
+                guard let managedObject = try MO.find(byID: id, in: backgroundContext) else {
                     throw CoreDataStorageError.deleteFailed
                 }
+                let domainModel = managedObject.toModel()
+                backgroundContext.delete(managedObject)
+                try backgroundContext.save()
+                return domainModel
             }
-        } catch let error as CoreDataStorageError {
-            throw error
         } catch {
-            throw .unknown(error)
+            AppLogger.error(error)
+            throw .deleteFailed
         }
     }
 }
