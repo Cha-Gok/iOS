@@ -8,9 +8,9 @@ import XCTest
 final class VoiceNoteEntityTests: XCTestCase {
     // MARK: - Helpers
 
-    /// 단일 CoreDataStore로 모든 엔티티를 처리합니다.
-    private func makeStore() async throws -> CoreDataStore {
-        try await CoreDataStore(inMemory: true)
+    /// 단일 CoreDataLocalDataBase로 모든 엔티티를 처리합니다.
+    private func makeStore() async throws -> CoreDataLocalDataBase {
+        try await CoreDataLocalDataBase(inMemory: true)
     }
 
     private func makeVoiceRecord(

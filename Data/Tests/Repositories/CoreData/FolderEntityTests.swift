@@ -8,8 +8,8 @@ import XCTest
 final class FolderEntityTests: XCTestCase {
     // MARK: - Helpers
 
-    private func makeStore() async throws -> CoreDataStore {
-        try await CoreDataStore(inMemory: true)
+    private func makeStore() async throws -> CoreDataLocalDataBase {
+        try await CoreDataLocalDataBase(inMemory: true)
     }
 
     private func makeFolder(

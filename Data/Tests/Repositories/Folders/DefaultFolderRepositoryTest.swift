@@ -7,7 +7,7 @@ final class DefaultFolderRepositoryTest: XCTestCase {
     // MARK: - Helpers
 
     private func makeSUT() async throws -> DefaultFolderRepository {
-        let store = try await CoreDataStore(inMemory: true)
+        let store = try await CoreDataLocalDataBase(inMemory: true)
         return DefaultFolderRepository(store: store)
     }
 }

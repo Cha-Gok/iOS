@@ -10,7 +10,7 @@ private final class BundleInfo: Sendable {
 /// Core Data 기반의 범용 로컬 데이터베이스입니다.
 /// 단일 NSPersistentContainer를 관리하며, 메서드 레벨 제네릭을 통해 모든 엔티티 타입을 처리합니다.
 /// actor로 선언되어 스레드 안전성을 보장하며, 내부적으로 backgroundContext를 사용하여 작업을 처리합니다.
-public actor CoreDataStore {
+public actor CoreDataLocalDataBase {
     private let container: NSPersistentContainer
     private let backgroundContext: NSManagedObjectContext
 
@@ -73,7 +73,7 @@ public actor CoreDataStore {
 
 // MARK: - CRUD
 
-public extension CoreDataStore {
+public extension CoreDataLocalDataBase {
     func create<MO: ManagedObjectMapping>(
         _ item: MO.ModelType, as entity: MO.Type
     ) async throws(CoreDataStorageError) -> MO.ModelType {

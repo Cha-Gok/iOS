@@ -2,11 +2,11 @@ import Core
 import Domain
 
 /// Folders 도메인을 위한 리포지토리 실구현체입니다.
-/// CoreDataStore에 의존하며, 엔티티 매핑 타입을 메서드 호출 시점에 지정합니다.
+/// CoreDataLocalDataBase에 의존하며, 엔티티 매핑 타입을 메서드 호출 시점에 지정합니다.
 public struct DefaultFolderRepository: FolderRepository {
-    private let store: CoreDataStore
+    private let store: CoreDataLocalDataBase
 
-    public init(store: CoreDataStore) {
+    public init(store: CoreDataLocalDataBase) {
         self.store = store
     }
 

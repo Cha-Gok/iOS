@@ -10,7 +10,7 @@ final class CoreDataStorageTests: XCTestCase {
 
     func test_인메모리모드일때_스토리지초기화시_정상적으로세팅된다() async throws {
         // Given
-        let store = try await CoreDataStore(inMemory: true)
+        let store = try await CoreDataLocalDataBase(inMemory: true)
 
         // Then
         let container = await store.testContainer
