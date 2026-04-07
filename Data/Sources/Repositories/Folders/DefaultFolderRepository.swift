@@ -10,11 +10,10 @@ public struct DefaultFolderRepository: FolderRepository {
         self.store = store
     }
 
-    public func create(name: String) async throws(FolderRepositoryError) -> Folder {
+    public func create(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
         if Task.isCancelled { throw .cancelled }
 
         do {
-            let folder = Folder(name: name)
             return try await store.create(folder, as: FolderEntity.self)
         } catch {
             AppLogger.error(error)

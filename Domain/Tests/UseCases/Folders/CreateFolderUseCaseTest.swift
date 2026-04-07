@@ -15,7 +15,7 @@ extension CreateFolderUseCaseTest {
         let expectedName = "New Folder"
         let expectedFolder = Folder.stub(name: expectedName)
         await repository.setCreateResult(.success(expectedFolder))
-        await repository.expectCreate(name: expectedName, callCount: 1)
+        await repository.expectCreate(name: expectedName, isDeletable: true, callCount: 1)
 
         // When
         let folder = try await sut.execute(name: expectedName)
@@ -23,6 +23,24 @@ extension CreateFolderUseCaseTest {
         // Then
         XCTAssertEqual(folder.name, expectedName)
         XCTAssertEqual(folder.id, expectedFolder.id)
+        await repository.verify()
+    }
+
+    func test_기본폴더이름상태_폴더생성시_삭제불가능한폴더로생성한다() async throws {
+        let repository = MockFolderRepository()
+        let sut = DefaultCreateFolderUseCase(repository: repository)
+
+        // Given
+        let expectedFolder = Folder.stub(name: Policy.defaultFolderName, isDeletable: false)
+        await repository.setCreateResult(.success(expectedFolder))
+        await repository.expectCreate(name: Policy.defaultFolderName, isDeletable: false, callCount: 1)
+
+        // When
+        let folder = try await sut.execute(name: Policy.defaultFolderName)
+
+        // Then
+        XCTAssertEqual(folder.name, Policy.defaultFolderName)
+        XCTAssertFalse(folder.isDeletable)
         await repository.verify()
     }
 }

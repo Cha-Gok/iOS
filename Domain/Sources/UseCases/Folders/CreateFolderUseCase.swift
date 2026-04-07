@@ -31,8 +31,13 @@ public struct DefaultCreateFolderUseCase: CreateFolderUseCase {
         // 폴더 이름 제한
         guard trimName.count <= Policy.maxNameLength else { throw .invalidLengthName }
 
+        let folder = Folder(
+            name: trimName,
+            isDeletable: trimName != Policy.defaultFolderName
+        )
+
         do {
-            return try await repository.create(name: trimName)
+            return try await repository.create(folder)
         } catch {
             AppLogger.error(error)
             throw CreateFolderUseCaseError(error)

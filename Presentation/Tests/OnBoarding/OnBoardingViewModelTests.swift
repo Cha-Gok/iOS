@@ -127,8 +127,8 @@ final class OnBoardingViewModelTests: XCTestCase {
 
         await sut.mockLanguageRepo.setSaveResult(.success(()))
         sut.mockCheckFirstLaunchRepo.setReturnValue(true)
-        await sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName)))
-        await sut.mockFolderRepo.expectCreate(name: Policy.defaultFolderName, callCount: 1)
+        await sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName, isDeletable: false)))
+        await sut.mockFolderRepo.expectCreate(name: Policy.defaultFolderName, isDeletable: false, callCount: 1)
 
         let expectation = XCTestExpectation(description: "finishOnBoarding 호출")
         sut.mockNavDelegate.finishOnBoardingExpectation = expectation

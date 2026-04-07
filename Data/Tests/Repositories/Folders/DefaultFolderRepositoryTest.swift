@@ -20,7 +20,7 @@ extension DefaultFolderRepositoryTest {
         let name = "새 폴더"
 
         // When
-        let result = try await sut.create(name: name)
+        let result = try await sut.create(Folder(name: name))
 
         // Then
         XCTAssertEqual(result.name, name)
@@ -31,7 +31,7 @@ extension DefaultFolderRepositoryTest {
 
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            return try await sut.create(name: "취소될폴더")
+            return try await sut.create(Folder(name: "취소될폴더"))
         }
 
         // When & Then
@@ -53,8 +53,8 @@ extension DefaultFolderRepositoryTest {
         let sut = try await makeSUT()
 
         // Given
-        _ = try await sut.create(name: "폴더1")
-        _ = try await sut.create(name: "폴더2")
+        _ = try await sut.create(Folder(name: "폴더1"))
+        _ = try await sut.create(Folder(name: "폴더2"))
 
         // When
         let result = try await sut.fetchAll()
@@ -102,7 +102,7 @@ extension DefaultFolderRepositoryTest {
         let sut = try await makeSUT()
 
         // Given
-        let created = try await sut.create(name: "원래 이름")
+        let created = try await sut.create(Folder(name: "원래 이름"))
         let updated = Folder(
             id: created.id,
             name: "수정된 이름",

@@ -13,7 +13,7 @@ public actor MockFolderRepository: FolderRepository {
     private var updateCallCount = 0
 
     // 인자 검증
-    private var actualName: String?
+    private var actualCreatedFolder: Folder?
     private var actualFolder: Folder?
 
     // Expected Values
@@ -21,7 +21,8 @@ public actor MockFolderRepository: FolderRepository {
     private var expectedFetchAllCallCount: Int?
     private var expectedUpdateCallCount: Int?
 
-    private var expectedName: String?
+    private var expectedCreateName: String?
+    private var expectedCreateIsDeletable: Bool?
     private var expectedFolderID: UUID?
 
     public init() {}
@@ -42,8 +43,9 @@ public actor MockFolderRepository: FolderRepository {
 
     // MARK: - Expectations
 
-    public func expectCreate(name: String? = nil, callCount: Int) {
-        expectedName = name
+    public func expectCreate(name: String? = nil, isDeletable: Bool? = nil, callCount: Int) {
+        expectedCreateName = name
+        expectedCreateIsDeletable = isDeletable
         expectedCreateCallCount = callCount
     }
 
@@ -65,8 +67,24 @@ public actor MockFolderRepository: FolderRepository {
             )
         }
 
-        if let expectedName {
-            XCTAssertEqual(actualName, expectedName, "생성 이름 인자가 일치하지 않습니다.", file: file, line: line)
+        if let expectedCreateName {
+            XCTAssertEqual(
+                actualCreatedFolder?.name,
+                expectedCreateName,
+                "생성 이름 인자가 일치하지 않습니다.",
+                file: file,
+                line: line
+            )
+        }
+
+        if let expectedCreateIsDeletable {
+            XCTAssertEqual(
+                actualCreatedFolder?.isDeletable,
+                expectedCreateIsDeletable,
+                "생성 삭제 가능 여부 인자가 일치하지 않습니다.",
+                file: file,
+                line: line
+            )
         }
 
         if let expected = expectedFetchAllCallCount {
@@ -89,9 +107,9 @@ public actor MockFolderRepository: FolderRepository {
 
     // MARK: - FolderRepository
 
-    public func create(name: String) async throws(FolderRepositoryError) -> Folder {
+    public func create(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
         createCallCount += 1
-        actualName = name
+        actualCreatedFolder = folder
 
         switch createResult {
         case .success(let folder):
