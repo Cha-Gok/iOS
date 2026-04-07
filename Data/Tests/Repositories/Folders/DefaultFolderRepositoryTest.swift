@@ -3,56 +3,31 @@ import CoreData
 import Domain
 import XCTest
 
-final class DefaultFolderRepositoryTest: XCTestCase {}
+final class DefaultFolderRepositoryTest: XCTestCase {
+    // MARK: - Helpers
+
+    private func makeSUT() async throws -> DefaultFolderRepository {
+        let store = try await CoreDataStore(inMemory: true)
+        return DefaultFolderRepository(store: store)
+    }
+}
 
 // MARK: - 폴더 생성 에러 및 취소 케이스
 
 extension DefaultFolderRepositoryTest {
     func test_정상적인이름일때_폴더생성시_성공한폴더를반환한다() async throws {
-        let mock = MockFolderLocalDataBase()
-        let sut = DefaultFolderRepository(database: mock)
+        let sut = try await makeSUT()
         let name = "새 폴더"
-        let expectedFolder = Folder(id: UUID(), name: name, createdAt: Date.now)
-
-        // Given
-        await mock.setCreateResult(.success(expectedFolder))
-        await mock.expectCreate(callCount: 1)
 
         // When
         let result = try await sut.create(name: name)
 
         // Then
         XCTAssertEqual(result.name, name)
-        XCTAssertEqual(result.id, expectedFolder.id)
-        await mock.verify()
-    }
-
-    func test_데이터소스에서_생성실패에러가나면_createFailed를던진다() async throws {
-        let mock = MockFolderLocalDataBase()
-        let sut = DefaultFolderRepository(database: mock)
-
-        // Given
-        await mock.setCreateResult(.failure(FolderRepositoryError.createFailed))
-        await mock.expectCreate(callCount: 1)
-
-        // When & Then
-        do {
-            _ = try await sut.create(name: "실패할 폴더")
-            XCTFail("FolderRepositoryError.createFailed 에러를 throw 해야 합니다.")
-        } catch {
-            guard case .createFailed = error else {
-                return XCTFail("예상한 에러는 FolderRepositoryError.createFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
-            }
-        }
-        await mock.verify()
     }
 
     func test_태스크가취소된상태에서_생성요청시_cancelled를던진다() async throws {
-        let mock = MockFolderLocalDataBase()
-        let sut = DefaultFolderRepository(database: mock)
-
-        // Given
-        await mock.expectCreate(callCount: 0)
+        let sut = try await makeSUT()
 
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
@@ -68,7 +43,6 @@ extension DefaultFolderRepositoryTest {
                 return XCTFail("예상한 에러는 FolderRepositoryError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
-        await mock.verify()
     }
 }
 
@@ -76,52 +50,33 @@ extension DefaultFolderRepositoryTest {
 
 extension DefaultFolderRepositoryTest {
     func test_폴더목록이존재할때_전체조회시_폴더리스트를반환한다() async throws {
-        let mock = MockFolderLocalDataBase()
-        let sut = DefaultFolderRepository(database: mock)
-        let expectedFolders = [
-            Folder(id: UUID(), name: "폴더1", createdAt: Date.now),
-            Folder(id: UUID(), name: "폴더2", createdAt: Date.now)
-        ]
+        let sut = try await makeSUT()
 
         // Given
-        await mock.setFetchAllResult(.success(expectedFolders))
-        await mock.expectFetchAll(callCount: 1)
+        _ = try await sut.create(name: "폴더1")
+        _ = try await sut.create(name: "폴더2")
 
         // When
         let result = try await sut.fetchAll()
 
         // Then
         XCTAssertEqual(result.count, 2)
-        XCTAssertEqual(result.first?.name, "폴더1")
-        await mock.verify()
+        XCTAssertTrue(result.contains(where: { $0.name == "폴더1" }))
+        XCTAssertTrue(result.contains(where: { $0.name == "폴더2" }))
     }
 
-    func test_데이터소스에서_조회실패에러가나면_fetchFailed를던진다() async throws {
-        let mock = MockFolderLocalDataBase()
-        let sut = DefaultFolderRepository(database: mock)
+    func test_폴더가없을때_전체조회시_빈배열을반환한다() async throws {
+        let sut = try await makeSUT()
 
-        // Given
-        await mock.setFetchAllResult(.failure(FolderRepositoryError.fetchFailed))
-        await mock.expectFetchAll(callCount: 1)
+        // When
+        let result = try await sut.fetchAll()
 
-        // When & Then
-        do {
-            _ = try await sut.fetchAll()
-            XCTFail("FolderRepositoryError.fetchFailed 에러를 throw 해야 합니다.")
-        } catch {
-            guard case .fetchFailed = error else {
-                return XCTFail("예상한 에러는 FolderRepositoryError.fetchFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
-            }
-        }
-        await mock.verify()
+        // Then
+        XCTAssertTrue(result.isEmpty)
     }
 
     func test_태스크가취소된상태에서_전체조회요청시_cancelled를던진다() async throws {
-        let mock = MockFolderLocalDataBase()
-        let sut = DefaultFolderRepository(database: mock)
-
-        // Given
-        await mock.expectFetchAll(callCount: 0)
+        let sut = try await makeSUT()
 
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
@@ -137,7 +92,6 @@ extension DefaultFolderRepositoryTest {
                 return XCTFail("예상한 에러는 FolderRepositoryError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
-        await mock.verify()
     }
 }
 
@@ -145,51 +99,43 @@ extension DefaultFolderRepositoryTest {
 
 extension DefaultFolderRepositoryTest {
     func test_폴더정보가수정되었을때_업데이트요청시_수정된폴더를반환한다() async throws {
-        let mock = MockFolderLocalDataBase()
-        let sut = DefaultFolderRepository(database: mock)
-        let folder = Folder(id: UUID(), name: "수정된 이름", createdAt: Date.now)
+        let sut = try await makeSUT()
 
         // Given
-        await mock.setUpdateResult(.success(folder))
-        await mock.expectUpdate(callCount: 1)
+        let created = try await sut.create(name: "원래 이름")
+        let updated = Folder(
+            id: created.id,
+            name: "수정된 이름",
+            createdAt: created.createdAt,
+            isDeletable: created.isDeletable,
+            deletedAt: created.deletedAt
+        )
 
         // When
-        let result = try await sut.update(folder)
+        let result = try await sut.update(updated)
 
         // Then
         XCTAssertEqual(result.name, "수정된 이름")
-        await mock.verify()
     }
 
-    func test_데이터소스에서_업데이트실패에러가나면_updateFailed를던진다() async throws {
-        let mock = MockFolderLocalDataBase()
-        let sut = DefaultFolderRepository(database: mock)
-        let dummyFolder = Folder(id: UUID(), name: "무관", createdAt: Date.now)
-
-        // Given
-        // 데이터 소스에서 조회 실패(notFound)가 발생해도 리포지토리는 updateFailed로 변환해야 함
-        await mock.setUpdateResult(.failure(FolderRepositoryError.notFound))
-        await mock.expectUpdate(callCount: 1)
+    func test_존재하지않는폴더를_업데이트요청시_updateFailed를던진다() async throws {
+        let sut = try await makeSUT()
+        let nonExistent = Folder(name: "존재하지 않는 폴더")
 
         // When & Then
         do {
-            _ = try await sut.update(dummyFolder)
+            _ = try await sut.update(nonExistent)
             XCTFail("FolderRepositoryError.updateFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .updateFailed = error else {
                 return XCTFail("예상한 에러는 FolderRepositoryError.updateFailed 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
-        await mock.verify()
     }
 
     func test_태스크가취소된상태에서_업데이트요청시_cancelled를던진다() async throws {
-        let mock = MockFolderLocalDataBase()
-        let sut = DefaultFolderRepository(database: mock)
-        let folder = Folder(id: UUID(), name: "무관", createdAt: Date.now)
-
-        // Given
-        await mock.expectUpdate(callCount: 0)
+        let sut = try await makeSUT()
+        let folder = Folder(name: "무관")
 
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
@@ -205,6 +151,5 @@ extension DefaultFolderRepositoryTest {
                 return XCTFail("예상한 에러는 FolderRepositoryError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
             }
         }
-        await mock.verify()
     }
 }
