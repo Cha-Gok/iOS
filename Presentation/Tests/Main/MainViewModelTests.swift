@@ -48,7 +48,10 @@ final class MainViewModelTests: XCTestCase {
 
         let viewModel = MainViewModel(
             fetchFolderUseCase: DefaultReadFolderUseCase(repository: mockFolderRepo),
-            fetchVoiceNoteUseCase: DefaultFetchVoiceNoteUseCase(repository: mockVoiceNoteRepo)
+            fetchVoiceNoteUseCase: DefaultFetchVoiceNoteUseCase(repository: mockVoiceNoteRepo),
+            fetchRecentVoiceNoteUseCase: DefaultFetchRecentVoiceNoteUseCase(
+                repository: mockVoiceNoteRepo
+            )
         )
         viewModel.mainCoordinator = mockCoordinator
 
@@ -118,6 +121,27 @@ final class MainViewModelTests: XCTestCase {
         XCTAssertEqual(sut.viewModel.categoryData[1].items.count, 2)
         if case .voiceNote(let note) = sut.viewModel.categoryData[1].items[0] {
             XCTAssertEqual(note.title, "노트1")
+        } else {
+            XCTFail("VoiceNote 타입이 아닙니다.")
+        }
+    }
+
+    func test_updateRecentCategory_호출시_최근기록로드확인() async {
+        // Given
+        let sut = makeSUT()
+        let expectedNotes = [VoiceNote.stub(title: "최신1"), VoiceNote.stub(title: "최신2")]
+        await sut.mockVoiceNoteRepo.setFetchRecentResult(.success(expectedNotes))
+        await sut.mockVoiceNoteRepo.expectFetchRecent(callCount: 1, limit: Policy.recentVoiceNoteLimit)
+
+        // When
+        sut.viewModel.updateRecentCategory()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        // Then
+        await sut.mockVoiceNoteRepo.verify()
+        XCTAssertEqual(sut.viewModel.categoryData[0].items.count, 2)
+        if case .voiceNote(let note) = sut.viewModel.categoryData[0].items[0] {
+            XCTAssertEqual(note.title, "최신1")
         } else {
             XCTFail("VoiceNote 타입이 아닙니다.")
         }
