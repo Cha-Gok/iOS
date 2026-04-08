@@ -121,6 +121,14 @@ public final class AppDIContainer {
         )
     }
 
+    public func makeTrashViewModel() -> TrashViewModel {
+        return TrashViewModel(
+            fetchUseCase: fetchWasteBasketUseCase,
+            deleteUseCase: deleteWasteBasketUseCase,
+            restoreUseCase: restoreWasteBasketUseCase
+        )
+    }
+
     public func makeTrashViewController() -> TrashViewController {
         return TrashViewController()
     }
