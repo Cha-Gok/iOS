@@ -1,6 +1,6 @@
 import Foundation
 
-public enum WasteBasketItem: Equatable, Sendable {
+public enum WasteBasketItem: Equatable, Hashable, Sendable {
     case folder(id: UUID)
     case voiceNote(id: UUID)
 }

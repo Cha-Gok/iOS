@@ -23,6 +23,9 @@ public final class AppDIContainer {
     )
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
+    private lazy var voiceNoteCreateRepository = DefaultVoiceNoteCreateRepository(store: localDataBase)
+    private lazy var voiceNoteFetchRepository = DefaultVoiceNoteFetchRepository(store: localDataBase)
+    private lazy var wasteBasketRepository = DefaultWasteBasketRepository(store: localDataBase)
 
     /// UseCase
     private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(
@@ -43,6 +46,27 @@ public final class AppDIContainer {
     private lazy var updateFolderUseCase = DefaultUpdateFolderUseCase(repository: folderRepository)
     private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(
         repository: folderRepository
+    )
+    private lazy var createVoiceNoteUseCase = DefaultCreateVoiceNoteUseCase(
+        repository: voiceNoteCreateRepository
+    )
+    private lazy var fetchVoiceNoteUseCase = DefaultFetchVoiceNoteUseCase(
+        repository: voiceNoteFetchRepository
+    )
+    private lazy var fetchRecentVoiceNoteUseCase = DefaultFetchRecentVoiceNoteUseCase(
+        repository: voiceNoteFetchRepository
+    )
+    private lazy var fetchWasteBasketUseCase = DefaultFetchWasteBasketFolderUseCase(
+        repository: wasteBasketRepository
+    )
+    private lazy var deleteWasteBasketUseCase = DefaultDeleteWasteBasketUseCase(
+        repository: wasteBasketRepository
+    )
+    private lazy var moveWasteBasketUseCase = DefaultMoveWasteBasketUseCase(
+        repository: wasteBasketRepository
+    )
+    private lazy var restoreWasteBasketUseCase = DefaultRestoreWasteBasketUseCase(
+        repository: wasteBasketRepository
     )
 
     public init() throws {
@@ -84,13 +108,24 @@ public final class AppDIContainer {
             ),
             cancelRecordingUseCase: DefaultCancelRecordingUseCase(
                 recordingRepository: voiceRecordRepository
-            )
+            ),
+            createVoiceNoteUseCase: createVoiceNoteUseCase
         )
     }
 
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
-            fetchFolderUseCase: fetchFolderUseCase
+            fetchFolderUseCase: fetchFolderUseCase,
+            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase,
+            fetchRecentVoiceNoteUseCase: fetchRecentVoiceNoteUseCase
+        )
+    }
+
+    public func makeTrashViewModel() -> TrashViewModel {
+        return TrashViewModel(
+            fetchUseCase: fetchWasteBasketUseCase,
+            deleteUseCase: deleteWasteBasketUseCase,
+            restoreUseCase: restoreWasteBasketUseCase
         )
     }
 
@@ -102,7 +137,8 @@ public final class AppDIContainer {
         return FolderViewModel(
             category: category,
             createUseCase: createFolderUseCase,
-            updateUseCase: updateFolderUseCase
+            updateUseCase: updateFolderUseCase,
+            moveToTrashUseCase: moveWasteBasketUseCase
         )
     }
 }

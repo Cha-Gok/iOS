@@ -10,9 +10,9 @@ public protocol DeleteWasteBasketUseCase: Sendable {
 }
 
 public struct DefaultDeleteWasteBasketUseCase: DeleteWasteBasketUseCase {
-    private let repository: WasteBasketRepository
+    private let repository: any WasteBasketRepository
 
-    public init(repository: WasteBasketRepository) {
+    public init(repository: any WasteBasketRepository) {
         self.repository = repository
     }
 

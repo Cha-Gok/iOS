@@ -40,14 +40,20 @@ public final class MainViewModel {
     // MARK: - UseCase
 
     let fetchFolderUseCase: ReadFolderUseCase
+    let fetchVoiceNoteUseCase: FetchVoiceNoteUseCase
+    let fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase
 
     // TODO: 화면 전환
     public weak var mainCoordinator: MainViewCoordinatorDelegate?
 
     public init(
-        fetchFolderUseCase: ReadFolderUseCase
+        fetchFolderUseCase: ReadFolderUseCase,
+        fetchVoiceNoteUseCase: FetchVoiceNoteUseCase,
+        fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase
     ) {
         self.fetchFolderUseCase = fetchFolderUseCase
+        self.fetchVoiceNoteUseCase = fetchVoiceNoteUseCase
+        self.fetchRecentVoiceNoteUseCase = fetchRecentVoiceNoteUseCase
     }
 }
 
@@ -117,6 +123,17 @@ extension MainViewModel {
 
     /// 기본 폴더(음성 노트) 업데이트 함수
     func updateVoiceNoteCategory() {
-        AppLogger.info("기본 폴더 생성 문제: 조회도 해야 하는데 어디서 할까요")
+        Task {
+            let voiceNotes: [VoiceNote] = await (try? fetchVoiceNoteUseCase.execute()) ?? []
+            categoryData[1].items = voiceNotes.map { .voiceNote($0) }
+        }
+    }
+
+    /// 최근 기록(전체 폴더 최신 5개) 업데이트 함수
+    func updateRecentCategory() {
+        Task {
+            let voiceNotes: [VoiceNote] = await (try? fetchRecentVoiceNoteUseCase.execute()) ?? []
+            categoryData[0].items = voiceNotes.map { .voiceNote($0) }
+        }
     }
 }

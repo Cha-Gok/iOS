@@ -4,7 +4,7 @@ import Foundation
 @MainActor
 public protocol RecordingCoordinating: AnyObject {
     func cancelRecording()
-    func finishRecording(voiceRecord: VoiceRecord)
+    func finishRecording(voiceNote: VoiceNote)
 }
 
 @MainActor
@@ -54,6 +54,7 @@ public final class RecordingViewModel {
     private let resumeRecordingUseCase: ResumeRecordingUseCase
     private let finishRecordingUseCase: FinishRecordingUseCase
     private let cancelRecordingUseCase: CancelRecordingUseCase
+    private let createVoiceNoteUseCase: CreateVoiceNoteUseCase
 
     public weak var coordinator: RecordingCoordinating?
 
@@ -66,13 +67,15 @@ public final class RecordingViewModel {
         pauseRecordingUseCase: PauseRecordingUseCase,
         resumeRecordingUseCase: ResumeRecordingUseCase,
         finishRecordingUseCase: FinishRecordingUseCase,
-        cancelRecordingUseCase: CancelRecordingUseCase
+        cancelRecordingUseCase: CancelRecordingUseCase,
+        createVoiceNoteUseCase: CreateVoiceNoteUseCase
     ) {
         self.startRecordingUseCase = startRecordingUseCase
         self.pauseRecordingUseCase = pauseRecordingUseCase
         self.resumeRecordingUseCase = resumeRecordingUseCase
         self.finishRecordingUseCase = finishRecordingUseCase
         self.cancelRecordingUseCase = cancelRecordingUseCase
+        self.createVoiceNoteUseCase = createVoiceNoteUseCase
     }
 
     public func send(_ action: Action) {
@@ -101,7 +104,8 @@ public final class RecordingViewModel {
                     waveformTask?.cancel()
                     waveformTask = nil
                     let voiceRecord = try await finishRecordingUseCase.execute()
-                    coordinator?.finishRecording(voiceRecord: voiceRecord)
+                    let voiceNote = try await createVoiceNoteUseCase.execute(voiceRecord)
+                    coordinator?.finishRecording(voiceNote: voiceNote)
                 } catch {
                     send(.errorOccurred(error))
                 }

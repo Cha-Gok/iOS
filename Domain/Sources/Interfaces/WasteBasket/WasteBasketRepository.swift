@@ -31,4 +31,14 @@ public protocol WasteBasketRepository: Sendable {
     /// - Returns: (Folder 또는 VoiceNote) 의 배열
     /// - Throws: 조회 실패 시
     func fetchAll() async throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem]
+
+    /// 특정 항목을 휴지통에서 복원합니다. (deletedAt → nil)
+    /// - Parameter item: 복원할 휴지통 항목
+    /// - Throws: 복원 중 오류 발생 시
+    func restore(item: WasteBasketItem) async throws(RestoreWasteBasketRepositoryError)
+
+    /// 다수의 항목을 휴지통에서 복원합니다. (deletedAt → nil)
+    /// - Parameter items: 복원할 휴지통 항목 리스트
+    /// - Throws: 복원 중 오류 발생 시
+    func restoreAll(items: [WasteBasketItem]) async throws(RestoreWasteBasketRepositoryError)
 }

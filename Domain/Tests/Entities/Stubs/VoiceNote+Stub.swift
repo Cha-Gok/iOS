@@ -1,7 +1,7 @@
 @testable import Domain
 import Foundation
 
-extension VoiceNote {
+public extension VoiceNote {
     static func stub(
         id: UUID = UUID(),
         title: String = "Test Voice Note",

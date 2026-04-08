@@ -10,11 +10,13 @@ final class FolderViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: FolderViewModel
         let mockFolderRepo: MockFolderRepository
+        let mockWasteBasketRepo: MockWasteBasketRepository
         let mockCoordinator: MockMainViewCoordinatorDelegate
     }
 
     private func makeSUT(initialItems: [Presentation.LibraryItem] = []) -> SUT {
         let mockFolderRepo = MockFolderRepository()
+        let mockWasteBasketRepo = MockWasteBasketRepository()
         let mockCoordinator = MockMainViewCoordinatorDelegate()
 
         let initialCategory = CategoryToggle(
@@ -26,13 +28,15 @@ final class FolderViewModelTests: XCTestCase {
         let viewModel = FolderViewModel(
             category: initialCategory,
             createUseCase: DefaultCreateFolderUseCase(repository: mockFolderRepo),
-            updateUseCase: DefaultUpdateFolderUseCase(repository: mockFolderRepo)
+            updateUseCase: DefaultUpdateFolderUseCase(repository: mockFolderRepo),
+            moveToTrashUseCase: DefaultMoveWasteBasketUseCase(repository: mockWasteBasketRepo)
         )
         viewModel.coordinator = mockCoordinator
 
         return SUT(
             viewModel: viewModel,
             mockFolderRepo: mockFolderRepo,
+            mockWasteBasketRepo: mockWasteBasketRepo,
             mockCoordinator: mockCoordinator
         )
     }
@@ -95,6 +99,22 @@ final class FolderViewModelTests: XCTestCase {
         await sut.mockFolderRepo.verify()
         XCTAssertEqual(sut.viewModel.category.items.count, 1)
         XCTAssertFalse(sut.viewModel.showAlert)
+    }
+
+    func test_move_성공시_리스트에서제거() async {
+        let folder = Folder(name: "이동 폴더")
+        let sut = makeSUT(initialItems: [.folder(folder)])
+
+        await sut.mockWasteBasketRepo.setMoveResult(.success(()))
+        await sut.mockWasteBasketRepo.expectMoveToWasteBasket(
+            item: .folder(id: folder.id), callCount: 1
+        )
+
+        sut.viewModel.move(folder: folder)
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        await sut.mockWasteBasketRepo.verify()
+        XCTAssertTrue(sut.viewModel.category.items.isEmpty)
     }
 
     func test_update_성공시_리스트항목교체() async {

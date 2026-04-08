@@ -37,21 +37,28 @@ final class MainViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: MainViewModel
         let mockFolderRepo: MockFolderRepository
+        let mockVoiceNoteRepo: MockVoiceNoteFetchRepository
         let mockCoordinator: MockMainViewCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
         let mockFolderRepo = MockFolderRepository()
+        let mockVoiceNoteRepo = MockVoiceNoteFetchRepository()
         let mockCoordinator = MockMainViewCoordinatorDelegate()
 
         let viewModel = MainViewModel(
-            fetchFolderUseCase: DefaultReadFolderUseCase(repository: mockFolderRepo)
+            fetchFolderUseCase: DefaultReadFolderUseCase(repository: mockFolderRepo),
+            fetchVoiceNoteUseCase: DefaultFetchVoiceNoteUseCase(repository: mockVoiceNoteRepo),
+            fetchRecentVoiceNoteUseCase: DefaultFetchRecentVoiceNoteUseCase(
+                repository: mockVoiceNoteRepo
+            )
         )
         viewModel.mainCoordinator = mockCoordinator
 
         return SUT(
             viewModel: viewModel,
             mockFolderRepo: mockFolderRepo,
+            mockVoiceNoteRepo: mockVoiceNoteRepo,
             mockCoordinator: mockCoordinator
         )
     }
@@ -97,6 +104,48 @@ final class MainViewModelTests: XCTestCase {
     }
 
     // MARK: - Update Tests
+
+    func test_updateVoiceNoteCategory_호출시_기본폴더보이스노트로드확인() async {
+        // Given
+        let sut = makeSUT()
+        let expectedNotes = [VoiceNote.stub(title: "노트1"), VoiceNote.stub(title: "노트2")]
+        await sut.mockVoiceNoteRepo.setFetchAllResult(.success(expectedNotes))
+        await sut.mockVoiceNoteRepo.expectFetchAllFromDefaultFolder(callCount: 1)
+
+        // When
+        sut.viewModel.updateVoiceNoteCategory()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        // Then
+        await sut.mockVoiceNoteRepo.verify()
+        XCTAssertEqual(sut.viewModel.categoryData[1].items.count, 2)
+        if case .voiceNote(let note) = sut.viewModel.categoryData[1].items[0] {
+            XCTAssertEqual(note.title, "노트1")
+        } else {
+            XCTFail("VoiceNote 타입이 아닙니다.")
+        }
+    }
+
+    func test_updateRecentCategory_호출시_최근기록로드확인() async {
+        // Given
+        let sut = makeSUT()
+        let expectedNotes = [VoiceNote.stub(title: "최신1"), VoiceNote.stub(title: "최신2")]
+        await sut.mockVoiceNoteRepo.setFetchRecentResult(.success(expectedNotes))
+        await sut.mockVoiceNoteRepo.expectFetchRecent(callCount: 1, limit: Policy.recentVoiceNoteLimit)
+
+        // When
+        sut.viewModel.updateRecentCategory()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        // Then
+        await sut.mockVoiceNoteRepo.verify()
+        XCTAssertEqual(sut.viewModel.categoryData[0].items.count, 2)
+        if case .voiceNote(let note) = sut.viewModel.categoryData[0].items[0] {
+            XCTAssertEqual(note.title, "최신1")
+        } else {
+            XCTFail("VoiceNote 타입이 아닙니다.")
+        }
+    }
 
     func test_updateMyFolderCategory_호출시_데이터로드확인() async {
         let sut = makeSUT()

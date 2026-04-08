@@ -30,7 +30,7 @@ extension MainCoordinator: RecordingCoordinating {
         presenter.dismiss(animated: true)
     }
 
-    func finishRecording(voiceRecord: VoiceRecord) {
+    func finishRecording(voiceNote: VoiceNote) {
         presenter.dismiss(animated: true)
     }
 }

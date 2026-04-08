@@ -7,15 +7,15 @@ import XCTest
 final class MockRecordingCoordinator: RecordingCoordinating {
     private(set) var cancelRecordingCallCount = 0
     private(set) var finishRecordingCallCount = 0
-    private(set) var finishedVoiceRecord: VoiceRecord?
+    private(set) var finishedVoiceNote: VoiceNote?
 
     func cancelRecording() {
         cancelRecordingCallCount += 1
     }
 
-    func finishRecording(voiceRecord: VoiceRecord) {
+    func finishRecording(voiceNote: VoiceNote) {
         finishRecordingCallCount += 1
-        finishedVoiceRecord = voiceRecord
+        finishedVoiceNote = voiceNote
     }
 }
 
@@ -24,11 +24,13 @@ final class RecordingViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: RecordingViewModel
         let repository: MockVoiceRecordRepository
+        let voiceNoteRepository: MockVoiceNoteCreateRepository
         let coordinator: MockRecordingCoordinator
     }
 
     private func makeSUT() -> SUT {
         let repository = MockVoiceRecordRepository()
+        let voiceNoteRepository = MockVoiceNoteCreateRepository()
         let coordinator = MockRecordingCoordinator()
 
         let viewModel = RecordingViewModel(
@@ -36,11 +38,17 @@ final class RecordingViewModelTests: XCTestCase {
             pauseRecordingUseCase: DefaultPauseRecordingUseCase(recordingRepository: repository),
             resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: repository),
             finishRecordingUseCase: DefaultFinishRecordingUseCase(recordingRepository: repository),
-            cancelRecordingUseCase: DefaultCancelRecordingUseCase(recordingRepository: repository)
+            cancelRecordingUseCase: DefaultCancelRecordingUseCase(recordingRepository: repository),
+            createVoiceNoteUseCase: DefaultCreateVoiceNoteUseCase(repository: voiceNoteRepository)
         )
         viewModel.coordinator = coordinator
 
-        return SUT(viewModel: viewModel, repository: repository, coordinator: coordinator)
+        return SUT(
+            viewModel: viewModel,
+            repository: repository,
+            voiceNoteRepository: voiceNoteRepository,
+            coordinator: coordinator
+        )
     }
 }
 
@@ -200,11 +208,13 @@ extension RecordingViewModelTests {
 // MARK: - 완료
 
 extension RecordingViewModelTests {
-    func test_finishButtonTapped_녹음완료후coordinator의finishRecording을호출한다() async {
+    func test_finishButtonTapped_녹음완료후보이스노트를생성하고coordinator의finishRecording을호출한다() async {
         // Given
         let sut = makeSUT()
-        let stub = VoiceRecord.stub()
-        await sut.repository.setFinishResult(.success(stub))
+        let voiceRecordStub = VoiceRecord.stub()
+        let voiceNoteStub = VoiceNote.stub(voiceRecord: voiceRecordStub)
+        await sut.repository.setFinishResult(.success(voiceRecordStub))
+        await sut.voiceNoteRepository.setResult(.success(voiceNoteStub))
 
         // When
         sut.viewModel.send(.finishButtonTapped)
@@ -212,13 +222,28 @@ extension RecordingViewModelTests {
 
         // Then
         XCTAssertEqual(sut.coordinator.finishRecordingCallCount, 1)
-        XCTAssertEqual(sut.coordinator.finishedVoiceRecord?.id, stub.id)
+        XCTAssertEqual(sut.coordinator.finishedVoiceNote?.id, voiceNoteStub.id)
     }
 
-    func test_finishButtonTapped_완료실패시_coordinator를호출하지않고errorMessage를설정한다() async {
+    func test_finishButtonTapped_녹음완료실패시_coordinator를호출하지않고errorMessage를설정한다() async {
         // Given
         let sut = makeSUT()
         await sut.repository.setFinishResult(.failure(.finishFailed))
+
+        // When
+        sut.viewModel.send(.finishButtonTapped)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.coordinator.finishRecordingCallCount, 0)
+        XCTAssertNotNil(sut.viewModel.state.errorMessage)
+    }
+
+    func test_finishButtonTapped_보이스노트생성실패시_coordinator를호출하지않고errorMessage를설정한다() async {
+        // Given
+        let sut = makeSUT()
+        await sut.repository.setFinishResult(.success(.stub()))
+        await sut.voiceNoteRepository.setResult(.failure(.createFailed))
 
         // When
         sut.viewModel.send(.finishButtonTapped)

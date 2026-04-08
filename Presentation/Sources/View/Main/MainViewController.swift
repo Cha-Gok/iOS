@@ -48,6 +48,12 @@ public final class MainViewController: UIViewController {
         floatingButtonConstraint()
     }
 
+    override public func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        vm.updateVoiceNoteCategory()
+        vm.updateRecentCategory()
+    }
+
     override public func updateProperties() {
         super.updateProperties()
         vm.updateMyFolderCategory()

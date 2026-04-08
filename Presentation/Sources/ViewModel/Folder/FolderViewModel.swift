@@ -16,17 +16,20 @@ public final class FolderViewModel {
 
     private let createUseCase: CreateFolderUseCase
     private let updateUseCase: UpdateFolderUseCase
+    private let moveToTrashUseCase: MoveWasteBasketUseCase
 
     // MARK: - Initialize
 
     public init(
         category: CategoryToggle,
         createUseCase: CreateFolderUseCase,
-        updateUseCase: UpdateFolderUseCase
+        updateUseCase: UpdateFolderUseCase,
+        moveToTrashUseCase: MoveWasteBasketUseCase
     ) {
         self.category = category
         self.createUseCase = createUseCase
         self.updateUseCase = updateUseCase
+        self.moveToTrashUseCase = moveToTrashUseCase
     }
 }
 
@@ -62,7 +65,6 @@ extension FolderViewModel {
     /// Domain.Folder를 생성하는 함수
     func create(name: String) {
         closeTextFieldView()
-        // TODO: Connect Folder UseCase
         Task {
             do {
                 let folder = try await createUseCase.execute(name: name)
@@ -104,8 +106,17 @@ extension FolderViewModel {
         }
     }
 
-    func move() {
-        AppLogger.info("Trash Move!!")
-        // TODO: Connect Folder UseCase
+    func move(folder: Folder) {
+        Task {
+            do {
+                try await moveToTrashUseCase.execute(method: .single(item: .folder(id: folder.id)))
+                category.items.removeAll {
+                    if case .folder(let item) = $0 { return item.id == folder.id }
+                    return false
+                }
+            } catch {
+                AppLogger.error(error)
+            }
+        }
     }
 }

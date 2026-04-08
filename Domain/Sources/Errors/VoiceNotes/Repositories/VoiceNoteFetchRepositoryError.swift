@@ -8,6 +8,10 @@ public enum VoiceNoteFetchRepositoryError: LocalizedError, Sendable {
     case recordNotFound(id: UUID)
     /// 단건 조회 실패.
     case fetchFailed(id: UUID)
+    /// 기본 폴더를 찾을 수 없음.
+    case defaultFolderNotFound
+    /// 최근 기록 조회 실패.
+    case fetchRecentFailed
     /// 취소됨.
     case cancelled
     /// 예측할 수 없는 오류.
@@ -17,6 +21,10 @@ public enum VoiceNoteFetchRepositoryError: LocalizedError, Sendable {
         switch self {
         case .fetchAllFailed:
             return "음성 메모 목록 조회에 실패했습니다."
+        case .fetchRecentFailed:
+            return "최근 기록 조회에 실패했습니다."
+        case .defaultFolderNotFound:
+            return "기본 폴더를 찾을 수 없습니다."
         case .recordNotFound:
             return "해당 음성 메모를 찾을 수 없습니다."
         case .fetchFailed:
