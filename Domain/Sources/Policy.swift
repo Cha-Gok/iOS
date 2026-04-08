@@ -24,4 +24,7 @@ public enum Policy {
 
     /// UI 파형 스트림의 최대 대기 개수 (초과 시 최신값 유지)
     public static let waveformStreamBufferLimit: Int = 8
+
+    /// 최근 기록 탭에서 표시할 최대 VoiceNote 개수
+    public static let recentVoiceNoteLimit: Int = 5
 }
