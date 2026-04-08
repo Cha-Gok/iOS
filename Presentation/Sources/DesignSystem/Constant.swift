@@ -119,6 +119,12 @@ public extension Constant {
 
     /// KeywordChipView 수직 패딩 (8)
     static let keywordChipVerticalPadding: CGFloat = 8
+
+    /// 키워드 칩 가로 간격 (10)
+    static let keywordChipInterItemSpacing: CGFloat = 10
+
+    /// 키워드 칩 세로 간격 (10)
+    static let keywordChipLineSpacing: CGFloat = 10
 }
 
 // MARK: - LanguagePicker Constants
