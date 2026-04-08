@@ -23,6 +23,7 @@ public final class AppDIContainer {
     )
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
+    private lazy var voiceNoteCreateRepository = DefaultVoiceNoteCreateRepository(store: localDataBase)
 
     /// UseCase
     private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(
@@ -43,6 +44,9 @@ public final class AppDIContainer {
     private lazy var updateFolderUseCase = DefaultUpdateFolderUseCase(repository: folderRepository)
     private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(
         repository: folderRepository
+    )
+    private lazy var createVoiceNoteUseCase = DefaultCreateVoiceNoteUseCase(
+        repository: voiceNoteCreateRepository
     )
 
     public init() throws {
@@ -84,7 +88,8 @@ public final class AppDIContainer {
             ),
             cancelRecordingUseCase: DefaultCancelRecordingUseCase(
                 recordingRepository: voiceRecordRepository
-            )
+            ),
+            createVoiceNoteUseCase: createVoiceNoteUseCase
         )
     }
 
