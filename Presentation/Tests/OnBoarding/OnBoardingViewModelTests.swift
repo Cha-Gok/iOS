@@ -45,7 +45,7 @@ final class OnBoardingViewModelTests: XCTestCase {
             completeFirstLaunchUseCase: DefaultCompleteFirstLaunchUseCase(repository: mockCheckFirstLaunchRepo),
             createDefaultFolderUseCase: DefaultCreateDefaultFolderUseCase(repository: mockFolderRepo)
         )
-        viewModel.navDelegate = mockNavDelegate
+        viewModel.onBoardingCoordinator = mockNavDelegate
 
         return SUT(
             viewModel: viewModel,
