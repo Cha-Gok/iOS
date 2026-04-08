@@ -25,6 +25,7 @@ public final class AppDIContainer {
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
     private lazy var voiceNoteCreateRepository = DefaultVoiceNoteCreateRepository(store: localDataBase)
     private lazy var voiceNoteFetchRepository = DefaultVoiceNoteFetchRepository(store: localDataBase)
+    private lazy var wasteBasketRepository = DefaultWasteBasketRepository(store: localDataBase)
 
     /// UseCase
     private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(
