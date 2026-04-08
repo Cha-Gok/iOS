@@ -1,10 +1,7 @@
 import Domain
 
 extension FetchWasteBasketRepositoryError {
-    init(_ error: CoreDataStorageError) {
-        switch error {
-        default:
-            self = .fetchFailed
-        }
+    init(_ error: any Error) {
+        self = .fetchFailed
     }
 }
