@@ -50,4 +50,19 @@ public struct DefaultVoiceNoteFetchRepository: VoiceNoteFetchRepository {
             throw .fetchFailed(id: id)
         }
     }
+
+    public func fetchRecent(limit: Int) async throws(VoiceNoteFetchRepositoryError) -> [VoiceNote] {
+        if Task.isCancelled { throw .cancelled }
+
+        do {
+            return try await store.fetchAll(VoiceNoteEntity.self)
+                .filter { $0.deletedAt == nil }
+                .sorted { $0.createdAt > $1.createdAt }
+                .prefix(limit)
+                .map(\.self)
+        } catch {
+            AppLogger.error(error)
+            throw .fetchRecentFailed
+        }
+    }
 }
