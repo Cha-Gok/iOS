@@ -11,9 +11,9 @@ public protocol FetchWasteBasketFolderUseCase: Sendable {
 }
 
 public struct DefaultFetchWasteBasketFolderUseCase: FetchWasteBasketFolderUseCase {
-    private let repository: WasteBasketRepository
+    private let repository: any WasteBasketRepository
 
-    public init(repository: WasteBasketRepository) {
+    public init(repository: any WasteBasketRepository) {
         self.repository = repository
     }
 
