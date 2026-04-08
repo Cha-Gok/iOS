@@ -14,7 +14,7 @@ public protocol OnboardingCoordinatorDelegate: AnyObject {
 public final class OnBoardingViewModel {
     // MARK: - Delegate
 
-    public weak var navDelegate: OnboardingCoordinatorDelegate?
+    public weak var onBoardingCoordinator: OnboardingCoordinatorDelegate?
 
     // MARK: - UseCase
 
@@ -158,7 +158,7 @@ extension OnBoardingViewModel {
                 try await selectLanguageUseCase.execute(lang: language)
                 _ = try await createDefaultFolderUseCase.execute()
                 _ = completeFirstLaunchUseCase.execute()
-                navDelegate?.finishOnBoarding()
+                onBoardingCoordinator?.finishOnBoarding()
             } catch {
                 isPaging = false
                 AppLogger.error(error)

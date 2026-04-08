@@ -6,7 +6,7 @@ import UIKit
 public final class OnBoardingViewController: UIViewController {
     // MARK: - State
 
-    public let vm: OnBoardingViewModel
+    private let vm: OnBoardingViewModel
 
     public init(vm: OnBoardingViewModel) {
         self.vm = vm

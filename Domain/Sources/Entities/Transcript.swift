@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Transcript: Sendable, Identifiable, Equatable {
+public struct Transcript: Sendable, Identifiable, Hashable {
     public let id: UUID
     public let createdAt: Date
     public let text: String

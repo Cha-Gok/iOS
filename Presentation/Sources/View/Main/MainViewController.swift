@@ -1,110 +1,164 @@
 import UIKit
 
 public final class MainViewController: UIViewController {
-    public var onRecordingButtonTapped: (() -> Void)?
+    // MARK: - View Model
 
-    private lazy var recordingButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.layer.cornerRadius = 32
-        button.clipsToBounds = true
-        button.backgroundColor = .gray950
-        button.tintColor = .gray50
-        button.setPreferredSymbolConfiguration(
-            UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold),
-            forImageIn: .normal
-        )
-        button.setImage(UIImage(systemName: "mic.fill"), for: .normal)
-        button.addTarget(self, action: #selector(recordingButtonTapped), for: .touchUpInside)
-        return button
+    private let vm: MainViewModel
+
+    // MARK: - Initialize
+
+    public init(vm: MainViewModel) {
+        self.vm = vm
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Component
+
+    private let navTitle: UILabel = {
+        let n = UILabel()
+        n.translatesAutoresizingMaskIntoConstraints = false
+        n.setTypography(text: "차곡", style: .header2)
+        n.textColor = UIColor.gray950
+        return n
     }()
 
     private let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-
-        return collectionView
+        let c = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        c.translatesAutoresizingMaskIntoConstraints = false
+        c.backgroundColor = UIColor.gray50
+        return c
     }()
 
-    let colors: [[UIColor]] = [
-        [.red, .red, .red, .red, .red],
-        (0 ..< 10).map { _ in .blue }
-    ]
+    private let floatingButton: GlassButton = .primary("녹음 시작")
+
+    var dataSource: UICollectionViewDiffableDataSource<MainSection, MainCellItem>!
+
+    // MARK: LifeCycle
 
     override public func viewDidLoad() {
         super.viewDidLoad()
         setup()
         setupCollectionView()
-        setupRecordingButton()
+        floatingButtonConstraint()
     }
+
+    override public func updateProperties() {
+        super.updateProperties()
+        vm.updateMyFolderCategory()
+    }
+
+    // MARK: Setup
 
     private func setup() {
-        view.backgroundColor = .gray200
-    }
+        view.backgroundColor = UIColor.gray50
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = UIColor.gray50
+        appearance.shadowColor = .clear
 
-    private func setupRecordingButton() {
-        view.addSubview(recordingButton)
-        NSLayoutConstraint.activate([
-            recordingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            recordingButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
-            recordingButton.widthAnchor.constraint(equalToConstant: 64),
-            recordingButton.heightAnchor.constraint(equalToConstant: 64)
-        ])
-    }
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
 
-    @objc
-    private func recordingButtonTapped() {
-        onRecordingButtonTapped?()
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: navTitle)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "magnifyingglass"),
+            menu: nil
+        )
+        navigationItem.leftBarButtonItem?.hidesSharedBackground = true
+        navigationItem.rightBarButtonItem?.hidesSharedBackground = true
     }
 
     private func setupCollectionView() {
         view.addSubview(collectionView)
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.register(MainViewCell.self, forCellWithReuseIdentifier: MainViewCell.reuseIdentifier)
+        view.addSubview(floatingButton)
+        collectionViewConstraint()
+
+        collectionView.register(
+            MainCategoryViewCell.self,
+            forCellWithReuseIdentifier: MainCategoryViewCell.reuseIdentifier
+        )
+        collectionView.register(
+            MainViewListCell.self,
+            forCellWithReuseIdentifier: MainViewListCell.reuseIdentifier
+        )
+        collectionView.register(
+            MainEmptyListCell.self,
+            forCellWithReuseIdentifier: MainEmptyListCell.reuseIdentifier
+        )
         collectionView.setCollectionViewLayout(
             createLayout(),
             animated: false
         )
-
-        collectionViewConstraint()
+        collectionView.delegate = self
+        setupDataSource()
     }
 
     private func collectionViewConstraint() {
         NSLayoutConstraint.activate([
-            collectionView.widthAnchor.constraint(equalTo: view.widthAnchor),
-            collectionView.heightAnchor.constraint(equalTo: view.heightAnchor)
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    private func floatingButtonConstraint() {
+        floatingButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            vm.presentRecodingView()
+        }, for: .touchUpInside)
+
+        NSLayoutConstraint.activate([
+            floatingButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            floatingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
     }
 }
 
-// MARK: - Layout Custom
+// MARK: - Collection view Layout Custom
 
 extension MainViewController {
     private func createLayout() -> UICollectionViewCompositionalLayout {
         UICollectionViewCompositionalLayout { [weak self] sectionIndex, _ in
-            switch sectionIndex {
-            case 0:
-                self?.createSection(
+            guard let self else { return self?.emptySection() }
+            let section = dataSource.sectionIdentifier(for: sectionIndex)
+            switch section {
+            case .category:
+                return createSection(
                     itemWidth: .fractionalWidth(1.0),
-                    itemHeight: .absolute(100),
-                    groupWidth: .fractionalWidth(0.3),
-                    groupHeight: .absolute(100),
-                    interGroupSpacing: 10,
-                    contentInsets: .init(top: 10, leading: 10, bottom: 10, trailing: 10),
+                    itemHeight: .absolute(120),
+                    groupWidth: .absolute(92),
+                    groupHeight: .absolute(120),
+                    interGroupSpacing: 8,
+                    contentInsets: .init(top: 0, leading: 20, bottom: 0, trailing: 20),
                     scrollBehavior: .continuous
                 )
-            default:
-                self?.createSection(
-                    itemWidth: .fractionalWidth(1.0),
-                    itemHeight: .absolute(100),
-                    groupWidth: .fractionalWidth(1.0),
-                    groupHeight: .absolute(100),
-                    interGroupSpacing: 10,
-                    contentInsets: .init(top: 10, leading: 10, bottom: 10, trailing: 10),
-                    scrollBehavior: .none
-                )
+            case .list:
+                if vm.isEmptyList {
+                    return createSection(
+                        itemWidth: .fractionalWidth(1.0),
+                        itemHeight: .estimated(300),
+                        groupWidth: .fractionalWidth(1.0),
+                        groupHeight: .estimated(300)
+                    )
+                } else {
+                    return createSection(
+                        itemWidth: .fractionalWidth(1.0),
+                        itemHeight: .absolute(80),
+                        groupWidth: .fractionalWidth(1.0),
+                        groupHeight: .absolute(80),
+                        interGroupSpacing: 10,
+                        contentInsets: .init(top: 32, leading: 20, bottom: 20, trailing: 20)
+                    )
+                }
+            default: return emptySection()
             }
         }
     }
@@ -120,8 +174,12 @@ extension MainViewController {
         headerHeight: CGFloat? = nil,
         scrollBehavior: UICollectionLayoutSectionOrthogonalScrollingBehavior = .none
     ) -> NSCollectionLayoutSection {
-        let itemSize: NSCollectionLayoutSize = .init(widthDimension: itemWidth, heightDimension: itemHeight)
-        let groupSize: NSCollectionLayoutSize = .init(widthDimension: groupWidth, heightDimension: groupHeight)
+        let itemSize: NSCollectionLayoutSize = .init(
+            widthDimension: itemWidth, heightDimension: itemHeight
+        )
+        let groupSize: NSCollectionLayoutSize = .init(
+            widthDimension: groupWidth, heightDimension: groupHeight
+        )
 
         let item: NSCollectionLayoutItem = .init(layoutSize: itemSize)
         let group: NSCollectionLayoutGroup = .vertical(layoutSize: groupSize, subitems: [item])
@@ -134,30 +192,108 @@ extension MainViewController {
 
         return section
     }
+
+    private func emptySection() -> NSCollectionLayoutSection {
+        createSection(
+            itemWidth: .fractionalWidth(0),
+            itemHeight: .fractionalHeight(0),
+            groupWidth: .fractionalWidth(0),
+            groupHeight: .fractionalHeight(0)
+        )
+    }
 }
 
-extension MainViewController: UICollectionViewDelegate, UICollectionViewDataSource {
-    public func numberOfSections(in collectionView: UICollectionView) -> Int {
-        colors.count
+// MARK: - setup DataSource
+
+extension MainViewController {
+    private func setupDataSource() {
+        createDataSource()
+        updateDataSource()
     }
 
-    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        colors[section].count
+    private func createDataSource() {
+        dataSource = UICollectionViewDiffableDataSource(
+            collectionView: collectionView,
+            cellProvider: { collectionView, indexPath, itemIdentifier in
+                switch itemIdentifier {
+                case .category(let categoryToggle):
+                    let cell =
+                        collectionView.dequeueReusableCell(
+                            withReuseIdentifier: MainCategoryViewCell.reuseIdentifier,
+                            for: indexPath
+                        ) as! MainCategoryViewCell
+                    cell.configure(
+                        imageName: categoryToggle.imageName,
+                        title: categoryToggle.title,
+                        totalCount: categoryToggle.items.count
+                    )
+                    return cell
+                case .list(let libraryItem):
+                    let cell =
+                        collectionView.dequeueReusableCell(
+                            withReuseIdentifier: MainViewListCell.reuseIdentifier,
+                            for: indexPath
+                        ) as! MainViewListCell
+
+                    cell.configure(libraryItem: libraryItem)
+                    return cell
+                case .emptyList:
+                    return collectionView.dequeueReusableCell(
+                        withReuseIdentifier: MainEmptyListCell.reuseIdentifier,
+                        for: indexPath
+                    )
+                }
+            }
+        )
+    }
+
+    private func updateDataSource() {
+        var snapshot = NSDiffableDataSourceSnapshot<MainSection, MainCellItem>()
+
+        // 1. 카테고리 섹션
+        let categorySection = MainSection.category
+        snapshot.appendSections([categorySection])
+        let categoryItems = vm.categoryData.map { MainCellItem.category($0) }
+        snapshot.appendItems(categoryItems, toSection: categorySection)
+
+        // 2. 리스트 섹션
+        let listSection = MainSection.list
+        snapshot.appendSections([listSection])
+
+        let items = vm.categoryData[vm.selectedCategoryIndex].items
+        if items.isEmpty {
+            snapshot.appendItems([.emptyList], toSection: listSection)
+        } else {
+            let cellItems = items.map { MainCellItem.list($0) }
+            snapshot.appendItems(cellItems, toSection: listSection)
+        }
+
+        dataSource.apply(snapshot, animatingDifferences: false) { [weak self] in
+            guard let self else { return }
+            let indexPath = IndexPath(item: vm.selectedCategoryIndex, section: 0)
+            collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+        }
+    }
+}
+
+// MARK: - CollectionView Delegate
+
+extension MainViewController: UICollectionViewDelegate {
+    public func collectionView(
+        _ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath
+    ) -> Bool {
+        let section = dataSource.sectionIdentifier(for: indexPath.section)
+        // 카테고리 섹션만 선택 가능하도록 제한하여, 리스트 클릭 시 카테고리 선택이 풀리지 않게 합니다.
+        return section == .category
     }
 
     public func collectionView(
-        _ collectionView: UICollectionView,
-        cellForItemAt indexPath: IndexPath
-    ) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MainViewCell.reuseIdentifier, for: indexPath)
-
-        cell.backgroundColor = colors[indexPath.section][indexPath.item]
-        cell.layer.borderColor = UIColor.darkGray.cgColor
-        cell.layer.borderWidth = 1.0
-        return cell
+        _ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath
+    ) {
+        let section = dataSource.sectionIdentifier(for: indexPath.section)
+        guard case .category = section else { return }
+        vm.setSelectedCategoryIndex(indexPath: indexPath)
+        collectionView.setCollectionViewLayout(createLayout(), animated: false)
+        updateDataSource()
     }
 }
-
-// #Preview {
-//    MainViewController()
-// }

@@ -29,7 +29,7 @@ final class AppCoordinator: BaseCoordinator<UINavigationController> {
 
     private func startOnboarding() {
         let viewModel = dependencyContainer.makeOnBoardingViewModel()
-        viewModel.navDelegate = self
+        viewModel.onBoardingCoordinator = self
         let onBoardingVC = OnBoardingViewController(vm: viewModel)
         presenter.setViewControllers([onBoardingVC], animated: false)
     }
