@@ -2,9 +2,14 @@
 import Foundation
 import XCTest
 
-actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
+public actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
     private var fetchAllResult: Result<[VoiceNote], VoiceNoteFetchRepositoryError>?
     private var fetchByIdResult: Result<VoiceNote, VoiceNoteFetchRepositoryError>?
+
+    public init() {}
+
+    private var fetchAllFromDefaultFolderCallCount = 0
+    private var expectedDefaultFetchCallCount: Int?
 
     private var fetchAllCallCount = 0
     private var actualFetchAllFolderID: UUID?
@@ -16,25 +21,38 @@ actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
     private var expectedFetchByIdCallCount: Int?
     private var expectedFetchByIdID: UUID?
 
-    func setFetchAllResult(_ result: Result<[VoiceNote], VoiceNoteFetchRepositoryError>) {
+    public func setFetchAllResult(_ result: Result<[VoiceNote], VoiceNoteFetchRepositoryError>) {
         fetchAllResult = result
     }
 
-    func setFetchByIdResult(_ result: Result<VoiceNote, VoiceNoteFetchRepositoryError>) {
+    public func setFetchByIdResult(_ result: Result<VoiceNote, VoiceNoteFetchRepositoryError>) {
         fetchByIdResult = result
     }
 
-    func expectFetchAll(callCount: Int, folderID: UUID? = nil) {
+    public func expectFetchAllFromDefaultFolder(callCount: Int) {
+        expectedDefaultFetchCallCount = callCount
+    }
+
+    public func expectFetchAll(callCount: Int, folderID: UUID? = nil) {
         expectedFetchAllCallCount = callCount
         expectedFetchAllFolderID = folderID
     }
 
-    func expectFetchById(callCount: Int, id: UUID? = nil) {
+    public func expectFetchById(callCount: Int, id: UUID? = nil) {
         expectedFetchByIdCallCount = callCount
         expectedFetchByIdID = id
     }
 
-    func verify(file: StaticString = #filePath, line: UInt = #line) {
+    public func verify(file: StaticString = #filePath, line: UInt = #line) {
+        if let expected = expectedDefaultFetchCallCount {
+            XCTAssertEqual(
+                fetchAllFromDefaultFolderCallCount,
+                expected,
+                "기본 폴더 전체 조회 호출 횟수가 일치하지 않습니다.",
+                file: file,
+                line: line
+            )
+        }
         if let expected = expectedFetchAllCallCount {
             XCTAssertEqual(
                 fetchAllCallCount,
@@ -73,7 +91,21 @@ actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
         }
     }
 
-    func fetchAll(folderID: UUID) async throws(VoiceNoteFetchRepositoryError) -> [VoiceNote] {
+    public func fetchAllFromDefaultFolder() async throws(VoiceNoteFetchRepositoryError) -> [VoiceNote] {
+        fetchAllFromDefaultFolderCallCount += 1
+
+        switch fetchAllResult {
+        case .success(let success):
+            return success
+        case .failure(let failure):
+            throw failure
+        case .none:
+            XCTFail("MockVoiceNoteFetchRepository.fetchAllResult 가 설정되지 않았습니다.")
+            throw .unknown(NSError(domain: "MockVoiceNoteFetchRepository.fetchAllResult", code: -1))
+        }
+    }
+
+    public func fetchAll(folderID: UUID) async throws(VoiceNoteFetchRepositoryError) -> [VoiceNote] {
         fetchAllCallCount += 1
         actualFetchAllFolderID = folderID
 
@@ -88,7 +120,7 @@ actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
         }
     }
 
-    func fetch(byId id: UUID) async throws(VoiceNoteFetchRepositoryError) -> VoiceNote {
+    public func fetch(byId id: UUID) async throws(VoiceNoteFetchRepositoryError) -> VoiceNote {
         fetchByIdCallCount += 1
         actualFetchByIdID = id
 
