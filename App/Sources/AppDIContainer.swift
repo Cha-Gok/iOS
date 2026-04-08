@@ -24,6 +24,7 @@ public final class AppDIContainer {
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
     private lazy var voiceNoteCreateRepository = DefaultVoiceNoteCreateRepository(store: localDataBase)
+    private lazy var voiceNoteFetchRepository = DefaultVoiceNoteFetchRepository(store: localDataBase)
 
     /// UseCase
     private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(
@@ -47,6 +48,9 @@ public final class AppDIContainer {
     )
     private lazy var createVoiceNoteUseCase = DefaultCreateVoiceNoteUseCase(
         repository: voiceNoteCreateRepository
+    )
+    private lazy var fetchVoiceNoteUseCase = DefaultFetchVoiceNoteUseCase(
+        repository: voiceNoteFetchRepository
     )
 
     public init() throws {
@@ -95,7 +99,8 @@ public final class AppDIContainer {
 
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
-            fetchFolderUseCase: fetchFolderUseCase
+            fetchFolderUseCase: fetchFolderUseCase,
+            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase
         )
     }
 
