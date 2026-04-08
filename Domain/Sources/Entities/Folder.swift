@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Folder: Sendable, Identifiable, Equatable {
+public struct Folder: Sendable, Identifiable, Hashable {
     public let id: UUID
     public let name: String
     public let createdAt: Date

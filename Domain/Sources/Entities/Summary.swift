@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Summary: Sendable, Identifiable, Equatable {
+public struct Summary: Sendable, Identifiable, Hashable {
     public let id: UUID
     public let createdAt: Date
     public let text: String
