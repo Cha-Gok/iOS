@@ -42,6 +42,8 @@ public enum FetchVoiceNoteUseCaseError: LocalizedError, Sendable {
             self = .fetchFailed(id: id)
         case .defaultFolderNotFound:
             self = .defaultFolderNotFound
+        case .fetchRecentFailed:
+            self = .unknown(VoiceNoteFetchRepositoryError.fetchRecentFailed)
         case .cancelled:
             self = .cancelled
         case .unknown(let error):
