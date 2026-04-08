@@ -65,6 +65,9 @@ public final class AppDIContainer {
     private lazy var moveWasteBasketUseCase = DefaultMoveWasteBasketUseCase(
         repository: wasteBasketRepository
     )
+    private lazy var restoreWasteBasketUseCase = DefaultRestoreWasteBasketUseCase(
+        repository: wasteBasketRepository
+    )
 
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()

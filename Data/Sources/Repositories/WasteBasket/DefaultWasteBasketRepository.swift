@@ -168,4 +168,84 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
             throw .moveFailed(.multiple(items: items))
         }
     }
+
+    // MARK: - Restore
+
+    public func restore(item: WasteBasketItem) async throws(RestoreWasteBasketRepositoryError) {
+        if Task.isCancelled { throw .cancelled }
+
+        do {
+            switch item {
+            case .voiceNote(let id):
+                let voiceNote = try await store.fetch(byID: id, as: VoiceNoteEntity.self)
+                let updated = VoiceNote(
+                    id: voiceNote.id,
+                    title: voiceNote.title,
+                    createdAt: voiceNote.createdAt,
+                    updatedAt: .now,
+                    folderID: voiceNote.folderID,
+                    voiceRecord: voiceNote.voiceRecord,
+                    keywords: voiceNote.keywords,
+                    transcript: voiceNote.transcript,
+                    summary: voiceNote.summary,
+                    deletedAt: nil
+                )
+                _ = try await store.update(updated, as: VoiceNoteEntity.self)
+
+            case .folder(let id):
+                let folder = try await store.fetch(byID: id, as: FolderEntity.self)
+                let updated = Folder(
+                    id: folder.id,
+                    name: folder.name,
+                    createdAt: folder.createdAt,
+                    isDeletable: folder.isDeletable,
+                    deletedAt: nil
+                )
+                _ = try await store.update(updated, as: FolderEntity.self)
+            }
+        } catch {
+            AppLogger.error(error)
+            throw .restoreFailed(.single(item: item))
+        }
+    }
+
+    public func restoreAll(items: [WasteBasketItem]) async throws(RestoreWasteBasketRepositoryError) {
+        if Task.isCancelled { throw .cancelled }
+
+        do {
+            for item in items {
+                switch item {
+                case .voiceNote(let id):
+                    let voiceNote = try await store.fetch(byID: id, as: VoiceNoteEntity.self)
+                    let updated = VoiceNote(
+                        id: voiceNote.id,
+                        title: voiceNote.title,
+                        createdAt: voiceNote.createdAt,
+                        updatedAt: .now,
+                        folderID: voiceNote.folderID,
+                        voiceRecord: voiceNote.voiceRecord,
+                        keywords: voiceNote.keywords,
+                        transcript: voiceNote.transcript,
+                        summary: voiceNote.summary,
+                        deletedAt: nil
+                    )
+                    _ = try await store.update(updated, as: VoiceNoteEntity.self)
+
+                case .folder(let id):
+                    let folder = try await store.fetch(byID: id, as: FolderEntity.self)
+                    let updated = Folder(
+                        id: folder.id,
+                        name: folder.name,
+                        createdAt: folder.createdAt,
+                        isDeletable: folder.isDeletable,
+                        deletedAt: nil
+                    )
+                    _ = try await store.update(updated, as: FolderEntity.self)
+                }
+            }
+        } catch {
+            AppLogger.error(error)
+            throw .restoreFailed(.multiple(items: items))
+        }
+    }
 }
