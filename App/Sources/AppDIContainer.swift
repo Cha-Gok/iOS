@@ -53,6 +53,9 @@ public final class AppDIContainer {
     private lazy var fetchVoiceNoteUseCase = DefaultFetchVoiceNoteUseCase(
         repository: voiceNoteFetchRepository
     )
+    private lazy var fetchRecentVoiceNoteUseCase = DefaultFetchRecentVoiceNoteUseCase(
+        repository: voiceNoteFetchRepository
+    )
     private lazy var fetchWasteBasketUseCase = DefaultFetchWasteBasketFolderUseCase(
         repository: wasteBasketRepository
     )
@@ -110,7 +113,8 @@ public final class AppDIContainer {
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
             fetchFolderUseCase: fetchFolderUseCase,
-            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase
+            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase,
+            fetchRecentVoiceNoteUseCase: fetchRecentVoiceNoteUseCase
         )
     }
 
