@@ -5,6 +5,7 @@ import XCTest
 public actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
     private var fetchAllResult: Result<[VoiceNote], VoiceNoteFetchRepositoryError>?
     private var fetchByIdResult: Result<VoiceNote, VoiceNoteFetchRepositoryError>?
+    private var fetchRecentResult: Result<[VoiceNote], VoiceNoteFetchRepositoryError>?
 
     public init() {}
 
@@ -15,11 +16,15 @@ public actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
     private var actualFetchAllFolderID: UUID?
     private var fetchByIdCallCount = 0
     private var actualFetchByIdID: UUID?
+    private var fetchRecentCallCount = 0
+    private var actualFetchRecentLimit: Int?
 
     private var expectedFetchAllCallCount: Int?
     private var expectedFetchAllFolderID: UUID?
     private var expectedFetchByIdCallCount: Int?
     private var expectedFetchByIdID: UUID?
+    private var expectedFetchRecentCallCount: Int?
+    private var expectedFetchRecentLimit: Int?
 
     public func setFetchAllResult(_ result: Result<[VoiceNote], VoiceNoteFetchRepositoryError>) {
         fetchAllResult = result
@@ -27,6 +32,10 @@ public actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
 
     public func setFetchByIdResult(_ result: Result<VoiceNote, VoiceNoteFetchRepositoryError>) {
         fetchByIdResult = result
+    }
+
+    public func setFetchRecentResult(_ result: Result<[VoiceNote], VoiceNoteFetchRepositoryError>) {
+        fetchRecentResult = result
     }
 
     public func expectFetchAllFromDefaultFolder(callCount: Int) {
@@ -43,50 +52,64 @@ public actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
         expectedFetchByIdID = id
     }
 
+    public func expectFetchRecent(callCount: Int, limit: Int? = nil) {
+        expectedFetchRecentCallCount = callCount
+        expectedFetchRecentLimit = limit
+    }
+
     public func verify(file: StaticString = #filePath, line: UInt = #line) {
+        verifyFetchAll(file: file, line: line)
+        verifyFetchById(file: file, line: line)
+        verifyFetchRecent(file: file, line: line)
+    }
+
+    private func verifyFetchAll(file: StaticString, line: UInt) {
         if let expected = expectedDefaultFetchCallCount {
             XCTAssertEqual(
-                fetchAllFromDefaultFolderCallCount,
-                expected,
-                "기본 폴더 전체 조회 호출 횟수가 일치하지 않습니다.",
-                file: file,
-                line: line
+                fetchAllFromDefaultFolderCallCount, expected,
+                "기본 폴더 전체 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line
             )
         }
         if let expected = expectedFetchAllCallCount {
             XCTAssertEqual(
-                fetchAllCallCount,
-                expected,
-                "전체 조회 호출 횟수가 일치하지 않습니다.",
-                file: file,
-                line: line
+                fetchAllCallCount, expected,
+                "전체 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line
             )
         }
         if let expectedFolderID = expectedFetchAllFolderID {
             XCTAssertEqual(
-                actualFetchAllFolderID,
-                expectedFolderID,
-                "전체 조회 폴더 ID가 일치하지 않습니다.",
-                file: file,
-                line: line
+                actualFetchAllFolderID, expectedFolderID,
+                "전체 조회 폴더 ID가 일치하지 않습니다.", file: file, line: line
             )
         }
+    }
+
+    private func verifyFetchById(file: StaticString, line: UInt) {
         if let expected = expectedFetchByIdCallCount {
             XCTAssertEqual(
-                fetchByIdCallCount,
-                expected,
-                "ID별 조회 호출 횟수가 일치하지 않습니다.",
-                file: file,
-                line: line
+                fetchByIdCallCount, expected,
+                "ID별 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line
             )
         }
         if let expectedID = expectedFetchByIdID {
             XCTAssertEqual(
-                actualFetchByIdID,
-                expectedID,
-                "ID별 조회 ID가 일치하지 않습니다.",
-                file: file,
-                line: line
+                actualFetchByIdID, expectedID,
+                "ID별 조회 ID가 일치하지 않습니다.", file: file, line: line
+            )
+        }
+    }
+
+    private func verifyFetchRecent(file: StaticString, line: UInt) {
+        if let expected = expectedFetchRecentCallCount {
+            XCTAssertEqual(
+                fetchRecentCallCount, expected,
+                "최근 기록 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line
+            )
+        }
+        if let expectedLimit = expectedFetchRecentLimit {
+            XCTAssertEqual(
+                actualFetchRecentLimit, expectedLimit,
+                "최근 기록 조회 limit이 일치하지 않습니다.", file: file, line: line
             )
         }
     }
@@ -134,6 +157,21 @@ public actor MockVoiceNoteFetchRepository: VoiceNoteFetchRepository {
             throw .unknown(
                 NSError(domain: "MockVoiceNoteFetchRepository.fetchByIdResult", code: -1)
             )
+        }
+    }
+
+    public func fetchRecent(limit: Int) async throws(VoiceNoteFetchRepositoryError) -> [VoiceNote] {
+        fetchRecentCallCount += 1
+        actualFetchRecentLimit = limit
+
+        switch fetchRecentResult {
+        case .success(let success):
+            return success
+        case .failure(let failure):
+            throw failure
+        case .none:
+            XCTFail("MockVoiceNoteFetchRepository.fetchRecentResult 가 설정되지 않았습니다.")
+            throw .unknown(NSError(domain: "MockVoiceNoteFetchRepository.fetchRecentResult", code: -1))
         }
     }
 }
