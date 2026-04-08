@@ -221,7 +221,9 @@ public extension FolderViewController {
 
         let deleteAction = UIContextualAction(style: .destructive, title: "삭제") {
             [weak self] _, _, completion in
-            self?.vm.move()
+            if case .folder(let folder) = item {
+                self?.vm.move(folder: folder)
+            }
             completion(true)
         }
         deleteAction.image = UIImage(systemName: "trash.fill")

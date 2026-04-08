@@ -2,7 +2,7 @@
 import Foundation
 import XCTest
 
-actor MockWasteBasketRepository: WasteBasketRepository {
+public actor MockWasteBasketRepository: WasteBasketRepository {
     // Results
     private var deleteResult: Result<Void, DeleteWasteBasketRepositoryError>?
     private var moveResult: Result<Void, MoveWasteBasketRepositoryError>?
@@ -47,65 +47,67 @@ actor MockWasteBasketRepository: WasteBasketRepository {
 
     // MARK: - Setup
 
-    func setFetchAllResult(_ result: Result<[WasteBasketItem], FetchWasteBasketRepositoryError>) {
+    public init() {}
+
+    public func setFetchAllResult(_ result: Result<[WasteBasketItem], FetchWasteBasketRepositoryError>) {
         fetchAllResult = result
     }
 
-    func setMoveResult(_ result: Result<Void, MoveWasteBasketRepositoryError>) {
+    public func setMoveResult(_ result: Result<Void, MoveWasteBasketRepositoryError>) {
         moveResult = result
     }
 
-    func setDeleteResult(_ result: Result<Void, DeleteWasteBasketRepositoryError>) {
+    public func setDeleteResult(_ result: Result<Void, DeleteWasteBasketRepositoryError>) {
         deleteResult = result
     }
 
-    func setRestoreResult(_ result: Result<Void, RestoreWasteBasketRepositoryError>) {
+    public func setRestoreResult(_ result: Result<Void, RestoreWasteBasketRepositoryError>) {
         restoreResult = result
     }
 
     // MARK: - Expectations
 
-    func expectFetchAll(callCount: Int) {
+    public func expectFetchAll(callCount: Int) {
         expectedFetchAllCallCount = callCount
     }
 
-    func expectMoveToWasteBasket(item: WasteBasketItem? = nil, callCount: Int) {
+    public func expectMoveToWasteBasket(item: WasteBasketItem? = nil, callCount: Int) {
         expectedMoveToWasteBasketCallCount = callCount
         expectedLastMovedItem = item
     }
 
-    func expectMoveAllToWasteBasket(items: [WasteBasketItem]? = nil, callCount: Int) {
+    public func expectMoveAllToWasteBasket(items: [WasteBasketItem]? = nil, callCount: Int) {
         expectedMoveAllToWasteBasketCallCount = callCount
         expectedLastMovedItems = items
     }
 
-    func expectDelete(item: WasteBasketItem? = nil, callCount: Int) {
+    public func expectDelete(item: WasteBasketItem? = nil, callCount: Int) {
         expectedDeleteCallCount = callCount
         expectedLastDeletedItem = item
     }
 
-    func expectDeleteAll(items: [WasteBasketItem]? = nil, callCount: Int) {
+    public func expectDeleteAll(items: [WasteBasketItem]? = nil, callCount: Int) {
         expectedDeleteAllCallCount = callCount
         expectedLastDeletedItems = items
     }
 
-    func expectAllClear(callCount: Int) {
+    public func expectAllClear(callCount: Int) {
         expectedAllClearCallCount = callCount
     }
 
-    func expectRestore(item: WasteBasketItem? = nil, callCount: Int) {
+    public func expectRestore(item: WasteBasketItem? = nil, callCount: Int) {
         expectedRestoreCallCount = callCount
         expectedLastRestoredItem = item
     }
 
-    func expectRestoreAll(items: [WasteBasketItem]? = nil, callCount: Int) {
+    public func expectRestoreAll(items: [WasteBasketItem]? = nil, callCount: Int) {
         expectedRestoreAllCallCount = callCount
         expectedLastRestoredItems = items
     }
 
     // MARK: - Verification
 
-    func verify(file: StaticString = #filePath, line: UInt = #line) {
+    public func verify(file: StaticString = #filePath, line: UInt = #line) {
         verifyFetch(file: file, line: line)
         verifyMove(file: file, line: line)
         verifyDelete(file: file, line: line)
@@ -174,7 +176,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
 
     // MARK: - WasteBasketRepository (Fetch, Move, Delete)
 
-    func fetchAll() async throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
+    public func fetchAll() async throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
         fetchAllCallCount += 1
 
         switch fetchAllResult {
@@ -189,7 +191,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    func moveToWasteBasket(item: WasteBasketItem) async throws(MoveWasteBasketRepositoryError) {
+    public func moveToWasteBasket(item: WasteBasketItem) async throws(MoveWasteBasketRepositoryError) {
         moveToWasteBasketCallCount += 1
         lastMovedItem = item
 
@@ -205,7 +207,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    func moveAllToWasteBasket(items: [WasteBasketItem]) async throws(MoveWasteBasketRepositoryError) {
+    public func moveAllToWasteBasket(items: [WasteBasketItem]) async throws(MoveWasteBasketRepositoryError) {
         moveAllToWasteBasketCallCount += 1
         lastMovedItems = items
 
@@ -221,7 +223,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    func delete(item: WasteBasketItem) async throws(DeleteWasteBasketRepositoryError) {
+    public func delete(item: WasteBasketItem) async throws(DeleteWasteBasketRepositoryError) {
         deleteCallCount += 1
         lastDeletedItem = item
 
@@ -237,7 +239,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    func deleteAll(items: [WasteBasketItem]) async throws(DeleteWasteBasketRepositoryError) {
+    public func deleteAll(items: [WasteBasketItem]) async throws(DeleteWasteBasketRepositoryError) {
         deleteAllCallCount += 1
         lastDeletedItems = items
 
@@ -253,7 +255,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    func allClear() async throws(DeleteWasteBasketRepositoryError) {
+    public func allClear() async throws(DeleteWasteBasketRepositoryError) {
         allClearCallCount += 1
 
         switch deleteResult {
@@ -268,7 +270,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    func restore(item: WasteBasketItem) async throws(RestoreWasteBasketRepositoryError) {
+    public func restore(item: WasteBasketItem) async throws(RestoreWasteBasketRepositoryError) {
         restoreCallCount += 1
         lastRestoredItem = item
 
@@ -284,7 +286,7 @@ actor MockWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    func restoreAll(items: [WasteBasketItem]) async throws(RestoreWasteBasketRepositoryError) {
+    public func restoreAll(items: [WasteBasketItem]) async throws(RestoreWasteBasketRepositoryError) {
         restoreAllCallCount += 1
         lastRestoredItems = items
 

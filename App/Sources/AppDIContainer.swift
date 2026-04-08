@@ -129,7 +129,8 @@ public final class AppDIContainer {
         return FolderViewModel(
             category: category,
             createUseCase: createFolderUseCase,
-            updateUseCase: updateFolderUseCase
+            updateUseCase: updateFolderUseCase,
+            moveToTrashUseCase: moveWasteBasketUseCase
         )
     }
 }
