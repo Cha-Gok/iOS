@@ -53,6 +53,15 @@ public final class AppDIContainer {
     private lazy var fetchVoiceNoteUseCase = DefaultFetchVoiceNoteUseCase(
         repository: voiceNoteFetchRepository
     )
+    private lazy var fetchWasteBasketUseCase = DefaultFetchWasteBasketFolderUseCase(
+        repository: wasteBasketRepository
+    )
+    private lazy var deleteWasteBasketUseCase = DefaultDeleteWasteBasketUseCase(
+        repository: wasteBasketRepository
+    )
+    private lazy var moveWasteBasketUseCase = DefaultMoveWasteBasketUseCase(
+        repository: wasteBasketRepository
+    )
 
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
