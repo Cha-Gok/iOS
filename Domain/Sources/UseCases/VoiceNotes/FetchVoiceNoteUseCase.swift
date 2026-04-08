@@ -3,6 +3,11 @@ import Foundation
 
 /// 음성 메모 조회 유스케이스 프로토콜.
 public protocol FetchVoiceNoteUseCase: Sendable {
+    /// 기본 폴더의 모든 음성 메모를 조회합니다.
+    /// - Returns: 기본 폴더에 저장된 음성 메모 배열
+    /// - Throws: `FetchVoiceNoteUseCaseError`
+    func execute() async throws(FetchVoiceNoteUseCaseError) -> [VoiceNote]
+
     /// 특정 폴더의 모든 음성 메모를 조회합니다.
     /// - Parameter folderID: 조회할 폴더의 ID
     /// - Returns: 조회된 `VoiceNote` 배열
@@ -21,6 +26,16 @@ public struct DefaultFetchVoiceNoteUseCase: FetchVoiceNoteUseCase {
 
     public init(repository: VoiceNoteFetchRepository) {
         self.repository = repository
+    }
+
+    public func execute() async throws(FetchVoiceNoteUseCaseError) -> [VoiceNote] {
+        if Task.isCancelled { throw .cancelled }
+        do {
+            return try await repository.fetchAllFromDefaultFolder()
+        } catch {
+            AppLogger.error(error)
+            throw FetchVoiceNoteUseCaseError(error)
+        }
     }
 
     public func execute(folderID: UUID) async throws(FetchVoiceNoteUseCaseError) -> [VoiceNote] {
