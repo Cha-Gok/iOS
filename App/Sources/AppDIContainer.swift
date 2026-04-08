@@ -25,17 +25,25 @@ public final class AppDIContainer {
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
 
     /// UseCase
-    private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(repository: languageRepository)
+    private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(
+        repository: languageRepository
+    )
     private lazy var checkMicrophonePermissionUseCase =
         DefaultCheckMicrophonePermissionUseCase(repository: voiceRecordRepository)
     private lazy var requestMicrophonePermissionUseCase =
         DefaultRequestMicrophonePermissionUseCase(repository: voiceRecordRepository)
-    private lazy var checkFirstLaunchUseCase = DefaultCheckFirstLaunchUseCase(repository: checkFirstLaunchRepository)
+    private lazy var checkFirstLaunchUseCase = DefaultCheckFirstLaunchUseCase(
+        repository: checkFirstLaunchRepository
+    )
     private lazy var completeFirstLaunchUseCase = DefaultCompleteFirstLaunchUseCase(
         repository: checkFirstLaunchRepository
     )
     private lazy var createFolderUseCase = DefaultCreateFolderUseCase(repository: folderRepository)
-    private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(repository: folderRepository)
+    private lazy var fetchFolderUseCase = DefaultReadFolderUseCase(repository: folderRepository)
+    private lazy var updateFolderUseCase = DefaultUpdateFolderUseCase(repository: folderRepository)
+    private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(
+        repository: folderRepository
+    )
 
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
@@ -60,17 +68,41 @@ public final class AppDIContainer {
 
     // MARK: - 메인 플로우
 
-    public func makeMainViewController() -> MainViewController {
-        MainViewController()
-    }
-
     public func makeRecordingViewModel() -> RecordingViewModel {
         RecordingViewModel(
-            startRecordingUseCase: DefaultStartRecordingUseCase(recordingRepository: voiceRecordRepository),
-            pauseRecordingUseCase: DefaultPauseRecordingUseCase(recordingRepository: voiceRecordRepository),
-            resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: voiceRecordRepository),
-            finishRecordingUseCase: DefaultFinishRecordingUseCase(recordingRepository: voiceRecordRepository),
-            cancelRecordingUseCase: DefaultCancelRecordingUseCase(recordingRepository: voiceRecordRepository)
+            startRecordingUseCase: DefaultStartRecordingUseCase(
+                recordingRepository: voiceRecordRepository
+            ),
+            pauseRecordingUseCase: DefaultPauseRecordingUseCase(
+                recordingRepository: voiceRecordRepository
+            ),
+            resumeRecordingUseCase: DefaultResumeRecordingUseCase(
+                recordingRepository: voiceRecordRepository
+            ),
+            finishRecordingUseCase: DefaultFinishRecordingUseCase(
+                recordingRepository: voiceRecordRepository
+            ),
+            cancelRecordingUseCase: DefaultCancelRecordingUseCase(
+                recordingRepository: voiceRecordRepository
+            )
+        )
+    }
+
+    public func makeMainViewModel() -> MainViewModel {
+        return MainViewModel(
+            fetchFolderUseCase: fetchFolderUseCase
+        )
+    }
+
+    public func makeTrashViewController() -> TrashViewController {
+        return TrashViewController()
+    }
+
+    public func makeMyFolderViewModel(_ category: CategoryToggle) -> FolderViewModel {
+        return FolderViewModel(
+            category: category,
+            createUseCase: createFolderUseCase,
+            updateUseCase: updateFolderUseCase
         )
     }
 }
