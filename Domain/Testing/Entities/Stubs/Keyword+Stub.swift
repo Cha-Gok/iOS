@@ -1,7 +1,7 @@
 @testable import Domain
 import Foundation
 
-extension Keyword {
+public extension Keyword {
     static func stub(
         id: UUID = UUID(),
         noteID: UUID = UUID(),

@@ -2,7 +2,9 @@
 import Foundation
 import XCTest
 
-actor MockSummaryRepository: SummaryRepository {
+public actor MockSummaryRepository: SummaryRepository {
+    public init() {}
+
     private var result: Result<(keywords: [Keyword], summary: Summary), SummaryRepositoryError>?
 
     private var actualCallCount = 0
@@ -11,18 +13,18 @@ actor MockSummaryRepository: SummaryRepository {
     private var expectedCallCount: Int?
     private var expectedTranscriptText: String?
 
-    func setResult(
+    public func setResult(
         _ result: Result<(keywords: [Keyword], summary: Summary), SummaryRepositoryError>
     ) {
         self.result = result
     }
 
-    func expectSummarize(callCount: Int, transcriptText: String? = nil) {
+    public func expectSummarize(callCount: Int, transcriptText: String? = nil) {
         expectedCallCount = callCount
         expectedTranscriptText = transcriptText
     }
 
-    func verify(file: StaticString = #filePath, line: UInt = #line) {
+    public func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedCallCount {
             XCTAssertEqual(actualCallCount, expected, "요약 호출 횟수가 일치하지 않습니다.", file: file, line: line)
         }
@@ -34,7 +36,7 @@ actor MockSummaryRepository: SummaryRepository {
         }
     }
 
-    func summarize(transcript: Transcript, language: Language) async throws(SummaryRepositoryError) -> (
+    public func summarize(transcript: Transcript, language: Language) async throws(SummaryRepositoryError) -> (
         keywords: [Keyword], summary: Summary
     ) {
         actualCallCount += 1

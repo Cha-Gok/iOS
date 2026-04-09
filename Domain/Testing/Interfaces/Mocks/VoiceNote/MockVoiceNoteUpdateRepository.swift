@@ -2,7 +2,9 @@
 import Foundation
 import XCTest
 
-actor MockVoiceNoteUpdateRepository: VoiceNoteUpdateRepository {
+public actor MockVoiceNoteUpdateRepository: VoiceNoteUpdateRepository {
+    public init() {}
+
     private var result: Result<VoiceNote, VoiceNoteUpdateRepositoryError>?
 
     private var updateCallCount = 0
@@ -11,16 +13,16 @@ actor MockVoiceNoteUpdateRepository: VoiceNoteUpdateRepository {
     private var expectedUpdateCallCount: Int?
     private var expectedUpdatedVoiceNote: VoiceNote?
 
-    func setResult(_ result: Result<VoiceNote, VoiceNoteUpdateRepositoryError>) {
+    public func setResult(_ result: Result<VoiceNote, VoiceNoteUpdateRepositoryError>) {
         self.result = result
     }
 
-    func expectUpdate(callCount: Int, voiceNote: VoiceNote? = nil) {
+    public func expectUpdate(callCount: Int, voiceNote: VoiceNote? = nil) {
         expectedUpdateCallCount = callCount
         expectedUpdatedVoiceNote = voiceNote
     }
 
-    func verify(file: StaticString = #filePath, line: UInt = #line) {
+    public func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedUpdateCallCount {
             XCTAssertEqual(
                 updateCallCount,
@@ -55,7 +57,7 @@ actor MockVoiceNoteUpdateRepository: VoiceNoteUpdateRepository {
         }
     }
 
-    func update(_ voiceNote: VoiceNote) async throws(VoiceNoteUpdateRepositoryError) -> VoiceNote {
+    public func update(_ voiceNote: VoiceNote) async throws(VoiceNoteUpdateRepositoryError) -> VoiceNote {
         updateCallCount += 1
         actualUpdatedVoiceNote = voiceNote
 

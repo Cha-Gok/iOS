@@ -1,7 +1,7 @@
 @testable import Domain
 import Foundation
 
-extension Transcript {
+public extension Transcript {
     static func stub(
         id: UUID = UUID(),
         createdAt: Date = Date(),

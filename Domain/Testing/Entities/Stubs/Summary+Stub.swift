@@ -1,7 +1,7 @@
 @testable import Domain
 import Foundation
 
-extension Summary {
+public extension Summary {
     static func stub(
         id: UUID = UUID(),
         createdAt: Date = Date(),

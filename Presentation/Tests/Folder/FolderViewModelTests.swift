@@ -1,6 +1,6 @@
 @testable import Presentation
 import Domain
-import DomainTests
+import DomainTesting
 import XCTest
 
 @MainActor
@@ -58,7 +58,7 @@ final class FolderViewModelTests: XCTestCase {
 
         sut.viewModel.didTapBack()
 
-        XCTAssertTrue(sut.mockCoordinator.popMyFolderViewCalled)
+        XCTAssertTrue(sut.mockCoordinator.popCalled)
     }
 
     func test_openTextFieldView_호출시_상태변경() {
@@ -107,7 +107,7 @@ final class FolderViewModelTests: XCTestCase {
 
         await sut.mockWasteBasketRepo.setMoveResult(.success(()))
         await sut.mockWasteBasketRepo.expectMoveToWasteBasket(
-            item: .folder(id: folder.id), callCount: 1
+            item: .folder(obj: folder), callCount: 1
         )
 
         sut.viewModel.move(folder: folder)

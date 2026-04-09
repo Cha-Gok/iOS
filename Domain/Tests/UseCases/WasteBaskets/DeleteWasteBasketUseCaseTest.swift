@@ -1,5 +1,6 @@
 @testable import Domain
 import Core
+import DomainTesting
 import XCTest
 
 final class DeleteWasteBasketUseCaseTest: XCTestCase {}
@@ -27,9 +28,15 @@ extension DeleteWasteBasketUseCaseTest {
         let sut = DefaultDeleteWasteBasketUseCase(repository: wasteBasketRepository)
 
         // Given
+        let folder = Folder(name: "테스트 폴더")
+        let voiceNote = VoiceNote(
+            title: "테스트 음성 메모",
+            folderID: UUID(),
+            voiceRecord: VoiceRecord(audioFilePath: URL(fileURLWithPath: "test.m4a"), duration: 10)
+        )
         let items: [WasteBasketItem] = [
-            .folder(id: UUID()),
-            .voiceNote(id: UUID())
+            .folder(obj: folder),
+            .voiceNote(obj: voiceNote)
         ]
         await wasteBasketRepository.setDeleteResult(.success(()))
         await wasteBasketRepository.expectDeleteAll(items: items, callCount: 1)
@@ -46,7 +53,7 @@ extension DeleteWasteBasketUseCaseTest {
         let sut = DefaultDeleteWasteBasketUseCase(repository: wasteBasketRepository)
 
         // Given
-        let item: WasteBasketItem = .folder(id: UUID())
+        let item: WasteBasketItem = .folder(obj: Folder(name: "테스트 폴더"))
         await wasteBasketRepository.setDeleteResult(.success(()))
         await wasteBasketRepository.expectDelete(item: item, callCount: 1)
 
@@ -88,7 +95,7 @@ extension DeleteWasteBasketUseCaseTest {
         let sut = DefaultDeleteWasteBasketUseCase(repository: wasteBasketRepository)
 
         // Given
-        let item = WasteBasketItem.folder(id: UUID())
+        let item = WasteBasketItem.folder(obj: Folder(name: "테스트 폴더"))
         let method = DeleteWasteBasketMethod.single(item: item)
         await wasteBasketRepository.setDeleteResult(.failure(.deleteFailed(method)))
         await wasteBasketRepository.expectDelete(callCount: 1)
@@ -111,7 +118,7 @@ extension DeleteWasteBasketUseCaseTest {
         let sut = DefaultDeleteWasteBasketUseCase(repository: wasteBasketRepository)
 
         // Given
-        let items: [WasteBasketItem] = [.folder(id: UUID())]
+        let items: [WasteBasketItem] = [.folder(obj: Folder(name: "테스트 폴더"))]
         let method = DeleteWasteBasketMethod.multiple(items: items)
         await wasteBasketRepository.setDeleteResult(.failure(.deleteFailed(method)))
         await wasteBasketRepository.expectDeleteAll(callCount: 1)

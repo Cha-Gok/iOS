@@ -1,5 +1,6 @@
 @testable import Domain
 import Core
+import DomainTesting
 import XCTest
 
 final class MoveWasteBasketUseCaseTest: XCTestCase {}
@@ -12,7 +13,7 @@ extension MoveWasteBasketUseCaseTest {
         let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
 
         // Given
-        let item: WasteBasketItem = .folder(id: UUID())
+        let item: WasteBasketItem = .folder(obj: Folder(name: "테스트 폴더"))
         await wasteBasketRepository.setMoveResult(.success(()))
         await wasteBasketRepository.expectMoveToWasteBasket(item: item, callCount: 1)
 
@@ -32,7 +33,7 @@ extension MoveWasteBasketUseCaseTest {
         let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
 
         // Given
-        let item: WasteBasketItem = .folder(id: UUID())
+        let item: WasteBasketItem = .folder(obj: Folder(name: "테스트 폴더"))
         let method = MoveWasteBasketMethod.single(item: item)
         await wasteBasketRepository.setMoveResult(.failure(.moveFailed(method)))
         await wasteBasketRepository.expectMoveToWasteBasket(item: item, callCount: 1)
@@ -57,7 +58,7 @@ extension MoveWasteBasketUseCaseTest {
         let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
 
         // Given
-        let item: WasteBasketItem = .folder(id: UUID())
+        let item: WasteBasketItem = .folder(obj: Folder(name: "테스트 폴더"))
         let method = MoveWasteBasketMethod.single(item: item)
         struct DummyError: Error {}
         let expectedError = DummyError()
@@ -84,7 +85,7 @@ extension MoveWasteBasketUseCaseTest {
         let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
 
         // Given
-        let item: WasteBasketItem = .folder(id: UUID())
+        let item: WasteBasketItem = .folder(obj: Folder(name: "테스트 폴더"))
         let method = MoveWasteBasketMethod.single(item: item)
         await wasteBasketRepository.setMoveResult(.failure(.cancelled))
         await wasteBasketRepository.expectMoveToWasteBasket(item: item, callCount: 1)
@@ -112,7 +113,7 @@ extension MoveWasteBasketUseCaseTest {
         let sut = DefaultMoveWasteBasketUseCase(repository: wasteBasketRepository)
 
         // Given
-        let item: WasteBasketItem = .folder(id: UUID())
+        let item: WasteBasketItem = .folder(obj: Folder(name: "테스트 폴더"))
         let method = MoveWasteBasketMethod.single(item: item)
         await wasteBasketRepository.setMoveResult(.success(()))
         await wasteBasketRepository.expectMoveToWasteBasket(callCount: 0)

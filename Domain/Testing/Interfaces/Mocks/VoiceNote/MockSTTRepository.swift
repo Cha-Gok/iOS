@@ -2,7 +2,9 @@
 import Foundation
 import XCTest
 
-actor MockSTTRepository: STTRepository {
+public actor MockSTTRepository: STTRepository {
+    public init() {}
+
     private var result: Result<Transcript, STTRepositoryError>?
     private var checkResult: Result<PermissionStatus, STTPermissionRepositoryError>?
     private var requestResult: Result<PermissionStatus, STTPermissionRepositoryError>?
@@ -17,32 +19,32 @@ actor MockSTTRepository: STTRepository {
     private var expectedCheckSTTPermissionCallCount: Int?
     private var expectedRequestSTTPermissionCallCount: Int?
 
-    func setResult(_ result: Result<Transcript, STTRepositoryError>) {
+    public func setResult(_ result: Result<Transcript, STTRepositoryError>) {
         self.result = result
     }
 
-    func setCheckResult(_ result: Result<PermissionStatus, STTPermissionRepositoryError>) {
+    public func setCheckResult(_ result: Result<PermissionStatus, STTPermissionRepositoryError>) {
         checkResult = result
     }
 
-    func setRequestResult(_ result: Result<PermissionStatus, STTPermissionRepositoryError>) {
+    public func setRequestResult(_ result: Result<PermissionStatus, STTPermissionRepositoryError>) {
         requestResult = result
     }
 
-    func expectTranscribe(callCount: Int, audioFileURL: URL? = nil) {
+    public func expectTranscribe(callCount: Int, audioFileURL: URL? = nil) {
         expectedCallCount = callCount
         expectedAudioFileURL = audioFileURL
     }
 
-    func expectCheckSTTPermission(callCount: Int) {
+    public func expectCheckSTTPermission(callCount: Int) {
         expectedCheckSTTPermissionCallCount = callCount
     }
 
-    func expectRequestSTTPermission(callCount: Int) {
+    public func expectRequestSTTPermission(callCount: Int) {
         expectedRequestSTTPermissionCallCount = callCount
     }
 
-    func verify(file: StaticString = #filePath, line: UInt = #line) {
+    public func verify(file: StaticString = #filePath, line: UInt = #line) {
         if let expected = expectedCallCount {
             XCTAssertEqual(
                 actualCallCount, expected, "변환 호출 횟수가 일치하지 않습니다.", file: file, line: line
@@ -73,7 +75,7 @@ actor MockSTTRepository: STTRepository {
         }
     }
 
-    func transcribe(audioFileURL: URL) async throws(STTRepositoryError) -> Transcript {
+    public func transcribe(audioFileURL: URL) async throws(STTRepositoryError) -> Transcript {
         actualCallCount += 1
         actualAudioFileURL = audioFileURL
 
@@ -90,7 +92,7 @@ actor MockSTTRepository: STTRepository {
         }
     }
 
-    func checkSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus {
+    public func checkSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus {
         actualCheckSTTPermissionCallCount += 1
 
         switch checkResult {
@@ -104,7 +106,7 @@ actor MockSTTRepository: STTRepository {
         }
     }
 
-    func requestSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus {
+    public func requestSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus {
         actualRequestSTTPermissionCallCount += 1
 
         switch requestResult {

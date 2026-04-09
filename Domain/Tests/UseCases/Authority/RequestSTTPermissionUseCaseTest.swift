@@ -1,5 +1,6 @@
 @testable import Domain
 import Core
+import DomainTesting
 import XCTest
 
 final class RequestSTTPermissionUseCaseTest: XCTestCase {}
