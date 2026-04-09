@@ -30,6 +30,29 @@ extension DefaultVoiceRecordRepositoryTest {
         await storageService.verify()
     }
 
+    func test_정상상태_녹음시작시_임시파일명이날짜기반형식으로생성된다() async throws {
+        let audioService = MockAudioRecorderService()
+        let storageService = MockStorageService()
+        let sut = DefaultVoiceRecordRepository(audioService: audioService, storageService: storageService)
+
+        // Given
+        let stubStream = AsyncStream<Waveform> { _ in }
+        let tempURL = URL(fileURLWithPath: "/temp/recording.m4a")
+        await storageService.setGenerateTempResult(Result<URL, StorageServiceError>.success(tempURL))
+        await audioService.setStartResult(Result<AsyncStream<Waveform>, AudioRecorderServiceError>.success(stubStream))
+
+        // When
+        _ = try await sut.startRecording()
+
+        // Then
+        let generatedFileName = await storageService.generatedTempFileName
+        XCTAssertNotNil(generatedFileName)
+        XCTAssertTrue(
+            generatedFileName?.range(of: #"^\d{14}\.m4a$"#, options: .regularExpression) != nil,
+            "임시 파일명이 날짜 기반 형식이어야 합니다. actual: \(generatedFileName ?? "nil")"
+        )
+    }
+
     func test_서비스실패상태_녹음시작시_startFailed에러를던진다() async throws {
         let audioService = MockAudioRecorderService()
         let storageService = MockStorageService()
@@ -256,7 +279,7 @@ extension DefaultVoiceRecordRepositoryTest {
 
         XCTAssertEqual(movedSourceURL, tempURL)
         XCTAssertEqual(movedDirectory, "VoiceRecords")
-        XCTAssertEqual(movedFileName, tempURL.lastPathComponent)
+        XCTAssertEqual(movedFileName, makeStorageFileName(for: createdAt, pathExtension: "m4a"))
 
         await audioService.verify()
         await storageService.verify()
@@ -312,6 +335,16 @@ extension DefaultVoiceRecordRepositoryTest {
             }
         }
         await audioService.verify()
+    }
+}
+
+private extension DefaultVoiceRecordRepositoryTest {
+    func makeStorageFileName(for date: Date, pathExtension: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMddHHmmss"
+
+        let normalizedExtension = pathExtension.trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        return "\(formatter.string(from: date)).\(normalizedExtension)"
     }
 }
 
