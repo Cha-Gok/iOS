@@ -31,6 +31,5 @@ final class TrashHeaderCell: UICollectionReusableView {
             titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
             titleLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
         ])
-        titleLabel.setTypography(style: .caption)
     }
 }

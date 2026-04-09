@@ -106,12 +106,7 @@ extension TrashViewModel {
         Task {
             do {
                 let wasteBaskets: [WasteBasketItem] = try await fetchUseCase.execute()
-                self.items = wasteBaskets.map {
-                    switch $0 {
-                    case .folder(let obj): return .folder(obj)
-                    case .voiceNote(let obj): return .voiceNote(obj)
-                    }
-                }
+                self.items = wasteBaskets.map(\.toLibraryItem)
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
@@ -139,13 +134,7 @@ extension TrashViewModel {
         Task {
             do {
                 try await deleteUseCase.execute(method: .single(item: item))
-                let targetID: UUID = {
-                    switch item {
-                    case .folder(let obj): return obj.id
-                    case .voiceNote(let obj): return obj.id
-                    }
-                }()
-                items.removeAll { $0.id == targetID }
+                items.removeAll { $0.id == item.id }
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
@@ -157,12 +146,7 @@ extension TrashViewModel {
         Task {
             do {
                 try await deleteUseCase.execute(method: .multiple(items: deleteItems))
-                let deleteIDs = Set(deleteItems.map {
-                    switch $0 {
-                    case .folder(let obj): return obj.id
-                    case .voiceNote(let obj): return obj.id
-                    }
-                })
+                let deleteIDs = Set(deleteItems.map(\.id))
                 items.removeAll { deleteIDs.contains($0.id) }
             } catch {
                 AppLogger.error(error)
@@ -179,13 +163,7 @@ extension TrashViewModel {
         Task {
             do {
                 try await restoreUseCase.execute(method: .single(item: item))
-                let targetID: UUID = {
-                    switch item {
-                    case .folder(let obj): return obj.id
-                    case .voiceNote(let obj): return obj.id
-                    }
-                }()
-                items.removeAll { $0.id == targetID }
+                items.removeAll { $0.id == item.id }
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
@@ -197,12 +175,7 @@ extension TrashViewModel {
         Task {
             do {
                 try await restoreUseCase.execute(method: .multiple(items: restoreItems))
-                let restoreIDs = Set(restoreItems.map {
-                    switch $0 {
-                    case .folder(let obj): return obj.id
-                    case .voiceNote(let obj): return obj.id
-                    }
-                })
+                let restoreIDs = Set(restoreItems.map(\.id))
                 items.removeAll { restoreIDs.contains($0.id) }
             } catch {
                 AppLogger.error(error)
@@ -224,6 +197,29 @@ fileprivate extension LibraryItem {
         switch self {
         case .folder(let obj): return obj.createdAt // 폴더는 updatedAt이 없으므로 createdAt 사용
         case .voiceNote(let obj): return obj.updatedAt
+        }
+    }
+
+    var toWasteBasketItem: WasteBasketItem {
+        switch self {
+        case .folder(let folder): return .folder(obj: folder)
+        case .voiceNote(let voiceNote): return .voiceNote(obj: voiceNote)
+        }
+    }
+}
+
+extension WasteBasketItem {
+    var id: UUID {
+        switch self {
+        case .folder(let obj): return obj.id
+        case .voiceNote(let obj): return obj.id
+        }
+    }
+
+    var toLibraryItem: LibraryItem {
+        switch self {
+        case .folder(let obj): return .folder(obj)
+        case .voiceNote(let obj): return .voiceNote(obj)
         }
     }
 }
