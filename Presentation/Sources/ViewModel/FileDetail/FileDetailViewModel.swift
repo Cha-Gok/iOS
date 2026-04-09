@@ -11,8 +11,23 @@ public struct ScriptSection {
     let paragraphs: [String]
 }
 
+@MainActor
+@Observable
 public final class VoiceNoteViewModel {
-    public let voiceNote: VoiceNote
+    // MARK: - Analysis State
+
+    public enum AnalysisState {
+        case analyzing
+        case completed
+        case failed
+    }
+
+    public private(set) var analysisState: AnalysisState = .analyzing
+    public private(set) var errorMessage: String?
+
+    // MARK: - Data
+
+    private var voiceNote: VoiceNote
 
     // MARK: - Mapped Properties
 
@@ -48,12 +63,72 @@ public final class VoiceNoteViewModel {
         voiceNote.keywords.map(\.word)
     }
 
-    public var keyPoints: [KeyPoint] = []
-    public var scriptSections: [ScriptSection] = []
+    public var keyPoints: [KeyPoint] {
+        guard let summary = voiceNote.summary else { return [] }
+        return summary.text
+            .components(separatedBy: "\n")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .enumerated()
+            .map { KeyPoint(number: $0.offset + 1, text: $0.element) }
+    }
+
+    public var scriptSections: [ScriptSection] {
+        guard let transcript = voiceNote.transcript else { return [] }
+        let paragraphs = transcript.text
+            .components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return [ScriptSection(timestamp: "00:00", paragraphs: paragraphs)]
+    }
+
+    // MARK: - UseCases
+
+    private let audioToSummaryUseCase: any AudioToSummaryUseCase
+    private let updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
+    private let fetchLanguageUseCase: any FetchLanguageUseCase
 
     // MARK: - Init
 
-    public init(voiceNote: VoiceNote) {
+    public init(
+        voiceNote: VoiceNote,
+        audioToSummaryUseCase: any AudioToSummaryUseCase,
+        updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase,
+        fetchLanguageUseCase: any FetchLanguageUseCase
+    ) {
         self.voiceNote = voiceNote
+        self.audioToSummaryUseCase = audioToSummaryUseCase
+        self.updateVoiceNoteUseCase = updateVoiceNoteUseCase
+        self.fetchLanguageUseCase = fetchLanguageUseCase
+    }
+
+    // MARK: - Analysis
+
+    public func startAnalysis() {
+        Task { [self] in
+            do {
+                let language = try await fetchLanguageUseCase.execute()
+                let result = try await audioToSummaryUseCase.execute(
+                    audioFileURL: voiceNote.voiceRecord.audioFilePath,
+                    language: language
+                )
+                let updated = VoiceNote(
+                    id: voiceNote.id,
+                    title: voiceNote.title,
+                    createdAt: voiceNote.createdAt,
+                    updatedAt: .now,
+                    folderID: voiceNote.folderID,
+                    voiceRecord: voiceNote.voiceRecord,
+                    keywords: result.keywords,
+                    transcript: result.transcript,
+                    summary: result.summary
+                )
+                voiceNote = try await updateVoiceNoteUseCase.execute(updated)
+                analysisState = .completed
+            } catch {
+                errorMessage = error.localizedDescription
+                analysisState = .failed
+            }
+        }
     }
 }
