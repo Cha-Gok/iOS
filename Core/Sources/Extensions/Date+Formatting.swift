@@ -2,8 +2,12 @@ import Foundation
 
 public extension Date {
     var yyyyMMddHHmmssString: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMddHHmmss"
-        return formatter.string(from: self)
+        formatted(
+            Date.VerbatimFormatStyle(
+                format: "\(year: .defaultDigits)\(month: .twoDigits)\(day: .twoDigits)\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased))\(minute: .twoDigits)\(second: .twoDigits)",
+                timeZone: .current,
+                calendar: .current
+            )
+        )
     }
 }
