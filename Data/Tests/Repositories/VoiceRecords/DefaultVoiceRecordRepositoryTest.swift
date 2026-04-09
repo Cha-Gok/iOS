@@ -279,7 +279,7 @@ extension DefaultVoiceRecordRepositoryTest {
 
         XCTAssertEqual(movedSourceURL, tempURL)
         XCTAssertEqual(movedDirectory, "VoiceRecords")
-        XCTAssertEqual(movedFileName, makeStorageFileName(for: createdAt, pathExtension: "m4a"))
+        XCTAssertEqual(movedFileName, "\(createdAt.yyyyMMddHHmmssString).m4a")
 
         await audioService.verify()
         await storageService.verify()
@@ -335,16 +335,6 @@ extension DefaultVoiceRecordRepositoryTest {
             }
         }
         await audioService.verify()
-    }
-}
-
-private extension DefaultVoiceRecordRepositoryTest {
-    func makeStorageFileName(for date: Date, pathExtension: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMddHHmmss"
-
-        let normalizedExtension = pathExtension.trimmingCharacters(in: CharacterSet(charactersIn: "."))
-        return "\(formatter.string(from: date)).\(normalizedExtension)"
     }
 }
 
