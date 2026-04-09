@@ -65,7 +65,6 @@ extension TrashViewModel {
     func toggleSelectionMode() {
         isSelectionMode.toggle()
         if !isSelectionMode {
-            print("selectedItems : \(selectedItems)")
             delete(items: selectedItems)
             selectedItems.removeAll()
         }
