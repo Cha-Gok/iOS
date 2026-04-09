@@ -1,6 +1,6 @@
 @testable import Presentation
 import Domain
-import DomainTests
+import DomainTesting
 import XCTest
 
 @MainActor
@@ -8,7 +8,7 @@ final class MockMainViewCoordinatorDelegate: MainViewCoordinatorDelegate {
     var pushTrashViewCalled = false
     var pushMyFolderViewCalled = false
     var presentRecodingViewCalled = false
-    var popMyFolderViewCalled = false
+    var popCalled = false
 
     var pushedCategory: CategoryToggle?
 
@@ -25,8 +25,8 @@ final class MockMainViewCoordinatorDelegate: MainViewCoordinatorDelegate {
         presentRecodingViewCalled = true
     }
 
-    func popMyFolderView() {
-        popMyFolderViewCalled = true
+    func pop() {
+        popCalled = true
     }
 }
 

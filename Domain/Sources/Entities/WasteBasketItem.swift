@@ -1,8 +1,8 @@
 import Foundation
 
 public enum WasteBasketItem: Equatable, Hashable, Sendable {
-    case folder(id: UUID)
-    case voiceNote(id: UUID)
+    case folder(obj: Folder)
+    case voiceNote(obj: VoiceNote)
 }
 
 public enum DeleteWasteBasketMethod: Equatable, Sendable {

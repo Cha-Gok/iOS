@@ -130,12 +130,6 @@ extension AlertView {
                 equalTo: bottomContent.topAnchor,
                 constant: -Constant.alertTopAndBottomContentSpacing
             ),
-
-            header.bottomAnchor.constraint(
-                equalTo: body.topAnchor,
-                constant: -Constant.alertTopAndBottomValueForTopContent
-            ),
-
             bottomContent.heightAnchor.constraint(equalToConstant: Constant.alertBottomContentHeight),
             bottomContent.bottomAnchor.constraint(
                 equalTo: bottomAnchor,

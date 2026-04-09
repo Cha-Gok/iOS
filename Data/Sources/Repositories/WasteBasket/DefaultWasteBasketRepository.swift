@@ -19,11 +19,11 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
         do {
             async let voiceNoteItems = store.fetchAll(VoiceNoteEntity.self)
                 .filter { $0.deletedAt != nil }
-                .map { WasteBasketItem.voiceNote(id: $0.id) }
+                .map { WasteBasketItem.voiceNote(obj: $0) }
 
             async let folderItems = store.fetchAll(FolderEntity.self)
                 .filter { $0.deletedAt != nil }
-                .map { WasteBasketItem.folder(id: $0.id) }
+                .map { WasteBasketItem.folder(obj: $0) }
 
             return try await voiceNoteItems + folderItems
         } catch {
@@ -60,10 +60,10 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
 
         do {
             switch item {
-            case .voiceNote(let id):
-                _ = try await store.delete(byID: id, as: VoiceNoteEntity.self)
-            case .folder(let id):
-                _ = try await store.delete(byID: id, as: FolderEntity.self)
+            case .voiceNote(let obj):
+                _ = try await store.delete(byID: obj.id, as: VoiceNoteEntity.self)
+            case .folder(let obj):
+                _ = try await store.delete(byID: obj.id, as: FolderEntity.self)
             }
         } catch {
             AppLogger.error(error)
@@ -77,10 +77,10 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
         do {
             for item in items {
                 switch item {
-                case .voiceNote(let id):
-                    _ = try await store.delete(byID: id, as: VoiceNoteEntity.self)
-                case .folder(let id):
-                    _ = try await store.delete(byID: id, as: FolderEntity.self)
+                case .voiceNote(let obj):
+                    _ = try await store.delete(byID: obj.id, as: VoiceNoteEntity.self)
+                case .folder(let obj):
+                    _ = try await store.delete(byID: obj.id, as: FolderEntity.self)
                 }
             }
         } catch {
@@ -96,8 +96,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
 
         do {
             switch item {
-            case .voiceNote(let id):
-                let voiceNote = try await store.fetch(byID: id, as: VoiceNoteEntity.self)
+            case .voiceNote(let obj):
+                let voiceNote = try await store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
                 let updated = VoiceNote(
                     id: voiceNote.id,
                     title: voiceNote.title,
@@ -112,8 +112,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                 )
                 _ = try await store.update(updated, as: VoiceNoteEntity.self)
 
-            case .folder(let id):
-                let folder = try await store.fetch(byID: id, as: FolderEntity.self)
+            case .folder(let obj):
+                let folder = try await store.fetch(byID: obj.id, as: FolderEntity.self)
                 let updated = Folder(
                     id: folder.id,
                     name: folder.name,
@@ -135,8 +135,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
         do {
             for item in items {
                 switch item {
-                case .voiceNote(let id):
-                    let voiceNote = try await store.fetch(byID: id, as: VoiceNoteEntity.self)
+                case .voiceNote(let obj):
+                    let voiceNote = try await store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
                     let updated = VoiceNote(
                         id: voiceNote.id,
                         title: voiceNote.title,
@@ -151,8 +151,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     )
                     _ = try await store.update(updated, as: VoiceNoteEntity.self)
 
-                case .folder(let id):
-                    let folder = try await store.fetch(byID: id, as: FolderEntity.self)
+                case .folder(let obj):
+                    let folder = try await store.fetch(byID: obj.id, as: FolderEntity.self)
                     let updated = Folder(
                         id: folder.id,
                         name: folder.name,
@@ -176,8 +176,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
 
         do {
             switch item {
-            case .voiceNote(let id):
-                let voiceNote = try await store.fetch(byID: id, as: VoiceNoteEntity.self)
+            case .voiceNote(let obj):
+                let voiceNote = try await store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
                 let updated = VoiceNote(
                     id: voiceNote.id,
                     title: voiceNote.title,
@@ -192,8 +192,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                 )
                 _ = try await store.update(updated, as: VoiceNoteEntity.self)
 
-            case .folder(let id):
-                let folder = try await store.fetch(byID: id, as: FolderEntity.self)
+            case .folder(let obj):
+                let folder = try await store.fetch(byID: obj.id, as: FolderEntity.self)
                 let updated = Folder(
                     id: folder.id,
                     name: folder.name,
@@ -215,8 +215,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
         do {
             for item in items {
                 switch item {
-                case .voiceNote(let id):
-                    let voiceNote = try await store.fetch(byID: id, as: VoiceNoteEntity.self)
+                case .voiceNote(let obj):
+                    let voiceNote = try await store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
                     let updated = VoiceNote(
                         id: voiceNote.id,
                         title: voiceNote.title,
@@ -231,8 +231,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     )
                     _ = try await store.update(updated, as: VoiceNoteEntity.self)
 
-                case .folder(let id):
-                    let folder = try await store.fetch(byID: id, as: FolderEntity.self)
+                case .folder(let obj):
+                    let folder = try await store.fetch(byID: obj.id, as: FolderEntity.self)
                     let updated = Folder(
                         id: folder.id,
                         name: folder.name,

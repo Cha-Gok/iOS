@@ -104,8 +104,8 @@ public protocol MainViewCoordinatorDelegate: AnyObject {
     func pushMyFolderView(category: CategoryToggle)
     /// 녹음 시작 present 함수
     func presentRecodingView()
-    /// 개인 폴더 Pop함수
-    func popMyFolderView()
+    /// 공용 Pop함수
+    func pop()
 }
 
 // MARK: - Update CategoryData

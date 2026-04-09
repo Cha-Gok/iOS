@@ -74,7 +74,7 @@ private let presentationTestsTarget = Target.target(
     ],
     dependencies: [
         .target(name: "Presentation"),
-        .project(target: "DomainTests", path: "../Domain")
+        .project(target: "DomainTesting", path: "../Domain")
     ]
 )
 

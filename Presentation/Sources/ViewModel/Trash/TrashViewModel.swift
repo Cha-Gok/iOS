@@ -7,12 +7,23 @@ import Foundation
 public final class TrashViewModel {
     // MARK: - State
 
-    private(set) var items: [WasteBasketItem] = []
+    enum Order {
+        case createdAt
+        case updatedAt
+    }
+
+    private(set) var items: [LibraryItem] = []
     private(set) var errorMessage: String?
+    private(set) var selectedOrder: Order = .createdAt
+    private(set) var isSelectionMode: Bool = false
+    private(set) var selectedItems: [WasteBasketItem] = []
+    private(set) var showAlert: Bool = false
 
     var isEmpty: Bool {
         items.isEmpty
     }
+
+    public weak var coordinator: BaseCoordinatorDelegate?
 
     // MARK: - UseCase
 
@@ -30,6 +41,61 @@ public final class TrashViewModel {
         self.fetchUseCase = fetchUseCase
         self.deleteUseCase = deleteUseCase
         self.restoreUseCase = restoreUseCase
+        sortItems()
+    }
+}
+
+// MARK: - Setter / Getter
+
+extension TrashViewModel {
+    private func setSelectedOrder(_ order: Order) {
+        selectedOrder = order
+        sortItems()
+    }
+
+    private func sortItems() {
+        switch selectedOrder {
+        case .createdAt:
+            items.sort { $0.createdAt > $1.createdAt }
+        case .updatedAt:
+            items.sort { $0.updatedAt > $1.updatedAt }
+        }
+    }
+
+    func toggleSelectionMode() {
+        isSelectionMode.toggle()
+        if !isSelectionMode {
+            delete(items: selectedItems)
+            selectedItems.removeAll()
+        }
+    }
+
+    func toggleShowAlert() {
+        showAlert.toggle()
+    }
+
+    func selectItem(_ item: WasteBasketItem) {
+        selectedItems.insert(item, at: 0)
+    }
+
+    func deselectItem(_ item: WasteBasketItem) {
+        selectedItems.removeAll { $0 == item }
+    }
+
+    func touchCreatedAction() {
+        setSelectedOrder(.createdAt)
+    }
+
+    func touchUpdatedAction() {
+        setSelectedOrder(.updatedAt)
+    }
+}
+
+// MARK: Action
+
+extension TrashViewModel {
+    func didTapBack() {
+        coordinator?.pop()
     }
 }
 
@@ -39,7 +105,8 @@ extension TrashViewModel {
     func fetchItems() {
         Task {
             do {
-                items = try await fetchUseCase.execute()
+                let wasteBaskets: [WasteBasketItem] = try await fetchUseCase.execute()
+                self.items = wasteBaskets.map(\.toLibraryItem)
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
@@ -67,7 +134,7 @@ extension TrashViewModel {
         Task {
             do {
                 try await deleteUseCase.execute(method: .single(item: item))
-                items.removeAll { $0 == item }
+                items.removeAll { $0.id == item.id }
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
@@ -75,12 +142,12 @@ extension TrashViewModel {
         }
     }
 
-    func delete(items deleteItems: [WasteBasketItem]) {
+    private func delete(items deleteItems: [WasteBasketItem]) {
         Task {
             do {
                 try await deleteUseCase.execute(method: .multiple(items: deleteItems))
-                let deleteSet = Set(deleteItems)
-                items.removeAll { deleteSet.contains($0) }
+                let deleteIDs = Set(deleteItems.map(\.id))
+                items.removeAll { deleteIDs.contains($0.id) }
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
@@ -96,7 +163,7 @@ extension TrashViewModel {
         Task {
             do {
                 try await restoreUseCase.execute(method: .single(item: item))
-                items.removeAll { $0 == item }
+                items.removeAll { $0.id == item.id }
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
@@ -108,12 +175,51 @@ extension TrashViewModel {
         Task {
             do {
                 try await restoreUseCase.execute(method: .multiple(items: restoreItems))
-                let restoreSet = Set(restoreItems)
-                items.removeAll { restoreSet.contains($0) }
+                let restoreIDs = Set(restoreItems.map(\.id))
+                items.removeAll { restoreIDs.contains($0.id) }
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
             }
+        }
+    }
+}
+
+fileprivate extension LibraryItem {
+    var createdAt: Date {
+        switch self {
+        case .folder(let obj): return obj.createdAt
+        case .voiceNote(let obj): return obj.createdAt
+        }
+    }
+
+    var updatedAt: Date {
+        switch self {
+        case .folder(let obj): return obj.createdAt // 폴더는 updatedAt이 없으므로 createdAt 사용
+        case .voiceNote(let obj): return obj.updatedAt
+        }
+    }
+
+    var toWasteBasketItem: WasteBasketItem {
+        switch self {
+        case .folder(let folder): return .folder(obj: folder)
+        case .voiceNote(let voiceNote): return .voiceNote(obj: voiceNote)
+        }
+    }
+}
+
+extension WasteBasketItem {
+    var id: UUID {
+        switch self {
+        case .folder(let obj): return obj.id
+        case .voiceNote(let obj): return obj.id
+        }
+    }
+
+    var toLibraryItem: LibraryItem {
+        switch self {
+        case .folder(let obj): return .folder(obj)
+        case .voiceNote(let obj): return .voiceNote(obj)
         }
     }
 }

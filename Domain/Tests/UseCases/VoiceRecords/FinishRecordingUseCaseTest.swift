@@ -1,4 +1,5 @@
 @testable import Domain
+import DomainTesting
 import Foundation
 import XCTest
 

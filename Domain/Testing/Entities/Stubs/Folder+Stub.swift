@@ -1,7 +1,7 @@
 @testable import Domain
 import Foundation
 
-extension Folder {
+public extension Folder {
     static func stub(
         id: UUID = UUID(),
         name: String = "Stub Folder",

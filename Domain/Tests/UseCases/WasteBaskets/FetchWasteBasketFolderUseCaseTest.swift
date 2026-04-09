@@ -1,5 +1,6 @@
 @testable import Domain
 import Core
+import DomainTesting
 import XCTest
 
 final class FetchWasteBasketFolderUseCaseTest: XCTestCase {}
@@ -12,9 +13,15 @@ extension FetchWasteBasketFolderUseCaseTest {
         let sut = DefaultFetchWasteBasketFolderUseCase(repository: wasteBasketRepository)
 
         // Given
+        let folder = Folder(name: "테스트 폴더")
+        let voiceNote = VoiceNote(
+            title: "테스트 음성 메모",
+            folderID: UUID(),
+            voiceRecord: VoiceRecord(audioFilePath: URL(fileURLWithPath: "test.m4a"), duration: 10)
+        )
         let expectedItems: [WasteBasketItem] = [
-            .folder(id: UUID()),
-            .voiceNote(id: UUID())
+            .folder(obj: folder),
+            .voiceNote(obj: voiceNote)
         ]
         await wasteBasketRepository.setFetchAllResult(.success(expectedItems))
         await wasteBasketRepository.expectFetchAll(callCount: 1)

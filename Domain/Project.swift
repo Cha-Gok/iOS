@@ -46,14 +46,17 @@ private let domainTarget = Target.target(
     ]
 )
 
-private let domainTestsTarget = Target.target(
-    name: "DomainTests",
+private let domainTestingTarget = Target.target(
+    name: "DomainTesting",
     destinations: .iOS,
     product: .framework,
-    bundleId: "\(bundleId).DomainTests",
+    bundleId: "\(bundleId).DomainTesting",
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
-    sources: ["Tests/**/*.swift"],
+    sources: [
+        "Testing/Interfaces/Mocks/**/*.swift",
+        "Testing/Entities/Stubs/**/*.swift"
+    ],
     scripts: [
         .pre(
             tool: "swiftformat",
@@ -68,6 +71,29 @@ private let domainTestsTarget = Target.target(
     ]
 )
 
+private let domainTestsTarget = Target.target(
+    name: "DomainTests",
+    destinations: .iOS,
+    product: .unitTests,
+    bundleId: "\(bundleId).DomainTests",
+    deploymentTargets: deploymentTargets,
+    infoPlist: .default,
+    sources: ["Tests/UseCases/**/*.swift"],
+    scripts: [
+        .pre(
+            tool: "swiftformat",
+            arguments: ["--config", "../.swiftformat", "."],
+            name: "SwiftFormat",
+            basedOnDependencyAnalysis: false
+        )
+    ],
+    dependencies: [
+        .target(name: "Domain"),
+        .target(name: "DomainTesting"),
+        .xctest
+    ]
+)
+
 let project = Project(
     name: "Domain",
     options: .options(
@@ -77,6 +103,7 @@ let project = Project(
     settings: settings,
     targets: [
         domainTarget,
+        domainTestingTarget,
         domainTestsTarget
     ],
     schemes: [
