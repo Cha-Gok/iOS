@@ -31,6 +31,6 @@ public enum Policy {
     /// 재생 상태 스트림의 최대 대기 개수 (초과 시 최신값 유지)
     public static let playbackStateStreamBufferLimit: Int = 8
 
-    /// 재생 진행률 업데이트 주기 (나노초, 1초)
-    public static let playbackProgressUpdateInterval: UInt64 = 1_000_000_000
+    /// 재생 진행률 업데이트 주기 (나노초, 0.1초)
+    public static let playbackProgressUpdateInterval: UInt64 = 100_000_000
 }
