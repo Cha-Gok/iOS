@@ -1,6 +1,6 @@
 import Foundation
 
-public enum ReadFolderUseCaseError: LocalizedError, Sendable {
+public enum FetchFolderUseCaseError: LocalizedError, Sendable {
     /// 작업 취소의 경우
     case cancelled
     /// 폴더를 찾을 수 없는 경우 (조회, 수정 시 발생)
