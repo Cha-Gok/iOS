@@ -111,6 +111,41 @@ public extension Constant {
     static let onBoardingPaginationTopMargin: CGFloat = 52
 }
 
+// MARK: - KeywordChipView Constants
+
+public extension Constant {
+    /// KeywordChipView 수평 패딩 (12)
+    static let keywordChipHorizontalPadding: CGFloat = 12
+
+    /// KeywordChipView 수직 패딩 (8)
+    static let keywordChipVerticalPadding: CGFloat = 8
+
+    /// 키워드 칩 가로 간격 (10)
+    static let keywordChipInterItemSpacing: CGFloat = 10
+
+    /// 키워드 칩 세로 간격 (10)
+    static let keywordChipLineSpacing: CGFloat = 10
+}
+
+// MARK: - ChipView Constants
+
+public extension Constant {
+    /// ChipView 내부 수평 패딩 (12)
+    static let chipHorizontalPadding: CGFloat = 12
+
+    /// ChipView 내부 수직 패딩 (4)
+    static let chipVerticalPadding: CGFloat = 4
+
+    /// ChipView 아이콘과 텍스트 사이 간격 (8)
+    static let chipContentSpacing: CGFloat = 8
+
+    /// ChipView 아이콘 크기 (16)
+    static let chipIconSize: CGFloat = 16
+
+    /// ChipView 최소 높이 (28)
+    static let chipMinimumHeight: CGFloat = 28
+}
+
 // MARK: - LanguagePicker Constants
 
 public extension Constant {
