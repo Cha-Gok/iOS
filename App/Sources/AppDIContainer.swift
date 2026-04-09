@@ -148,10 +148,6 @@ public final class AppDIContainer {
         )
     }
 
-    public func makeTrashViewController() -> TrashViewController {
-        return TrashViewController()
-    }
-
     public func makeMyFolderViewModel(_ category: CategoryToggle) -> FolderViewModel {
         return FolderViewModel(
             category: category,

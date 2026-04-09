@@ -46,8 +46,10 @@ extension MainCoordinator: MainViewCoordinatorDelegate {
     // TODO: Push
 
     func pushTrashView() {
-        let trashView = dependencyContainer.makeTrashViewController()
-        presenter.pushViewController(trashView, animated: true)
+        let trashVM = dependencyContainer.makeTrashViewModel()
+        trashVM.coordinator = self
+        let trashVC = TrashViewController(vm: trashVM)
+        presenter.pushViewController(trashVC, animated: true)
     }
 
     func pushMyFolderView(category: CategoryToggle) {
@@ -71,7 +73,7 @@ extension MainCoordinator: MainViewCoordinatorDelegate {
 
     // TODO: Pop
 
-    func popMyFolderView() {
+    func pop() {
         presenter.popViewController(animated: true)
     }
 }

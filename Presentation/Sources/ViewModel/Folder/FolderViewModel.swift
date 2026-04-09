@@ -45,7 +45,7 @@ extension FolderViewModel {
 
 extension FolderViewModel {
     func didTapBack() {
-        coordinator?.popMyFolderView()
+        coordinator?.pop()
     }
 
     func openTextFieldView(for folder: Folder? = nil) {
@@ -109,9 +109,9 @@ extension FolderViewModel {
     func move(folder: Folder) {
         Task {
             do {
-                try await moveToTrashUseCase.execute(method: .single(item: .folder(id: folder.id)))
+                try await moveToTrashUseCase.execute(method: .single(item: .folder(obj: folder)))
                 category.items.removeAll {
-                    if case .folder(let item) = $0 { return item.id == folder.id }
+                    if case .folder(let obj) = $0 { return obj.id == folder.id }
                     return false
                 }
             } catch {
