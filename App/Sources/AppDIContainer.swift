@@ -127,7 +127,8 @@ public final class AppDIContainer {
             voiceNote: voiceNote,
             audioToSummaryUseCase: audioToSummaryUseCase,
             updateVoiceNoteUseCase: updateVoiceNoteUseCase,
-            fetchLanguageUseCase: fetchLanguageUseCase
+            fetchLanguageUseCase: fetchLanguageUseCase,
+            fetchFolderUseCase: fetchFolderUseCase
         )
     }
 

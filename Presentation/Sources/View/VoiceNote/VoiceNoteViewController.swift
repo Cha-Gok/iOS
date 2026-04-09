@@ -130,6 +130,7 @@ public final class VoiceNoteViewController: UIViewController {
     override public func updateProperties() {
         super.updateProperties()
         _ = viewModel.analysisState
+        _ = viewModel.folderName
         applySnapshot()
         if let message = viewModel.errorMessage {
             showErrorAlert(message: message)
@@ -337,6 +338,7 @@ private extension VoiceNoteViewController {
         )
         snapshot.appendItems([.keywords], toSection: .keywords)
         snapshot.appendItems(viewModel.scriptSections.indices.map { .script(index: $0) }, toSection: .scripts)
+        snapshot.reconfigureItems([.metadata, .keywords])
         dataSource.apply(snapshot, animatingDifferences: true)
     }
 
