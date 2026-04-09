@@ -18,7 +18,9 @@ final class TrashHeaderCell: UICollectionReusableView {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) { nil }
+    required init?(coder: NSCoder) {
+        nil
+    }
 
     private func setupUI() {
         addSubview(titleLabel)
