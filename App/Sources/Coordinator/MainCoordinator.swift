@@ -31,7 +31,12 @@ extension MainCoordinator: RecordingCoordinating {
     }
 
     func finishRecording(voiceNote: VoiceNote) {
-        presenter.dismiss(animated: true)
+        presenter.dismiss(animated: true) { [weak self] in
+            guard let self else { return }
+            let voiceNoteVM = VoiceNoteViewModel(voiceNote: voiceNote)
+            let voiceNoteVC = VoiceNoteViewController(viewModel: voiceNoteVM)
+            presenter.pushViewController(voiceNoteVC, animated: true)
+        }
     }
 }
 
