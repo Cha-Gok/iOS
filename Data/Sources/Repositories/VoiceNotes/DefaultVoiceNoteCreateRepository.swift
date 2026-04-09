@@ -22,7 +22,7 @@ public struct DefaultVoiceNoteCreateRepository: VoiceNoteCreateRepository {
             }
 
             let voiceNote = VoiceNote(
-                title: voiceRecord.audioFilePath.deletingPathExtension().lastPathComponent,
+                title: voiceRecord.createdAt.yyyyMMddHHmmssString,
                 folderID: defaultFolder.id,
                 voiceRecord: voiceRecord
             )
