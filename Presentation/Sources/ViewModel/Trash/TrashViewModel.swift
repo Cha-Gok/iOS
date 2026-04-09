@@ -23,7 +23,7 @@ public final class TrashViewModel {
         items.isEmpty
     }
 
-    public weak var coordinator: MainViewCoordinatorDelegate?
+    public weak var coordinator: BaseCoordinatorDelegate?
 
     // MARK: - UseCase
 

@@ -8,7 +8,7 @@ public final class FolderViewModel {
     // MARK: - State
 
     var category: CategoryToggle
-    public weak var coordinator: MainViewCoordinatorDelegate?
+    public weak var coordinator: BaseCoordinatorDelegate?
     private(set) var showAlert: Bool = false
     private(set) var editFolder: Folder?
 

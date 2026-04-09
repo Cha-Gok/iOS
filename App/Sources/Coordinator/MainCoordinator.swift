@@ -42,7 +42,7 @@ extension MainCoordinator: RecordingCoordinating {
 
 // MARK: - MainViewCoordinator
 
-extension MainCoordinator: MainViewCoordinatorDelegate {
+extension MainCoordinator: MainViewCoordinatorDelegate, BaseCoordinatorDelegate {
     // TODO: Push
 
     func pushTrashView() {
