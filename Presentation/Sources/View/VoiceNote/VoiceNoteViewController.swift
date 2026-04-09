@@ -248,77 +248,20 @@ private extension VoiceNoteViewController {
 // MARK: - CollectionView Layout & DataSource
 
 private extension VoiceNoteViewController {
-    func makeLayout() -> UICollectionViewCompositionalLayout {
-        UICollectionViewCompositionalLayout { sectionIndex, _ in
-            switch Section(rawValue: sectionIndex) {
-            case .metadata: return Self.makeMetadataSection()
-            case .keyPoints: return Self.makeListSection(headerHeight: 44)
-            case .keywords: return Self.makeKeywordsSection()
-            case .scripts: return Self.makeListSection(headerHeight: 44)
-            case nil: return nil
+    func makeLayout() -> UICollectionViewLayout {
+        UICollectionViewCompositionalLayout { sectionIndex, environment in
+            var config = UICollectionLayoutListConfiguration(appearance: .plain)
+            config.backgroundColor = .clear
+            config.showsSeparators = false
+            config.headerMode = Section(rawValue: sectionIndex) == .metadata ? .none : .supplementary
+
+            let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
+            section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 32, trailing: 20)
+            if Section(rawValue: sectionIndex) == .keyPoints {
+                section.interGroupSpacing = 6
             }
+            return section
         }
-    }
-
-    static func makeMetadataSection() -> NSCollectionLayoutSection {
-        let itemSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(80)
-        )
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: itemSize,
-            subitems: [NSCollectionLayoutItem(layoutSize: itemSize)]
-        )
-        let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 32, trailing: 20)
-        return section
-    }
-
-    static func makeListSection(headerHeight: CGFloat) -> NSCollectionLayoutSection {
-        let itemSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(50)
-        )
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: itemSize,
-            subitems: [NSCollectionLayoutItem(layoutSize: itemSize)]
-        )
-        let header = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(headerHeight)
-            ),
-            elementKind: UICollectionView.elementKindSectionHeader,
-            alignment: .top
-        )
-        let section = NSCollectionLayoutSection(group: group)
-        section.interGroupSpacing = 6
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 32, trailing: 20)
-        section.boundarySupplementaryItems = [header]
-        return section
-    }
-
-    static func makeKeywordsSection() -> NSCollectionLayoutSection {
-        let itemSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(44)
-        )
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: itemSize,
-            subitems: [NSCollectionLayoutItem(layoutSize: itemSize)]
-        )
-        let header = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(44)
-            ),
-            elementKind: UICollectionView.elementKindSectionHeader,
-            alignment: .top
-        )
-        let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 32, trailing: 20)
-        section.boundarySupplementaryItems = [header]
-        return section
     }
 
     func configureDataSource() {
