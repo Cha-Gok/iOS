@@ -13,6 +13,12 @@ public protocol FolderRepository: Sendable {
     /// - Throws: `FolderRepositoryError.fetchFailed` 등
     func fetchAll() async throws(FolderRepositoryError) -> [Folder]
 
+    /// ID로 특정 폴더를 조회합니다.
+    /// - Parameter id: 조회할 폴더의 UUID
+    /// - Returns: 조회된 폴더 엔티티
+    /// - Throws: `FolderRepositoryError.notFound`, `.fetchFailed` 등
+    func fetch(by id: UUID) async throws(FolderRepositoryError) -> Folder
+
     /// 폴더 정보를 업데이트합니다. (이름 변경 등)
     /// - Parameter folder: 업데이트할 폴더 엔티티
     /// - Returns: 업데이트된 폴더 엔티티
