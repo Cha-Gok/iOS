@@ -1,3 +1,4 @@
+import Core
 import Domain
 import Presentation
 import UIKit
@@ -60,6 +61,31 @@ extension MainCoordinator: MainViewCoordinatorDelegate {
     // TODO: Present
 
     func presentRecodingView() {
+        Task {
+            let checkUseCase = dependencyContainer.makeCheckMicrophonePermissionUseCase()
+            let requestUseCase = dependencyContainer.makeRequestMicrophonePermissionUseCase()
+
+            do {
+                let status = try await checkUseCase.execute()
+
+                switch status {
+                case .authorized:
+                    showRecordingView()
+                case .denied:
+                    showPermissionDeniedAlert()
+                case .notDetermined:
+                    let grantedStatus = try await requestUseCase.execute()
+                    if grantedStatus == .authorized {
+                        showRecordingView()
+                    }
+                }
+            } catch {
+                AppLogger.error(error)
+            }
+        }
+    }
+
+    private func showRecordingView() {
         let navController = UINavigationController()
         let viewModel = dependencyContainer.makeRecordingViewModel()
         viewModel.coordinator = self
@@ -67,6 +93,23 @@ extension MainCoordinator: MainViewCoordinatorDelegate {
         navController.modalPresentationStyle = .fullScreen
         navController.setViewControllers([recordingVC], animated: false)
         presenter.present(navController, animated: true)
+    }
+
+    private func showPermissionDeniedAlert() {
+        let alert = UIAlertController(
+            title: "마이크 권한 필요",
+            message: "녹음을 위해 마이크 권한이 필요합니다. 설정에서 권한을 허용해주세요.",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+
+        presenter.present(alert, animated: true)
     }
 
     // TODO: Pop
