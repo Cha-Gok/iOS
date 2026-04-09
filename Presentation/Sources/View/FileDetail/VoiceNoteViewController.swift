@@ -1,3 +1,4 @@
+import Domain
 import UIKit
 
 public final class VoiceNoteViewController: UIViewController {
@@ -12,14 +13,14 @@ public final class VoiceNoteViewController: UIViewController {
 
     private enum Item: Hashable {
         case metadata
-        case keyPoint(id: Int, text: String)
+        case keyPoint(number: Int, text: String)
         case keywords
         case script(index: Int)
     }
 
     // MARK: - Properties
 
-    private let viewModel = FileDetailViewModel()
+    private let viewModel: VoiceNoteViewModel
     private var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
 
     // MARK: - UI Components
@@ -103,6 +104,18 @@ public final class VoiceNoteViewController: UIViewController {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
+
+    // MARK: - Init
+
+    public init(viewModel: VoiceNoteViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
 
     // MARK: - Lifecycle
 
@@ -365,7 +378,10 @@ private extension VoiceNoteViewController {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections(Section.allCases)
         snapshot.appendItems([.metadata], toSection: .metadata)
-        snapshot.appendItems(viewModel.keyPoints.map { .keyPoint(id: $0.id, text: $0.text) }, toSection: .keyPoints)
+        snapshot.appendItems(
+            viewModel.keyPoints.map { .keyPoint(number: $0.number, text: $0.text) },
+            toSection: .keyPoints
+        )
         snapshot.appendItems([.keywords], toSection: .keywords)
         snapshot.appendItems(viewModel.scriptSections.indices.map { .script(index: $0) }, toSection: .scripts)
         dataSource.apply(snapshot, animatingDifferences: false)
@@ -453,5 +469,11 @@ private extension VoiceNoteViewController {
 }
 
 #Preview {
-    UINavigationController(rootViewController: VoiceNoteViewController())
+    let voiceNote = VoiceNote(
+        title: "오전 취업 관련 강의",
+        folderID: UUID(),
+        voiceRecord: VoiceRecord(audioFilePath: URL(fileURLWithPath: ""), duration: 4350)
+    )
+    let viewModel = VoiceNoteViewModel(voiceNote: voiceNote)
+    UINavigationController(rootViewController: VoiceNoteViewController(viewModel: viewModel))
 }
