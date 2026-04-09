@@ -11,13 +11,13 @@ final class FolderViewModelTests: XCTestCase {
         let viewModel: FolderViewModel
         let mockFolderRepo: MockFolderRepository
         let mockWasteBasketRepo: MockWasteBasketRepository
-        let mockCoordinator: MockMainViewCoordinatorDelegate
+        let mockCoordinator: MockBaseCoordinatorDelegate
     }
 
     private func makeSUT(initialItems: [Presentation.LibraryItem] = []) -> SUT {
         let mockFolderRepo = MockFolderRepository()
         let mockWasteBasketRepo = MockWasteBasketRepository()
-        let mockCoordinator = MockMainViewCoordinatorDelegate()
+        let mockCoordinator = MockBaseCoordinatorDelegate()
 
         let initialCategory = CategoryToggle(
             imageName: "folder",

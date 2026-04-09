@@ -10,12 +10,12 @@ final class TrashViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: TrashViewModel
         let mockRepo: MockWasteBasketRepository // Use single repo for all DefaultUseCases
-        let mockCoordinator: MockMainViewCoordinatorDelegate
+        let mockCoordinator: MockBaseCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
         let mockRepo = MockWasteBasketRepository()
-        let mockCoordinator = MockMainViewCoordinatorDelegate()
+        let mockCoordinator = MockBaseCoordinatorDelegate()
 
         let viewModel = TrashViewModel(
             fetchUseCase: DefaultFetchWasteBasketFolderUseCase(repository: mockRepo),
