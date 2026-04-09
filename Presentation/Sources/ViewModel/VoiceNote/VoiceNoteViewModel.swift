@@ -87,7 +87,7 @@ public final class VoiceNoteViewModel {
     private let audioToSummaryUseCase: any AudioToSummaryUseCase
     private let updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
     private let fetchLanguageUseCase: any FetchLanguageUseCase
-    private let fetchFolderUseCase: any ReadFolderUseCase
+    private let fetchFolderUseCase: any FetchFolderUseCase
 
     // MARK: - Init
 
@@ -96,7 +96,7 @@ public final class VoiceNoteViewModel {
         audioToSummaryUseCase: any AudioToSummaryUseCase,
         updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase,
         fetchLanguageUseCase: any FetchLanguageUseCase,
-        fetchFolderUseCase: any ReadFolderUseCase
+        fetchFolderUseCase: any FetchFolderUseCase
     ) {
         self.voiceNote = voiceNote
         self.audioToSummaryUseCase = audioToSummaryUseCase
@@ -108,8 +108,7 @@ public final class VoiceNoteViewModel {
     // MARK: - Analysis
 
     public func startAnalysis() {
-        Task { [self] in
-            await loadFolderName()
+        Task {
             do {
                 let language = try await fetchLanguageUseCase.execute()
                 let result = try await audioToSummaryUseCase.execute(
@@ -127,23 +126,13 @@ public final class VoiceNoteViewModel {
                     transcript: result.transcript,
                     summary: result.summary
                 )
+                folderName = try await fetchFolderUseCase.fetch(by: voiceNote.folderID).name
                 voiceNote = try await updateVoiceNoteUseCase.execute(updated)
                 analysisState = .completed
             } catch {
                 errorMessage = error.localizedDescription
                 analysisState = .failed
             }
-        }
-    }
-
-    private func loadFolderName() async {
-        guard folderName.isEmpty else { return }
-
-        do {
-            let folders = try await fetchFolderUseCase.execute()
-            folderName = folders.first(where: { $0.id == voiceNote.folderID })?.name ?? ""
-        } catch {
-            folderName = ""
         }
     }
 }

@@ -47,7 +47,7 @@ final class MainViewModelTests: XCTestCase {
         let mockCoordinator = MockMainViewCoordinatorDelegate()
 
         let viewModel = MainViewModel(
-            fetchFolderUseCase: DefaultReadFolderUseCase(repository: mockFolderRepo),
+            fetchFolderUseCase: DefaultFetchFolderUseCase(repository: mockFolderRepo),
             fetchVoiceNoteUseCase: DefaultFetchVoiceNoteUseCase(repository: mockVoiceNoteRepo),
             fetchRecentVoiceNoteUseCase: DefaultFetchRecentVoiceNoteUseCase(
                 repository: mockVoiceNoteRepo

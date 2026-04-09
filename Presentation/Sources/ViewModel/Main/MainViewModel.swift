@@ -39,7 +39,7 @@ public final class MainViewModel {
 
     // MARK: - UseCase
 
-    let fetchFolderUseCase: ReadFolderUseCase
+    let fetchFolderUseCase: FetchFolderUseCase
     let fetchVoiceNoteUseCase: FetchVoiceNoteUseCase
     let fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase
 
@@ -47,7 +47,7 @@ public final class MainViewModel {
     public weak var mainCoordinator: MainViewCoordinatorDelegate?
 
     public init(
-        fetchFolderUseCase: ReadFolderUseCase,
+        fetchFolderUseCase: FetchFolderUseCase,
         fetchVoiceNoteUseCase: FetchVoiceNoteUseCase,
         fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase
     ) {
@@ -114,7 +114,7 @@ extension MainViewModel {
     /// 폴더 영속성 업데이트 함수
     func updateMyFolderCategory() {
         Task {
-            let folders: [Folder] = try await fetchFolderUseCase.execute()
+            let folders: [Folder] = try await fetchFolderUseCase.fetchAll()
             categoryData[2].items = folders.map { folder in
                 LibraryItem.folder(folder)
             }
