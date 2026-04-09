@@ -27,6 +27,7 @@ actor MockStorageService: StorageService {
     var movedSourceURL: URL?
     var movedDirectory: String?
     var movedFileName: String?
+    var generatedTempFileName: String?
 
     func setGenerateTempResult(_ result: Result<URL, StorageServiceError>) {
         generateTempResult = result
@@ -99,6 +100,7 @@ actor MockStorageService: StorageService {
 
     func generateTemporaryURL(fileName: String) async throws(StorageServiceError) -> URL {
         generateTempCallCount += 1
+        generatedTempFileName = fileName
         guard let result = generateTempResult else {
             XCTFail("generateTempResult가 설정되지 않았습니다.")
             throw .uncreatableTemporaryPath

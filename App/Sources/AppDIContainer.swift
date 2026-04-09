@@ -45,7 +45,7 @@ public final class AppDIContainer {
         repository: checkFirstLaunchRepository
     )
     private lazy var createFolderUseCase = DefaultCreateFolderUseCase(repository: folderRepository)
-    private lazy var fetchFolderUseCase = DefaultReadFolderUseCase(repository: folderRepository)
+    private lazy var fetchFolderUseCase = DefaultFetchFolderUseCase(repository: folderRepository)
     private lazy var updateFolderUseCase = DefaultUpdateFolderUseCase(repository: folderRepository)
     private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(
         repository: folderRepository
@@ -127,7 +127,8 @@ public final class AppDIContainer {
             voiceNote: voiceNote,
             audioToSummaryUseCase: audioToSummaryUseCase,
             updateVoiceNoteUseCase: updateVoiceNoteUseCase,
-            fetchLanguageUseCase: fetchLanguageUseCase
+            fetchLanguageUseCase: fetchLanguageUseCase,
+            fetchFolderUseCase: fetchFolderUseCase
         )
     }
 

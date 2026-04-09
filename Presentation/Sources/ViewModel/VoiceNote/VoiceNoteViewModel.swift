@@ -87,6 +87,7 @@ public final class VoiceNoteViewModel {
     private let audioToSummaryUseCase: any AudioToSummaryUseCase
     private let updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
     private let fetchLanguageUseCase: any FetchLanguageUseCase
+    private let fetchFolderUseCase: any FetchFolderUseCase
 
     // MARK: - Init
 
@@ -94,18 +95,20 @@ public final class VoiceNoteViewModel {
         voiceNote: VoiceNote,
         audioToSummaryUseCase: any AudioToSummaryUseCase,
         updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase,
-        fetchLanguageUseCase: any FetchLanguageUseCase
+        fetchLanguageUseCase: any FetchLanguageUseCase,
+        fetchFolderUseCase: any FetchFolderUseCase
     ) {
         self.voiceNote = voiceNote
         self.audioToSummaryUseCase = audioToSummaryUseCase
         self.updateVoiceNoteUseCase = updateVoiceNoteUseCase
         self.fetchLanguageUseCase = fetchLanguageUseCase
+        self.fetchFolderUseCase = fetchFolderUseCase
     }
 
     // MARK: - Analysis
 
     public func startAnalysis() {
-        Task { [self] in
+        Task {
             do {
                 let language = try await fetchLanguageUseCase.execute()
                 let result = try await audioToSummaryUseCase.execute(
@@ -123,6 +126,7 @@ public final class VoiceNoteViewModel {
                     transcript: result.transcript,
                     summary: result.summary
                 )
+                folderName = try await fetchFolderUseCase.fetch(by: voiceNote.folderID).name
                 voiceNote = try await updateVoiceNoteUseCase.execute(updated)
                 analysisState = .completed
             } catch {

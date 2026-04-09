@@ -28,7 +28,7 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
         if Task.isCancelled { throw .cancelled }
         let tempURL: URL
         do {
-            let fileName = "\(Int(Date.now.timeIntervalSince1970 * 1000)).m4a"
+            let fileName = "\(Date.now.yyyyMMddHHmmssString).m4a"
             tempURL = try await storageService.generateTemporaryURL(fileName: fileName)
         } catch {
             AppLogger.error(error)
@@ -90,7 +90,10 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
         if Task.isCancelled { throw .cancelled }
 
         do {
-            let fileName = recorded.audioFilePath.lastPathComponent
+            let normalizedExtension = recorded.audioFilePath.pathExtension.trimmingCharacters(
+                in: CharacterSet(charactersIn: ".")
+            )
+            let fileName = "\(recorded.createdAt.yyyyMMddHHmmssString).\(normalizedExtension)"
             let permanentURL = try await storageService.moveFile(
                 from: recorded.audioFilePath,
                 toDirectory: "VoiceRecords",

@@ -45,6 +45,13 @@ actor MockVoiceNoteUpdateRepository: VoiceNoteUpdateRepository {
                 file: file,
                 line: line
             )
+            XCTAssertEqual(
+                actualUpdatedVoiceNote?.voiceRecord.audioFilePath,
+                expectedNote.voiceRecord.audioFilePath,
+                "수정 시 오디오 파일 경로는 유지되어야 합니다.",
+                file: file,
+                line: line
+            )
         }
     }
 

@@ -1,5 +1,6 @@
 import Core
 import Domain
+import Foundation
 
 /// Folders 도메인을 위한 리포지토리 실구현체입니다.
 /// CoreDataLocalDataBase에 의존하며, 엔티티 매핑 타입을 메서드 호출 시점에 지정합니다.
@@ -26,6 +27,17 @@ public struct DefaultFolderRepository: FolderRepository {
 
         do {
             return try await store.fetchAll(FolderEntity.self)
+        } catch {
+            AppLogger.error(error)
+            throw .fetchFailed
+        }
+    }
+
+    public func fetch(by id: UUID) async throws(FolderRepositoryError) -> Folder {
+        if Task.isCancelled { throw .cancelled }
+
+        do {
+            return try await store.fetch(byID: id, as: FolderEntity.self)
         } catch {
             AppLogger.error(error)
             throw .fetchFailed

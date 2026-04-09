@@ -25,6 +25,23 @@ extension UpdateVoiceNoteUseCaseTest {
         XCTAssertEqual(result.title, expectedVoiceNote.title)
         await repository.verify()
     }
+
+    func test_사용자가제목을바꿔도_오디오파일경로는그대로유지된다() async throws {
+        let repository = MockVoiceNoteUpdateRepository()
+        let sut = DefaultUpdateVoiceNoteUseCase(repository: repository)
+
+        let voiceRecord = VoiceRecord.stub(audioFilePath: URL(fileURLWithPath: "/tmp/20260409_120000_000.m4a"))
+        let editedVoiceNote = VoiceNote.stub(title: "회의 정리", voiceRecord: voiceRecord)
+
+        await repository.setResult(.success(editedVoiceNote))
+        await repository.expectUpdate(callCount: 1, voiceNote: editedVoiceNote)
+
+        let result = try await sut.execute(editedVoiceNote)
+
+        XCTAssertEqual(result.title, "회의 정리")
+        XCTAssertEqual(result.voiceRecord.audioFilePath, voiceRecord.audioFilePath)
+        await repository.verify()
+    }
 }
 
 // MARK: - 에러 케이스
