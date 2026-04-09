@@ -5,25 +5,30 @@ public actor MockFolderRepository: FolderRepository {
     // Results
     private var createResult: Result<Folder, FolderRepositoryError>?
     private var fetchAllResult: Result<[Folder], FolderRepositoryError>?
+    private var fetchByIDResult: Result<Folder, FolderRepositoryError>?
     private var updateResult: Result<Folder, FolderRepositoryError>?
 
     // 호출 검증 Count
     private var createCallCount = 0
     private var fetchAllCallCount = 0
+    private var fetchByIDCallCount = 0
     private var updateCallCount = 0
 
     // 인자 검증
     private var actualCreatedFolder: Folder?
     private var actualFolder: Folder?
+    private var actualFetchByID: UUID?
 
     // Expected Values
     private var expectedCreateCallCount: Int?
     private var expectedFetchAllCallCount: Int?
+    private var expectedFetchByIDCallCount: Int?
     private var expectedUpdateCallCount: Int?
 
     private var expectedCreateName: String?
     private var expectedCreateIsDeletable: Bool?
     private var expectedFolderID: UUID?
+    private var expectedFetchByID: UUID?
 
     public init() {}
 
@@ -35,6 +40,10 @@ public actor MockFolderRepository: FolderRepository {
 
     public func setFetchAllResult(_ result: Result<[Folder], FolderRepositoryError>) {
         fetchAllResult = result
+    }
+
+    public func setFetchByIDResult(_ result: Result<Folder, FolderRepositoryError>) {
+        fetchByIDResult = result
     }
 
     public func setUpdateResult(_ result: Result<Folder, FolderRepositoryError>) {
@@ -51,6 +60,11 @@ public actor MockFolderRepository: FolderRepository {
 
     public func expectFetchAll(callCount: Int) {
         expectedFetchAllCallCount = callCount
+    }
+
+    public func expectFetchByID(id: UUID? = nil, callCount: Int) {
+        expectedFetchByID = id
+        expectedFetchByIDCallCount = callCount
     }
 
     public func expectUpdate(folderID: UUID? = nil, callCount: Int) {
@@ -93,6 +107,18 @@ public actor MockFolderRepository: FolderRepository {
             )
         }
 
+        if let expected = expectedFetchByIDCallCount {
+            XCTAssertEqual(
+                fetchByIDCallCount, expected, "ID 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line
+            )
+        }
+
+        if let expectedID = expectedFetchByID {
+            XCTAssertEqual(
+                actualFetchByID, expectedID, "ID 조회 인자가 일치하지 않습니다.", file: file, line: line
+            )
+        }
+
         if let expected = expectedUpdateCallCount {
             XCTAssertEqual(
                 updateCallCount, expected, "수정 호출 횟수가 일치하지 않습니다.", file: file, line: line
@@ -119,6 +145,22 @@ public actor MockFolderRepository: FolderRepository {
         case .none:
             XCTFail("MockFolderRepository.createResult가 설정되지 않았습니다.")
             let error = NSError(domain: "MockFolderRepository.createResult", code: 0)
+            throw .unknown(error)
+        }
+    }
+
+    public func fetch(by id: UUID) async throws(FolderRepositoryError) -> Folder {
+        fetchByIDCallCount += 1
+        actualFetchByID = id
+
+        switch fetchByIDResult {
+        case .success(let folder):
+            return folder
+        case .failure(let error):
+            throw error
+        case .none:
+            XCTFail("MockFolderRepository.fetchByIDResult가 설정되지 않았습니다.")
+            let error = NSError(domain: "MockFolderRepository.fetchByIDResult", code: 0)
             throw .unknown(error)
         }
     }
