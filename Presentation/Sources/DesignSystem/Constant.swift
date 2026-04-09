@@ -127,6 +127,25 @@ public extension Constant {
     static let keywordChipLineSpacing: CGFloat = 10
 }
 
+// MARK: - ChipView Constants
+
+public extension Constant {
+    /// ChipView 내부 수평 패딩 (12)
+    static let chipHorizontalPadding: CGFloat = 12
+
+    /// ChipView 내부 수직 패딩 (4)
+    static let chipVerticalPadding: CGFloat = 4
+
+    /// ChipView 아이콘과 텍스트 사이 간격 (8)
+    static let chipContentSpacing: CGFloat = 8
+
+    /// ChipView 아이콘 크기 (16)
+    static let chipIconSize: CGFloat = 16
+
+    /// ChipView 최소 높이 (28)
+    static let chipMinimumHeight: CGFloat = 28
+}
+
 // MARK: - LanguagePicker Constants
 
 public extension Constant {

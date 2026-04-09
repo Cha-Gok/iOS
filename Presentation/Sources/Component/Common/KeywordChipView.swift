@@ -1,8 +1,6 @@
 import UIKit
 
 public final class KeywordChipView: UIView {
-    // MARK: - UI Components
-
     private let label: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.gray950
@@ -10,8 +8,6 @@ public final class KeywordChipView: UIView {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-
-    // MARK: - Init
 
     public init(text: String) {
         super.init(frame: .zero)
@@ -21,15 +17,13 @@ public final class KeywordChipView: UIView {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
-        return nil
+        nil
     }
 
     override public func layoutSubviews() {
         super.layoutSubviews()
         layer.cornerRadius = bounds.height / 2
     }
-
-    // MARK: - Setup
 
     private func setupUI() {
         backgroundColor = UIColor.gray100
