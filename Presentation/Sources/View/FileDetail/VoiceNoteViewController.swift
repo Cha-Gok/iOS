@@ -124,6 +124,16 @@ public final class VoiceNoteViewController: UIViewController {
         setupUI()
         configureDataSource()
         applySnapshot()
+        viewModel.startAnalysis()
+    }
+
+    override public func updateProperties() {
+        super.updateProperties()
+        _ = viewModel.analysisState
+        applySnapshot()
+        if let message = viewModel.errorMessage {
+            showErrorAlert(message: message)
+        }
     }
 }
 
@@ -384,7 +394,13 @@ private extension VoiceNoteViewController {
         )
         snapshot.appendItems([.keywords], toSection: .keywords)
         snapshot.appendItems(viewModel.scriptSections.indices.map { .script(index: $0) }, toSection: .scripts)
-        dataSource.apply(snapshot, animatingDifferences: false)
+        dataSource.apply(snapshot, animatingDifferences: true)
+    }
+
+    func showErrorAlert(message: String) {
+        let alert = UIAlertController(title: "분석 실패", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
     }
 }
 
@@ -466,14 +482,4 @@ private extension VoiceNoteViewController {
         ])
         return view
     }
-}
-
-#Preview {
-    let voiceNote = VoiceNote(
-        title: "오전 취업 관련 강의",
-        folderID: UUID(),
-        voiceRecord: VoiceRecord(audioFilePath: URL(fileURLWithPath: ""), duration: 4350)
-    )
-    let viewModel = VoiceNoteViewModel(voiceNote: voiceNote)
-    UINavigationController(rootViewController: VoiceNoteViewController(viewModel: viewModel))
 }
