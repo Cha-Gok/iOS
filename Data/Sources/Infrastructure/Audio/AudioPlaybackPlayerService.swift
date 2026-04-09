@@ -27,7 +27,7 @@ public final class AudioPlaybackPlayerService: NSObject, AudioPlaybackService {
     }
 
     /// 새 파일을 준비하고 재생 상태 스트림을 반환합니다.
-    /// 파일 I/O는 백그라운드에서 수행하고, AVAudioPlayer 생성은 메인 액터에서 처리합니다.
+    /// `AVAudioPlayer(contentsOf:)`를 사용해 메모리 맵핑 방식으로 효율적으로 파일을 로드합니다.
     public func preparePlayback(at fileURL: URL) async throws(AudioPlaybackServiceError)
         -> AsyncStream<AudioPlaybackState>
     {
@@ -40,9 +40,7 @@ public final class AudioPlaybackPlayerService: NSObject, AudioPlaybackService {
 
         let player: AVAudioPlayer
         do {
-            // 파일 I/O를 백그라운드에서 수행 (AVAudioPlayer는 Sendable 미준수로 직접 전달 불가)
-            let data = try await Task.detached { try Data(contentsOf: fileURL) }.value
-            player = try AVAudioPlayer(data: data)
+            player = try AVAudioPlayer(contentsOf: fileURL)
         } catch {
             AppLogger.error(error)
             throw .prepareFailed
