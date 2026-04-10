@@ -41,12 +41,20 @@ public final class VoiceNoteViewController: UIViewController {
         viewModel.send(.onAppear)
     }
 
+    override public func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        viewModel.send(.onDisappear)
+    }
+
     override public func updateProperties() {
         super.updateProperties()
-        _ = viewModel.state.analysisState
+        let analysisState = viewModel.state.analysisState
         _ = viewModel.state.folderName
         _ = viewModel.state.errorMessage
         playerView.apply(viewModel.state.currentPlaybackState)
+        if analysisState == .completed {
+            applySnapshot()
+        }
     }
 }
 
@@ -75,7 +83,7 @@ private extension VoiceNoteViewController {
             collectionView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: playerView.topAnchor),
 
             topBlurView.topAnchor.constraint(equalTo: view.topAnchor),
             topBlurView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -90,7 +98,6 @@ private extension VoiceNoteViewController {
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            playerView.heightAnchor.constraint(equalToConstant: 136),
         ])
     }
 
@@ -98,7 +105,12 @@ private extension VoiceNoteViewController {
         title = viewModel.state.title
 
         let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), style: .plain, target: nil, action: nil)
-        let searchItem = UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: nil, action: nil)
+        let searchItem = UIBarButtonItem(
+            image: UIImage(systemName: "magnifyingglass"),
+            style: .plain,
+            target: nil,
+            action: nil
+        )
 
         navigationItem.rightBarButtonItems = [moreItem, searchItem]
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
@@ -148,7 +160,9 @@ private extension VoiceNoteViewController {
             config.showsSeparators = false
             config.headerMode = Section(rawValue: sectionIndex) == .metadata ? .none : .supplementary
 
-            return NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
+            let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
+            section.boundarySupplementaryItems.forEach { $0.pinToVisibleBounds = false }
+            return section
         }
     }
 
@@ -196,7 +210,16 @@ private extension VoiceNoteViewController {
             }
         }
 
-        let headerReg = UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView>(
+        let headerReg = makeHeaderRegistration()
+        dataSource.supplementaryViewProvider = { col, _, indexPath in
+            col.dequeueConfiguredReusableSupplementary(using: headerReg, for: indexPath)
+        }
+
+        return dataSource
+    }
+
+    func makeHeaderRegistration() -> UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView> {
+        UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView>(
             elementKind: UICollectionView.elementKindSectionHeader
         ) { header, _, indexPath in
             guard let section = Section(rawValue: indexPath.section),
@@ -209,12 +232,6 @@ private extension VoiceNoteViewController {
                 header.configure(title: title)
             }
         }
-
-        dataSource.supplementaryViewProvider = { col, _, indexPath in
-            col.dequeueConfiguredReusableSupplementary(using: headerReg, for: indexPath)
-        }
-
-        return dataSource
     }
 
     func applySnapshot() {
