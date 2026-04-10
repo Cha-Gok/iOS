@@ -42,14 +42,6 @@ private let presentationTarget = Target.target(
     ),
     sources: ["Sources/**/*.swift"],
     resources: ["Resources/**"],
-    scripts: [
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--config", "../.swiftformat", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        )
-    ],
     dependencies: [
         .project(target: "Core", path: "../Core"),
         .project(target: "Domain", path: "../Domain")
@@ -64,14 +56,6 @@ private let presentationTestsTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Tests/**/*.swift"],
-    scripts: [
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--config", "../.swiftformat", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        )
-    ],
     dependencies: [
         .target(name: "Presentation"),
         .project(target: "DomainTesting", path: "../Domain")

@@ -33,14 +33,6 @@ private let domainTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Sources/**/*.swift"],
-    scripts: [
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--config", "../.swiftformat", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        )
-    ],
     dependencies: [
         .project(target: "Core", path: "../Core")
     ]
@@ -57,14 +49,6 @@ private let domainTestingTarget = Target.target(
         "Testing/Interfaces/Mocks/**/*.swift",
         "Testing/Entities/Stubs/**/*.swift"
     ],
-    scripts: [
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--config", "../.swiftformat", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        )
-    ],
     dependencies: [
         .target(name: "Domain"),
         .xctest
@@ -79,14 +63,6 @@ private let domainTestsTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Tests/UseCases/**/*.swift"],
-    scripts: [
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--config", "../.swiftformat", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        )
-    ],
     dependencies: [
         .target(name: "Domain"),
         .target(name: "DomainTesting"),

@@ -33,14 +33,6 @@ private let coreTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Sources/**/*.swift"],
-    scripts: [
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--config", "../.swiftformat", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        )
-    ],
     dependencies: []
 )
 
@@ -52,14 +44,6 @@ private let coreTestsTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Tests/**/*.swift"],
-    scripts: [
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--config", "../.swiftformat", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        )
-    ],
     dependencies: [.target(name: "Core")]
 )
 
