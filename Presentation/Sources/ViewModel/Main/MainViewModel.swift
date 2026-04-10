@@ -31,6 +31,7 @@ public final class MainViewModel {
         )
     ]
 
+    @ObservationIgnored
     private(set) var selectedCategoryIndex: Int = 0
 
     var isEmptyList: Bool {
@@ -39,21 +40,24 @@ public final class MainViewModel {
 
     // MARK: - UseCase
 
-    let fetchFolderUseCase: FetchFolderUseCase
-    let fetchVoiceNoteUseCase: FetchVoiceNoteUseCase
     let fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase
+    let fetchVoiceNoteUseCase: FetchVoiceNoteUseCase
+    let fetchFolderUseCase: FetchFolderUseCase
+    let fetchTrashUseCase: FetchWasteBasketFolderUseCase
 
     // TODO: 화면 전환
     public weak var mainCoordinator: MainViewCoordinatorDelegate?
 
     public init(
-        fetchFolderUseCase: FetchFolderUseCase,
+        fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase,
         fetchVoiceNoteUseCase: FetchVoiceNoteUseCase,
-        fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase
+        fetchFolderUseCase: FetchFolderUseCase,
+        fetchTrashUseCase: FetchWasteBasketFolderUseCase
     ) {
-        self.fetchFolderUseCase = fetchFolderUseCase
-        self.fetchVoiceNoteUseCase = fetchVoiceNoteUseCase
         self.fetchRecentVoiceNoteUseCase = fetchRecentVoiceNoteUseCase
+        self.fetchVoiceNoteUseCase = fetchVoiceNoteUseCase
+        self.fetchFolderUseCase = fetchFolderUseCase
+        self.fetchTrashUseCase = fetchTrashUseCase
     }
 }
 
@@ -111,13 +115,12 @@ public protocol MainViewCoordinatorDelegate: AnyObject {
 // MARK: - Update CategoryData
 
 extension MainViewModel {
-    /// 폴더 영속성 업데이트 함수
-    func updateMyFolderCategory() {
+    /// 최근 기록(전체 폴더 최신 5개) 업데이트 함수
+    func updateRecentCategory() {
         Task {
-            let folders: [Folder] = try await fetchFolderUseCase.fetchAll()
-            categoryData[2].items = folders.map { folder in
-                LibraryItem.folder(folder)
-            }
+            let voiceNotes: [VoiceNote] = await (try? fetchRecentVoiceNoteUseCase.execute()) ?? []
+            let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
+            categoryData[0].items = items
         }
     }
 
@@ -125,15 +128,28 @@ extension MainViewModel {
     func updateVoiceNoteCategory() {
         Task {
             let voiceNotes: [VoiceNote] = await (try? fetchVoiceNoteUseCase.execute()) ?? []
-            categoryData[1].items = voiceNotes.map { .voiceNote($0) }
+            let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
+            categoryData[1].items = items
         }
     }
 
-    /// 최근 기록(전체 폴더 최신 5개) 업데이트 함수
-    func updateRecentCategory() {
+    /// 폴더 영속성 업데이트 함수
+    func updateMyFolderCategory() {
         Task {
-            let voiceNotes: [VoiceNote] = await (try? fetchRecentVoiceNoteUseCase.execute()) ?? []
-            categoryData[0].items = voiceNotes.map { .voiceNote($0) }
+            let folders: [Folder] = try await fetchFolderUseCase.fetchAll()
+            let items: [LibraryItem] = folders.map { folder in
+                LibraryItem.folder(folder)
+            }
+            categoryData[2].items = items
+        }
+    }
+
+    /// 휴지통 영속성 업데이트 함수
+    func updateTrashCategory() {
+        Task {
+            let wasteBasket: [WasteBasketItem] = try await fetchTrashUseCase.execute()
+            let items: [LibraryItem] = wasteBasket.map(\.toLibraryItem)
+            categoryData[3].items = items
         }
     }
 }

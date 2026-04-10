@@ -141,9 +141,10 @@ public final class AppDIContainer {
 
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
-            fetchFolderUseCase: fetchFolderUseCase,
+            fetchRecentVoiceNoteUseCase: fetchRecentVoiceNoteUseCase,
             fetchVoiceNoteUseCase: fetchVoiceNoteUseCase,
-            fetchRecentVoiceNoteUseCase: fetchRecentVoiceNoteUseCase
+            fetchFolderUseCase: fetchFolderUseCase,
+            fetchTrashUseCase: fetchWasteBasketUseCase
         )
     }
 
