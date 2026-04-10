@@ -57,7 +57,17 @@ private let appTarget = Target.target(
         .project(target: "Presentation", path: "../Presentation"),
         .project(target: "Data", path: "../Data")
     ],
-    settings: settings
+    settings: .settings(
+        configurations: [
+            .debug(name: "Debug", settings: [
+                "PROVISIONING_PROFILE_SPECIFIER": "match Development com.yongms.ChaGokChaGok"
+            ]),
+            .release(name: "Release", settings: [
+                "PROVISIONING_PROFILE_SPECIFIER": "match AppStore com.yongms.ChaGokChaGok"
+            ])
+        ],
+        defaultSettings: .recommended
+    )
 )
 
 private let appTestsTarget = Target.target(
