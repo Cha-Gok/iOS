@@ -44,13 +44,17 @@ final class MainViewModelTests: XCTestCase {
     private func makeSUT() -> SUT {
         let mockFolderRepo = MockFolderRepository()
         let mockVoiceNoteRepo = MockVoiceNoteFetchRepository()
+        let mockWasteBasketRepo = MockWasteBasketRepository()
         let mockCoordinator = MockMainViewCoordinatorDelegate()
 
         let viewModel = MainViewModel(
-            fetchFolderUseCase: DefaultFetchFolderUseCase(repository: mockFolderRepo),
-            fetchVoiceNoteUseCase: DefaultFetchVoiceNoteUseCase(repository: mockVoiceNoteRepo),
             fetchRecentVoiceNoteUseCase: DefaultFetchRecentVoiceNoteUseCase(
                 repository: mockVoiceNoteRepo
+            ),
+            fetchVoiceNoteUseCase: DefaultFetchVoiceNoteUseCase(repository: mockVoiceNoteRepo),
+            fetchFolderUseCase: DefaultFetchFolderUseCase(repository: mockFolderRepo),
+            fetchTrashUseCase: DefaultFetchWasteBasketFolderUseCase(
+                repository: mockWasteBasketRepo
             )
         )
         viewModel.mainCoordinator = mockCoordinator
