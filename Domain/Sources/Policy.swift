@@ -27,4 +27,10 @@ public enum Policy {
 
     /// 최근 기록 탭에서 표시할 최대 VoiceNote 개수
     public static let recentVoiceNoteLimit: Int = 5
+
+    /// 재생 상태 스트림의 최대 대기 개수 (초과 시 최신값 유지)
+    public static let playbackStateStreamBufferLimit: Int = 8
+
+    /// 재생 진행률 업데이트 주기 (나노초, 0.1초)
+    public static let playbackProgressUpdateInterval: UInt64 = 100_000_000
 }
