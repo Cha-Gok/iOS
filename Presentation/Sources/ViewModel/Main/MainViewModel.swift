@@ -46,7 +46,7 @@ public final class MainViewModel {
     let fetchTrashUseCase: FetchWasteBasketFolderUseCase
 
     // TODO: 화면 전환
-    public weak var mainCoordinator: MainViewCoordinatorDelegate?
+    public weak var mainCoordinator: MainCoordinatorDelegate?
 
     public init(
         fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase,
@@ -96,20 +96,6 @@ extension MainViewModel {
     func presentRecodingView() {
         mainCoordinator?.presentRecodingView()
     }
-}
-
-// MARK: - Coordinator Delegate 패턴
-
-@MainActor
-public protocol MainViewCoordinatorDelegate: AnyObject {
-    /// 휴지통으로 push하는 함수
-    func pushTrashView()
-    /// 개인 폴더로 push 하는 함수
-    func pushMyFolderView(category: CategoryToggle)
-    /// 녹음 시작 present 함수
-    func presentRecodingView()
-    /// 공용 Pop함수
-    func pop()
 }
 
 // MARK: - Update CategoryData

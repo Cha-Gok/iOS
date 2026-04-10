@@ -4,7 +4,7 @@ import DomainTesting
 import XCTest
 
 @MainActor
-final class MockMainViewCoordinatorDelegate: MainViewCoordinatorDelegate {
+final class MockMainCoordinatorDelegate: MainCoordinatorDelegate {
     var pushTrashViewCalled = false
     var pushMyFolderViewCalled = false
     var presentRecodingViewCalled = false
@@ -38,14 +38,14 @@ final class MainViewModelTests: XCTestCase {
         let viewModel: MainViewModel
         let mockFolderRepo: MockFolderRepository
         let mockVoiceNoteRepo: MockVoiceNoteFetchRepository
-        let mockCoordinator: MockMainViewCoordinatorDelegate
+        let mockCoordinator: MockMainCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
         let mockFolderRepo = MockFolderRepository()
         let mockVoiceNoteRepo = MockVoiceNoteFetchRepository()
         let mockWasteBasketRepo = MockWasteBasketRepository()
-        let mockCoordinator = MockMainViewCoordinatorDelegate()
+        let mockCoordinator = MockMainCoordinatorDelegate()
 
         let viewModel = MainViewModel(
             fetchRecentVoiceNoteUseCase: DefaultFetchRecentVoiceNoteUseCase(

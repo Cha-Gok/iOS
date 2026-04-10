@@ -164,4 +164,11 @@ public final class AppDIContainer {
             moveToTrashUseCase: moveWasteBasketUseCase
         )
     }
+
+    public func makeMyFolderDetailViewModel(_ folder: Folder) -> FolderDetailViewModel {
+        return FolderDetailViewModel(
+            title: folder.name,
+            folderID: folder.id
+        )
+    }
 }
