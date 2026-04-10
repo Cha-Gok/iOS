@@ -50,7 +50,6 @@ public final class MainViewController: UIViewController {
 
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        print("ViewWillAppear")
         vm.updateRecentCategory()
         vm.updateVoiceNoteCategory()
         vm.updateMyFolderCategory()
