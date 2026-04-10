@@ -116,7 +116,7 @@ public final class VoiceNoteViewModel {
 
         public let tabSections: [Section] = [.keyPoints, .keywords, .scripts]
         public var tabTitles: [String] {
-            tabSections.compactMap { $0.title }
+            tabSections.compactMap(\.title)
         }
     }
 
@@ -132,7 +132,8 @@ public final class VoiceNoteViewModel {
 
     public private(set) var state: State
 
-    @ObservationIgnored private var playbackObservationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var playbackObservationTask: Task<Void, Never>?
 
     // MARK: - UseCases
 
@@ -189,7 +190,7 @@ public final class VoiceNoteViewModel {
             play()
         case .pauseButtonTapped:
             pause()
-        case let .seek(time):
+        case .seek(let time):
             seek(to: time)
         }
     }

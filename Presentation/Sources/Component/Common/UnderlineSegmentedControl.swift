@@ -3,7 +3,6 @@ import UIKit
 final class UnderlineSegmentedControl: UIControl {
     private(set) var selectedSegmentIndex: Int = 0
 
-
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal

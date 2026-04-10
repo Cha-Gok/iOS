@@ -97,7 +97,7 @@ private extension VoiceNoteViewController {
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
     }
 
@@ -176,7 +176,7 @@ private extension VoiceNoteViewController {
         }
 
         let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case let .keyPoint(number, text) = item else { return }
+            guard case .keyPoint(let number, let text) = item else { return }
             cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
         }
 
@@ -187,7 +187,7 @@ private extension VoiceNoteViewController {
         }
 
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard let self, case let .script(index) = item else { return }
+            guard let self, case .script(let index) = item else { return }
             let section = viewModel.state.scriptSections[index]
             cell.contentConfiguration = ScriptContentConfiguration(
                 timestamp: section.timestamp,

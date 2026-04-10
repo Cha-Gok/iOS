@@ -42,7 +42,7 @@ final class UnderlineTabButton: UIControl {
             indicator.leadingAnchor.constraint(equalTo: leadingAnchor),
             indicator.trailingAnchor.constraint(equalTo: trailingAnchor),
             indicator.bottomAnchor.constraint(equalTo: bottomAnchor),
-            indicator.heightAnchor.constraint(equalToConstant: 2),
+            indicator.heightAnchor.constraint(equalToConstant: 2)
         ])
     }
 
