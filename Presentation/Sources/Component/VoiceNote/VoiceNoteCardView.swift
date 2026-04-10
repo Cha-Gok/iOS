@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct TrashListViewCell: View {
+struct VoiceNoteCardView: View {
     var title: String
     var subTitle: String
 

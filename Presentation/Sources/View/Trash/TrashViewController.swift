@@ -194,14 +194,14 @@ public final class TrashViewController: UICollectionViewController {
             switch itemIdentifier {
             case .folder(let folder):
                 cell.contentConfiguration = UIHostingConfiguration {
-                    TrashListViewCell(
+                    VoiceNoteCardView(
                         title: folder.name,
                         subTitle: folder.createdAt.description
                     )
                 }
             case .voiceNote(let voiceNote):
                 cell.contentConfiguration = UIHostingConfiguration {
-                    TrashListViewCell(
+                    VoiceNoteCardView(
                         title: voiceNote.title,
                         subTitle: voiceNote.createdAt.description
                     )
