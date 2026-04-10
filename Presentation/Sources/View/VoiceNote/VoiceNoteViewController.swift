@@ -12,7 +12,8 @@ public final class VoiceNoteViewController: UIViewController {
 
     private let playerView = AudioPlayerView()
     private let topBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-    private lazy var segmentedControl = UnderlineSegmentedControl(items: viewModel.state.tabTitles)
+    private var lastAppliedFolderName: String = ""
+    private lazy var segmentedControl = UnderlineSegmentedControl(items: viewModel.tabTitles)
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
         collectionView.backgroundColor = .clear
@@ -38,22 +39,27 @@ public final class VoiceNoteViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         applySnapshot()
-        viewModel.send(.onAppear)
+        viewModel.send(.view(.onAppear))
     }
 
     override public func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        viewModel.send(.onDisappear)
+        viewModel.send(.view(.onDisappear))
     }
 
     override public func updateProperties() {
         super.updateProperties()
         let analysisState = viewModel.state.analysisState
-        _ = viewModel.state.folderName
+        let folderName = viewModel.state.folderName
         _ = viewModel.state.errorMessage
         playerView.apply(viewModel.state.currentPlaybackState)
         if analysisState == .completed {
             applySnapshot()
+        } else if folderName != lastAppliedFolderName {
+            lastAppliedFolderName = folderName
+            var snapshot = dataSource.snapshot()
+            snapshot.reconfigureItems([.metadata])
+            dataSource.apply(snapshot, animatingDifferences: false)
         }
     }
 }
@@ -120,8 +126,8 @@ private extension VoiceNoteViewController {
         segmentedControl.addAction(UIAction { [weak self] action in
             guard let self, let sender = action.sender as? UnderlineSegmentedControl else { return }
             let index = sender.selectedSegmentIndex
-            guard index < viewModel.state.tabSections.count else { return }
-            let section = viewModel.state.tabSections[index]
+            guard index < viewModel.tabSections.count else { return }
+            let section = viewModel.tabSections[index]
             scrollToSection(section: section)
         }, for: .valueChanged)
     }
