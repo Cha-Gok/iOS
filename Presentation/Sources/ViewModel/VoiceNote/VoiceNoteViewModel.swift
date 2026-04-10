@@ -1,4 +1,5 @@
 import Domain
+import Core
 import Foundation
 
 public struct KeyPoint: Hashable {
@@ -70,25 +71,14 @@ public final class VoiceNoteViewModel {
         }
 
         public var metadataText1: String {
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "ko_KR")
-            formatter.dateFormat = "yyyy.MM.dd · a HH:mm"
-            let created = formatter.string(from: voiceNote.createdAt)
+            let created = voiceNote.createdAt.toString(format: "yyyy.MM.dd · a HH:mm")
             guard voiceNote.createdAt != voiceNote.updatedAt else { return created }
-            let updatedFormatter = DateFormatter()
-            updatedFormatter.locale = Locale(identifier: "ko_KR")
-            updatedFormatter.dateFormat = "yyyy.MM.dd"
-            return "\(created) (\(updatedFormatter.string(from: voiceNote.updatedAt)) 수정됨)"
+            let updated = voiceNote.updatedAt.toString(format: "yyyy.MM.dd")
+            return "\(created) (\(updated) 수정됨)"
         }
 
         public var metadataText2: String {
-            let total = Int(voiceNote.voiceRecord.duration)
-            let hours = total / 3600
-            let minutes = (total % 3600) / 60
-            let seconds = total % 60
-            if hours > 0 { return "\(hours)시간 \(minutes)분 \(seconds)초" }
-            if minutes > 0 { return "\(minutes)분 \(seconds)초" }
-            return "\(seconds)초"
+            voiceNote.voiceRecord.duration.koreanDurationString
         }
 
         public var keywords: [String] {
