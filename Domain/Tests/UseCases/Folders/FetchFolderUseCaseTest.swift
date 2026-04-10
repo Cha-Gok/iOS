@@ -8,13 +8,15 @@ final class FetchFolderUseCaseTest: XCTestCase {}
 // MARK: - 성공 케이스
 
 extension FetchFolderUseCaseTest {
-    func test_정상상태_폴더조회시_전체폴더목록을반환한다() async throws {
+    func test_정상상태_폴더조회시_기본폴더와_삭제된폴더를제외한_폴더목록만반환한다() async throws {
         let repository = MockFolderRepository()
         let sut = DefaultFetchFolderUseCase(repository: repository)
 
         // Given
         let expectedFolders = [
-            Folder.stub(name: "Folder 1"),
+            Folder.stub(name: "기본 폴더", isDeletable: false), // 필터링 대상
+            Folder.stub(name: "휴지통에 있는 폴더", deletedAt: Date()), // 필터링 대상
+            Folder.stub(name: "Folder 1"), // 기본값 isDeletable: true, deletedAt: nil
             Folder.stub(name: "Folder 2")
         ]
         await repository.setFetchAllResult(.success(expectedFolders))
@@ -26,9 +28,9 @@ extension FetchFolderUseCaseTest {
         // Then
         XCTAssertEqual(folders.count, 2)
         XCTAssertEqual(folders[0].name, "Folder 1")
-        XCTAssertEqual(folders[0].id, expectedFolders[0].id)
+        XCTAssertEqual(folders[0].id, expectedFolders[2].id)
         XCTAssertEqual(folders[1].name, "Folder 2")
-        XCTAssertEqual(folders[1].id, expectedFolders[1].id)
+        XCTAssertEqual(folders[1].id, expectedFolders[3].id)
         await repository.verify()
     }
 }

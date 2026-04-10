@@ -4,7 +4,7 @@ import Foundation
 /// 폴더 목록 조회 유스케이스 프로토콜.
 /// CoreData에 저장된 모든 폴더 정보를 조회합니다.
 public protocol FetchFolderUseCase: Sendable {
-    /// 모든 폴더 목록을 조회합니다.
+    /// 모든 폴더 목록을 조회합니다. ( 기본 폴더 제외 )
     /// - Returns: 조회된 `Folder` 배열
     /// - Throws: 조회 실패 시
     func fetchAll() async throws(FetchFolderUseCaseError) -> [Folder]
@@ -22,7 +22,8 @@ public struct DefaultFetchFolderUseCase: FetchFolderUseCase {
     public func fetchAll() async throws(FetchFolderUseCaseError) -> [Folder] {
         if Task.isCancelled { throw .cancelled }
         do {
-            return try await repository.fetchAll()
+            let folders: [Folder] = try await repository.fetchAll()
+            return folders.filter { $0.deletedAt == nil && $0.isDeletable }
         } catch {
             AppLogger.error(error)
             throw FetchFolderUseCaseError(error)
