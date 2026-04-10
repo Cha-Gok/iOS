@@ -82,13 +82,22 @@ public final class AppDIContainer {
         localDataBase = try CoreDataLocalDataBase()
     }
 
-    // MARK: - 온보딩 플로우 (Presentation)
+    // MARK: - UseCase
 
     func makeCheckFirstLaunchUseCase() -> CheckFirstLaunchUseCase {
         checkFirstLaunchUseCase
     }
 
-    /// OnBoarding 화면을 시작할 때 호출될 Factory 메서드
+    func makeCheckMicrophonePermissionUseCase() -> CheckMicrophonePermissionUseCase {
+        checkMicrophonePermissionUseCase
+    }
+
+    func makeRequestMicrophonePermissionUseCase() -> RequestMicrophonePermissionUseCase {
+        requestMicrophonePermissionUseCase
+    }
+
+    // MARK: - ViewModel
+
     public func makeOnBoardingViewModel() -> OnBoardingViewModel {
         OnBoardingViewModel(
             selectLanguageUseCase: selectLanguageUseCase,
@@ -98,8 +107,6 @@ public final class AppDIContainer {
             createDefaultFolderUseCase: createDefaultFolderUseCase
         )
     }
-
-    // MARK: - 메인 플로우
 
     public func makeRecordingViewModel() -> RecordingViewModel {
         RecordingViewModel(
