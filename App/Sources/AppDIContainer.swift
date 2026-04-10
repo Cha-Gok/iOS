@@ -168,7 +168,8 @@ public final class AppDIContainer {
     public func makeMyFolderDetailViewModel(_ folder: Folder) -> FolderDetailViewModel {
         return FolderDetailViewModel(
             title: folder.name,
-            folderID: folder.id
+            folderID: folder.id,
+            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase
         )
     }
 }
