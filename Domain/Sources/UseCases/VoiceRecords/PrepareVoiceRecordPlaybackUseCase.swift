@@ -18,7 +18,6 @@ public struct DefaultPrepareVoiceRecordPlaybackUseCase: PrepareVoiceRecordPlayba
     public func execute(audioFileURL: URL) throws(PrepareVoiceRecordPlaybackUseCaseError)
         -> AsyncStream<AudioPlaybackState>
     {
-        if Task.isCancelled { throw .cancelled }
         do {
             return try repository.prepare(audioFileURL: audioFileURL)
         } catch {

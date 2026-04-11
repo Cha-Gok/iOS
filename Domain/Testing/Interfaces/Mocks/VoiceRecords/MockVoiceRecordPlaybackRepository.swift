@@ -91,7 +91,6 @@ public final class MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackReposit
     public func prepare(audioFileURL: URL) throws(VoiceRecordPlaybackRepositoryError)
         -> AsyncStream<AudioPlaybackState>
     {
-        if Task.isCancelled { throw .cancelled }
         actualPrepareCallCount += 1
         preparedAudioFileURL = audioFileURL
         switch prepareResult {
@@ -104,7 +103,6 @@ public final class MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackReposit
     }
 
     public func play() throws(VoiceRecordPlaybackRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
         actualPlayCallCount += 1
         switch playResult {
         case .success: return
@@ -116,7 +114,6 @@ public final class MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackReposit
     }
 
     public func pause() throws(VoiceRecordPlaybackRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
         actualPauseCallCount += 1
         switch pauseResult {
         case .success: return
@@ -128,7 +125,6 @@ public final class MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackReposit
     }
 
     public func seek(to time: TimeInterval) throws(VoiceRecordPlaybackRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
         actualSeekCallCount += 1
         lastSeekTime = time
         switch seekResult {
@@ -141,7 +137,6 @@ public final class MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackReposit
     }
 
     public func stop() throws(VoiceRecordPlaybackRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
         actualStopCallCount += 1
         switch stopResult {
         case .success: return

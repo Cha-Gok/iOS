@@ -13,7 +13,6 @@ public struct DefaultVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepositor
     public func prepare(audioFileURL: URL) throws(VoiceRecordPlaybackRepositoryError)
         -> AsyncStream<AudioPlaybackState>
     {
-        if Task.isCancelled { throw .cancelled }
         do {
             return try audioPlaybackService.preparePlayback(at: audioFileURL)
         } catch {
@@ -23,7 +22,6 @@ public struct DefaultVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepositor
     }
 
     public func play() throws(VoiceRecordPlaybackRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
         do {
             try audioPlaybackService.play()
         } catch {
@@ -33,7 +31,6 @@ public struct DefaultVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepositor
     }
 
     public func pause() throws(VoiceRecordPlaybackRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
         do {
             try audioPlaybackService.pause()
         } catch {
@@ -43,7 +40,6 @@ public struct DefaultVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepositor
     }
 
     public func seek(to time: TimeInterval) throws(VoiceRecordPlaybackRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
         do {
             try audioPlaybackService.seek(to: time)
         } catch {
@@ -53,7 +49,6 @@ public struct DefaultVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepositor
     }
 
     public func stop() throws(VoiceRecordPlaybackRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
         do {
             try audioPlaybackService.stop()
         } catch {

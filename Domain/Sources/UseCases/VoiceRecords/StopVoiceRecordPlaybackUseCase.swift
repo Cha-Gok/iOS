@@ -15,7 +15,6 @@ public struct DefaultStopVoiceRecordPlaybackUseCase: StopVoiceRecordPlaybackUseC
     }
 
     public func execute() throws(StopVoiceRecordPlaybackUseCaseError) {
-        if Task.isCancelled { throw .cancelled }
         do {
             try repository.stop()
         } catch {

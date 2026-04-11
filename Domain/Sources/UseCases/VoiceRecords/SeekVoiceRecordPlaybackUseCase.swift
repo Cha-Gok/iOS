@@ -15,7 +15,6 @@ public struct DefaultSeekVoiceRecordPlaybackUseCase: SeekVoiceRecordPlaybackUseC
     }
 
     public func execute(time: TimeInterval) throws(SeekVoiceRecordPlaybackUseCaseError) {
-        if Task.isCancelled { throw .cancelled }
         do {
             try repository.seek(to: time)
         } catch {

@@ -15,7 +15,6 @@ public struct DefaultPlayVoiceRecordUseCase: PlayVoiceRecordUseCase {
     }
 
     public func execute() throws(PlayVoiceRecordUseCaseError) {
-        if Task.isCancelled { throw .cancelled }
         do {
             try repository.play()
         } catch {
