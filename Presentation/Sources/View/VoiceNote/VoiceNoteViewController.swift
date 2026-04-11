@@ -2,107 +2,24 @@ import Domain
 import UIKit
 
 public final class VoiceNoteViewController: UIViewController {
-    // MARK: - Section / Item
-
-    private enum Section: Int, CaseIterable {
-        case metadata
-        case keyPoints
-        case keywords
-        case scripts
-    }
-
-    private enum Item: Hashable {
-        case metadata
-        case keyPoint(number: Int, text: String)
-        case keywords
-        case script(index: Int)
-    }
-
-    // MARK: - Properties
+    typealias Section = VoiceNoteViewModel.Section
+    typealias Item = VoiceNoteViewModel.Item
 
     private let viewModel: VoiceNoteViewModel
-    private var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
+    private lazy var dataSource = makeDataSource()
 
     // MARK: - UI Components
 
-    private let bgImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.backgroundColor = UIColor.gray0
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
+    private let playerView = AudioPlayerView()
+    private let topBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
+    private lazy var segmentedControl = UnderlineSegmentedControl(items: [Section.keyPoints, .keywords, .scripts]
+        .compactMap(\.title))
 
-    /// 네비게이션 및 탭 영역 딤 처리 뷰
-    private let topBlurView: UIVisualEffectView = {
-        let view = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
-    /// Tab Bar
-    private let tabStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.distribution = .fillEqually
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
-    }()
-
-    private let aiSummaryTabButton = createTabButton(title: "AI 요약", isSelected: true)
-    private let keywordTabButton = createTabButton(title: "키워드", isSelected: false)
-    private let scriptTabButton = createTabButton(title: "스크립트", isSelected: false)
-
-    /// Main Content
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
-        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 200, right: 0)
-        collectionView.verticalScrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 200, right: 0)
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
-    }()
-
-    private let playerBackgroundView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.gray0
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
-    private let playButton: UIButton = {
-        let button = UIButton(type: .system)
-        let configuration = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
-        button.setImage(UIImage(systemName: "play.fill", withConfiguration: configuration), for: .normal)
-        button.tintColor = .white
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-
-    private let rewindButton: UIButton = {
-        let button = UIButton(type: .system)
-        let configuration = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
-        button.setImage(UIImage(systemName: "gobackward.15", withConfiguration: configuration), for: .normal)
-        button.tintColor = .white
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-
-    private let forwardButton: UIButton = {
-        let button = UIButton(type: .system)
-        let configuration = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
-        button.setImage(UIImage(systemName: "goforward.15", withConfiguration: configuration), for: .normal)
-        button.tintColor = .white
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-
-    private let progressBar: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.gray100
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
     }()
 
     // MARK: - Init
@@ -122,18 +39,36 @@ public final class VoiceNoteViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        configureDataSource()
         applySnapshot()
-        viewModel.startAnalysis()
+        observePlaybackState()
+        viewModel.send(.view(.onAppear))
+    }
+
+    override public func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        viewModel.send(.view(.onDisappear))
     }
 
     override public func updateProperties() {
         super.updateProperties()
-        _ = viewModel.analysisState
-        _ = viewModel.folderName
-        applySnapshot()
-        if let message = viewModel.errorMessage {
-            showErrorAlert(message: message)
+        if let errorMessage = viewModel.state.errorMessage {
+            showErrorAlert(message: errorMessage)
+        } else if viewModel.state.analysisState == .completed {
+            applySnapshot()
+        } else {
+            var snapshot = dataSource.snapshot()
+            snapshot.reconfigureItems([.metadata])
+            dataSource.apply(snapshot, animatingDifferences: false)
+        }
+    }
+
+    private func observePlaybackState() {
+        withObservationTracking {
+            playerView.apply(viewModel.state.currentPlaybackState)
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.observePlaybackState()
+            }
         }
     }
 }
@@ -144,207 +79,98 @@ private extension VoiceNoteViewController {
     func setupUI() {
         view.backgroundColor = UIColor.gray0
 
-        view.addSubview(bgImageView)
-        NSLayoutConstraint.activate([
-            bgImageView.topAnchor.constraint(equalTo: view.topAnchor),
-            bgImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bgImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bgImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-
         view.addSubview(collectionView)
-        view.addSubview(playerBackgroundView)
-        view.addSubview(progressBar)
-        playerBackgroundView.addSubview(rewindButton)
-        playerBackgroundView.addSubview(forwardButton)
-        view.addSubview(playButton)
+        view.addSubview(playerView)
         view.addSubview(topBlurView)
-        view.addSubview(tabStackView)
+        view.addSubview(segmentedControl)
 
         setupConstraints()
         setupNavigationBar()
         setupTabBar()
+        setupPlayerView()
     }
 
     func setupConstraints() {
+        for subview in [collectionView, playerView, topBlurView, segmentedControl] {
+            subview.translatesAutoresizingMaskIntoConstraints = false
+        }
+
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: tabStackView.bottomAnchor),
+            collectionView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: playerView.topAnchor),
 
             topBlurView.topAnchor.constraint(equalTo: view.topAnchor),
             topBlurView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topBlurView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topBlurView.bottomAnchor.constraint(equalTo: tabStackView.bottomAnchor),
+            topBlurView.bottomAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
 
-            tabStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            tabStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tabStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tabStackView.heightAnchor.constraint(equalToConstant: 42),
+            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            segmentedControl.heightAnchor.constraint(equalToConstant: 42),
 
-            playerBackgroundView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            playerBackgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            playerBackgroundView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            playerBackgroundView.heightAnchor.constraint(equalToConstant: 136),
-
-            progressBar.bottomAnchor.constraint(equalTo: playerBackgroundView.topAnchor),
-            progressBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            progressBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            progressBar.heightAnchor.constraint(equalToConstant: 6),
-
-            playButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            playButton.centerYAnchor.constraint(equalTo: playerBackgroundView.centerYAnchor, constant: -10),
-            playButton.widthAnchor.constraint(equalToConstant: 120),
-            playButton.heightAnchor.constraint(equalToConstant: 60),
-
-            rewindButton.trailingAnchor.constraint(equalTo: playButton.leadingAnchor, constant: -16),
-            rewindButton.centerYAnchor.constraint(equalTo: playerBackgroundView.centerYAnchor, constant: -10),
-            rewindButton.widthAnchor.constraint(equalToConstant: 60),
-            rewindButton.heightAnchor.constraint(equalToConstant: 60),
-
-            forwardButton.leadingAnchor.constraint(equalTo: playButton.trailingAnchor, constant: 16),
-            forwardButton.centerYAnchor.constraint(equalTo: rewindButton.centerYAnchor),
-            forwardButton.widthAnchor.constraint(equalToConstant: 60),
-            forwardButton.heightAnchor.constraint(equalToConstant: 60)
+            playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
     }
 
     func setupNavigationBar() {
-        let titleLabel = UILabel()
-        titleLabel.setTypography(text: viewModel.title, style: .header2)
-        titleLabel.textColor = .white
-        navigationItem.titleView = titleLabel
+        title = viewModel.state.title
 
-        let moreButton = UIButton(type: .system)
-        moreButton.setImage(
-            UIImage(systemName: "ellipsis")?.withConfiguration(UIImage.SymbolConfiguration(weight: .medium)),
-            for: .normal
-        )
-        moreButton.tintColor = .white
-        moreButton.transform = CGAffineTransform(rotationAngle: .pi / 2)
-
+        let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), style: .plain, target: nil, action: nil)
         let searchItem = UIBarButtonItem(
-            image: UIImage(systemName: "magnifyingglass")?
-                .withConfiguration(UIImage.SymbolConfiguration(weight: .medium)),
+            image: UIImage(systemName: "magnifyingglass"),
             style: .plain,
             target: nil,
             action: nil
         )
-        navigationItem.rightBarButtonItems = [UIBarButtonItem(customView: moreButton), searchItem]
+
+        navigationItem.rightBarButtonItems = [moreItem, searchItem]
+        navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
     }
 
     func setupTabBar() {
-        tabStackView.addArrangedSubview(aiSummaryTabButton)
-        tabStackView.addArrangedSubview(keywordTabButton)
-        tabStackView.addArrangedSubview(scriptTabButton)
+        segmentedControl.addAction(UIAction { [weak self] action in
+            guard let self, let sender = action.sender as? UnderlineSegmentedControl else { return }
+            let sections: [Section] = [.keyPoints, .keywords, .scripts]
+            let index = sender.selectedSegmentIndex
+            guard index < sections.count else { return }
+            let section = sections[index]
+            scrollToSection(section: section)
+        }, for: .valueChanged)
+    }
 
-        for tab in [aiSummaryTabButton, keywordTabButton, scriptTabButton] {
-            tab.isUserInteractionEnabled = true
-            tab.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tabTapped(_:))))
+    func setupPlayerView() {
+        playerView.onPlayPause = { [weak self] in
+            self?.viewModel.send(.view(.playPauseButtonTapped))
+        }
+        playerView.onRewind = { [weak self] in
+            self?.viewModel.send(.view(.rewindButtonTapped))
+        }
+        playerView.onForward = { [weak self] in
+            self?.viewModel.send(.view(.forwardButtonTapped))
+        }
+        playerView.onSeekBegan = { [weak self] in
+            self?.viewModel.send(.view(.seekBegan))
+        }
+        playerView.onSeekEnded = { [weak self] time in
+            self?.viewModel.send(.view(.seekEnded(time)))
         }
     }
 }
 
-// MARK: - CollectionView Layout & DataSource
+// MARK: - Alert
 
 private extension VoiceNoteViewController {
-    func makeLayout() -> UICollectionViewLayout {
-        UICollectionViewCompositionalLayout { sectionIndex, environment in
-            var config = UICollectionLayoutListConfiguration(appearance: .plain)
-            config.backgroundColor = .clear
-            config.showsSeparators = false
-            config.headerMode = Section(rawValue: sectionIndex) == .metadata ? .none : .supplementary
-
-            let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
-            section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 32, trailing: 20)
-            if Section(rawValue: sectionIndex) == .keyPoints {
-                section.interGroupSpacing = 6
-            }
-            return section
-        }
-    }
-
-    func configureDataSource() {
-        let metadataCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
-            cell.contentConfiguration = MetadataContentConfiguration(
-                folderName: self?.viewModel.folderName ?? "",
-                date: self?.viewModel.metadataText1 ?? "",
-                duration: self?.viewModel.metadataText2 ?? ""
-            )
-        }
-
-        let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case .keyPoint(let number, let text) = item else { return }
-            cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
-        }
-
-        let keywordsCellReg = UICollectionView.CellRegistration<KeywordsCell, Item> { [weak self] cell, _, _ in
-            cell.contentConfiguration = KeywordsContentConfiguration(
-                keywords: self?.viewModel.keywords ?? []
-            )
-        }
-
-        let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard let self, case .script(let index) = item else { return }
-            let section = viewModel.scriptSections[index]
-            cell.contentConfiguration = ScriptContentConfiguration(
-                timestamp: section.timestamp,
-                paragraphs: section.paragraphs
-            )
-        }
-
-        dataSource = UICollectionViewDiffableDataSource(collectionView: collectionView) { col, indexPath, item in
-            switch item {
-            case .metadata:
-                return col.dequeueConfiguredReusableCell(using: metadataCellReg, for: indexPath, item: item)
-            case .keyPoint:
-                return col.dequeueConfiguredReusableCell(using: keyPointCellReg, for: indexPath, item: item)
-            case .keywords:
-                return col.dequeueConfiguredReusableCell(using: keywordsCellReg, for: indexPath, item: item)
-            case .script:
-                return col.dequeueConfiguredReusableCell(using: scriptCellReg, for: indexPath, item: item)
-            }
-        }
-
-        configureSupplementaryProvider()
-    }
-
-    func configureSupplementaryProvider() {
-        let headerReg = UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView>(
-            elementKind: UICollectionView.elementKindSectionHeader
-        ) { header, _, indexPath in
-            switch Section(rawValue: indexPath.section) {
-            case .keyPoints:
-                let chip = ChipView(icon: UIImage(systemName: "arrow.clockwise"), text: "재생성")
-                header.configure(title: "핵심 포인트", trailingView: chip)
-            case .keywords: header.configure(title: "키워드")
-            case .scripts: header.configure(title: "스크립트")
-            default: break
-            }
-        }
-        dataSource.supplementaryViewProvider = { col, _, indexPath in
-            col.dequeueConfiguredReusableSupplementary(using: headerReg, for: indexPath)
-        }
-    }
-
-    func applySnapshot() {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        snapshot.appendSections(Section.allCases)
-        snapshot.appendItems([.metadata], toSection: .metadata)
-        snapshot.appendItems(
-            viewModel.keyPoints.map { .keyPoint(number: $0.number, text: $0.text) },
-            toSection: .keyPoints
-        )
-        snapshot.appendItems([.keywords], toSection: .keywords)
-        snapshot.appendItems(viewModel.scriptSections.indices.map { .script(index: $0) }, toSection: .scripts)
-        snapshot.reconfigureItems([.metadata, .keywords])
-        dataSource.apply(snapshot, animatingDifferences: true)
-    }
-
     func showErrorAlert(message: String) {
-        let alert = UIAlertController(title: "분석 실패", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        guard presentedViewController == nil else { return }
+        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .default) { [weak self] _ in
+            self?.viewModel.send(.internal(.errorDismissed))
+        })
         present(alert, animated: true)
     }
 }
@@ -352,32 +178,8 @@ private extension VoiceNoteViewController {
 // MARK: - Tab Actions
 
 private extension VoiceNoteViewController {
-    @objc
-    func tabTapped(_ gesture: UITapGestureRecognizer) {
-        let tabs = [aiSummaryTabButton, keywordTabButton, scriptTabButton]
-        guard let tapped = gesture.view,
-              let index = tabs.firstIndex(where: { $0 === tapped }) else { return }
-        updateTabSelection(index: index)
-        scrollToSection(index: index)
-    }
-
-    func updateTabSelection(index: Int) {
-        let tabs = [aiSummaryTabButton, keywordTabButton, scriptTabButton]
-        for (idx, tab) in tabs.enumerated() {
-            let isSelected = idx == index
-            (tab.viewWithTag(1) as? UILabel)?.font = UIFont.systemFont(
-                ofSize: 16,
-                weight: isSelected ? .bold : .regular
-            )
-            (tab.viewWithTag(1) as? UILabel)?.textColor = isSelected ? .white : UIColor.gray600
-            tab.viewWithTag(2)?.isHidden = !isSelected
-        }
-    }
-
-    func scrollToSection(index: Int) {
-        // section 0 = metadata, 탭 index와 섹션 offset 1 차이
-        let sectionIndex = index + 1
-        guard sectionIndex < Section.allCases.count else { return }
+    func scrollToSection(section: Section) {
+        let sectionIndex = section.rawValue
         let headerIndexPath = IndexPath(item: 0, section: sectionIndex)
 
         if let attributes = collectionView.collectionViewLayout.layoutAttributesForSupplementaryView(
@@ -396,35 +198,101 @@ private extension VoiceNoteViewController {
     }
 }
 
-// MARK: - Factory Methods
+// MARK: - CollectionView Layout & DataSource
 
 private extension VoiceNoteViewController {
-    static func createTabButton(title: String, isSelected: Bool) -> UIView {
-        let view = UIView()
+    func makeLayout() -> UICollectionViewLayout {
+        UICollectionViewCompositionalLayout { sectionIndex, environment in
+            var config = UICollectionLayoutListConfiguration(appearance: .plain)
+            config.backgroundColor = .clear
+            config.showsSeparators = false
+            config.headerMode = Section(rawValue: sectionIndex) == .metadata ? .none : .supplementary
 
-        let label = UILabel()
-        label.tag = 1
-        label.text = title
-        label.font = UIFont.systemFont(ofSize: 16, weight: isSelected ? .bold : .regular)
-        label.textColor = isSelected ? .white : UIColor.gray600
-        label.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(label)
+            let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
+            section.boundarySupplementaryItems.forEach { $0.pinToVisibleBounds = false }
+            return section
+        }
+    }
 
-        let indicator = UIView()
-        indicator.tag = 2
-        indicator.backgroundColor = UIColor.point700
-        indicator.isHidden = !isSelected
-        indicator.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(indicator)
+    func makeDataSource() -> UICollectionViewDiffableDataSource<Section, Item> {
+        let metadataCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
+            cell.contentConfiguration = MetadataContentConfiguration(
+                folderName: self?.viewModel.state.folderName ?? "",
+                date: self?.viewModel.state.metadataText1 ?? "",
+                duration: self?.viewModel.state.metadataText2 ?? ""
+            )
+        }
 
-        NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            indicator.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            indicator.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            indicator.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            indicator.heightAnchor.constraint(equalToConstant: 2)
-        ])
-        return view
+        let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
+            guard case .keyPoint(let number, let text) = item else { return }
+            cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
+        }
+
+        let keywordsCellReg = UICollectionView.CellRegistration<KeywordsCell, Item> { [weak self] cell, _, _ in
+            cell.contentConfiguration = KeywordsContentConfiguration(
+                keywords: self?.viewModel.state.keywords ?? []
+            )
+        }
+
+        let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
+            guard let self, case .script(let index) = item else { return }
+            let section = viewModel.state.scriptSections[index]
+            cell.contentConfiguration = ScriptContentConfiguration(
+                timestamp: section.timestamp,
+                paragraphs: section.paragraphs
+            )
+        }
+
+        let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
+            collectionView: collectionView
+        ) { col, indexPath, item in
+            switch item {
+            case .metadata:
+                return col.dequeueConfiguredReusableCell(using: metadataCellReg, for: indexPath, item: item)
+            case .keyPoint:
+                return col.dequeueConfiguredReusableCell(using: keyPointCellReg, for: indexPath, item: item)
+            case .keywords:
+                return col.dequeueConfiguredReusableCell(using: keywordsCellReg, for: indexPath, item: item)
+            case .script:
+                return col.dequeueConfiguredReusableCell(using: scriptCellReg, for: indexPath, item: item)
+            }
+        }
+
+        let headerReg = makeHeaderRegistration()
+        dataSource.supplementaryViewProvider = { col, _, indexPath in
+            col.dequeueConfiguredReusableSupplementary(using: headerReg, for: indexPath)
+        }
+
+        return dataSource
+    }
+
+    func makeHeaderRegistration() -> UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView> {
+        UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView>(
+            elementKind: UICollectionView.elementKindSectionHeader
+        ) { header, _, indexPath in
+            guard let section = Section(rawValue: indexPath.section),
+                  let title = section.headerTitle else { return }
+
+            if section == .keyPoints {
+                let chip = ChipView(icon: UIImage(systemName: "arrow.clockwise"), text: "재생성")
+                header.configure(title: title, trailingView: chip)
+            } else {
+                header.configure(title: title)
+            }
+        }
+    }
+
+    func applySnapshot() {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
+        snapshot.appendSections(Section.allCases)
+        snapshot.appendItems([.metadata], toSection: .metadata)
+        snapshot.appendItems(
+            viewModel.state.keyPoints.map { .keyPoint(number: $0.number, text: $0.text) },
+            toSection: .keyPoints
+        )
+        snapshot.appendItems([.keywords], toSection: .keywords)
+        snapshot.appendItems(viewModel.state.scriptSections.indices.map { .script(index: $0) }, toSection: .scripts)
+        snapshot.reconfigureItems([.metadata, .keywords])
+        dataSource.apply(snapshot, animatingDifferences: true)
     }
 }

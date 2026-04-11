@@ -10,4 +10,11 @@ public extension Date {
             )
         )
     }
+
+    func toString(format: String, localeIdentifier: String = "ko_KR") -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: localeIdentifier)
+        formatter.dateFormat = format
+        return formatter.string(from: self)
+    }
 }

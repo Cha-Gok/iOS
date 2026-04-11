@@ -51,21 +51,23 @@ private let appTarget = Target.target(
     ),
     sources: ["Sources/**/*.swift"],
     resources: ["Resources/**"],
-    scripts: [
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--config", "../.swiftformat", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        )
-    ],
     dependencies: [
         .project(target: "Core", path: "../Core"),
         .project(target: "Domain", path: "../Domain"),
         .project(target: "Presentation", path: "../Presentation"),
         .project(target: "Data", path: "../Data")
     ],
-    settings: settings
+    settings: .settings(
+        configurations: [
+            .debug(name: "Debug", settings: [
+                "PROVISIONING_PROFILE_SPECIFIER": "match Development com.yongms.ChaGokChaGok"
+            ]),
+            .release(name: "Release", settings: [
+                "PROVISIONING_PROFILE_SPECIFIER": "match AppStore com.yongms.ChaGokChaGok"
+            ])
+        ],
+        defaultSettings: .recommended
+    )
 )
 
 private let appTestsTarget = Target.target(
@@ -76,14 +78,6 @@ private let appTestsTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Tests/**/*.swift"],
-    scripts: [
-        .pre(
-            tool: "swiftformat",
-            arguments: ["--config", "../.swiftformat", "."],
-            name: "SwiftFormat",
-            basedOnDependencyAnalysis: false
-        )
-    ],
     dependencies: [.target(name: "App")]
 )
 

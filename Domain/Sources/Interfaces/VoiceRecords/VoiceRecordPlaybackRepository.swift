@@ -1,9 +1,10 @@
 import Foundation
 
+@MainActor
 public protocol VoiceRecordPlaybackRepository: Sendable {
-    func prepare(audioFileURL: URL) async throws(VoiceRecordPlaybackRepositoryError) -> AsyncStream<AudioPlaybackState>
-    func play() async throws(VoiceRecordPlaybackRepositoryError)
-    func pause() async throws(VoiceRecordPlaybackRepositoryError)
-    func seek(to time: TimeInterval) async throws(VoiceRecordPlaybackRepositoryError)
-    func stop() async throws(VoiceRecordPlaybackRepositoryError)
+    func prepare(audioFileURL: URL) throws(VoiceRecordPlaybackRepositoryError) -> AsyncStream<AudioPlaybackState>
+    func play() throws(VoiceRecordPlaybackRepositoryError)
+    func pause() throws(VoiceRecordPlaybackRepositoryError)
+    func seek(to time: TimeInterval) throws(VoiceRecordPlaybackRepositoryError)
+    func stop() throws(VoiceRecordPlaybackRepositoryError)
 }

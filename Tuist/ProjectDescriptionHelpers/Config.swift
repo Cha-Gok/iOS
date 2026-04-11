@@ -17,9 +17,11 @@ public let settings: Settings = .settings(
         "CURRENT_PROJECT_VERSION": SettingValue(stringLiteral: build),
         // iPhone 전용 앱 (iPad 아이콘 불필요)
         "TARGETED_DEVICE_FAMILY": "1",
-        // CI 시뮬레이터 빌드 시 Development Team 없이 빌드 가능
-        "CODE_SIGN_IDENTITY": "",
-        "CODE_SIGNING_REQUIRED": "NO",
+        // 실제 기기 빌드를 위한 사이닝 설정
+        "DEVELOPMENT_TEAM": "78QTJM9AD7",
+        "CODE_SIGN_STYLE": "Manual",
+        "CODE_SIGNING_REQUIRED": "YES",
+        "CODE_SIGNING_ALLOWED": "YES",
         // 에셋 카탈로그 → Swift 심볼 자동 생성 (타입 세이프 접근)
         "ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS": "YES",
         // String Catalog → Swift 심볼 생성 (Xcode "Enable String Catalog Symbol Generation")

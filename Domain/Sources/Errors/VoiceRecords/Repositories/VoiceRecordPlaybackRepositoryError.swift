@@ -7,7 +7,6 @@ public enum VoiceRecordPlaybackRepositoryError: LocalizedError, Sendable {
     case pauseFailed
     case seekFailed
     case stopFailed
-    case cancelled
     case unknown(any Error)
 
     public var errorDescription: String? {
@@ -24,8 +23,6 @@ public enum VoiceRecordPlaybackRepositoryError: LocalizedError, Sendable {
             return "오디오 위치를 이동할 수 없습니다."
         case .stopFailed:
             return "오디오 재생을 중지할 수 없습니다."
-        case .cancelled:
-            return nil
         case .unknown(let error):
             return "알 수 없는 에러가 발생했습니다: \(error.localizedDescription)"
         }

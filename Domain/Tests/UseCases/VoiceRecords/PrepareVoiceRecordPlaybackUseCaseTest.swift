@@ -2,8 +2,10 @@
 import DomainTesting
 import XCTest
 
+@MainActor
 final class PrepareVoiceRecordPlaybackUseCaseTest: XCTestCase {}
 
+@MainActor
 extension PrepareVoiceRecordPlaybackUseCaseTest {
     func test_정상상태_prepare호출시_preparedPlayback을반환한다() async throws {
         let repository = MockVoiceRecordPlaybackRepository()
@@ -13,27 +15,27 @@ extension PrepareVoiceRecordPlaybackUseCaseTest {
             continuation.yield(.stub(duration: 42))
             continuation.finish()
         }
-        await repository.setPrepareResult(.success(stream))
-        await repository.expectPrepare(callCount: 1)
+        repository.setPrepareResult(.success(stream))
+        repository.expectPrepare(callCount: 1)
 
-        let result = try await sut.execute(audioFileURL: audioURL)
-        let preparedAudioFileURL = await repository.preparedAudioFileURL
+        let result = try sut.execute(audioFileURL: audioURL)
+        let preparedAudioFileURL = repository.preparedAudioFileURL
         var iterator = result.makeAsyncIterator()
         let initialState = await iterator.next()
 
         XCTAssertEqual(initialState, .stub(duration: 42))
         XCTAssertEqual(preparedAudioFileURL, audioURL)
-        await repository.verify()
+        repository.verify()
     }
 
-    func test_리포지토리prepare실패상태_prepare호출시_prepareFailed에러를던진다() async {
+    func test_리포지토리prepare실패상태_prepare호출시_prepareFailed에러를던진다() {
         let repository = MockVoiceRecordPlaybackRepository()
         let sut = DefaultPrepareVoiceRecordPlaybackUseCase(repository: repository)
-        await repository.setPrepareResult(.failure(.prepareFailed))
-        await repository.expectPrepare(callCount: 1)
+        repository.setPrepareResult(.failure(.prepareFailed))
+        repository.expectPrepare(callCount: 1)
 
         do {
-            _ = try await sut.execute(audioFileURL: URL(fileURLWithPath: "/tmp/test.m4a"))
+            _ = try sut.execute(audioFileURL: URL(fileURLWithPath: "/tmp/test.m4a"))
             XCTFail("PrepareVoiceRecordPlaybackUseCaseError.prepareFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .prepareFailed = error else {
@@ -41,6 +43,6 @@ extension PrepareVoiceRecordPlaybackUseCaseTest {
             }
         }
 
-        await repository.verify()
+        repository.verify()
     }
 }

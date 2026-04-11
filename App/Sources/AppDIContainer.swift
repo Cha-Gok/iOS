@@ -12,6 +12,7 @@ public final class AppDIContainer {
     /// InfraStructure
     private lazy var store = UserDefaultsKeyValueStoreService()
     private lazy var audioService = AudioService()
+    private lazy var audioPlaybackService = AudioPlaybackPlayerService()
     private lazy var storageService = FileManagerStorageService()
     private let localDataBase: CoreDataLocalDataBase
 
@@ -20,6 +21,9 @@ public final class AppDIContainer {
     private lazy var voiceRecordRepository = DefaultVoiceRecordRepository(
         audioService: audioService,
         storageService: storageService
+    )
+    private lazy var voiceRecordPlaybackRepository = DefaultVoiceRecordPlaybackRepository(
+        audioPlaybackService: audioPlaybackService
     )
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
@@ -76,6 +80,21 @@ public final class AppDIContainer {
     private lazy var audioToSummaryUseCase = DefaultAudioToSummaryUseCase(
         sttRepository: sttRepository,
         summaryRepository: summaryRepository
+    )
+    private lazy var prepareVoiceRecordPlaybackUseCase = DefaultPrepareVoiceRecordPlaybackUseCase(
+        repository: voiceRecordPlaybackRepository
+    )
+    private lazy var playVoiceRecordUseCase = DefaultPlayVoiceRecordUseCase(
+        repository: voiceRecordPlaybackRepository
+    )
+    private lazy var pauseVoiceRecordPlaybackUseCase = DefaultPauseVoiceRecordPlaybackUseCase(
+        repository: voiceRecordPlaybackRepository
+    )
+    private lazy var seekVoiceRecordPlaybackUseCase = DefaultSeekVoiceRecordPlaybackUseCase(
+        repository: voiceRecordPlaybackRepository
+    )
+    private lazy var stopVoiceRecordPlaybackUseCase = DefaultStopVoiceRecordPlaybackUseCase(
+        repository: voiceRecordPlaybackRepository
     )
 
     public init() throws {
@@ -135,7 +154,12 @@ public final class AppDIContainer {
             audioToSummaryUseCase: audioToSummaryUseCase,
             updateVoiceNoteUseCase: updateVoiceNoteUseCase,
             fetchLanguageUseCase: fetchLanguageUseCase,
-            fetchFolderUseCase: fetchFolderUseCase
+            fetchFolderUseCase: fetchFolderUseCase,
+            prepareVoiceRecordPlaybackUseCase: prepareVoiceRecordPlaybackUseCase,
+            playVoiceRecordUseCase: playVoiceRecordUseCase,
+            pauseVoiceRecordPlaybackUseCase: pauseVoiceRecordPlaybackUseCase,
+            seekVoiceRecordPlaybackUseCase: seekVoiceRecordPlaybackUseCase,
+            stopVoiceRecordPlaybackUseCase: stopVoiceRecordPlaybackUseCase
         )
     }
 

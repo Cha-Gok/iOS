@@ -3,7 +3,8 @@ import Domain
 import Foundation
 import XCTest
 
-actor MockAudioPlaybackService: AudioPlaybackService {
+@MainActor
+final class MockAudioPlaybackService: AudioPlaybackService {
     private var prepareResult: Result<AsyncStream<AudioPlaybackState>, AudioPlaybackServiceError>?
     private var playResult: Result<Void, AudioPlaybackServiceError>?
     private var pauseResult: Result<Void, AudioPlaybackServiceError>?
@@ -83,7 +84,7 @@ actor MockAudioPlaybackService: AudioPlaybackService {
         }
     }
 
-    func preparePlayback(at fileURL: URL) async throws(AudioPlaybackServiceError) -> AsyncStream<AudioPlaybackState> {
+    func preparePlayback(at fileURL: URL) throws(AudioPlaybackServiceError) -> AsyncStream<AudioPlaybackState> {
         prepareCallCount += 1
         preparedURL = fileURL
         guard let prepareResult else {
@@ -93,7 +94,7 @@ actor MockAudioPlaybackService: AudioPlaybackService {
         return try prepareResult.get()
     }
 
-    func play() async throws(AudioPlaybackServiceError) {
+    func play() throws(AudioPlaybackServiceError) {
         playCallCount += 1
         guard let playResult else {
             XCTFail("playResult가 설정되지 않았습니다.")
@@ -102,7 +103,7 @@ actor MockAudioPlaybackService: AudioPlaybackService {
         _ = try playResult.get()
     }
 
-    func pause() async throws(AudioPlaybackServiceError) {
+    func pause() throws(AudioPlaybackServiceError) {
         pauseCallCount += 1
         guard let pauseResult else {
             XCTFail("pauseResult가 설정되지 않았습니다.")
@@ -111,7 +112,7 @@ actor MockAudioPlaybackService: AudioPlaybackService {
         _ = try pauseResult.get()
     }
 
-    func seek(to time: TimeInterval) async throws(AudioPlaybackServiceError) {
+    func seek(to time: TimeInterval) throws(AudioPlaybackServiceError) {
         seekCallCount += 1
         lastSeekTime = time
         guard let seekResult else {
@@ -121,7 +122,7 @@ actor MockAudioPlaybackService: AudioPlaybackService {
         _ = try seekResult.get()
     }
 
-    func stop() async throws(AudioPlaybackServiceError) {
+    func stop() throws(AudioPlaybackServiceError) {
         stopCallCount += 1
         guard let stopResult else {
             XCTFail("stopResult가 설정되지 않았습니다.")

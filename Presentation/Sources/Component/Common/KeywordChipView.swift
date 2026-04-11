@@ -11,6 +11,7 @@ public final class KeywordChipView: UIView {
 
     public init(text: String) {
         super.init(frame: .zero)
+        translatesAutoresizingMaskIntoConstraints = false
         setupUI()
         label.text = text
     }

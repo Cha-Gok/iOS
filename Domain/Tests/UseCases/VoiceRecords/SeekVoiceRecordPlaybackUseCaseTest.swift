@@ -2,30 +2,32 @@
 import DomainTesting
 import XCTest
 
+@MainActor
 final class SeekVoiceRecordPlaybackUseCaseTest: XCTestCase {}
 
+@MainActor
 extension SeekVoiceRecordPlaybackUseCaseTest {
-    func test_정상상태_seek호출시_repositorySeek를호출한다() async throws {
+    func test_정상상태_seek호출시_repositorySeek를호출한다() throws {
         let repository = MockVoiceRecordPlaybackRepository()
         let sut = DefaultSeekVoiceRecordPlaybackUseCase(repository: repository)
-        await repository.setSeekResult(.success(()))
-        await repository.expectSeek(callCount: 1)
+        repository.setSeekResult(.success(()))
+        repository.expectSeek(callCount: 1)
 
-        try await sut.execute(time: 15)
-        let lastSeekTime = await repository.lastSeekTime
+        try sut.execute(time: 15)
+        let lastSeekTime = repository.lastSeekTime
 
         XCTAssertEqual(lastSeekTime, 15)
-        await repository.verify()
+        repository.verify()
     }
 
-    func test_리포지토리seek실패상태_seek호출시_seekFailed에러를던진다() async {
+    func test_리포지토리seek실패상태_seek호출시_seekFailed에러를던진다() {
         let repository = MockVoiceRecordPlaybackRepository()
         let sut = DefaultSeekVoiceRecordPlaybackUseCase(repository: repository)
-        await repository.setSeekResult(.failure(.seekFailed))
-        await repository.expectSeek(callCount: 1)
+        repository.setSeekResult(.failure(.seekFailed))
+        repository.expectSeek(callCount: 1)
 
         do {
-            try await sut.execute(time: 15)
+            try sut.execute(time: 15)
             XCTFail("SeekVoiceRecordPlaybackUseCaseError.seekFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .seekFailed = error else {
@@ -33,6 +35,6 @@ extension SeekVoiceRecordPlaybackUseCaseTest {
             }
         }
 
-        await repository.verify()
+        repository.verify()
     }
 }

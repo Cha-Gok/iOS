@@ -1,10 +1,12 @@
 import Core
 import Foundation
 
+@MainActor
 public protocol SeekVoiceRecordPlaybackUseCase: Sendable {
-    func execute(time: TimeInterval) async throws(SeekVoiceRecordPlaybackUseCaseError)
+    func execute(time: TimeInterval) throws(SeekVoiceRecordPlaybackUseCaseError)
 }
 
+@MainActor
 public struct DefaultSeekVoiceRecordPlaybackUseCase: SeekVoiceRecordPlaybackUseCase {
     private let repository: VoiceRecordPlaybackRepository
 
@@ -12,10 +14,9 @@ public struct DefaultSeekVoiceRecordPlaybackUseCase: SeekVoiceRecordPlaybackUseC
         self.repository = repository
     }
 
-    public func execute(time: TimeInterval) async throws(SeekVoiceRecordPlaybackUseCaseError) {
-        if Task.isCancelled { throw .cancelled }
+    public func execute(time: TimeInterval) throws(SeekVoiceRecordPlaybackUseCaseError) {
         do {
-            try await repository.seek(to: time)
+            try repository.seek(to: time)
         } catch {
             AppLogger.error(error)
             throw SeekVoiceRecordPlaybackUseCaseError(error)
