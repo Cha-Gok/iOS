@@ -331,15 +331,7 @@ public extension VoiceNoteViewModel {
         }
 
         public var scriptSections: [ScriptSection] {
-            guard let transcript = voiceNote.transcript else { return [] }
-            // 레거시 데이터 (세그먼트 없음) — 기존 방식 유지
-            guard !transcript.segments.isEmpty else {
-                let paragraphs = transcript.text
-                    .components(separatedBy: "\n\n")
-                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                    .filter { !$0.isEmpty }
-                return [ScriptSection(timestamp: 0, paragraphs: paragraphs)]
-            }
+            guard let transcript = voiceNote.transcript, !transcript.segments.isEmpty else { return [] }
             return Self.groupSegmentsIntoSections(transcript.segments)
         }
 
