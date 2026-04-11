@@ -31,6 +31,9 @@ public extension Constant {
     /// GlassButton Shadow Offset ( width, height )
     static let shadowOffsetWidth: CGFloat = 2
     static let shadowOffsetHeight: CGFloat = 2
+
+    /// GlassButton Floating Size
+    static let floatingButtonSize: CGFloat = 64
 }
 
 // MARK: - AlertView Constants

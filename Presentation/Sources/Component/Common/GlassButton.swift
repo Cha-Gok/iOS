@@ -7,11 +7,6 @@ final class GlassButton: UIButton {
     var isShadow: Bool = true
     var cornerRadius: CGFloat = Constant.cornerRadius
 
-    struct Border {
-        let color: UIColor
-        let width: CGFloat
-    }
-
     // MARK: - Initializer
 
     override init(frame: CGRect) {
@@ -21,7 +16,7 @@ final class GlassButton: UIButton {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
 
     // MARK: - Lifecycle
@@ -60,6 +55,10 @@ final class GlassButton: UIButton {
     override func updateConfiguration() {
         super.updateConfiguration()
         configuration?.background.cornerRadius = cornerRadius
+
+        if let unifiedView = configuration?.background.customView as? UnifiedGradientView {
+            unifiedView.updateCornerRadius(cornerRadius)
+        }
     }
 }
 
@@ -72,26 +71,29 @@ extension GlassButton {
         clipsToBounds = false
     }
 
-    /// GlassButton의 전반적인 디자인(텍스트, 폰트, 테두리, 배경색 등)을 세부적으로 구성합니다.
+    /// GlassButton의 전반적인 디자인(텍스트, 폰트, 테두리, 배경색, 이미지 등)을 세부적으로 구성합니다.
+    /// 단일 색상(Solid Color)뿐만 아니라 배열 형태의 그라데이션(Gradient) 색상 적용도 투명 효과와 함께 지원합니다.
     ///
     /// - Parameters:
-    ///   - title: 버튼 내부에 표시될 텍스트 문자열입니다.
+    ///   - title: 버튼 내부에 표시될 텍스트 문자열입니다. 타이틀이 필요 없을 경우 nil을 전달합니다.
     ///   - typography: 애플리케이션 공통 폰트 지정 열거형(`Typography`)으로 폰트 스타일을 적용합니다.
-    ///   - border: 필요에 따라 테두리(색상, 두께)를 지정하는 `Border` 구조체를 전달합니다. 옵셔널 값입니다.
-    ///   - backgroundColor: 버튼의 기본 배경색 (기본값: `.point600`).
-    ///   - foregroundColor: 버튼 텍스트의 기본 색상 (기본값: `.white`).
+    ///   - border: 필요에 따라 테두리를 지정하는 `Border` 구조체를 전달합니다. 단색 또는 그라데이션(`GradientSet`), 두께를 설정할 수 있습니다.
+    ///   - image: 버튼 내에 들어갈 아이콘 이미지(`ImageAsset`)를 지정합니다. 리소스 형식과 SFSymbol 형식을 모두 지정 가능합니다.
+    ///   - backgroundColor: 버튼의 배경색을 결정하는 `GradientSet` 열거형입니다. 단색 또는 여러 색상 배열의 그라데이션을 사용할 수 있습니다. (기본값:
+    /// `.color(.point600)`)
+    ///   - foregroundColor: 버튼 텍스트 및 이미지의 기본 색상입니다. (기본값: `.white`)
     func configure(
-        _ title: String,
+        _ title: String?,
         typography: Typography,
         border: Border? = nil,
-        backgroundColor: UIColor = .point600,
+        image: ImageAsset? = nil,
+        backgroundColor: GradientSet = .color(.point600),
         foregroundColor: UIColor = .white
     ) {
         var config: UIButton.Configuration = .prominentGlass()
 
         config.title = title
         config.baseForegroundColor = foregroundColor
-        config.baseBackgroundColor = backgroundColor
         config.background.cornerRadius = cornerRadius
         config.cornerStyle = .fixed
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
@@ -100,9 +102,55 @@ extension GlassButton {
             return outgoing
         }
 
+        if let image {
+            switch image.type {
+            case .resource:
+                config.image = UIImage(named: image.imageName)
+            case .system:
+                config.image = UIImage(systemName: image.imageName)
+            }
+        }
+
+        var needsCustomView = false
+        var bgColors: [UIColor]? = nil
+        var bgColor: UIColor? = nil
+        var borderColors: [UIColor]? = nil
+
+        switch backgroundColor {
+        case .color(let color):
+            bgColor = color
+            config.baseBackgroundColor = color
+        case .gradient(let colors):
+            bgColors = colors
+            config.baseBackgroundColor = .clear
+            needsCustomView = true
+        }
+
         if let border {
-            config.background.strokeColor = border.color
-            config.background.strokeWidth = border.width
+            switch border.color {
+            case .color(let color):
+                config.background.strokeColor = color
+                config.background.strokeWidth = border.width
+            case .gradient(let colors):
+                borderColors = colors
+                config.background.strokeWidth = 0
+                needsCustomView = true
+            }
+        }
+
+        if needsCustomView {
+            let unifiedView = UnifiedGradientView(
+                bgColor: bgColors == nil ? bgColor : nil,
+                bgColors: bgColors,
+                borderColors: borderColors,
+                borderWidth: border?.width ?? 0,
+                cornerRadius: cornerRadius
+            )
+            config.background.customView = unifiedView
+
+            if bgColors == nil {
+                config.baseBackgroundColor = .clear
+            }
         }
 
         configuration = config
@@ -121,6 +169,8 @@ extension GlassButton {
     }
 }
 
+// MARK: GlassButton Factory
+
 extension GlassButton {
     /// 기본 스타일의 GlassButton 인스턴스를 생성하여 반환합니다.
     /// - Parameter title: 버튼에 표시될 텍스트
@@ -130,8 +180,8 @@ extension GlassButton {
         btn.configure(
             title,
             typography: .subtitle1,
-            border: Border(color: UIColor.gray600, width: Constant.borderWidth),
-            backgroundColor: UIColor.point200.withAlphaComponent(Constant.backgroundOpacity),
+            border: Border(color: .color(UIColor.gray600), width: Constant.borderWidth),
+            backgroundColor: .color(UIColor.point200.withAlphaComponent(Constant.backgroundOpacity)),
             foregroundColor: UIColor.gray900
         )
 
@@ -146,7 +196,7 @@ extension GlassButton {
         btn.configure(
             title,
             typography: .subtitle1,
-            backgroundColor: UIColor.point600,
+            backgroundColor: .color(UIColor.point600),
             foregroundColor: .white
         )
 
@@ -161,7 +211,7 @@ extension GlassButton {
         btn.configure(
             title,
             typography: .subtitle1,
-            backgroundColor: UIColor.danger,
+            backgroundColor: .color(UIColor.danger),
             foregroundColor: .white
         )
         return btn
@@ -175,9 +225,129 @@ extension GlassButton {
         btn.configure(
             title,
             typography: .body1,
-            backgroundColor: UIColor.gray300,
+            backgroundColor: .color(UIColor.gray300),
             foregroundColor: UIColor.gray750
         )
         return btn
+    }
+
+    /// 64x64 크기의 둥근 플로팅 액션 버튼(FAB) 형태인 GlassButton 인스턴스를 생성하여 반환합니다.
+    /// 배경과 테두리에 기본적으로 음성 녹음 관련 그라데이션 컬러 매핑이 적용되어 있습니다.
+    ///
+    /// - Parameter image: 버튼 중앙에 표시할 아이콘 이미지 (`ImageAsset`)
+    /// - Returns: 기본 제약조건(Width, Height) 및 그라데이션 스타일이 적용된 GlassButton 인스턴스
+    static func floating(image: ImageAsset) -> GlassButton {
+        let btn = GlassButton()
+        btn.configure(
+            nil,
+            typography: .body1,
+            border: .init(color: .gradient([.point900, .point1000]), width: 1),
+            image: image,
+            backgroundColor: .gradient([.point800, .point600]),
+            foregroundColor: UIColor.gray950
+        )
+        btn.widthAnchor.constraint(equalToConstant: Constant.floatingButtonSize).isActive = true
+        btn.heightAnchor.constraint(equalToConstant: Constant.floatingButtonSize).isActive = true
+
+        return btn
+    }
+}
+
+// MARK: Data 구조
+
+extension GlassButton {
+    struct Border {
+        let color: GradientSet
+        let width: CGFloat
+    }
+
+    struct ImageAsset {
+        let imageName: String
+        let type: GlassImageType
+    }
+
+    enum GlassImageType {
+        case resource
+        case system
+    }
+
+    enum GradientSet {
+        case color(UIColor)
+        case gradient([UIColor])
+    }
+}
+
+// MARK: - Gradient 커스텀 뷰
+
+private final class UnifiedGradientView: UIView {
+    private let backgroundGradientLayer = CAGradientLayer()
+    private let borderGradientLayer = CAGradientLayer()
+    private let borderMaskLayer = CAShapeLayer()
+
+    private var currentCornerRadius: CGFloat
+
+    init(
+        bgColor: UIColor?,
+        bgColors: [UIColor]?,
+        borderColors: [UIColor]?,
+        borderWidth: CGFloat,
+        cornerRadius: CGFloat
+    ) {
+        currentCornerRadius = cornerRadius
+        super.init(frame: .zero)
+        isUserInteractionEnabled = false
+
+        if let bgColor {
+            backgroundColor = bgColor
+        }
+
+        if let bgColors {
+            backgroundGradientLayer.colors = bgColors.map(\.cgColor)
+            backgroundGradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+            backgroundGradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
+            layer.addSublayer(backgroundGradientLayer)
+        }
+
+        if let borderColors {
+            borderGradientLayer.colors = borderColors.map(\.cgColor)
+            borderGradientLayer.startPoint = CGPoint(x: 0.5, y: 1)
+            borderGradientLayer.endPoint = CGPoint(x: 0.5, y: 0)
+
+            borderMaskLayer.fillColor = UIColor.clear.cgColor
+            borderMaskLayer.strokeColor = UIColor.black.cgColor
+            borderMaskLayer.lineWidth = borderWidth
+            borderGradientLayer.mask = borderMaskLayer
+
+            layer.addSublayer(borderGradientLayer)
+        }
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    func updateCornerRadius(_ radius: CGFloat) {
+        currentCornerRadius = radius
+        setNeedsLayout()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        if backgroundGradientLayer.superlayer != nil {
+            backgroundGradientLayer.frame = bounds
+            backgroundGradientLayer.cornerRadius = currentCornerRadius
+        }
+
+        if borderGradientLayer.superlayer != nil {
+            borderGradientLayer.frame = bounds
+            let inset = borderMaskLayer.lineWidth / 2
+            let path = UIBezierPath(
+                roundedRect: bounds.insetBy(dx: inset, dy: inset),
+                cornerRadius: max(currentCornerRadius - inset, 0)
+            )
+            borderMaskLayer.path = path.cgPath
+        }
     }
 }
