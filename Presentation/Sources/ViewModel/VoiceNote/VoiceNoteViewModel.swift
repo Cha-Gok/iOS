@@ -13,8 +13,6 @@ public final class VoiceNoteViewModel {
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
-    @ObservationIgnored
-    private var wasPlayingBeforeSeek = false
 
     // MARK: - UseCases
 
@@ -79,15 +77,8 @@ public final class VoiceNoteViewModel {
                 seek(to: state.currentPlaybackState.currentTime - Policy.playbackSkipInterval)
             case .forwardButtonTapped:
                 seek(to: state.currentPlaybackState.currentTime + Policy.playbackSkipInterval)
-            case .seekBegan:
-                wasPlayingBeforeSeek = state.currentPlaybackState.status == .playing
-                if wasPlayingBeforeSeek { pause() }
-            case .seekEnded(let time):
+            case .seek(let time):
                 seek(to: time)
-                if wasPlayingBeforeSeek {
-                    wasPlayingBeforeSeek = false
-                    play()
-                }
             }
 
         case .internal(let internalAction):
@@ -251,8 +242,7 @@ public extension VoiceNoteViewModel {
             case playPauseButtonTapped
             case rewindButtonTapped
             case forwardButtonTapped
-            case seekBegan
-            case seekEnded(TimeInterval)
+            case seek(TimeInterval)
         }
 
         public enum Internal {

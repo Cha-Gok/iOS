@@ -82,19 +82,27 @@ public final class AudioPlaybackPlayerService: NSObject, AudioPlaybackService {
     public func seek(to time: TimeInterval) throws(AudioPlaybackServiceError) {
         guard let player else { throw .notPrepared }
 
+        let wasPlaying = player.isPlaying
+        if wasPlaying {
+            player.pause()
+            stopProgressTask()
+        }
+
         let clampedTime = min(max(0, time), player.duration)
         player.currentTime = clampedTime
 
-        // seek 후 상태는 재생 중 여부와 seek 위치로 결정
-        let status: AudioPlaybackState.Status = {
-            if player.isPlaying { return .playing }
-            if player.duration > 0, clampedTime >= player.duration { return .finished }
-            // 한 번도 재생하지 않은 상태에서 처음으로 seek하면 idle 유지
-            if playbackStatus == .idle, clampedTime == 0 { return .idle }
-            return .paused
-        }()
-
-        updateState(status: status, currentTime: clampedTime, duration: player.duration)
+        if wasPlaying {
+            guard player.play() else { throw .playFailed }
+            startProgressTask()
+            updateState(status: .playing, currentTime: clampedTime, duration: player.duration)
+        } else {
+            let status: AudioPlaybackState.Status = {
+                if player.duration > 0, clampedTime >= player.duration { return .finished }
+                if playbackStatus == .idle, clampedTime == 0 { return .idle }
+                return .paused
+            }()
+            updateState(status: status, currentTime: clampedTime, duration: player.duration)
+        }
     }
 
     public func stop() throws(AudioPlaybackServiceError) {
