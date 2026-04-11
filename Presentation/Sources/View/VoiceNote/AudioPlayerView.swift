@@ -5,7 +5,8 @@ final class AudioPlayerView: UIView {
     var onPlayPause: (() -> Void)?
     var onRewind: (() -> Void)?
     var onForward: (() -> Void)?
-    var onSeek: ((TimeInterval) -> Void)?
+    var onSeekBegan: (() -> Void)?
+    var onSeekEnded: ((TimeInterval) -> Void)?
 
     private let currentTimeLabel: UILabel = {
         let label = UILabel()
@@ -120,8 +121,11 @@ final class AudioPlayerView: UIView {
         playPauseButton.addAction(UIAction { [weak self] _ in self?.onPlayPause?() }, for: .touchUpInside)
         forwardButton.addAction(UIAction { [weak self] _ in self?.onForward?() }, for: .touchUpInside)
         progressSlider.addAction(UIAction { [weak self] _ in
+            self?.onSeekBegan?()
+        }, for: .touchDown)
+        progressSlider.addAction(UIAction { [weak self] _ in
             guard let self else { return }
-            onSeek?(TimeInterval(progressSlider.value))
+            onSeekEnded?(TimeInterval(progressSlider.value))
         }, for: [.touchUpInside, .touchUpOutside])
         // 드래그 중 시간 레이블만 실시간 업데이트
         progressSlider.addAction(UIAction { [weak self] _ in
