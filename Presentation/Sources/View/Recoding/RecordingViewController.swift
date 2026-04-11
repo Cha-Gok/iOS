@@ -71,7 +71,7 @@ public final class RecordingViewController: ViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        chagokBackgroundView.amplitude = .init(value: viewModel.state.amplitude)
+        chagokBackgroundView.amplitude.value = viewModel.state.amplitude
         titleLabel.setTypography(text: viewModel.state.title, style: .header2)
         timestampLabel.setTypography(text: viewModel.state.displayStartDate, style: .subtitle2)
         durationLabel.setTypography(text: viewModel.state.displayDuration, style: .header1)
