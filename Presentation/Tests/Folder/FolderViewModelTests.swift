@@ -4,6 +4,20 @@ import DomainTesting
 import XCTest
 
 @MainActor
+final class MockFolderCoordinatorDelegate: FolderCoordinatorDelegate {
+    var popCalled = false
+    var pushedFolder: Folder?
+
+    func pop() {
+        popCalled = true
+    }
+
+    func pushMyFolderDetailView(_ folder: Folder) {
+        pushedFolder = folder
+    }
+}
+
+@MainActor
 final class FolderViewModelTests: XCTestCase {
     // MARK: - SUT
 
@@ -11,13 +25,13 @@ final class FolderViewModelTests: XCTestCase {
         let viewModel: FolderViewModel
         let mockFolderRepo: MockFolderRepository
         let mockWasteBasketRepo: MockWasteBasketRepository
-        let mockCoordinator: MockBaseCoordinatorDelegate
+        let mockCoordinator: MockFolderCoordinatorDelegate
     }
 
     private func makeSUT(initialItems: [Presentation.LibraryItem] = []) -> SUT {
         let mockFolderRepo = MockFolderRepository()
         let mockWasteBasketRepo = MockWasteBasketRepository()
-        let mockCoordinator = MockBaseCoordinatorDelegate()
+        let mockCoordinator = MockFolderCoordinatorDelegate()
 
         let initialCategory = CategoryToggle(
             imageName: "folder",
