@@ -209,7 +209,8 @@ private extension VoiceNoteViewController {
             config.headerMode = Section(rawValue: sectionIndex) == .metadata ? .none : .supplementary
 
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
-            section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
+            let topInset: CGFloat = Section(rawValue: sectionIndex) == .metadata ? 24 : 0
+            section.contentInsets = NSDirectionalEdgeInsets(top: topInset, leading: 20, bottom: 0, trailing: 20)
             section.boundarySupplementaryItems.forEach { $0.pinToVisibleBounds = false }
             return section
         }
