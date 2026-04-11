@@ -12,7 +12,9 @@ public final class VoiceNoteViewController: UIViewController {
 
     private let playerView = AudioPlayerView()
     private let topBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-    private lazy var segmentedControl = UnderlineSegmentedControl(items: viewModel.tabTitles)
+    private lazy var segmentedControl = UnderlineSegmentedControl(items: [Section.keyPoints, .keywords, .scripts]
+        .compactMap(\.title))
+
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
         collectionView.backgroundColor = .clear
@@ -133,9 +135,10 @@ private extension VoiceNoteViewController {
     func setupTabBar() {
         segmentedControl.addAction(UIAction { [weak self] action in
             guard let self, let sender = action.sender as? UnderlineSegmentedControl else { return }
+            let sections: [Section] = [.keyPoints, .keywords, .scripts]
             let index = sender.selectedSegmentIndex
-            guard index < viewModel.tabSections.count else { return }
-            let section = viewModel.tabSections[index]
+            guard index < sections.count else { return }
+            let section = sections[index]
             scrollToSection(section: section)
         }, for: .valueChanged)
     }

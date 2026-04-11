@@ -6,10 +6,6 @@ import Foundation
 @Observable
 public final class VoiceNoteViewModel {
     public private(set) var state: State
-    public let tabSections: [Section] = [.keyPoints, .keywords, .scripts]
-    public var tabTitles: [String] {
-        tabSections.compactMap(\.title)
-    }
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
