@@ -119,21 +119,22 @@ final class ChaGokBackgroundView: UIView {
         let amp = CGFloat(amplitude.value)
 
         // 속성(Properties) 업데이트: Blur 반경
-        let firstBlur = animationValue.ellipseFirstBlur + (amp * 250)
-        let secondBlur = animationValue.ellipseSecondBlur + (amp * 100)
+        let firstBlur = animationValue.ellipseFirstBlur + (amp * Constant.ellipseFirstBlurAmplitudeMultiplier)
+        let secondBlur = animationValue.ellipseSecondBlur + (amp * Constant.ellipseSecondBlurAmplitudeMultiplier)
         ellipseFirst.layer.shadowRadius = firstBlur
         ellipseSecond.layer.shadowRadius = secondBlur
         // background Color
-        ellipseFirst.layer.shadowColor = amp == 0.0 ? UIColor.point300.cgColor : UIColor.point300.cgColor
+        ellipseFirst.layer.shadowColor = amp == 0.0 ? UIColor.point300.cgColor : UIColor.point500.cgColor
         ellipseSecond.layer.shadowColor = amp == 0.0 ? UIColor.point500.cgColor : UIColor.point600.cgColor
+        setNeedsUpdateConstraints()
     }
 
     override func updateConstraints() {
         super.updateConstraints()
         let amp = CGFloat(amplitude.value)
         // 제약조건(Constraints) 업데이트: 높이
-        ellipseFirstHeightConstraint?.constant = animationValue.ellipseFirstHeight + (amp * 643)
-        ellipseSecondHeightConstraint?.constant = animationValue.ellipseSecondHeight + (amp * 204)
+        ellipseFirstHeightConstraint?.constant = animationValue.ellipseFirstHeight + (amp * Constant.ellipseFirstHeightAmplitudeMultiplier)
+        ellipseSecondHeightConstraint?.constant = animationValue.ellipseSecondHeight + (amp * Constant.ellipseSecondHeightAmplitudeMultiplier)
     }
 
     private func setup() {
@@ -148,10 +149,10 @@ final class ChaGokBackgroundView: UIView {
 
         NSLayoutConstraint.activate([
             ellipseFirst.centerXAnchor.constraint(equalTo: centerXAnchor),
-            ellipseFirst.leadingAnchor.constraint(equalTo: leadingAnchor, constant: -16),
-            ellipseFirst.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 16),
+            ellipseFirst.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Constant.ellipseFirstLeadingOffset),
+            ellipseFirst.trailingAnchor.constraint(equalTo: trailingAnchor, constant: Constant.ellipseFirstTrailingOffset),
             heightConstraint,
-            ellipseFirst.bottomAnchor.constraint(equalTo: bottomAnchor, constant: 69)
+            ellipseFirst.bottomAnchor.constraint(equalTo: bottomAnchor, constant: Constant.ellipseFirstBottomOffset)
         ])
     }
 
@@ -165,7 +166,7 @@ final class ChaGokBackgroundView: UIView {
             ellipseSecond.leadingAnchor.constraint(equalTo: leadingAnchor),
             ellipseSecond.trailingAnchor.constraint(equalTo: trailingAnchor),
             heightConstraint,
-            ellipseSecond.bottomAnchor.constraint(equalTo: bottomAnchor, constant: 100)
+            ellipseSecond.bottomAnchor.constraint(equalTo: bottomAnchor, constant: Constant.ellipseSecondBottomOffset)
         ])
     }
 }
@@ -184,11 +185,11 @@ extension ChaGokBackgroundView {
 
     struct AnimationValue {
         // 제약조건의 높이 최소/최대 (원하시는 수치로 언제든 수정 가능합니다)
-        var ellipseFirstHeight: CGFloat = 195
-        var ellipseSecondHeight: CGFloat = 116
+        var ellipseFirstHeight: CGFloat = Constant.ellipseFirstHeight
+        var ellipseSecondHeight: CGFloat = Constant.ellipseSecondHeight
         // Blur(그림자 흐림 반경)
-        var ellipseFirstBlur: CGFloat = 100
-        var ellipseSecondBlur: CGFloat = 40
+        var ellipseFirstBlur: CGFloat = Constant.ellipseFirstBlur
+        var ellipseSecondBlur: CGFloat = Constant.ellipseSecondBlur
     }
 }
 
