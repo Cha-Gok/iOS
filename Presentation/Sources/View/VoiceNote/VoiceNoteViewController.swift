@@ -12,7 +12,6 @@ public final class VoiceNoteViewController: UIViewController {
 
     private let playerView = AudioPlayerView()
     private let topBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-    private var lastAppliedFolderName: String = ""
     private lazy var segmentedControl = UnderlineSegmentedControl(items: viewModel.tabTitles)
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
@@ -39,6 +38,7 @@ public final class VoiceNoteViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         applySnapshot()
+        observePlaybackState()
         viewModel.send(.view(.onAppear))
     }
 
@@ -49,19 +49,24 @@ public final class VoiceNoteViewController: UIViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        let analysisState = viewModel.state.analysisState
-        let folderName = viewModel.state.folderName
-        let errorMessage = viewModel.state.errorMessage
-        playerView.apply(viewModel.state.currentPlaybackState)
-        if let errorMessage {
+        if let errorMessage = viewModel.state.errorMessage {
             showErrorAlert(message: errorMessage)
-        } else if analysisState == .completed {
+        } else if viewModel.state.analysisState == .completed {
             applySnapshot()
-        } else if folderName != lastAppliedFolderName {
-            lastAppliedFolderName = folderName
+        } else {
             var snapshot = dataSource.snapshot()
             snapshot.reconfigureItems([.metadata])
             dataSource.apply(snapshot, animatingDifferences: false)
+        }
+    }
+
+    private func observePlaybackState() {
+        withObservationTracking {
+            playerView.apply(viewModel.state.currentPlaybackState)
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.observePlaybackState()
+            }
         }
     }
 }
