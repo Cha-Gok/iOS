@@ -60,9 +60,11 @@ private let appTarget = Target.target(
     settings: .settings(
         configurations: [
             .debug(name: "Debug", settings: [
+                "CODE_SIGN_IDENTITY": "Apple Development",
                 "PROVISIONING_PROFILE_SPECIFIER": "match Development com.yongms.ChaGokChaGok"
             ]),
             .release(name: "Release", settings: [
+                "CODE_SIGN_IDENTITY": "Apple Distribution",
                 "PROVISIONING_PROFILE_SPECIFIER": "match AppStore com.yongms.ChaGokChaGok"
             ])
         ],
