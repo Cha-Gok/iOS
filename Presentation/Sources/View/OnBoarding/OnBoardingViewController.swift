@@ -3,7 +3,7 @@ import Domain
 import Foundation
 import UIKit
 
-public final class OnBoardingViewController: UIViewController {
+public final class OnBoardingViewController: ViewController {
     // MARK: - State
 
     private let vm: OnBoardingViewModel

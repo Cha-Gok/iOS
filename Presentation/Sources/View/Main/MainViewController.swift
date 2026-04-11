@@ -1,6 +1,6 @@
 import UIKit
 
-public final class MainViewController: UIViewController {
+public final class MainViewController: ViewController {
     // MARK: - View Model
 
     private let vm: MainViewModel
