@@ -12,6 +12,10 @@ public final class TranscriptEntity: NSManagedObject {
     @NSManaged
     public var createdAt: Date
 
+    /// JSON 직렬화된 세그먼트 배열. 레거시 데이터는 nil.
+    @NSManaged
+    public var segmentsData: Data?
+
     @NSManaged
     public var voiceNote: VoiceNoteEntity
 }
@@ -25,10 +29,15 @@ extension TranscriptEntity: ManagedObjectMapping {
     }
 
     public func toModel() -> ModelType {
-        Transcript(
+        var segments: [TranscriptSegment] = []
+        if let data = segmentsData {
+            segments = (try? JSONDecoder().decode([TranscriptSegment].self, from: data)) ?? []
+        }
+        return Transcript(
             id: id,
             createdAt: createdAt,
-            text: text
+            text: text,
+            segments: segments
         )
     }
 
@@ -36,6 +45,11 @@ extension TranscriptEntity: ManagedObjectMapping {
         id = model.id
         text = model.text
         createdAt = model.createdAt
+        if !model.segments.isEmpty {
+            segmentsData = try? JSONEncoder().encode(model.segments)
+        } else {
+            segmentsData = nil
+        }
     }
 
     public static var entityName: CoreDataEntityName {
