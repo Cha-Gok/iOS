@@ -51,9 +51,11 @@ public final class VoiceNoteViewController: UIViewController {
         super.updateProperties()
         let analysisState = viewModel.state.analysisState
         let folderName = viewModel.state.folderName
-        _ = viewModel.state.errorMessage
+        let errorMessage = viewModel.state.errorMessage
         playerView.apply(viewModel.state.currentPlaybackState)
-        if analysisState == .completed {
+        if let errorMessage {
+            showErrorAlert(message: errorMessage)
+        } else if analysisState == .completed {
             applySnapshot()
         } else if folderName != lastAppliedFolderName {
             lastAppliedFolderName = folderName
@@ -146,6 +148,19 @@ private extension VoiceNoteViewController {
         playerView.onSeek = { [weak self] time in
             self?.viewModel.send(.view(.seek(time)))
         }
+    }
+}
+
+// MARK: - Alert
+
+private extension VoiceNoteViewController {
+    func showErrorAlert(message: String) {
+        guard presentedViewController == nil else { return }
+        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .default) { [weak self] _ in
+            self?.viewModel.send(.internal(.errorDismissed))
+        })
+        present(alert, animated: true)
     }
 }
 

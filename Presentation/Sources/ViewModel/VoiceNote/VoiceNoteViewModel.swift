@@ -108,6 +108,8 @@ public final class VoiceNoteViewModel {
                 state.currentPlaybackState = playbackState
             case .errorOccurred(let message):
                 state.errorMessage = message
+            case .errorDismissed:
+                state.errorMessage = nil
             }
         }
     }
@@ -254,6 +256,7 @@ public extension VoiceNoteViewModel {
             case analysisFailed(String)
             case playbackStateChanged(AudioPlaybackState)
             case errorOccurred(String)
+            case errorDismissed
         }
 
         case view(View)
