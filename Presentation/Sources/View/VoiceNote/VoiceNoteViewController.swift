@@ -7,6 +7,7 @@ public final class VoiceNoteViewController: UIViewController {
 
     private let viewModel: VoiceNoteViewModel
     private lazy var dataSource = makeDataSource()
+    private var lastPlayingInfo: VoiceNoteViewModel.State.PlayingParagraphInfo?
 
     // MARK: - UI Components
 
@@ -65,11 +66,33 @@ public final class VoiceNoteViewController: UIViewController {
     private func observePlaybackState() {
         withObservationTracking {
             playerView.apply(viewModel.state.currentPlaybackState)
+            
+            // 하이라이트 정보 관찰 및 갱신
+            let currentInfo = viewModel.state.playingParagraphInfo
+            if lastPlayingInfo != currentInfo {
+                updateHighlight(from: lastPlayingInfo, to: currentInfo)
+                lastPlayingInfo = currentInfo
+            }
         } onChange: { [weak self] in
             Task { @MainActor [weak self] in
                 self?.observePlaybackState()
             }
         }
+    }
+
+    private func updateHighlight(
+        from last: VoiceNoteViewModel.State.PlayingParagraphInfo?,
+        to current: VoiceNoteViewModel.State.PlayingParagraphInfo?
+    ) {
+        var itemsToReconfigure: [Item] = []
+        if let last { itemsToReconfigure.append(.script(index: last.sectionIndex)) }
+        if let current { itemsToReconfigure.append(.script(index: current.sectionIndex)) }
+        
+        guard !itemsToReconfigure.isEmpty else { return }
+        
+        var snapshot = dataSource.snapshot()
+        snapshot.reconfigureItems(itemsToReconfigure)
+        dataSource.apply(snapshot, animatingDifferences: false)
     }
 }
 
@@ -239,10 +262,14 @@ private extension VoiceNoteViewController {
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
             guard let self, case .script(let index) = item else { return }
             let section = viewModel.state.scriptSections[index]
+            let playingInfo = viewModel.state.playingParagraphInfo
+            let isHighlightedSection = playingInfo?.sectionIndex == index
+            
             cell.contentConfiguration = ScriptContentConfiguration(
                 timestamp: section.formattedTimestamp,
                 timestampSeconds: section.timestamp,
                 paragraphs: section.paragraphs,
+                highlightedParagraphIndex: isHighlightedSection ? playingInfo?.paragraphIndex : nil,
                 onTimestampTapped: { [weak self] time in
                     self?.viewModel.send(.view(.scriptTimestampTapped(time)))
                 }
