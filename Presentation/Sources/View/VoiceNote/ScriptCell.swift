@@ -73,7 +73,8 @@ final class ScriptContentView: UIView, UIContentView {
         addSubview(containerStack)
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(timestampTapped))
-        timeLabel.addGestureRecognizer(tap)
+        containerStack.addGestureRecognizer(tap)
+        containerStack.isUserInteractionEnabled = true
 
         NSLayoutConstraint.activate([
             containerStack.topAnchor.constraint(equalTo: topAnchor),
