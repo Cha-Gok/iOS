@@ -1,7 +1,8 @@
 @testable import Domain
 import XCTest
 
-public actor MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepository {
+@MainActor
+public final class MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepository {
     public init() {}
 
     private var prepareResult: Result<AsyncStream<AudioPlaybackState>, VoiceRecordPlaybackRepositoryError>?
@@ -87,7 +88,7 @@ public actor MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepository {
         XCTAssertEqual(actual, expected, "\(label) 호출 횟수 불일치", file: file, line: line)
     }
 
-    public func prepare(audioFileURL: URL) async throws(VoiceRecordPlaybackRepositoryError)
+    public func prepare(audioFileURL: URL) throws(VoiceRecordPlaybackRepositoryError)
         -> AsyncStream<AudioPlaybackState>
     {
         if Task.isCancelled { throw .cancelled }
@@ -102,7 +103,7 @@ public actor MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepository {
         }
     }
 
-    public func play() async throws(VoiceRecordPlaybackRepositoryError) {
+    public func play() throws(VoiceRecordPlaybackRepositoryError) {
         if Task.isCancelled { throw .cancelled }
         actualPlayCallCount += 1
         switch playResult {
@@ -114,7 +115,7 @@ public actor MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepository {
         }
     }
 
-    public func pause() async throws(VoiceRecordPlaybackRepositoryError) {
+    public func pause() throws(VoiceRecordPlaybackRepositoryError) {
         if Task.isCancelled { throw .cancelled }
         actualPauseCallCount += 1
         switch pauseResult {
@@ -126,7 +127,7 @@ public actor MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepository {
         }
     }
 
-    public func seek(to time: TimeInterval) async throws(VoiceRecordPlaybackRepositoryError) {
+    public func seek(to time: TimeInterval) throws(VoiceRecordPlaybackRepositoryError) {
         if Task.isCancelled { throw .cancelled }
         actualSeekCallCount += 1
         lastSeekTime = time
@@ -139,7 +140,7 @@ public actor MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepository {
         }
     }
 
-    public func stop() async throws(VoiceRecordPlaybackRepositoryError) {
+    public func stop() throws(VoiceRecordPlaybackRepositoryError) {
         if Task.isCancelled { throw .cancelled }
         actualStopCallCount += 1
         switch stopResult {

@@ -1,10 +1,12 @@
 import Core
 import Foundation
 
+@MainActor
 public protocol StopVoiceRecordPlaybackUseCase: Sendable {
-    func execute() async throws(StopVoiceRecordPlaybackUseCaseError)
+    func execute() throws(StopVoiceRecordPlaybackUseCaseError)
 }
 
+@MainActor
 public struct DefaultStopVoiceRecordPlaybackUseCase: StopVoiceRecordPlaybackUseCase {
     private let repository: VoiceRecordPlaybackRepository
 
@@ -12,10 +14,10 @@ public struct DefaultStopVoiceRecordPlaybackUseCase: StopVoiceRecordPlaybackUseC
         self.repository = repository
     }
 
-    public func execute() async throws(StopVoiceRecordPlaybackUseCaseError) {
+    public func execute() throws(StopVoiceRecordPlaybackUseCaseError) {
         if Task.isCancelled { throw .cancelled }
         do {
-            try await repository.stop()
+            try repository.stop()
         } catch {
             AppLogger.error(error)
             throw StopVoiceRecordPlaybackUseCaseError(error)

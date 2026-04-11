@@ -28,12 +28,12 @@ public final class AudioPlaybackPlayerService: NSObject, AudioPlaybackService {
 
     /// 새 파일을 준비하고 재생 상태 스트림을 반환합니다.
     /// `AVAudioPlayer(contentsOf:)`를 사용해 메모리 맵핑 방식으로 효율적으로 파일을 로드합니다.
-    public func preparePlayback(at fileURL: URL) async throws(AudioPlaybackServiceError)
+    public func preparePlayback(at fileURL: URL) throws(AudioPlaybackServiceError)
         -> AsyncStream<AudioPlaybackState>
     {
         // 이전 재생 세션 정리
         player?.stop()
-        await stopProgressTask()
+        stopProgressTask()
         player?.delegate = nil
         player = nil
         deactivateSessionIfNeeded()
@@ -55,7 +55,7 @@ public final class AudioPlaybackPlayerService: NSObject, AudioPlaybackService {
         return playbackStream
     }
 
-    public func play() async throws(AudioPlaybackServiceError) {
+    public func play() throws(AudioPlaybackServiceError) {
         guard let player else { throw .notPrepared }
 
         // 끝까지 재생된 상태라면 처음부터 다시 시작
@@ -70,16 +70,16 @@ public final class AudioPlaybackPlayerService: NSObject, AudioPlaybackService {
         updateState(status: .playing, currentTime: player.currentTime, duration: player.duration)
     }
 
-    public func pause() async throws(AudioPlaybackServiceError) {
+    public func pause() throws(AudioPlaybackServiceError) {
         guard let player else { throw .notPrepared }
         guard player.isPlaying else { throw .pauseFailed }
 
         player.pause()
-        await stopProgressTask()
+        stopProgressTask()
         updateState(status: .paused, currentTime: player.currentTime, duration: player.duration)
     }
 
-    public func seek(to time: TimeInterval) async throws(AudioPlaybackServiceError) {
+    public func seek(to time: TimeInterval) throws(AudioPlaybackServiceError) {
         guard let player else { throw .notPrepared }
 
         let clampedTime = min(max(0, time), player.duration)
@@ -97,10 +97,10 @@ public final class AudioPlaybackPlayerService: NSObject, AudioPlaybackService {
         updateState(status: status, currentTime: clampedTime, duration: player.duration)
     }
 
-    public func stop() async throws(AudioPlaybackServiceError) {
+    public func stop() throws(AudioPlaybackServiceError) {
         player?.stop()
         player?.currentTime = 0
-        await stopProgressTask()
+        stopProgressTask()
         player?.delegate = nil
         player = nil
         // player 해제 후에도 duration을 유지해 UI가 총 길이를 표시할 수 있도록
@@ -115,38 +115,38 @@ extension AudioPlaybackPlayerService: AVAudioPlayerDelegate {
     /// AVAudioPlayerDelegate 콜백은 nonisolated 컨텍스트에서 호출되므로
     /// Task를 통해 MainActor로 전환 후 처리
     public nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        Task { @MainActor [weak self] in await self?.handlePlaybackFinished(successfully: flag) }
+        Task { @MainActor [weak self] in self?.handlePlaybackFinished(successfully: flag) }
     }
 
     public nonisolated func audioPlayerBeginInterruption(_ player: AVAudioPlayer) {
-        Task { @MainActor [weak self] in await self?.handleInterruptionBegan() }
+        Task { @MainActor [weak self] in self?.handleInterruptionBegan() }
     }
 
     public nonisolated func audioPlayerEndInterruption(_ player: AVAudioPlayer, withOptions flags: Int) {
         let shouldResume = AVAudioSession.InterruptionOptions(rawValue: UInt(flags)).contains(.shouldResume)
-        Task { @MainActor [weak self] in await self?.handleInterruptionEnded(shouldResume: shouldResume) }
+        Task { @MainActor [weak self] in self?.handleInterruptionEnded(shouldResume: shouldResume) }
     }
 }
 
 // MARK: - Private
 
 private extension AudioPlaybackPlayerService {
-    func handlePlaybackFinished(successfully: Bool) async {
+    func handlePlaybackFinished(successfully: Bool) {
         guard successfully, let player else { return }
-        await stopProgressTask()
+        stopProgressTask()
         // currentTime을 duration과 동일하게 설정해 UI가 끝 위치를 표시하도록
         updateState(status: .finished, currentTime: player.duration, duration: player.duration)
         deactivateSessionIfNeeded()
     }
 
-    func handleInterruptionBegan() async {
+    func handleInterruptionBegan() {
         guard let player else { return }
         player.pause()
-        await stopProgressTask()
+        stopProgressTask()
         updateState(status: .paused, currentTime: player.currentTime, duration: player.duration)
     }
 
-    func handleInterruptionEnded(shouldResume: Bool) async {
+    func handleInterruptionEnded(shouldResume: Bool) {
         guard let player else { return }
         if shouldResume {
             try? activateSession()
@@ -191,12 +191,10 @@ private extension AudioPlaybackPlayerService {
         progressTask = Task { [weak self] in await self?.streamProgress() }
     }
 
-    /// 진행 중인 Task를 취소하고 실제 종료를 기다려 상태 업데이트 누락을 방지
-    func stopProgressTask() async {
-        let progressTask = progressTask
-        self.progressTask = nil
+    /// 진행 중인 Task를 취소합니다.
+    func stopProgressTask() {
         progressTask?.cancel()
-        await progressTask?.value
+        progressTask = nil
     }
 
     /// 재생 중 주기적으로 currentTime을 스트림에 방출

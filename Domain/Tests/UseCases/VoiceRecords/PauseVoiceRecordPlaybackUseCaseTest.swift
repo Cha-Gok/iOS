@@ -2,28 +2,30 @@
 import DomainTesting
 import XCTest
 
+@MainActor
 final class PauseVoiceRecordPlaybackUseCaseTest: XCTestCase {}
 
+@MainActor
 extension PauseVoiceRecordPlaybackUseCaseTest {
-    func test_정상상태_pause호출시_repositoryPause를호출한다() async throws {
+    func test_정상상태_pause호출시_repositoryPause를호출한다() throws {
         let repository = MockVoiceRecordPlaybackRepository()
         let sut = DefaultPauseVoiceRecordPlaybackUseCase(repository: repository)
-        await repository.setPauseResult(.success(()))
-        await repository.expectPause(callCount: 1)
+        repository.setPauseResult(.success(()))
+        repository.expectPause(callCount: 1)
 
-        try await sut.execute()
+        try sut.execute()
 
-        await repository.verify()
+        repository.verify()
     }
 
-    func test_리포지토리pause실패상태_pause호출시_pauseFailed에러를던진다() async {
+    func test_리포지토리pause실패상태_pause호출시_pauseFailed에러를던진다() {
         let repository = MockVoiceRecordPlaybackRepository()
         let sut = DefaultPauseVoiceRecordPlaybackUseCase(repository: repository)
-        await repository.setPauseResult(.failure(.pauseFailed))
-        await repository.expectPause(callCount: 1)
+        repository.setPauseResult(.failure(.pauseFailed))
+        repository.expectPause(callCount: 1)
 
         do {
-            try await sut.execute()
+            try sut.execute()
             XCTFail("PauseVoiceRecordPlaybackUseCaseError.pauseFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .pauseFailed = error else {
@@ -31,6 +33,6 @@ extension PauseVoiceRecordPlaybackUseCaseTest {
             }
         }
 
-        await repository.verify()
+        repository.verify()
     }
 }
