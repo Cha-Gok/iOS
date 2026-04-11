@@ -14,7 +14,7 @@ public actor SpeechService: STTService {
     /// 진행 중인 전사 작업
     private var currentTask: SFSpeechRecognitionTask?
     /// onCancel에서 접근하기 위해 actor 프로퍼티로 보관
-    private var currentContinuation: CheckedContinuation<String, any Error>?
+    private var currentContinuation: CheckedContinuation<STTResult, any Error>?
 
     public init() {}
 
@@ -54,7 +54,7 @@ public actor SpeechService: STTService {
 
     // MARK: - STTService
 
-    public func transcribe(audioFileURL: URL) async throws(STTServiceError) -> String {
+    public func transcribe(audioFileURL: URL) async throws(STTServiceError) -> STTResult {
         guard !Task.isCancelled else { throw .cancelled }
         guard currentTask == nil else { throw .alreadyTranscribing }
 
@@ -88,7 +88,7 @@ public actor SpeechService: STTService {
 
     private func startRecognitionTask(
         audioFileURL: URL,
-        continuation: CheckedContinuation<String, any Error>
+        continuation: CheckedContinuation<STTResult, any Error>
     ) throws(STTServiceError) {
         guard !Task.isCancelled else { throw .cancelled }
         guard let recognizer = SFSpeechRecognizer(), recognizer.isAvailable else {
@@ -115,9 +115,17 @@ public actor SpeechService: STTService {
 
             guard let result, result.isFinal else { return }
 
-            let text = result.bestTranscription.formattedString
-            AppLogger.info("음성 전사가 완료되었습니다. 글자 수: \(text.count)")
-            Task { await self.finishTask(text) }
+            let transcription = result.bestTranscription
+            let segments = transcription.segments.map {
+                STTResult.Segment(
+                    substring: $0.substring,
+                    timestamp: $0.timestamp,
+                    duration: $0.duration
+                )
+            }
+            let sttResult = STTResult(text: transcription.formattedString, segments: segments)
+            AppLogger.info("음성 전사가 완료되었습니다. 글자 수: \(sttResult.text.count), 세그먼트 수: \(segments.count)")
+            Task { await self.finishTask(sttResult) }
         }
     }
 
@@ -134,11 +142,11 @@ public actor SpeechService: STTService {
         }
     }
 
-    private func finishTask(_ text: String) {
+    private func finishTask(_ result: STTResult) {
         let continuation = currentContinuation
         currentContinuation = nil
         currentTask = nil
-        continuation?.resume(returning: text)
+        continuation?.resume(returning: result)
     }
 
     private func failTask(_ error: STTServiceError) {
