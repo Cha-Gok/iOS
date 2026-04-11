@@ -3,7 +3,7 @@ import Domain
 import Foundation
 
 @MainActor
-public protocol FolderCoordinatorDelegate: AnyObject {
+public protocol FolderCoordinatorDelegate: BaseCoordinatorDelegate {
     /// 개인 폴더 -> 상세 폴더 화면 이동 함수
     func pushMyFolderDetailView(_ folder: Folder)
 }
@@ -17,8 +17,7 @@ public final class FolderViewModel {
     private(set) var showAlert: Bool = false
     private(set) var editFolder: Folder?
 
-    public weak var coordinator: BaseCoordinatorDelegate?
-    public weak var folderCoordinator: FolderCoordinatorDelegate?
+    public weak var coordinator: FolderCoordinatorDelegate?
 
     // MARK: - UseCase
 
@@ -57,7 +56,7 @@ extension FolderViewModel {
     }
 
     func pushDetail(_ folder: Folder) {
-        folderCoordinator?.pushMyFolderDetailView(folder)
+        coordinator?.pushMyFolderDetailView(folder)
     }
 
     func openTextFieldView(for folder: Folder? = nil) {
