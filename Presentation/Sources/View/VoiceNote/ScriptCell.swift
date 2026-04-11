@@ -102,7 +102,24 @@ final class ScriptContentView: UIView, UIContentView {
             label.textColor = isHighlighted ? .white : UIColor.gray600
             label.setTypography(text: para, style: .body1)
             label.numberOfLines = 0
-            paragraphsStack.addArrangedSubview(label)
+            
+            if isHighlighted {
+                let container = UIView()
+                container.backgroundColor = UIColor(red: 0.458, green: 0.292, blue: 0.813, alpha: 0.3)
+                container.layer.cornerRadius = 8
+                
+                container.addSubview(label)
+                label.translatesAutoresizingMaskIntoConstraints = false
+                NSLayoutConstraint.activate([
+                    label.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+                    label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8),
+                    label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
+                    label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12)
+                ])
+                paragraphsStack.addArrangedSubview(container)
+            } else {
+                paragraphsStack.addArrangedSubview(label)
+            }
         }
     }
 }
