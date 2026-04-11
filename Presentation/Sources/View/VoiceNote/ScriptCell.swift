@@ -105,7 +105,7 @@ final class ScriptContentView: UIView, UIContentView {
             
             if isHighlighted {
                 let container = UIView()
-                container.backgroundColor = UIColor(red: 0.458, green: 0.292, blue: 0.813, alpha: 0.3)
+                container.backgroundColor = UIColor.point600.withAlphaComponent(0.3)
                 container.layer.cornerRadius = 8
                 
                 container.addSubview(label)
