@@ -7,7 +7,6 @@ public final class VoiceNoteViewController: UIViewController {
 
     private let viewModel: VoiceNoteViewModel
     private lazy var dataSource = makeDataSource()
-    private var lastPlayingInfo: VoiceNoteViewModel.State.PlayingParagraphInfo?
 
     // MARK: - UI Components
 
@@ -41,7 +40,8 @@ public final class VoiceNoteViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         applySnapshot()
-        observePlaybackState()
+        observeAudioPlayback()
+        observeHighlightChange()
         viewModel.send(.view(.onAppear))
     }
 
@@ -63,19 +63,25 @@ public final class VoiceNoteViewController: UIViewController {
         }
     }
 
-    private func observePlaybackState() {
+    private func observeAudioPlayback() {
         withObservationTracking {
             playerView.apply(viewModel.state.currentPlaybackState)
-            
-            // 하이라이트 정보 관찰 및 갱신
-            let currentInfo = viewModel.state.playingParagraphInfo
-            if lastPlayingInfo != currentInfo {
-                updateHighlight(from: lastPlayingInfo, to: currentInfo)
-                lastPlayingInfo = currentInfo
-            }
         } onChange: { [weak self] in
             Task { @MainActor [weak self] in
-                self?.observePlaybackState()
+                self?.observeAudioPlayback()
+            }
+        }
+    }
+
+    private func observeHighlightChange() {
+        withObservationTracking {
+            updateHighlight(
+                from: viewModel.state.previousPlayingParagraphInfo,
+                to: viewModel.state.playingParagraphInfo
+            )
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.observeHighlightChange()
             }
         }
     }

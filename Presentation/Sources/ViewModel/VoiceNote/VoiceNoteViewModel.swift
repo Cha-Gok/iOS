@@ -117,6 +117,7 @@ public final class VoiceNoteViewModel {
             case .playbackStateChanged(let playbackState):
                 // 재생 진행 스트림에서 수신한 최신 상태 반영
                 state.currentPlaybackState = playbackState
+                state.updatePlayingParagraph()
             case .errorOccurred(let message):
                 // 재생 제어 중 에러 발생 — 알럿 표시
                 state.errorMessage = message
@@ -297,6 +298,45 @@ public extension VoiceNoteViewModel {
         init(voiceNote: VoiceNote) {
             self.voiceNote = voiceNote
             analysisState = voiceNote.summary != nil && voiceNote.transcript != nil ? .completed : .analyzing
+        }
+
+        // MARK: - Highlight Logic
+
+        /// 현재 재생 중인 문단의 정보를 담는 구조체
+        public struct PlayingParagraphInfo: Equatable {
+            public let sectionIndex: Int
+            public let paragraphIndex: Int
+        }
+
+        /// 현재 하이라이트된 문단 정보
+        public private(set) var playingParagraphInfo: PlayingParagraphInfo?
+        /// 이전에 하이라이트되었던 문단 정보 (UI 갱신용)
+        public private(set) var previousPlayingParagraphInfo: PlayingParagraphInfo?
+
+        /// 재생 시간에 따라 하이라이트 정보를 업데이트합니다.
+        mutating func updatePlayingParagraph() {
+            let currentTime = currentPlaybackState.currentTime
+            let sections = scriptSections
+            guard !sections.isEmpty else {
+                if playingParagraphInfo != nil {
+                    previousPlayingParagraphInfo = playingParagraphInfo
+                    playingParagraphInfo = nil
+                }
+                return
+            }
+
+            var newInfo: PlayingParagraphInfo?
+            for (index, section) in sections.enumerated().reversed() {
+                if section.timestamp <= currentTime {
+                    newInfo = PlayingParagraphInfo(sectionIndex: index, paragraphIndex: 0)
+                    break
+                }
+            }
+            
+            if playingParagraphInfo != newInfo {
+                previousPlayingParagraphInfo = playingParagraphInfo
+                playingParagraphInfo = newInfo
+            }
         }
 
         // MARK: - Mapped Properties
