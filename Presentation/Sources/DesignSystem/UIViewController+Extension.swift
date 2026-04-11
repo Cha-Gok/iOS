@@ -133,8 +133,10 @@ final class ChaGokBackgroundView: UIView {
         super.updateConstraints()
         let amp = CGFloat(amplitude.value)
         // 제약조건(Constraints) 업데이트: 높이
-        ellipseFirstHeightConstraint?.constant = animationValue.ellipseFirstHeight + (amp * Constant.ellipseFirstHeightAmplitudeMultiplier)
-        ellipseSecondHeightConstraint?.constant = animationValue.ellipseSecondHeight + (amp * Constant.ellipseSecondHeightAmplitudeMultiplier)
+        ellipseFirstHeightConstraint?.constant = animationValue
+            .ellipseFirstHeight + (amp * Constant.ellipseFirstHeightAmplitudeMultiplier)
+        ellipseSecondHeightConstraint?.constant = animationValue
+            .ellipseSecondHeight + (amp * Constant.ellipseSecondHeightAmplitudeMultiplier)
     }
 
     private func setup() {
@@ -150,7 +152,10 @@ final class ChaGokBackgroundView: UIView {
         NSLayoutConstraint.activate([
             ellipseFirst.centerXAnchor.constraint(equalTo: centerXAnchor),
             ellipseFirst.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Constant.ellipseFirstLeadingOffset),
-            ellipseFirst.trailingAnchor.constraint(equalTo: trailingAnchor, constant: Constant.ellipseFirstTrailingOffset),
+            ellipseFirst.trailingAnchor.constraint(
+                equalTo: trailingAnchor,
+                constant: Constant.ellipseFirstTrailingOffset
+            ),
             heightConstraint,
             ellipseFirst.bottomAnchor.constraint(equalTo: bottomAnchor, constant: Constant.ellipseFirstBottomOffset)
         ])

@@ -164,6 +164,7 @@ public extension Constant {
     /// LanguagePicker 라디오 버튼과 텍스트 사이 간격 (6)
     static let languagePickerTitleSpacing: CGFloat = 6
 }
+
 // MARK: - BackgroundView Constants
 
 public extension Constant {
