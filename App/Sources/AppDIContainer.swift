@@ -141,9 +141,10 @@ public final class AppDIContainer {
 
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
-            fetchFolderUseCase: fetchFolderUseCase,
+            fetchRecentVoiceNoteUseCase: fetchRecentVoiceNoteUseCase,
             fetchVoiceNoteUseCase: fetchVoiceNoteUseCase,
-            fetchRecentVoiceNoteUseCase: fetchRecentVoiceNoteUseCase
+            fetchFolderUseCase: fetchFolderUseCase,
+            fetchTrashUseCase: fetchWasteBasketUseCase
         )
     }
 
@@ -161,6 +162,14 @@ public final class AppDIContainer {
             createUseCase: createFolderUseCase,
             updateUseCase: updateFolderUseCase,
             moveToTrashUseCase: moveWasteBasketUseCase
+        )
+    }
+
+    public func makeMyFolderDetailViewModel(_ folder: Folder) -> FolderDetailViewModel {
+        return FolderDetailViewModel(
+            title: folder.name,
+            folderID: folder.id,
+            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase
         )
     }
 }

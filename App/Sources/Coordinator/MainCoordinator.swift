@@ -43,7 +43,7 @@ extension MainCoordinator: RecordingCoordinating {
 
 // MARK: - MainViewCoordinator
 
-extension MainCoordinator: MainViewCoordinatorDelegate, BaseCoordinatorDelegate {
+extension MainCoordinator: MainCoordinatorDelegate {
     // TODO: Push
 
     func pushTrashView() {
@@ -113,7 +113,22 @@ extension MainCoordinator: MainViewCoordinatorDelegate, BaseCoordinatorDelegate 
 
         presenter.present(alert, animated: true)
     }
+}
 
+// MARK: FolderCoordinating
+
+extension MainCoordinator: FolderCoordinatorDelegate {
+    func pushMyFolderDetailView(_ folder: Folder) {
+        let myFolderDetailVM = dependencyContainer.makeMyFolderDetailViewModel(folder)
+        myFolderDetailVM.coordinator = self
+        let myFolderDetailVC = FolderDetailViewController(vm: myFolderDetailVM)
+        presenter.pushViewController(myFolderDetailVC, animated: true)
+    }
+}
+
+// MARK: Base 공통 함수 묶음
+
+extension MainCoordinator: BaseCoordinatorDelegate {
     // TODO: Pop
 
     func pop() {

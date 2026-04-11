@@ -32,11 +32,12 @@ public struct CategoryToggle: Hashable, Sendable {
     }
 
     public static func == (lhs: CategoryToggle, rhs: CategoryToggle) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id && lhs.items == rhs.items
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
+        hasher.combine(items)
     }
 }
 

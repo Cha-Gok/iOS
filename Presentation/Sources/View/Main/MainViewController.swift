@@ -14,7 +14,7 @@ public final class MainViewController: UIViewController {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
 
     // MARK: - Component
@@ -50,13 +50,15 @@ public final class MainViewController: UIViewController {
 
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        vm.updateVoiceNoteCategory()
         vm.updateRecentCategory()
+        vm.updateVoiceNoteCategory()
+        vm.updateMyFolderCategory()
+        vm.updateTrashCategory()
     }
 
     override public func updateProperties() {
         super.updateProperties()
-        vm.updateMyFolderCategory()
+        updateDataSource()
     }
 
     // MARK: Setup
@@ -214,7 +216,6 @@ extension MainViewController {
 extension MainViewController {
     private func setupDataSource() {
         createDataSource()
-        updateDataSource()
     }
 
     private func createDataSource() {

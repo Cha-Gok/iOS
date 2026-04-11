@@ -95,6 +95,7 @@ public final class FolderViewController: UITableViewController {
 
     private func setup() {
         view.backgroundColor = UIColor.gray50
+        tableView.separatorStyle = .none
         tableView.register(FolderViewCell.self, forCellReuseIdentifier: FolderViewCell.reuseIdentifier)
     }
 
@@ -245,6 +246,23 @@ public extension FolderViewController {
         editAction.image = UIImage(systemName: "pencil")
 
         return UISwipeActionsConfiguration(actions: [deleteAction, editAction])
+    }
+}
+
+// MARK: - Cell Touch Delegate
+
+public extension FolderViewController {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        // 터치 시 배경색 진해진 상태를 부드럽게 원래대로 돌려줍니다.
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        // 클릭한 셀의 데이터를 가져옵니다.
+        guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
+
+        // LibraryItem이 folder 모델일 경우 상세 화면으로 이동합니다.
+        if case .folder(let folder) = item {
+            vm.pushDetail(folder)
+        }
     }
 }
 

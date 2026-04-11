@@ -3,14 +3,21 @@ import Domain
 import Foundation
 
 @MainActor
+public protocol FolderCoordinatorDelegate: BaseCoordinatorDelegate {
+    /// 개인 폴더 -> 상세 폴더 화면 이동 함수
+    func pushMyFolderDetailView(_ folder: Folder)
+}
+
+@MainActor
 @Observable
 public final class FolderViewModel {
     // MARK: - State
 
     var category: CategoryToggle
-    public weak var coordinator: BaseCoordinatorDelegate?
     private(set) var showAlert: Bool = false
     private(set) var editFolder: Folder?
+
+    public weak var coordinator: FolderCoordinatorDelegate?
 
     // MARK: - UseCase
 
@@ -46,6 +53,10 @@ extension FolderViewModel {
 extension FolderViewModel {
     func didTapBack() {
         coordinator?.pop()
+    }
+
+    func pushDetail(_ folder: Folder) {
+        coordinator?.pushMyFolderDetailView(folder)
     }
 
     func openTextFieldView(for folder: Folder? = nil) {
