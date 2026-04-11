@@ -78,6 +78,7 @@ private extension VoiceNoteViewController {
         setupConstraints()
         setupNavigationBar()
         setupTabBar()
+        setupPlayerView()
     }
 
     func setupConstraints() {
@@ -130,6 +131,12 @@ private extension VoiceNoteViewController {
             let section = viewModel.tabSections[index]
             scrollToSection(section: section)
         }, for: .valueChanged)
+    }
+
+    func setupPlayerView() {
+        playerView.onPlayPause = { [weak self] in
+            self?.viewModel.send(.view(.playPauseButtonTapped))
+        }
     }
 }
 

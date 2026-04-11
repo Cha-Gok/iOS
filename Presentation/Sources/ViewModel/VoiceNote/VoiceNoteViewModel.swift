@@ -67,10 +67,12 @@ public final class VoiceNoteViewModel {
                 send(.internal(.preparePlayback))
             case .onDisappear:
                 stop()
-            case .playButtonTapped:
-                play()
-            case .pauseButtonTapped:
-                pause()
+            case .playPauseButtonTapped:
+                if state.currentPlaybackState.status == .playing {
+                    pause()
+                } else {
+                    play()
+                }
             case .seek(let time):
                 seek(to: time)
             }
@@ -233,8 +235,7 @@ public extension VoiceNoteViewModel {
         public enum View {
             case onAppear
             case onDisappear
-            case playButtonTapped
-            case pauseButtonTapped
+            case playPauseButtonTapped
             case seek(TimeInterval)
         }
 
