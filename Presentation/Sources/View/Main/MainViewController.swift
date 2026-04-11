@@ -31,11 +31,13 @@ public final class MainViewController: ViewController {
         let layout = UICollectionViewFlowLayout()
         let c = UICollectionView(frame: .zero, collectionViewLayout: layout)
         c.translatesAutoresizingMaskIntoConstraints = false
-        c.backgroundColor = UIColor.gray50
+        c.backgroundColor = .clear
         return c
     }()
 
-    private let floatingButton: GlassButton = .primary("녹음 시작")
+    private let floatingButton: GlassButton = .floating(
+        image: .init(imageName: "microphone", type: .system)
+    )
 
     var dataSource: UICollectionViewDiffableDataSource<MainSection, MainCellItem>!
 
@@ -64,7 +66,6 @@ public final class MainViewController: ViewController {
     // MARK: Setup
 
     private func setup() {
-        view.backgroundColor = UIColor.gray50
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = UIColor.gray50
