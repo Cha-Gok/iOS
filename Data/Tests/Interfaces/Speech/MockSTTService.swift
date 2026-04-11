@@ -3,7 +3,7 @@ import Domain
 import XCTest
 
 actor MockSTTService: STTService {
-    private var transcribeResult: Result<String, STTServiceError>?
+    private var transcribeResult: Result<STTResult, STTServiceError>?
     private var checkResult: PermissionStatus?
     private var requestResult: PermissionStatus?
 
@@ -17,7 +17,7 @@ actor MockSTTService: STTService {
     private var expectedCheckCallCount: Int?
     private var expectedRequestCallCount: Int?
 
-    func setResult(_ result: Result<String, STTServiceError>) {
+    func setResult(_ result: Result<STTResult, STTServiceError>) {
         transcribeResult = result
     }
 
@@ -99,12 +99,12 @@ actor MockSTTService: STTService {
         return requestResult
     }
 
-    func transcribe(audioFileURL: URL) async throws(STTServiceError) -> String {
+    func transcribe(audioFileURL: URL) async throws(STTServiceError) -> STTResult {
         actualTranscribeCallCount += 1
         actualTranscribeAudioFileURL = audioFileURL
         switch transcribeResult {
-        case .success(let text):
-            return text
+        case .success(let result):
+            return result
         case .failure(let error):
             throw error
         case .none:
