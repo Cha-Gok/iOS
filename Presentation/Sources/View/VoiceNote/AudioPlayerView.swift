@@ -5,6 +5,7 @@ final class AudioPlayerView: UIView {
     var onPlayPause: (() -> Void)?
     var onRewind: (() -> Void)?
     var onForward: (() -> Void)?
+    var onSeek: ((TimeInterval) -> Void)?
 
     private let currentTimeLabel: UILabel = {
         let label = UILabel()
@@ -118,6 +119,10 @@ final class AudioPlayerView: UIView {
         rewindButton.addAction(UIAction { [weak self] _ in self?.onRewind?() }, for: .touchUpInside)
         playPauseButton.addAction(UIAction { [weak self] _ in self?.onPlayPause?() }, for: .touchUpInside)
         forwardButton.addAction(UIAction { [weak self] _ in self?.onForward?() }, for: .touchUpInside)
+        progressSlider.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            onSeek?(TimeInterval(progressSlider.value))
+        }, for: .valueChanged)
     }
 
     func apply(_ state: AudioPlaybackState) {
@@ -127,6 +132,11 @@ final class AudioPlayerView: UIView {
             playPauseButton.setImage(UIImage(systemName: "pause.fill"), for: .normal)
         } else {
             playPauseButton.setImage(UIImage(systemName: "play.fill"), for: .normal)
+        }
+        // 슬라이더를 드래그 중이 아닐 때만 업데이트
+        if !progressSlider.isTracking {
+            progressSlider.maximumValue = Float(state.duration)
+            progressSlider.value = Float(state.currentTime)
         }
     }
 }

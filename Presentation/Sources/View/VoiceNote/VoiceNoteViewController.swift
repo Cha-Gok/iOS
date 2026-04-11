@@ -143,6 +143,9 @@ private extension VoiceNoteViewController {
         playerView.onForward = { [weak self] in
             self?.viewModel.send(.view(.forwardButtonTapped))
         }
+        playerView.onSeek = { [weak self] time in
+            self?.viewModel.send(.view(.seek(time)))
+        }
     }
 }
 
