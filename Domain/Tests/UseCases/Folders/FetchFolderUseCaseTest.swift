@@ -8,7 +8,35 @@ final class FetchFolderUseCaseTest: XCTestCase {}
 // MARK: - 성공 케이스
 
 extension FetchFolderUseCaseTest {
-    func test_정상상태_폴더조회시_기본폴더와_삭제된폴더를제외한_폴더목록만반환한다() async throws {
+    func test_정상상태_폴더조회시_fetchAll호출시_삭제되지않은_모든폴더를반환한다() async throws {
+        let repository = MockFolderRepository()
+        let sut = DefaultFetchFolderUseCase(repository: repository)
+
+        // Given
+        let expectedFolders = [
+            Folder.stub(name: "기본 폴더", isDeletable: false), // 반환 대상
+            Folder.stub(name: "휴지통에 있는 폴더", deletedAt: Date()), // 필터링 대상
+            Folder.stub(name: "Folder 1", isDeletable: true), // 반환 대상
+            Folder.stub(name: "Folder 2", isDeletable: true) // 반환 대상
+        ]
+        await repository.setFetchAllResult(.success(expectedFolders))
+        await repository.expectFetchAll(callCount: 1)
+
+        // When
+        let folders = try await sut.fetchAll()
+
+        // Then
+        XCTAssertEqual(folders.count, 3)
+        XCTAssertEqual(folders[0].name, "기본 폴더")
+        XCTAssertEqual(folders[0].id, expectedFolders[0].id)
+        XCTAssertEqual(folders[1].name, "Folder 1")
+        XCTAssertEqual(folders[1].id, expectedFolders[2].id)
+        XCTAssertEqual(folders[2].name, "Folder 2")
+        XCTAssertEqual(folders[2].id, expectedFolders[3].id)
+        await repository.verify()
+    }
+
+    func test_정상상태_폴더조회시_fetchDeletableFolders호출시_기본과삭제된폴더를제외한_폴더목록만반환한다() async throws {
         let repository = MockFolderRepository()
         let sut = DefaultFetchFolderUseCase(repository: repository)
 
@@ -16,14 +44,14 @@ extension FetchFolderUseCaseTest {
         let expectedFolders = [
             Folder.stub(name: "기본 폴더", isDeletable: false), // 필터링 대상
             Folder.stub(name: "휴지통에 있는 폴더", deletedAt: Date()), // 필터링 대상
-            Folder.stub(name: "Folder 1"), // 기본값 isDeletable: true, deletedAt: nil
-            Folder.stub(name: "Folder 2")
+            Folder.stub(name: "Folder 1", isDeletable: true), // 반환 대상
+            Folder.stub(name: "Folder 2", isDeletable: true) // 반환 대상
         ]
         await repository.setFetchAllResult(.success(expectedFolders))
         await repository.expectFetchAll(callCount: 1)
 
         // When
-        let folders = try await sut.fetchAll()
+        let folders = try await sut.fetchDeletableFolders()
 
         // Then
         XCTAssertEqual(folders.count, 2)

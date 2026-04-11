@@ -135,7 +135,7 @@ extension MainViewModel {
     func updateMyFolderCategory() {
         Task {
             do {
-                let folders: [Folder] = try await fetchFolderUseCase.fetchAll()
+                let folders: [Folder] = try await fetchFolderUseCase.fetchDeletableFolders()
                 let items: [LibraryItem] = folders.map { folder in
                     LibraryItem.folder(folder)
                 }
