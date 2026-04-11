@@ -2,29 +2,17 @@ import Core
 import Domain
 import Foundation
 
-public struct KeyPoint: Hashable {
-    let number: Int
-    let text: String
-}
-
-public struct ScriptSection: Hashable {
-    let timestamp: String
-    let paragraphs: [String]
-}
-
 @MainActor
 @Observable
 public final class VoiceNoteViewModel {
-    // MARK: - Properties
-
     public private(set) var state: State
     public let tabSections: [Section] = [.keyPoints, .keywords, .scripts]
-    public var tabTitles: [String] { tabSections.compactMap(\.title) }
+    public var tabTitles: [String] {
+        tabSections.compactMap(\.title)
+    }
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
-    @ObservationIgnored
-    private var playbackControlTask: Task<Void, Never>?
 
     // MARK: - UseCases
 
@@ -66,7 +54,6 @@ public final class VoiceNoteViewModel {
 
     deinit {
         playbackObservationTask?.cancel()
-        playbackControlTask?.cancel()
     }
 
     // MARK: - Send
@@ -158,52 +145,59 @@ public final class VoiceNoteViewModel {
     }
 
     private func startPlaybackObservation() {
-        Task {
-            do {
-                let stream = try await prepareVoiceRecordPlaybackUseCase.execute(
-                    audioFileURL: state.voiceNote.voiceRecord.audioFilePath
-                )
-                playbackObservationTask = Task {
-                    for await playbackState in stream {
-                        send(.internal(.playbackStateChanged(playbackState)))
-                    }
+        do {
+            let stream = try prepareVoiceRecordPlaybackUseCase.execute(
+                audioFileURL: state.voiceNote.voiceRecord.audioFilePath
+            )
+            playbackObservationTask = Task {
+                for await playbackState in stream {
+                    send(.internal(.playbackStateChanged(playbackState)))
                 }
-            } catch {
-                send(.internal(.errorOccurred(error.localizedDescription)))
             }
+        } catch {
+            send(.internal(.errorOccurred(error.localizedDescription)))
         }
     }
 
     private func stop() {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
-        playbackControlTask?.cancel()
-        playbackControlTask = Task {
-            do {
-                try await stopVoiceRecordPlaybackUseCase.execute()
-            } catch {
-                send(.internal(.errorOccurred(error.localizedDescription)))
-            }
+        do {
+            try stopVoiceRecordPlaybackUseCase.execute()
+        } catch {
+            send(.internal(.errorOccurred(error.localizedDescription)))
         }
     }
 
     private func play() {
-        Task { try? await playVoiceRecordUseCase.execute() }
+        do {
+            try playVoiceRecordUseCase.execute()
+        } catch {
+            send(.internal(.errorOccurred(error.localizedDescription)))
+        }
     }
 
     private func pause() {
-        Task { try? await pauseVoiceRecordPlaybackUseCase.execute() }
+        do {
+            try pauseVoiceRecordPlaybackUseCase.execute()
+        } catch {
+            send(.internal(.errorOccurred(error.localizedDescription)))
+        }
     }
 
     private func seek(to time: TimeInterval) {
-        Task { try? await seekVoiceRecordPlaybackUseCase.execute(time: time) }
+        do {
+            try seekVoiceRecordPlaybackUseCase.execute(time: time)
+        } catch {
+            send(.internal(.errorOccurred(error.localizedDescription)))
+        }
     }
 }
 
 // MARK: - Nested Types
 
-extension VoiceNoteViewModel {
-    public enum Section: Int, CaseIterable, Sendable {
+public extension VoiceNoteViewModel {
+    enum Section: Int, CaseIterable, Sendable {
         case metadata
         case keyPoints
         case keywords
@@ -228,14 +222,14 @@ extension VoiceNoteViewModel {
         }
     }
 
-    public enum Item: Hashable, Sendable {
+    enum Item: Hashable, Sendable {
         case metadata
         case keyPoint(number: Int, text: String)
         case keywords
         case script(index: Int)
     }
 
-    public enum Action {
+    enum Action {
         public enum View {
             case onAppear
             case onDisappear
@@ -259,7 +253,7 @@ extension VoiceNoteViewModel {
         case `internal`(Internal)
     }
 
-    public struct State {
+    struct State {
         public enum AnalysisState {
             case analyzing
             case completed
@@ -278,7 +272,7 @@ extension VoiceNoteViewModel {
 
         init(voiceNote: VoiceNote) {
             self.voiceNote = voiceNote
-            self.analysisState = voiceNote.summary != nil && voiceNote.transcript != nil ? .completed : .analyzing
+            analysisState = voiceNote.summary != nil && voiceNote.transcript != nil ? .completed : .analyzing
         }
 
         // MARK: - Mapped Properties
