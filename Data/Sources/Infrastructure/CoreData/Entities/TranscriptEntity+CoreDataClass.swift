@@ -12,7 +12,6 @@ public final class TranscriptEntity: NSManagedObject {
     @NSManaged
     public var createdAt: Date
 
-    /// JSON 직렬화된 세그먼트 배열. 레거시 데이터는 nil.
     @NSManaged
     public var segmentsData: Data?
 
@@ -29,10 +28,7 @@ extension TranscriptEntity: ManagedObjectMapping {
     }
 
     public func toModel() -> ModelType {
-        var segments: [TranscriptSegment] = []
-        if let data = segmentsData {
-            segments = (try? JSONDecoder().decode([TranscriptSegment].self, from: data)) ?? []
-        }
+        let segments = (segmentsData.flatMap { try? JSONDecoder().decode([TranscriptSegment].self, from: $0) }) ?? []
         return Transcript(
             id: id,
             createdAt: createdAt,
@@ -45,11 +41,7 @@ extension TranscriptEntity: ManagedObjectMapping {
         id = model.id
         text = model.text
         createdAt = model.createdAt
-        if !model.segments.isEmpty {
-            segmentsData = try? JSONEncoder().encode(model.segments)
-        } else {
-            segmentsData = nil
-        }
+        segmentsData = try? JSONEncoder().encode(model.segments)
     }
 
     public static var entityName: CoreDataEntityName {
