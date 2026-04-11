@@ -61,24 +61,34 @@ public final class VoiceNoteViewModel {
         case .view(let viewAction):
             switch viewAction {
             case .onAppear:
-                send(.internal(.prepare))
-                send(.internal(.preparePlayback))
+                // 재생 스트림 구독 시작 및 폴더명·AI 분석 로드
+                startPlaybackObservation()
+                Task { await fetchFolderName() }
+                if state.analysisState != .completed {
+                    Task { await performNewAnalysis() }
+                }
             case .onDisappear:
+                // 재생 중단 및 리소스 해제
                 stop()
             case .playPauseButtonTapped:
+                // 현재 재생 중이면 일시정지, 아니면 재생
                 if state.currentPlaybackState.status == .playing {
                     pause()
                 } else {
                     play()
                 }
             case .rewindButtonTapped:
+                // 현재 위치에서 skipInterval만큼 뒤로 이동
                 seek(to: state.currentPlaybackState.currentTime - Policy.playbackSkipInterval)
             case .forwardButtonTapped:
+                // 현재 위치에서 skipInterval만큼 앞으로 이동
                 seek(to: state.currentPlaybackState.currentTime + Policy.playbackSkipInterval)
             case .seekBegan:
+                // 슬라이더 드래그 시작 — 재생 중이었으면 일시정지하고 상태 보존
                 wasPlayingBeforeSeek = state.currentPlaybackState.status == .playing
                 if wasPlayingBeforeSeek { pause() }
             case .seekEnded(let time):
+                // 슬라이더 드래그 종료 — 목표 위치로 이동 후 드래그 전 재생 상태 복원
                 seek(to: time)
                 if wasPlayingBeforeSeek {
                     wasPlayingBeforeSeek = false
@@ -88,32 +98,25 @@ public final class VoiceNoteViewModel {
 
         case .internal(let internalAction):
             switch internalAction {
-            case .prepare:
-                Task { await fetchFolderName() }
-                send(.internal(.checkAnalysis))
-            case .preparePlayback:
-                startPlaybackObservation()
-            case .checkAnalysis:
-                Task {
-                    if state.analysisState == .completed {
-                        send(.internal(.analysisCompleted(note: state.voiceNote)))
-                    } else {
-                        await performNewAnalysis()
-                    }
-                }
             case .metadataLoaded(let folderName):
+                // 폴더명 비동기 로드 완료
                 state.folderName = folderName
             case .analysisCompleted(let note):
+                // AI 분석 완료 — keywords/transcript/summary가 채워진 노트로 교체
                 state.voiceNote = note
                 state.analysisState = .completed
             case .analysisFailed(let message):
+                // AI 분석 실패 — 에러 메시지 표시
                 state.errorMessage = message
                 state.analysisState = .failed
             case .playbackStateChanged(let playbackState):
+                // 재생 진행 스트림에서 수신한 최신 상태 반영
                 state.currentPlaybackState = playbackState
             case .errorOccurred(let message):
+                // 재생 제어 중 에러 발생 — 알럿 표시
                 state.errorMessage = message
             case .errorDismissed:
+                // 에러 알럿 닫기
                 state.errorMessage = nil
             }
         }
@@ -256,9 +259,6 @@ public extension VoiceNoteViewModel {
         }
 
         public enum Internal {
-            case prepare
-            case preparePlayback
-            case checkAnalysis
             case metadataLoaded(folderName: String)
             case analysisCompleted(note: VoiceNote)
             case analysisFailed(String)
