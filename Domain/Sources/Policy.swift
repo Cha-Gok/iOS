@@ -33,4 +33,7 @@ public enum Policy {
 
     /// 재생 진행률 업데이트 주기 (나노초, 0.1초)
     public static let playbackProgressUpdateInterval: UInt64 = 100_000_000
+
+    /// 재생 빨리감기/뒤로가기 이동 간격 (초)
+    public static let playbackSkipInterval: TimeInterval = 10
 }

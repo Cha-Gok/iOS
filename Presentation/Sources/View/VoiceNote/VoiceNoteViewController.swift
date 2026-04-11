@@ -137,6 +137,12 @@ private extension VoiceNoteViewController {
         playerView.onPlayPause = { [weak self] in
             self?.viewModel.send(.view(.playPauseButtonTapped))
         }
+        playerView.onRewind = { [weak self] in
+            self?.viewModel.send(.view(.rewindButtonTapped))
+        }
+        playerView.onForward = { [weak self] in
+            self?.viewModel.send(.view(.forwardButtonTapped))
+        }
     }
 }
 

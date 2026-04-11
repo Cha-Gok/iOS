@@ -73,6 +73,10 @@ public final class VoiceNoteViewModel {
                 } else {
                     play()
                 }
+            case .rewindButtonTapped:
+                seek(to: state.currentPlaybackState.currentTime - Policy.playbackSkipInterval)
+            case .forwardButtonTapped:
+                seek(to: state.currentPlaybackState.currentTime + Policy.playbackSkipInterval)
             case .seek(let time):
                 seek(to: time)
             }
@@ -236,6 +240,8 @@ public extension VoiceNoteViewModel {
             case onAppear
             case onDisappear
             case playPauseButtonTapped
+            case rewindButtonTapped
+            case forwardButtonTapped
             case seek(TimeInterval)
         }
 
