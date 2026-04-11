@@ -20,7 +20,7 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
         super.init(frame: frame)
         addSubview(titleLabel)
         NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
     }
@@ -47,7 +47,7 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
         view.translatesAutoresizingMaskIntoConstraints = false
         addSubview(view)
         NSLayoutConstraint.activate([
-            view.trailingAnchor.constraint(equalTo: trailingAnchor),
+            view.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
             view.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
     }
