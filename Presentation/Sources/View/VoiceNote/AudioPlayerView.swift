@@ -137,11 +137,9 @@ final class AudioPlayerView: UIView {
     func apply(_ state: AudioPlaybackState) {
         currentTimeLabel.text = state.currentTime.durationString
         totalDurationLabel.text = state.duration.durationString
-        if state.status == .playing {
-            playPauseButton.setImage(UIImage(systemName: "pause.fill"), for: .normal)
-        } else {
-            playPauseButton.setImage(UIImage(systemName: "play.fill"), for: .normal)
-        }
+        var config = playPauseButton.configuration
+        config?.image = state.status == .playing ? UIImage(systemName: "pause.fill") : UIImage(systemName: "play.fill")
+        playPauseButton.configuration = config
         // 슬라이더를 드래그 중이 아닐 때만 업데이트
         if !progressSlider.isTracking {
             progressSlider.maximumValue = Float(state.duration)
