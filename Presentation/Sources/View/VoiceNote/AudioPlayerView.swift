@@ -64,6 +64,7 @@ final class AudioPlayerView: UIView {
     private lazy var buttonStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
+        stackView.distribution = .equalSpacing
         stackView.spacing = 35
         stackView.addArrangedSubview(rewindButton)
         stackView.addArrangedSubview(playPauseButton)
