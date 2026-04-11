@@ -4,9 +4,12 @@ import UIKit
 
 struct ScriptContentConfiguration: UIContentConfiguration {
     var timestamp: String = ""
+    var timestampSeconds: TimeInterval = 0
     var paragraphs: [String] = []
     /// 현재 재생 중인 문단 인덱스. nil이면 하이라이팅 없음
     var highlightedParagraphIndex: Int?
+    /// 타임스탬프 탭 콜백
+    var onTimestampTapped: ((TimeInterval) -> Void)?
 
     func makeContentView() -> UIView & UIContentView {
         ScriptContentView(configuration: self)
@@ -29,6 +32,7 @@ final class ScriptContentView: UIView, UIContentView {
     private let timeLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.gray600
+        label.isUserInteractionEnabled = true
         return label
     }()
 
@@ -68,12 +72,20 @@ final class ScriptContentView: UIView, UIContentView {
         containerStack.addArrangedSubview(paragraphsStack)
         addSubview(containerStack)
 
+        let tap = UITapGestureRecognizer(target: self, action: #selector(timestampTapped))
+        timeLabel.addGestureRecognizer(tap)
+
         NSLayoutConstraint.activate([
             containerStack.topAnchor.constraint(equalTo: topAnchor),
             containerStack.leadingAnchor.constraint(equalTo: leadingAnchor),
             containerStack.trailingAnchor.constraint(equalTo: trailingAnchor),
             containerStack.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
+    }
+
+    @objc private func timestampTapped() {
+        guard let config = configuration as? ScriptContentConfiguration else { return }
+        config.onTimestampTapped?(config.timestampSeconds)
     }
 
     // MARK: - Apply

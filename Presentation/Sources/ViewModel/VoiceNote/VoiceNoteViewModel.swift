@@ -2,6 +2,11 @@ import Core
 import Domain
 import Foundation
 
+private enum ScriptGroupingPolicy {
+    /// 세그먼트 간 공백이 이 값(초)을 초과하면 새 섹션으로 분리
+    static let pauseThreshold: TimeInterval = 2.0
+}
+
 @MainActor
 @Observable
 public final class VoiceNoteViewModel {
@@ -94,6 +99,10 @@ public final class VoiceNoteViewModel {
                     wasPlayingBeforeSeek = false
                     play()
                 }
+            case .scriptTimestampTapped(let time):
+                // 스크립트 타임스탬프 탭 — 해당 시간으로 이동 후 재생
+                seek(to: time)
+                play()
             }
 
         case .internal(let internalAction):
@@ -256,6 +265,7 @@ public extension VoiceNoteViewModel {
             case forwardButtonTapped
             case seekBegan
             case seekEnded(TimeInterval)
+            case scriptTimestampTapped(TimeInterval)
         }
 
         public enum Internal {
@@ -326,11 +336,51 @@ public extension VoiceNoteViewModel {
 
         public var scriptSections: [ScriptSection] {
             guard let transcript = voiceNote.transcript else { return [] }
-            let paragraphs = transcript.text
-                .components(separatedBy: "\n\n")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-            return [ScriptSection(timestamp: "00:00", paragraphs: paragraphs)]
+            // 레거시 데이터 (세그먼트 없음) — 기존 방식 유지
+            guard !transcript.segments.isEmpty else {
+                let paragraphs = transcript.text
+                    .components(separatedBy: "\n\n")
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+                return [ScriptSection(timestamp: 0, paragraphs: paragraphs)]
+            }
+            return Self.groupSegmentsIntoSections(transcript.segments)
+        }
+
+        // MARK: - Segment Grouping
+
+        /// 세그먼트를 공백 임계값 기준으로 섹션들로 그룹화
+        private static func groupSegmentsIntoSections(_ segments: [TranscriptSegment]) -> [ScriptSection] {
+            guard let first = segments.first else { return [] }
+
+            var sections: [ScriptSection] = []
+            var currentTimestamp = first.timestamp
+            var currentWords: [String] = [first.substring]
+
+            for i in 1..<segments.count {
+                let prev = segments[i - 1]
+                let curr = segments[i]
+                let gap = curr.timestamp - (prev.timestamp + prev.duration)
+
+                if gap > ScriptGroupingPolicy.pauseThreshold {
+                    // 현재까지 모은 단어들을 하나의 문단으로 완성
+                    let paragraph = currentWords.joined(separator: " ")
+                    sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
+                    // 새 섹션 시작
+                    currentTimestamp = curr.timestamp
+                    currentWords = [curr.substring]
+                } else {
+                    currentWords.append(curr.substring)
+                }
+            }
+
+            // 마지막 섹션 추가
+            if !currentWords.isEmpty {
+                let paragraph = currentWords.joined(separator: " ")
+                sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
+            }
+
+            return sections
         }
     }
 }

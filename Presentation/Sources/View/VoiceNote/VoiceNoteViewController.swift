@@ -238,8 +238,12 @@ private extension VoiceNoteViewController {
             guard let self, case .script(let index) = item else { return }
             let section = viewModel.state.scriptSections[index]
             cell.contentConfiguration = ScriptContentConfiguration(
-                timestamp: section.timestamp,
-                paragraphs: section.paragraphs
+                timestamp: section.formattedTimestamp,
+                timestampSeconds: section.timestamp,
+                paragraphs: section.paragraphs,
+                onTimestampTapped: { [weak self] time in
+                    self?.viewModel.send(.view(.scriptTimestampTapped(time)))
+                }
             )
         }
 
