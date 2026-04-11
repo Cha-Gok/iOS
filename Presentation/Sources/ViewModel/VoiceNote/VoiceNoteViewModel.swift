@@ -162,6 +162,8 @@ public final class VoiceNoteViewModel {
     }
 
     private func startPlaybackObservation() {
+        playbackObservationTask?.cancel()
+        playbackObservationTask = nil
         do {
             let stream = try prepareVoiceRecordPlaybackUseCase.execute(
                 audioFileURL: state.voiceNote.voiceRecord.audioFilePath
