@@ -38,6 +38,8 @@ public final class MainViewModel {
         categoryData[selectedCategoryIndex].items.isEmpty
     }
 
+    var errorMessage: String?
+
     // MARK: - UseCase
 
     let fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase
@@ -104,38 +106,58 @@ extension MainViewModel {
     /// 최근 기록(전체 폴더 최신 5개) 업데이트 함수
     func updateRecentCategory() {
         Task {
-            let voiceNotes: [VoiceNote] = await (try? fetchRecentVoiceNoteUseCase.execute()) ?? []
-            let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
-            categoryData[0].items = items
+            do {
+                let voiceNotes: [VoiceNote] = try await fetchRecentVoiceNoteUseCase.execute()
+                let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
+                categoryData[0].items = items
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
+            }
         }
     }
 
     /// 기본 폴더(음성 노트) 업데이트 함수
     func updateVoiceNoteCategory() {
         Task {
-            let voiceNotes: [VoiceNote] = await (try? fetchVoiceNoteUseCase.execute()) ?? []
-            let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
-            categoryData[1].items = items
+            do {
+                let voiceNotes: [VoiceNote] = try await fetchVoiceNoteUseCase.execute()
+                let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
+                categoryData[1].items = items
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
+            }
         }
     }
 
     /// 폴더 영속성 업데이트 함수
     func updateMyFolderCategory() {
         Task {
-            let folders: [Folder] = try await fetchFolderUseCase.fetchAll()
-            let items: [LibraryItem] = folders.map { folder in
-                LibraryItem.folder(folder)
+            do {
+                let folders: [Folder] = try await fetchFolderUseCase.fetchAll()
+                let items: [LibraryItem] = folders.map { folder in
+                    LibraryItem.folder(folder)
+                }
+                categoryData[2].items = items
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
             }
-            categoryData[2].items = items
         }
     }
 
     /// 휴지통 영속성 업데이트 함수
     func updateTrashCategory() {
         Task {
-            let wasteBasket: [WasteBasketItem] = try await fetchTrashUseCase.execute()
-            let items: [LibraryItem] = wasteBasket.map(\.toLibraryItem)
-            categoryData[3].items = items
+            do {
+                let wasteBasket: [WasteBasketItem] = try await fetchTrashUseCase.execute()
+                let items: [LibraryItem] = wasteBasket.map(\.toLibraryItem)
+                categoryData[3].items = items
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
+            }
         }
     }
 }
