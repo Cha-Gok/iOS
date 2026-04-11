@@ -2,10 +2,6 @@ import Core
 import Domain
 import Foundation
 
-private enum ScriptGroupingPolicy {
-    /// 세그먼트 간 공백이 이 값(초)을 초과하면 새 섹션으로 분리
-    static let pauseThreshold: TimeInterval = 2.0
-}
 
 @MainActor
 @Observable
@@ -362,7 +358,7 @@ public extension VoiceNoteViewModel {
                 let curr = segments[i]
                 let gap = curr.timestamp - (prev.timestamp + prev.duration)
 
-                if gap > ScriptGroupingPolicy.pauseThreshold {
+                if gap > Policy.scriptGroupingPauseThreshold {
                     // 현재까지 모은 단어들을 하나의 문단으로 완성
                     let paragraph = currentWords.joined(separator: " ")
                     sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
