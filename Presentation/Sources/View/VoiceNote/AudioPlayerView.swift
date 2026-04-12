@@ -115,7 +115,7 @@ final class AudioPlayerView: UIView {
             buttonStackView.topAnchor.constraint(equalTo: durationStackView.bottomAnchor, constant: 9),
             buttonStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 40),
             buttonStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -40),
-            buttonStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -46),
+            buttonStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -46)
         ])
     }
 

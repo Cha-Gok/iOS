@@ -29,8 +29,8 @@ public final class VoiceNoteViewController: UIViewController {
 
     public init(viewModel: VoiceNoteViewModel) {
         self.viewModel = viewModel
-        self.analysisObservable = viewModel.state.analysisObservable
-        self.errorObservable = viewModel.state.errorObservable
+        analysisObservable = viewModel.state.analysisObservable
+        errorObservable = viewModel.state.errorObservable
         super.init(nibName: nil, bundle: nil)
     }
 

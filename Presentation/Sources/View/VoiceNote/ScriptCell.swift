@@ -87,7 +87,8 @@ final class ScriptContentView: UIView, UIContentView {
         ])
     }
 
-    @objc private func timestampTapped() {
+    @objc
+    private func timestampTapped() {
         guard let config = configuration as? ScriptContentConfiguration else { return }
         config.onTimestampTapped?(config.timestampSeconds)
     }
@@ -134,11 +135,10 @@ final class ScriptContentView: UIView, UIContentView {
                 return (background, label)
             }
         } else {
-            zip(paragraphRows, config.paragraphs).forEach { row, para in
+            for (row, para) in zip(paragraphRows, config.paragraphs) {
                 row.label.setTypography(text: para, style: .body1)
             }
         }
-
     }
 
     // MARK: - Highlight
