@@ -348,10 +348,13 @@ public extension VoiceNoteViewModel {
         public private(set) var playingParagraphInfo: PlayingParagraphInfo?
 
         /// 재생 시간에 따라 하이라이트 정보를 업데이트합니다.
+        /// - Note: `@Observable`은 값이 같아도 setter 호출 시 observation을 fire하므로,
+        ///   동일 값이면 early return하여 visible cell의 불필요한 `updateProperties()` 호출을 방지합니다.
         mutating func updatePlayingParagraph() {
             let currentTime = currentPlaybackState.currentTime
             let sections = scriptSections
             guard !sections.isEmpty else {
+                guard playingParagraphInfo != nil else { return }
                 playingParagraphInfo = nil
                 playbackHighlight.playingParagraphInfo = nil
                 return
@@ -363,6 +366,9 @@ public extension VoiceNoteViewModel {
                     newInfo = PlayingParagraphInfo(sectionIndex: index, paragraphIndex: 0)
                     break
                 }
+            }
+            guard playingParagraphInfo != newInfo else {
+                return
             }
             playingParagraphInfo = newInfo
             playbackHighlight.playingParagraphInfo = newInfo
