@@ -6,6 +6,9 @@ public final class VoiceNoteViewController: UIViewController {
     typealias Item = VoiceNoteViewModel.Item
 
     private let viewModel: VoiceNoteViewModel
+    private let analysisObservable: VoiceNoteViewModel.AnalysisObservable
+    private let errorObservable: VoiceNoteViewModel.ErrorObservable
+    private var hasAppliedCompletedSnapshot = false
     private lazy var dataSource = makeDataSource()
 
     // MARK: - UI Components
@@ -26,6 +29,8 @@ public final class VoiceNoteViewController: UIViewController {
 
     public init(viewModel: VoiceNoteViewModel) {
         self.viewModel = viewModel
+        self.analysisObservable = viewModel.state.analysisObservable
+        self.errorObservable = viewModel.state.errorObservable
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -50,17 +55,20 @@ public final class VoiceNoteViewController: UIViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        switch viewModel.state.analysisObservable.analysisState {
+        switch analysisObservable.analysisState {
         case .analyzing:
             var snapshot = dataSource.snapshot()
             snapshot.reconfigureItems([.metadata])
             dataSource.apply(snapshot, animatingDifferences: false)
         case .completed:
-            applySnapshot()
+            if !hasAppliedCompletedSnapshot {
+                hasAppliedCompletedSnapshot = true
+                applySnapshot()
+            }
         case .failed:
             break
         }
-        if let message = viewModel.state.errorObservable.message {
+        if let message = errorObservable.message {
             showErrorAlert(message: message)
         }
     }
