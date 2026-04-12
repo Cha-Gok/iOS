@@ -40,7 +40,6 @@ public final class VoiceNoteViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         applySnapshot()
-        observeAudioPlayback()
         viewModel.send(.view(.onAppear))
     }
 
@@ -51,27 +50,20 @@ public final class VoiceNoteViewController: UIViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        if let errorMessage = viewModel.state.errorMessage {
-            showErrorAlert(message: errorMessage)
-        } else if viewModel.state.analysisState == .completed {
-            applySnapshot()
-        } else {
+        switch viewModel.state.analysisObservable.analysisState {
+        case .analyzing:
             var snapshot = dataSource.snapshot()
             snapshot.reconfigureItems([.metadata])
             dataSource.apply(snapshot, animatingDifferences: false)
+        case .completed:
+            applySnapshot()
+        case .failed:
+            break
+        }
+        if let message = viewModel.state.errorObservable.message {
+            showErrorAlert(message: message)
         }
     }
-
-    private func observeAudioPlayback() {
-        withObservationTracking {
-            playerView.apply(viewModel.state.currentPlaybackState)
-        } onChange: { [weak self] in
-            Task { @MainActor [weak self] in
-                self?.observeAudioPlayback()
-            }
-        }
-    }
-
 }
 
 // MARK: - Setup
@@ -145,6 +137,7 @@ private extension VoiceNoteViewController {
     }
 
     func setupPlayerView() {
+        playerView.audioPlayerObservable = viewModel.state.audioPlayerObservable
         playerView.onPlayPause = { [weak self] in self?.viewModel.send(.view(.playPauseButtonTapped)) }
         playerView.onRewind = { [weak self] in self?.viewModel.send(.view(.rewindButtonTapped)) }
         playerView.onForward = { [weak self] in self?.viewModel.send(.view(.forwardButtonTapped)) }
@@ -202,6 +195,7 @@ private extension VoiceNoteViewController {
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
             let topInset: CGFloat = Section(rawValue: sectionIndex) == .metadata ? 24 : 12
             section.contentInsets = NSDirectionalEdgeInsets(top: topInset, leading: 20, bottom: 32, trailing: 20)
+            if Section(rawValue: sectionIndex) == .scripts { section.interGroupSpacing = 16 }
             section.boundarySupplementaryItems.forEach { $0.pinToVisibleBounds = false }
             return section
         }

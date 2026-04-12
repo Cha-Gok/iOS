@@ -2,7 +2,6 @@ import Core
 import Domain
 import Foundation
 
-
 @MainActor
 @Observable
 public final class VoiceNoteViewModel {
@@ -227,6 +226,25 @@ public extension VoiceNoteViewModel {
         public var playingParagraphInfo: State.PlayingParagraphInfo?
     }
 
+    /// 오디오 플레이어 재생 상태. AudioPlayerView가 직접 관찰합니다.
+    @Observable
+    final class AudioPlayerObservable {
+        public var playbackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
+    }
+
+    /// 분석 진행 상태. VoiceNoteViewController가 직접 관찰합니다.
+    /// analyzing → completed/failed 로 한 번만 바뀝니다.
+    @Observable
+    final class AnalysisObservable {
+        public var analysisState: State.AnalysisState = .analyzing
+    }
+
+    /// 에러 메시지. VoiceNoteViewController가 직접 관찰합니다.
+    @Observable
+    final class ErrorObservable {
+        public var message: String?
+    }
+
     enum Section: Int, CaseIterable, Sendable {
         case metadata
         case keyPoints
@@ -292,20 +310,30 @@ public extension VoiceNoteViewModel {
         }
 
         var voiceNote: VoiceNote
-        var analysisState: AnalysisState
-        var errorMessage: String?
+        var analysisState: AnalysisState {
+            didSet { analysisObservable.analysisState = analysisState }
+        }
+
+        var errorMessage: String? {
+            didSet { errorObservable.message = errorMessage }
+        }
+
         var folderName: String = ""
         /// State가 struct이므로 let으로 선언해 참조 안정성을 보장합니다.
+        let analysisObservable = AnalysisObservable()
+        let errorObservable = ErrorObservable()
         let playbackHighlight = PlaybackHighlight()
-        var currentPlaybackState = AudioPlaybackState(
-            status: .idle,
-            currentTime: 0,
-            duration: 0
-        )
+        let audioPlayerObservable = AudioPlayerObservable()
+        var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0) {
+            didSet { audioPlayerObservable.playbackState = currentPlaybackState }
+        }
 
         init(voiceNote: VoiceNote) {
             self.voiceNote = voiceNote
-            analysisState = voiceNote.summary != nil && voiceNote.transcript != nil ? .completed : .analyzing
+            let initialAnalysisState: AnalysisState = voiceNote.summary != nil && voiceNote
+                .transcript != nil ? .completed : .analyzing
+            analysisState = initialAnalysisState
+            analysisObservable.analysisState = initialAnalysisState
         }
 
         // MARK: - Highlight Logic
@@ -386,7 +414,7 @@ public extension VoiceNoteViewModel {
             var currentTimestamp = first.timestamp
             var currentWords: [String] = [first.substring]
 
-            for i in 1..<segments.count {
+            for i in 1 ..< segments.count {
                 let prev = segments[i - 1]
                 let curr = segments[i]
                 let gap = curr.timestamp - (prev.timestamp + prev.duration)
