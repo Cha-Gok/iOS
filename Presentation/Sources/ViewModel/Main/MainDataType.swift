@@ -5,6 +5,22 @@ import Observation
 public enum MainSection: Hashable, Sendable {
     case category
     case list
+    case groupedList(MainListDateGroup)
+    case emptyList
+}
+
+public enum MainListDateGroup: Int, Hashable, Sendable, CaseIterable {
+    case today
+    case recentSevenDays
+    case older
+
+    var title: String {
+        switch self {
+        case .today: return "오늘"
+        case .recentSevenDays: return "최근 7일"
+        case .older: return "이전"
+        }
+    }
 }
 
 public enum LibraryItem: Hashable, Sendable {
