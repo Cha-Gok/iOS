@@ -3,7 +3,6 @@ import Foundation
 import Observation
 
 public enum MainSection: Hashable, Sendable {
-    case category
     case list
     case groupedList(MainListDateGroup)
     case emptyList
@@ -58,7 +57,6 @@ public struct CategoryToggle: Hashable, Sendable {
 }
 
 public enum MainCellItem: Hashable, Sendable {
-    case category(CategoryToggle)
     case list(LibraryItem)
     case emptyList
 }
