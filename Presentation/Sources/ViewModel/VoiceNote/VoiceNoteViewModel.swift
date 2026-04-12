@@ -221,6 +221,12 @@ public final class VoiceNoteViewModel {
 // MARK: - Nested Types
 
 public extension VoiceNoteViewModel {
+    /// 재생 위치에 따른 하이라이트 상태. 셀이 직접 관찰합니다.
+    @Observable
+    final class PlaybackHighlight {
+        public var playingParagraphInfo: State.PlayingParagraphInfo?
+    }
+
     enum Section: Int, CaseIterable, Sendable {
         case metadata
         case keyPoints
@@ -289,6 +295,8 @@ public extension VoiceNoteViewModel {
         var analysisState: AnalysisState
         var errorMessage: String?
         var folderName: String = ""
+        /// State가 struct이므로 let으로 선언해 참조 안정성을 보장합니다.
+        let playbackHighlight = PlaybackHighlight()
         var currentPlaybackState = AudioPlaybackState(
             status: .idle,
             currentTime: 0,
@@ -310,18 +318,14 @@ public extension VoiceNoteViewModel {
 
         /// 현재 하이라이트된 문단 정보
         public private(set) var playingParagraphInfo: PlayingParagraphInfo?
-        /// 이전에 하이라이트되었던 문단 정보 (UI 갱신용)
-        public private(set) var previousPlayingParagraphInfo: PlayingParagraphInfo?
 
         /// 재생 시간에 따라 하이라이트 정보를 업데이트합니다.
         mutating func updatePlayingParagraph() {
             let currentTime = currentPlaybackState.currentTime
             let sections = scriptSections
             guard !sections.isEmpty else {
-                if playingParagraphInfo != nil {
-                    previousPlayingParagraphInfo = playingParagraphInfo
-                    playingParagraphInfo = nil
-                }
+                playingParagraphInfo = nil
+                playbackHighlight.playingParagraphInfo = nil
                 return
             }
 
@@ -332,11 +336,8 @@ public extension VoiceNoteViewModel {
                     break
                 }
             }
-            
-            if playingParagraphInfo != newInfo {
-                previousPlayingParagraphInfo = playingParagraphInfo
-                playingParagraphInfo = newInfo
-            }
+            playingParagraphInfo = newInfo
+            playbackHighlight.playingParagraphInfo = newInfo
         }
 
         // MARK: - Mapped Properties
