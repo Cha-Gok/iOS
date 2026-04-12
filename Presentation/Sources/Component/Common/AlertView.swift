@@ -57,6 +57,7 @@ final class AlertView: UIView {
         self.primaryButton = primaryButton
         super.init(frame: frame)
         setup()
+        setupButton()
         childSetup()
     }
 
@@ -103,6 +104,16 @@ extension AlertView {
         backgroundColor = .point200.withAlphaComponent(Constant.backgroundOpacity)
         layer.borderWidth = Constant.borderWidth
         layer.borderColor = UIColor.gray600.cgColor
+    }
+
+    /// AlertView에 맞게 외부 설정 값 상관 없이 내부에서 일관된 디자인을  처리합니다.
+    private func setupButton() {
+        // close
+        closeButton.setShadow(false)
+        closeButton.setCapsuleCornerRadius()
+        // primary
+        primaryButton.setShadow(false)
+        primaryButton.setCapsuleCornerRadius()
     }
 
     /// AlertView 내부의 컴포넌트들(제목, 부제목, 버튼 등)을 StackView에 배치하고

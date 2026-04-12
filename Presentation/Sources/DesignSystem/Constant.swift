@@ -31,6 +31,9 @@ public extension Constant {
     /// GlassButton Shadow Offset ( width, height )
     static let shadowOffsetWidth: CGFloat = 2
     static let shadowOffsetHeight: CGFloat = 2
+
+    /// GlassButton Floating Size
+    static let floatingButtonSize: CGFloat = 64
 }
 
 // MARK: - AlertView Constants
@@ -160,4 +163,35 @@ public extension Constant {
 
     /// LanguagePicker 라디오 버튼과 텍스트 사이 간격 (6)
     static let languagePickerTitleSpacing: CGFloat = 6
+}
+
+// MARK: - BackgroundView Constants
+
+public extension Constant {
+    /// 첫 번째 타원 초기 높이 (195)
+    static let ellipseFirstHeight: CGFloat = 195
+    /// 두 번째 타원 초기 높이 (116)
+    static let ellipseSecondHeight: CGFloat = 116
+    /// 첫 번째 타원 초기 Blur (100)
+    static let ellipseFirstBlur: CGFloat = 100
+    /// 두 번째 타원 초기 Blur (40)
+    static let ellipseSecondBlur: CGFloat = 40
+
+    /// 첫 번째 타원 Blur 진폭 배율 (250)
+    static let ellipseFirstBlurAmplitudeMultiplier: CGFloat = 250
+    /// 두 번째 타원 Blur 진폭 배율 (100)
+    static let ellipseSecondBlurAmplitudeMultiplier: CGFloat = 100
+    /// 첫 번째 타원 높이 진폭 배율 (643)
+    static let ellipseFirstHeightAmplitudeMultiplier: CGFloat = 643
+    /// 두 번째 타원 높이 진폭 배율 (204)
+    static let ellipseSecondHeightAmplitudeMultiplier: CGFloat = 204
+
+    /// 첫 번째 타원 Leading Offset (-16)
+    static let ellipseFirstLeadingOffset: CGFloat = -16
+    /// 첫 번째 타원 Trailing Offset (16)
+    static let ellipseFirstTrailingOffset: CGFloat = 16
+    /// 첫 번째 타원 Bottom Offset (69)
+    static let ellipseFirstBottomOffset: CGFloat = 69
+    /// 두 번째 타원 Bottom Offset (100)
+    static let ellipseSecondBottomOffset: CGFloat = 100
 }

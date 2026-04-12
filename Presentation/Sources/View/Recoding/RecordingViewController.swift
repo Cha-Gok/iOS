@@ -1,12 +1,10 @@
 import Domain
 import UIKit
 
-public final class RecordingViewController: UIViewController {
+public final class RecordingViewController: ViewController {
     private let viewModel: RecordingViewModel
 
     // MARK: - UI Components
-
-    private let backgroundView: RecordingBackgroundView = .init()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -73,7 +71,7 @@ public final class RecordingViewController: UIViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        backgroundView.updateValue(viewModel.state.amplitude)
+        chagokBackgroundView.amplitude.value = viewModel.state.amplitude
         titleLabel.setTypography(text: viewModel.state.title, style: .header2)
         timestampLabel.setTypography(text: viewModel.state.displayStartDate, style: .subtitle2)
         durationLabel.setTypography(text: viewModel.state.displayDuration, style: .header1)
@@ -99,16 +97,12 @@ public final class RecordingViewController: UIViewController {
     }
 
     private func setupUI() {
-        for item in [backgroundView, titleLabel, durationLabel, recordButton, timestampLabel] {
+        for item in [titleLabel, durationLabel, recordButton, timestampLabel] {
             item.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(item)
         }
 
         NSLayoutConstraint.activate([
-            backgroundView.topAnchor.constraint(equalTo: view.topAnchor),
-            backgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            backgroundView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            backgroundView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 180),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
