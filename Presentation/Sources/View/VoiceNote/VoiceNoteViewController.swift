@@ -93,9 +93,9 @@ public final class VoiceNoteViewController: UIViewController {
         var itemsToReconfigure: [Item] = []
         if let last { itemsToReconfigure.append(.script(index: last.sectionIndex)) }
         if let current { itemsToReconfigure.append(.script(index: current.sectionIndex)) }
-        
+
         guard !itemsToReconfigure.isEmpty else { return }
-        
+
         var snapshot = dataSource.snapshot()
         snapshot.reconfigureItems(itemsToReconfigure)
         dataSource.apply(snapshot, animatingDifferences: false)
@@ -173,21 +173,11 @@ private extension VoiceNoteViewController {
     }
 
     func setupPlayerView() {
-        playerView.onPlayPause = { [weak self] in
-            self?.viewModel.send(.view(.playPauseButtonTapped))
-        }
-        playerView.onRewind = { [weak self] in
-            self?.viewModel.send(.view(.rewindButtonTapped))
-        }
-        playerView.onForward = { [weak self] in
-            self?.viewModel.send(.view(.forwardButtonTapped))
-        }
-        playerView.onSeekBegan = { [weak self] in
-            self?.viewModel.send(.view(.seekBegan))
-        }
-        playerView.onSeekEnded = { [weak self] time in
-            self?.viewModel.send(.view(.seekEnded(time)))
-        }
+        playerView.onPlayPause = { [weak self] in self?.viewModel.send(.view(.playPauseButtonTapped)) }
+        playerView.onRewind = { [weak self] in self?.viewModel.send(.view(.rewindButtonTapped)) }
+        playerView.onForward = { [weak self] in self?.viewModel.send(.view(.forwardButtonTapped)) }
+        playerView.onSeekBegan = { [weak self] in self?.viewModel.send(.view(.seekBegan)) }
+        playerView.onSeekEnded = { [weak self] time in self?.viewModel.send(.view(.seekEnded(time))) }
     }
 }
 
@@ -238,8 +228,8 @@ private extension VoiceNoteViewController {
             config.headerMode = Section(rawValue: sectionIndex) == .metadata ? .none : .supplementary
 
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
-            let topInset: CGFloat = Section(rawValue: sectionIndex) == .metadata ? 24 : 0
-            section.contentInsets = NSDirectionalEdgeInsets(top: topInset, leading: 20, bottom: 0, trailing: 20)
+            let topInset: CGFloat = Section(rawValue: sectionIndex) == .metadata ? 24 : 12
+            section.contentInsets = NSDirectionalEdgeInsets(top: topInset, leading: 20, bottom: 32, trailing: 20)
             section.boundarySupplementaryItems.forEach { $0.pinToVisibleBounds = false }
             return section
         }
@@ -270,7 +260,7 @@ private extension VoiceNoteViewController {
             let section = viewModel.state.scriptSections[index]
             let playingInfo = viewModel.state.playingParagraphInfo
             let isHighlightedSection = playingInfo?.sectionIndex == index
-            
+
             cell.contentConfiguration = ScriptContentConfiguration(
                 timestamp: section.formattedTimestamp,
                 timestampSeconds: section.timestamp,
