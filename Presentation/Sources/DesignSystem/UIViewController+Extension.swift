@@ -5,10 +5,6 @@ import UIKit
 public class ViewController: UIViewController {
     lazy var chagokBackgroundView: ChaGokBackgroundView = .init()
 
-    override public func viewDidLoad() {
-        super.viewDidLoad()
-    }
-
     override public func loadView() {
         view = chagokBackgroundView
     }
@@ -21,10 +17,8 @@ public class CollectionViewController: UICollectionViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-    }
-
-    override public func loadView() {
-        view = chagokBackgroundView
+        collectionView.backgroundView = chagokBackgroundView
+        collectionView.backgroundColor = .clear
     }
 }
 
@@ -51,10 +45,8 @@ public class TableViewController: UITableViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-    }
-
-    override public func loadView() {
-        view = chagokBackgroundView
+        tableView.backgroundView = chagokBackgroundView
+        tableView.backgroundColor = .clear
     }
 }
 
@@ -86,7 +78,6 @@ final class ChaGokBackgroundView: UIView {
     let ellipseSecond: UIView = {
         let e = UIView()
         e.translatesAutoresizingMaskIntoConstraints = false
-        e.backgroundColor = .yellow
         return e
     }()
 
