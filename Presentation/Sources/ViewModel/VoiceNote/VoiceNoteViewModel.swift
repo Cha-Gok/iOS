@@ -2,6 +2,8 @@ import Core
 import Domain
 import Foundation
 
+public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {}
+
 @MainActor
 @Observable
 public final class VoiceNoteViewModel {
@@ -11,6 +13,8 @@ public final class VoiceNoteViewModel {
     private var playbackObservationTask: Task<Void, Never>?
     @ObservationIgnored
     private var wasPlayingBeforeSeek = false
+
+    public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
     // MARK: - UseCases
 
@@ -98,6 +102,8 @@ public final class VoiceNoteViewModel {
                 // 스크립트 타임스탬프 탭 — 해당 시간으로 이동 후 재생
                 seek(to: time)
                 play()
+            case .pop:
+                coordinator?.pop()
             }
 
         case .internal(let internalAction):
@@ -287,6 +293,7 @@ public extension VoiceNoteViewModel {
             case seekBegan
             case seekEnded(TimeInterval)
             case scriptTimestampTapped(TimeInterval)
+            case pop
         }
 
         public enum Internal {

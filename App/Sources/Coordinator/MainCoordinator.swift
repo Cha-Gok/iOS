@@ -60,6 +60,13 @@ extension MainCoordinator: MainCoordinatorDelegate {
         presenter.pushViewController(myFolderVC, animated: true)
     }
 
+    func pushVoiceNoteView(voiceNote: VoiceNote) {
+        let voiceNoteVM = dependencyContainer.makeVoiceNoteViewModel(voiceNote: voiceNote)
+        voiceNoteVM.coordinator = self
+        let voiceNoteVC = VoiceNoteViewController(viewModel: voiceNoteVM)
+        presenter.pushViewController(voiceNoteVC, animated: true)
+    }
+
     // TODO: Present
 
     func presentRecodingView() {
@@ -125,6 +132,10 @@ extension MainCoordinator: FolderCoordinatorDelegate {
         presenter.pushViewController(myFolderDetailVC, animated: true)
     }
 }
+
+// MARK: VoiceNoteCoordinating
+
+extension MainCoordinator: VoiceNoteCoordinatorDelegate {}
 
 // MARK: Base 공통 함수 묶음
 

@@ -95,6 +95,10 @@ extension MainViewModel {
         mainCoordinator?.pushMyFolderView(category: categoryData[2])
     }
 
+    func pushVoiceNoteView(voiceNote: VoiceNote) {
+        mainCoordinator?.pushVoiceNoteView(voiceNote: voiceNote)
+    }
+
     func presentRecodingView() {
         mainCoordinator?.presentRecodingView()
     }
