@@ -35,6 +35,7 @@ extension MainCoordinator: RecordingCoordinating {
         presenter.dismiss(animated: true) { [weak self] in
             guard let self else { return }
             let voiceNoteVM = dependencyContainer.makeVoiceNoteViewModel(voiceNote: voiceNote)
+            voiceNoteVM.coordinator = self
             let voiceNoteVC = VoiceNoteViewController(viewModel: voiceNoteVM)
             presenter.pushViewController(voiceNoteVC, animated: true)
         }

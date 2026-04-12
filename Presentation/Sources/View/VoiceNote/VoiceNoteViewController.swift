@@ -17,6 +17,15 @@ public final class VoiceNoteViewController: UIViewController {
     private let topBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
     private lazy var segmentedControl = UnderlineSegmentedControl(items: [Section.keyPoints, .keywords, .scripts]
         .compactMap(\.title))
+    private lazy var backButton: UIButton = {
+        let btn = UIButton(type: .system)
+        let backImage = UIImage(systemName: "chevron.left")?
+            .withConfiguration(UIImage.SymbolConfiguration(weight: .bold))
+        btn.setImage(backImage, for: .normal)
+        btn.titleLabel?.setTypography(style: .title1)
+        btn.tintColor = UIColor.gray950
+        return btn
+    }()
 
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
@@ -119,8 +128,12 @@ private extension VoiceNoteViewController {
     }
 
     func setupNavigationBar() {
-        title = viewModel.state.title
-
+        backButton.setTitle(" \(viewModel.state.title)", for: .normal)
+        backButton.addAction(
+            UIAction { [weak self] _ in
+                self?.viewModel.send(.view(.pop))
+            }, for: .touchUpInside
+        )
         let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), style: .plain, target: nil, action: nil)
         let searchItem = UIBarButtonItem(
             image: UIImage(systemName: "magnifyingglass"),
@@ -128,9 +141,14 @@ private extension VoiceNoteViewController {
             target: nil,
             action: nil
         )
-
+        let leftItem = UIBarButtonItem(customView: backButton)
+        navigationItem.leftBarButtonItem = leftItem
         navigationItem.rightBarButtonItems = [moreItem, searchItem]
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
+        navigationItem.leftBarButtonItem?.hidesSharedBackground = true
+        navigationItem.rightBarButtonItems?.forEach {
+            $0.hidesSharedBackground = true
+        }
     }
 
     func setupTabBar() {
