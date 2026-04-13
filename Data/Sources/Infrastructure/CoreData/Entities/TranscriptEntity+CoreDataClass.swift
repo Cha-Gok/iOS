@@ -13,6 +13,9 @@ public final class TranscriptEntity: NSManagedObject {
     public var createdAt: Date
 
     @NSManaged
+    public var segmentsData: Data?
+
+    @NSManaged
     public var voiceNote: VoiceNoteEntity
 }
 
@@ -25,10 +28,12 @@ extension TranscriptEntity: ManagedObjectMapping {
     }
 
     public func toModel() -> ModelType {
-        Transcript(
+        let segments = (segmentsData.flatMap { try? JSONDecoder().decode([TranscriptSegment].self, from: $0) }) ?? []
+        return Transcript(
             id: id,
             createdAt: createdAt,
-            text: text
+            text: text,
+            segments: segments
         )
     }
 
@@ -36,6 +41,7 @@ extension TranscriptEntity: ManagedObjectMapping {
         id = model.id
         text = model.text
         createdAt = model.createdAt
+        segmentsData = try? JSONEncoder().encode(model.segments)
     }
 
     public static var entityName: CoreDataEntityName {

@@ -6,6 +6,9 @@ public final class VoiceNoteViewController: UIViewController {
     typealias Item = VoiceNoteViewModel.Item
 
     private let viewModel: VoiceNoteViewModel
+    private let analysisObservable: VoiceNoteViewModel.AnalysisObservable
+    private let errorObservable: VoiceNoteViewModel.ErrorObservable
+    private var hasAppliedCompletedSnapshot = false
     private lazy var dataSource = makeDataSource()
 
     // MARK: - UI Components
@@ -26,6 +29,8 @@ public final class VoiceNoteViewController: UIViewController {
 
     public init(viewModel: VoiceNoteViewModel) {
         self.viewModel = viewModel
+        analysisObservable = viewModel.state.analysisObservable
+        errorObservable = viewModel.state.errorObservable
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -40,7 +45,6 @@ public final class VoiceNoteViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         applySnapshot()
-        observePlaybackState()
         viewModel.send(.view(.onAppear))
     }
 
@@ -51,24 +55,21 @@ public final class VoiceNoteViewController: UIViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        if let errorMessage = viewModel.state.errorMessage {
-            showErrorAlert(message: errorMessage)
-        } else if viewModel.state.analysisState == .completed {
-            applySnapshot()
-        } else {
+        switch analysisObservable.analysisState {
+        case .analyzing:
             var snapshot = dataSource.snapshot()
             snapshot.reconfigureItems([.metadata])
             dataSource.apply(snapshot, animatingDifferences: false)
-        }
-    }
-
-    private func observePlaybackState() {
-        withObservationTracking {
-            playerView.apply(viewModel.state.currentPlaybackState)
-        } onChange: { [weak self] in
-            Task { @MainActor [weak self] in
-                self?.observePlaybackState()
+        case .completed:
+            if !hasAppliedCompletedSnapshot {
+                hasAppliedCompletedSnapshot = true
+                applySnapshot()
             }
+        case .failed:
+            break
+        }
+        if let message = errorObservable.message {
+            showErrorAlert(message: message)
         }
     }
 }
@@ -144,21 +145,12 @@ private extension VoiceNoteViewController {
     }
 
     func setupPlayerView() {
-        playerView.onPlayPause = { [weak self] in
-            self?.viewModel.send(.view(.playPauseButtonTapped))
-        }
-        playerView.onRewind = { [weak self] in
-            self?.viewModel.send(.view(.rewindButtonTapped))
-        }
-        playerView.onForward = { [weak self] in
-            self?.viewModel.send(.view(.forwardButtonTapped))
-        }
-        playerView.onSeekBegan = { [weak self] in
-            self?.viewModel.send(.view(.seekBegan))
-        }
-        playerView.onSeekEnded = { [weak self] time in
-            self?.viewModel.send(.view(.seekEnded(time)))
-        }
+        playerView.audioPlayerObservable = viewModel.state.audioPlayerObservable
+        playerView.onPlayPause = { [weak self] in self?.viewModel.send(.view(.playPauseButtonTapped)) }
+        playerView.onRewind = { [weak self] in self?.viewModel.send(.view(.rewindButtonTapped)) }
+        playerView.onForward = { [weak self] in self?.viewModel.send(.view(.forwardButtonTapped)) }
+        playerView.onSeekBegan = { [weak self] in self?.viewModel.send(.view(.seekBegan)) }
+        playerView.onSeekEnded = { [weak self] time in self?.viewModel.send(.view(.seekEnded(time))) }
     }
 }
 
@@ -209,6 +201,9 @@ private extension VoiceNoteViewController {
             config.headerMode = Section(rawValue: sectionIndex) == .metadata ? .none : .supplementary
 
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
+            let topInset: CGFloat = Section(rawValue: sectionIndex) == .metadata ? 24 : 12
+            section.contentInsets = NSDirectionalEdgeInsets(top: topInset, leading: 20, bottom: 32, trailing: 20)
+            if Section(rawValue: sectionIndex) == .scripts { section.interGroupSpacing = 16 }
             section.boundarySupplementaryItems.forEach { $0.pinToVisibleBounds = false }
             return section
         }
@@ -237,9 +232,16 @@ private extension VoiceNoteViewController {
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
             guard let self, case .script(let index) = item else { return }
             let section = viewModel.state.scriptSections[index]
+
             cell.contentConfiguration = ScriptContentConfiguration(
-                timestamp: section.timestamp,
-                paragraphs: section.paragraphs
+                sectionIndex: index,
+                timestamp: section.formattedTimestamp,
+                timestampSeconds: section.timestamp,
+                paragraphs: section.paragraphs,
+                highlight: viewModel.state.playbackHighlight,
+                onTimestampTapped: { [weak self] time in
+                    self?.viewModel.send(.view(.scriptTimestampTapped(time)))
+                }
             )
         }
 

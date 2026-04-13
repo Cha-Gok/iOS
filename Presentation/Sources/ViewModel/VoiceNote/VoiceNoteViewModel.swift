@@ -94,6 +94,10 @@ public final class VoiceNoteViewModel {
                     wasPlayingBeforeSeek = false
                     play()
                 }
+            case .scriptTimestampTapped(let time):
+                // 스크립트 타임스탬프 탭 — 해당 시간으로 이동 후 재생
+                seek(to: time)
+                play()
             }
 
         case .internal(let internalAction):
@@ -112,6 +116,7 @@ public final class VoiceNoteViewModel {
             case .playbackStateChanged(let playbackState):
                 // 재생 진행 스트림에서 수신한 최신 상태 반영
                 state.currentPlaybackState = playbackState
+                state.updatePlayingParagraph()
             case .errorOccurred(let message):
                 // 재생 제어 중 에러 발생 — 알럿 표시
                 state.errorMessage = message
@@ -215,6 +220,31 @@ public final class VoiceNoteViewModel {
 // MARK: - Nested Types
 
 public extension VoiceNoteViewModel {
+    /// 재생 위치에 따른 하이라이트 상태. 셀이 직접 관찰합니다.
+    @Observable
+    final class PlaybackHighlight {
+        public var playingParagraphInfo: State.PlayingParagraphInfo?
+    }
+
+    /// 오디오 플레이어 재생 상태. AudioPlayerView가 직접 관찰합니다.
+    @Observable
+    final class AudioPlayerObservable {
+        public var playbackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
+    }
+
+    /// 분석 진행 상태. VoiceNoteViewController가 직접 관찰합니다.
+    /// analyzing → completed/failed 로 한 번만 바뀝니다.
+    @Observable
+    final class AnalysisObservable {
+        public var analysisState: State.AnalysisState = .analyzing
+    }
+
+    /// 에러 메시지. VoiceNoteViewController가 직접 관찰합니다.
+    @Observable
+    final class ErrorObservable {
+        public var message: String?
+    }
+
     enum Section: Int, CaseIterable, Sendable {
         case metadata
         case keyPoints
@@ -256,6 +286,7 @@ public extension VoiceNoteViewModel {
             case forwardButtonTapped
             case seekBegan
             case seekEnded(TimeInterval)
+            case scriptTimestampTapped(TimeInterval)
         }
 
         public enum Internal {
@@ -279,18 +310,68 @@ public extension VoiceNoteViewModel {
         }
 
         var voiceNote: VoiceNote
-        var analysisState: AnalysisState
-        var errorMessage: String?
+        var analysisState: AnalysisState {
+            didSet { analysisObservable.analysisState = analysisState }
+        }
+
+        var errorMessage: String? {
+            didSet { errorObservable.message = errorMessage }
+        }
+
         var folderName: String = ""
-        var currentPlaybackState = AudioPlaybackState(
-            status: .idle,
-            currentTime: 0,
-            duration: 0
-        )
+        /// State가 struct이므로 let으로 선언해 참조 안정성을 보장합니다.
+        let analysisObservable = AnalysisObservable()
+        let errorObservable = ErrorObservable()
+        let playbackHighlight = PlaybackHighlight()
+        let audioPlayerObservable = AudioPlayerObservable()
+        var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0) {
+            didSet { audioPlayerObservable.playbackState = currentPlaybackState }
+        }
 
         init(voiceNote: VoiceNote) {
             self.voiceNote = voiceNote
-            analysisState = voiceNote.summary != nil && voiceNote.transcript != nil ? .completed : .analyzing
+            let initialAnalysisState: AnalysisState = voiceNote.summary != nil && voiceNote
+                .transcript != nil ? .completed : .analyzing
+            analysisState = initialAnalysisState
+            analysisObservable.analysisState = initialAnalysisState
+        }
+
+        // MARK: - Highlight Logic
+
+        /// 현재 재생 중인 문단의 정보를 담는 구조체
+        public struct PlayingParagraphInfo: Equatable {
+            public let sectionIndex: Int
+            public let paragraphIndex: Int
+        }
+
+        /// 현재 하이라이트된 문단 정보
+        public private(set) var playingParagraphInfo: PlayingParagraphInfo?
+
+        /// 재생 시간에 따라 하이라이트 정보를 업데이트합니다.
+        /// - Note: `@Observable`은 값이 같아도 setter 호출 시 observation을 fire하므로,
+        ///   동일 값이면 early return하여 visible cell의 불필요한 `updateProperties()` 호출을 방지합니다.
+        mutating func updatePlayingParagraph() {
+            let currentTime = currentPlaybackState.currentTime
+            let sections = scriptSections
+            guard !sections.isEmpty else {
+                guard playingParagraphInfo != nil else { return }
+                playingParagraphInfo = nil
+                playbackHighlight.playingParagraphInfo = nil
+                return
+            }
+
+            var newInfo: PlayingParagraphInfo?
+            for (index, section) in sections.enumerated().reversed() {
+                if section.timestamp <= currentTime {
+                    newInfo = PlayingParagraphInfo(sectionIndex: index, paragraphIndex: 0)
+                    break
+                }
+            }
+            guard playingParagraphInfo != newInfo else {
+                return
+            }
+            playingParagraphInfo = newInfo
+            playbackHighlight.playingParagraphInfo = newInfo
         }
 
         // MARK: - Mapped Properties
@@ -325,12 +406,44 @@ public extension VoiceNoteViewModel {
         }
 
         public var scriptSections: [ScriptSection] {
-            guard let transcript = voiceNote.transcript else { return [] }
-            let paragraphs = transcript.text
-                .components(separatedBy: "\n\n")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-            return [ScriptSection(timestamp: "00:00", paragraphs: paragraphs)]
+            guard let transcript = voiceNote.transcript, !transcript.segments.isEmpty else { return [] }
+            return Self.groupSegmentsIntoSections(transcript.segments)
+        }
+
+        // MARK: - Segment Grouping
+
+        /// 세그먼트를 공백 임계값 기준으로 섹션들로 그룹화
+        private static func groupSegmentsIntoSections(_ segments: [TranscriptSegment]) -> [ScriptSection] {
+            guard let first = segments.first else { return [] }
+
+            var sections: [ScriptSection] = []
+            var currentTimestamp = first.timestamp
+            var currentWords: [String] = [first.substring]
+
+            for i in 1 ..< segments.count {
+                let prev = segments[i - 1]
+                let curr = segments[i]
+                let gap = curr.timestamp - (prev.timestamp + prev.duration)
+
+                if gap > Policy.scriptGroupingPauseThreshold {
+                    // 현재까지 모은 단어들을 하나의 문단으로 완성
+                    let paragraph = currentWords.joined(separator: " ")
+                    sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
+                    // 새 섹션 시작
+                    currentTimestamp = curr.timestamp
+                    currentWords = [curr.substring]
+                } else {
+                    currentWords.append(curr.substring)
+                }
+            }
+
+            // 마지막 섹션 추가
+            if !currentWords.isEmpty {
+                let paragraph = currentWords.joined(separator: " ")
+                sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
+            }
+
+            return sections
         }
     }
 }

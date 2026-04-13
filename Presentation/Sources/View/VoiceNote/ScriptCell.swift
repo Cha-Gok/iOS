@@ -3,10 +3,13 @@ import UIKit
 // MARK: - ScriptContentConfiguration
 
 struct ScriptContentConfiguration: UIContentConfiguration {
+    var sectionIndex: Int = 0
     var timestamp: String = ""
+    var timestampSeconds: TimeInterval = 0
     var paragraphs: [String] = []
-    /// 현재 재생 중인 문단 인덱스. nil이면 하이라이팅 없음
-    var highlightedParagraphIndex: Int?
+    var highlight: VoiceNoteViewModel.PlaybackHighlight?
+    /// 타임스탬프 탭 콜백
+    var onTimestampTapped: ((TimeInterval) -> Void)?
 
     func makeContentView() -> UIView & UIContentView {
         ScriptContentView(configuration: self)
@@ -29,6 +32,7 @@ final class ScriptContentView: UIView, UIContentView {
     private let timeLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.gray600
+        label.isUserInteractionEnabled = true
         return label
     }()
 
@@ -46,6 +50,9 @@ final class ScriptContentView: UIView, UIContentView {
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
+
+    /// 문단별 (배경 컨테이너, 텍스트 레이블) 쌍. 하이라이트 직접 업데이트에 사용
+    private var paragraphRows: [(background: UIView, label: UILabel)] = []
 
     // MARK: - Init
 
@@ -68,12 +75,34 @@ final class ScriptContentView: UIView, UIContentView {
         containerStack.addArrangedSubview(paragraphsStack)
         addSubview(containerStack)
 
+        let tap = UITapGestureRecognizer(target: self, action: #selector(timestampTapped))
+        containerStack.addGestureRecognizer(tap)
+        containerStack.isUserInteractionEnabled = true
+
         NSLayoutConstraint.activate([
             containerStack.topAnchor.constraint(equalTo: topAnchor),
-            containerStack.leadingAnchor.constraint(equalTo: leadingAnchor),
-            containerStack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            containerStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
+            containerStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
             containerStack.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
+    }
+
+    @objc
+    private func timestampTapped() {
+        guard let config = configuration as? ScriptContentConfiguration else { return }
+        config.onTimestampTapped?(config.timestampSeconds)
+    }
+
+    // MARK: - UIView Update Cycle
+
+    /// @Observable PlaybackHighlight를 자동 추적합니다.
+    /// playingParagraphInfo가 변경될 때마다 UIKit이 재호출합니다.
+    override func updateProperties() {
+        super.updateProperties()
+        guard let config = configuration as? ScriptContentConfiguration else { return }
+        let info = config.highlight?.playingParagraphInfo
+        let index = info?.sectionIndex == config.sectionIndex ? info?.paragraphIndex : nil
+        applyHighlight(paragraphIndex: index)
     }
 
     // MARK: - Apply
@@ -82,14 +111,43 @@ final class ScriptContentView: UIView, UIContentView {
         guard let config = configuration as? ScriptContentConfiguration else { return }
         timeLabel.setTypography(text: config.timestamp, style: .caption)
 
-        paragraphsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        for (index, para) in config.paragraphs.enumerated() {
-            let label = UILabel()
-            let isHighlighted = config.highlightedParagraphIndex == index
-            label.textColor = isHighlighted ? .white : UIColor.gray600
-            label.setTypography(text: para, style: .body1)
-            label.numberOfLines = 0
-            paragraphsStack.addArrangedSubview(label)
+        // 문단 내용이 바뀔 때만 뷰 재구성
+        let needsRebuild = paragraphRows.count != config.paragraphs.count
+
+        if needsRebuild {
+            paragraphsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            paragraphRows = config.paragraphs.map { para in
+                let label = UILabel()
+                label.setTypography(text: para, style: .body1)
+                label.numberOfLines = 0
+                label.translatesAutoresizingMaskIntoConstraints = false
+
+                let background = UIView()
+                background.layer.cornerRadius = 8
+                background.addSubview(label)
+                NSLayoutConstraint.activate([
+                    label.topAnchor.constraint(equalTo: background.topAnchor, constant: 8),
+                    label.bottomAnchor.constraint(equalTo: background.bottomAnchor, constant: -8),
+                    label.leadingAnchor.constraint(equalTo: background.leadingAnchor, constant: 12),
+                    label.trailingAnchor.constraint(equalTo: background.trailingAnchor, constant: -12)
+                ])
+                paragraphsStack.addArrangedSubview(background)
+                return (background, label)
+            }
+        } else {
+            for (row, para) in zip(paragraphRows, config.paragraphs) {
+                row.label.setTypography(text: para, style: .body1)
+            }
+        }
+    }
+
+    // MARK: - Highlight
+
+    private func applyHighlight(paragraphIndex: Int?) {
+        for (index, row) in paragraphRows.enumerated() {
+            let isHighlighted = paragraphIndex == index
+            row.background.backgroundColor = isHighlighted ? UIColor.point600.withAlphaComponent(0.3) : .clear
+            row.label.textColor = isHighlighted ? .white : UIColor.gray600
         }
     }
 }

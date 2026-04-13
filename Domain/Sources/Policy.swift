@@ -36,4 +36,7 @@ public enum Policy {
 
     /// 재생 빨리감기/뒤로가기 이동 간격 (초)
     public static let playbackSkipInterval: TimeInterval = 10
+
+    /// 세그먼트 간 공백이 이 값(초)을 초과하면 새 섹션으로 분리
+    public static let scriptGroupingPauseThreshold: TimeInterval = 2.0
 }

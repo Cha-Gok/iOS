@@ -12,7 +12,7 @@ extension DefaultSTTRepositoryTest {
         let mockService = MockSTTService()
         let sut = DefaultSTTRepository(service: mockService)
         let audioURL = URL(fileURLWithPath: "/test/audio.m4a")
-        await mockService.setResult(.success("테스트 전사 텍스트"))
+        await mockService.setResult(.success(STTResult(text: "테스트 전사 텍스트", segments: [])))
         await mockService.expectTranscribe(callCount: 1, audioFileURL: audioURL)
 
         // When

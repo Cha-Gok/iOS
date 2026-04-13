@@ -13,8 +13,11 @@ public struct DefaultSTTRepository: STTRepository {
     public func transcribe(audioFileURL: URL) async throws(STTRepositoryError) -> Transcript {
         if Task.isCancelled { throw .cancelled }
         do {
-            let text = try await service.transcribe(audioFileURL: audioFileURL)
-            return Transcript(text: text)
+            let result = try await service.transcribe(audioFileURL: audioFileURL)
+            let segments = result.segments.map {
+                TranscriptSegment(substring: $0.substring, timestamp: $0.timestamp, duration: $0.duration)
+            }
+            return Transcript(text: result.text, segments: segments)
         } catch {
             AppLogger.error(error)
             throw STTRepositoryError(error)

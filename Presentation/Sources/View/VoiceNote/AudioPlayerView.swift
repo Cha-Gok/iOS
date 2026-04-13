@@ -8,6 +8,8 @@ final class AudioPlayerView: UIView {
     var onSeekBegan: (() -> Void)?
     var onSeekEnded: ((TimeInterval) -> Void)?
 
+    var audioPlayerObservable: VoiceNoteViewModel.AudioPlayerObservable?
+
     private let currentTimeLabel: UILabel = {
         let label = UILabel()
         label.setTypography(style: .label)
@@ -135,7 +137,19 @@ final class AudioPlayerView: UIView {
         }, for: .valueChanged)
     }
 
-    func apply(_ state: AudioPlaybackState) {
+    // MARK: - UIView Update Cycle
+
+    /// @Observable AudioPlayerObservable를 자동 추적합니다.
+    /// playbackState가 변경될 때마다 UIKit이 재호출합니다.
+    override func updateProperties() {
+        super.updateProperties()
+        guard let state = audioPlayerObservable?.playbackState else { return }
+        apply(state)
+    }
+
+    // MARK: - Apply
+
+    private func apply(_ state: AudioPlaybackState) {
         currentTimeLabel.text = state.currentTime.durationString
         totalDurationLabel.text = state.duration.durationString
         var config = playPauseButton.configuration
@@ -147,32 +161,4 @@ final class AudioPlayerView: UIView {
             progressSlider.value = Float(state.currentTime)
         }
     }
-}
-
-#Preview(traits: .portrait) {
-    AudioPlayerView()
-}
-
-#Preview("재생 중 - 중간 지점") {
-    let view = AudioPlayerView()
-    view.apply(AudioPlaybackState(status: .playing, currentTime: 75, duration: 180))
-    return view
-}
-
-#Preview("일시정지 - 초반") {
-    let view = AudioPlayerView()
-    view.apply(AudioPlaybackState(status: .paused, currentTime: 20, duration: 180))
-    return view
-}
-
-#Preview("Idle - 시작 전") {
-    let view = AudioPlayerView()
-    view.apply(AudioPlaybackState(status: .idle, currentTime: 0, duration: 0))
-    return view
-}
-
-#Preview("1시간 이상 - 포맷 확인") {
-    let view = AudioPlayerView()
-    view.apply(AudioPlaybackState(status: .playing, currentTime: 3720, duration: 7260))
-    return view
 }

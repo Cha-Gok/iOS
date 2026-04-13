@@ -13,7 +13,7 @@ public protocol STTService: Sendable {
 
     /// 오디오 파일을 전사합니다.
     /// - Parameter audioFileURL: 전사할 오디오 파일 URL
-    /// - Returns: 전사된 텍스트
+    /// - Returns: 전사된 텍스트 및 세그먼트 타이밍 정보
     /// - Throws: `STTServiceError`
-    func transcribe(audioFileURL: URL) async throws(STTServiceError) -> String
+    func transcribe(audioFileURL: URL) async throws(STTServiceError) -> STTResult
 }
