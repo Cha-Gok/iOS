@@ -7,10 +7,12 @@ import XCTest
 final class MockMainCoordinatorDelegate: MainCoordinatorDelegate {
     var pushTrashViewCalled = false
     var pushMyFolderViewCalled = false
+    var pushVoiceNoteViewCalled = false
     var presentRecodingViewCalled = false
     var popCalled = false
 
     var pushedCategory: CategoryToggle?
+    var pushedVoiceNote: VoiceNote?
 
     func pushTrashView() {
         pushTrashViewCalled = true
@@ -19,6 +21,11 @@ final class MockMainCoordinatorDelegate: MainCoordinatorDelegate {
     func pushMyFolderView(category: CategoryToggle) {
         pushMyFolderViewCalled = true
         pushedCategory = category
+    }
+
+    func pushVoiceNoteView(voiceNote: VoiceNote) {
+        pushVoiceNoteViewCalled = true
+        pushedVoiceNote = voiceNote
     }
 
     func presentRecodingView() {

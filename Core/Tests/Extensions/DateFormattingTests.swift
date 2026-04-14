@@ -44,7 +44,7 @@ extension DateFormattingTests {
         let result = now.voiceNoteDay(createdAt: createdAt, updatedAt: updatedAt, duration: 150)
 
         // Then
-        XCTAssertEqual(result, "5분 전 · 2분")
+        XCTAssertEqual(result, "5분 전 · 2분 30초")
     }
 
     func test_1시간전_상세날짜문구생성시_수정일기준시간전으로표시된다() {
