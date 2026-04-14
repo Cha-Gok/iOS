@@ -7,6 +7,7 @@ struct MainCategoryContentConfiguration: UIContentConfiguration {
     var title: String = ""
     var totalCount: Int = 0
     var isSelected: Bool = false
+    var didScroll: Bool = false
 
     func makeContentView() -> UIView & UIContentView {
         MainCategoryContentView(configuration: self)
@@ -28,14 +29,29 @@ final class MainCategoryContentView: UIView, UIContentView {
     }
 
     /// Components
-    private let container: UIView = {
-        let c = UIView()
+    private let container: UIStackView = {
+        let c = UIStackView()
         c.translatesAutoresizingMaskIntoConstraints = false
+        c.axis = .vertical
+        c.alignment = .fill
+        c.spacing = 0
+        c.isLayoutMarginsRelativeArrangement = true
+        c.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         c.layer.cornerRadius = 20
         c.layer.borderWidth = 1.0
         c.layer.borderColor = UIColor.gray600.cgColor
         return c
     }()
+
+    private let imageRow: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.alignment = .center
+        stackView.spacing = 0
+        return stackView
+    }()
+
+    private let imageSpacer = UIView()
 
     private let imageView: UIImageView = {
         let img = UIImageView()
@@ -49,6 +65,7 @@ final class MainCategoryContentView: UIView, UIContentView {
         let t = UILabel()
         t.translatesAutoresizingMaskIntoConstraints = false
         t.textColor = UIColor.gray600
+        t.numberOfLines = 1
         return t
     }()
 
@@ -74,9 +91,13 @@ final class MainCategoryContentView: UIView, UIContentView {
     /// Setup & Constraints
     private func setup() {
         addSubview(container)
-        container.addSubview(imageView)
-        container.addSubview(titleLabel)
-        container.addSubview(countView)
+        container.addArrangedSubview(imageRow)
+        imageRow.addArrangedSubview(imageView)
+        imageRow.addArrangedSubview(imageSpacer)
+        container.addArrangedSubview(titleLabel)
+        container.addArrangedSubview(countView)
+        container.setCustomSpacing(6, after: imageRow)
+        container.setCustomSpacing(16, after: titleLabel)
 
         NSLayoutConstraint.activate([
             container.topAnchor.constraint(equalTo: topAnchor),
@@ -86,22 +107,13 @@ final class MainCategoryContentView: UIView, UIContentView {
         ])
 
         NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: container.topAnchor, constant: 16),
-            imageView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16)
+            imageView.widthAnchor.constraint(equalToConstant: 20),
+            imageView.heightAnchor.constraint(equalToConstant: 20)
         ])
 
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 6),
-            titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16)
-        ])
-
-        NSLayoutConstraint.activate([
-            countView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
-            countView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
-            countView.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
-            countView.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -16)
-        ])
+        imageRow.setContentHuggingPriority(.required, for: .horizontal)
+        imageRow.setContentCompressionResistancePriority(.required, for: .horizontal)
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
     }
 
     func setSelectedState(_ isSelected: Bool, totalCount: Int) {
@@ -114,6 +126,18 @@ final class MainCategoryContentView: UIView, UIContentView {
         }
     }
 
+    func setDidScrollState(_ didScroll: Bool) {
+        container.axis = didScroll ? .horizontal : .vertical
+        container.alignment = didScroll ? .center : .fill
+        container.spacing = didScroll ? 6 : 0
+        container.layoutMargins = didScroll
+            ? UIEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
+            : UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        container.layer.cornerRadius = didScroll ? 18 : 20
+        imageSpacer.isHidden = didScroll
+        countView.isHidden = didScroll
+    }
+
     /// Apply
     private func apply(configuration: UIContentConfiguration) {
         guard let configuration = configuration as? MainCategoryContentConfiguration else { return }
@@ -121,5 +145,6 @@ final class MainCategoryContentView: UIView, UIContentView {
         titleLabel.setTypography(text: configuration.title, style: .subtitle2)
         countView.setTypography(text: String(configuration.totalCount), style: .label)
         setSelectedState(configuration.isSelected, totalCount: configuration.totalCount)
+        setDidScrollState(configuration.didScroll)
     }
 }
