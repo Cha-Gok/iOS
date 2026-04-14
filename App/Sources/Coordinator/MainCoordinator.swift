@@ -35,6 +35,7 @@ extension MainCoordinator: RecordingCoordinating {
         presenter.dismiss(animated: true) { [weak self] in
             guard let self else { return }
             let voiceNoteVM = dependencyContainer.makeVoiceNoteViewModel(voiceNote: voiceNote)
+            voiceNoteVM.coordinator = self
             let voiceNoteVC = VoiceNoteViewController(viewModel: voiceNoteVM)
             presenter.pushViewController(voiceNoteVC, animated: true)
         }
@@ -58,6 +59,13 @@ extension MainCoordinator: MainCoordinatorDelegate {
         myFolderVM.coordinator = self
         let myFolderVC = FolderViewController(vm: myFolderVM)
         presenter.pushViewController(myFolderVC, animated: true)
+    }
+
+    func pushVoiceNoteView(voiceNote: VoiceNote) {
+        let voiceNoteVM = dependencyContainer.makeVoiceNoteViewModel(voiceNote: voiceNote)
+        voiceNoteVM.coordinator = self
+        let voiceNoteVC = VoiceNoteViewController(viewModel: voiceNoteVM)
+        presenter.pushViewController(voiceNoteVC, animated: true)
     }
 
     // TODO: Present
@@ -125,6 +133,10 @@ extension MainCoordinator: FolderCoordinatorDelegate {
         presenter.pushViewController(myFolderDetailVC, animated: true)
     }
 }
+
+// MARK: VoiceNoteCoordinating
+
+extension MainCoordinator: VoiceNoteCoordinatorDelegate {}
 
 // MARK: Base 공통 함수 묶음
 

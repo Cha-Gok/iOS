@@ -1,6 +1,22 @@
+import Core
+import SwiftUI
 import UIKit
 
 public final class MainViewController: ViewController {
+    // MARK: - Type
+
+    typealias CategoryHeaderRegistration = UICollectionView.SupplementaryRegistration<MainCategoryHeaderView>
+    typealias ListCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, LibraryItem>
+    typealias EmptyCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, MainCellItem>
+    typealias SectionHeaderRegistration = UICollectionView.SupplementaryRegistration<MainSectionHeaderView>
+    typealias DataSource = UICollectionViewDiffableDataSource<MainSection, MainCellItem>
+    typealias SnapShot = NSDiffableDataSourceSnapshot<MainSection, MainCellItem>
+
+    private enum LayoutConstant {
+        static let expandedCategoryHeaderHeight: CGFloat = 120
+        static let collapsedCategoryHeaderHeight: CGFloat = 40
+    }
+
     // MARK: - View Model
 
     private let vm: MainViewModel
@@ -39,7 +55,7 @@ public final class MainViewController: ViewController {
         image: .init(imageName: "microphone", type: .system)
     )
 
-    var dataSource: UICollectionViewDiffableDataSource<MainSection, MainCellItem>!
+    var dataSource: DataSource!
 
     // MARK: LifeCycle
 
@@ -88,25 +104,70 @@ public final class MainViewController: ViewController {
         view.addSubview(collectionView)
         view.addSubview(floatingButton)
         collectionViewConstraint()
-
-        collectionView.register(
-            MainCategoryViewCell.self,
-            forCellWithReuseIdentifier: MainCategoryViewCell.reuseIdentifier
-        )
-        collectionView.register(
-            MainViewListCell.self,
-            forCellWithReuseIdentifier: MainViewListCell.reuseIdentifier
-        )
-        collectionView.register(
-            MainEmptyListCell.self,
-            forCellWithReuseIdentifier: MainEmptyListCell.reuseIdentifier
-        )
+        collectionView.delegate = self
         collectionView.setCollectionViewLayout(
             createLayout(),
             animated: false
         )
-        collectionView.delegate = self
-        setupDataSource()
+
+        let listRegistration = ListCellRegistration { cell, _, item in
+            cell.backgroundConfiguration = .clear()
+            cell.contentConfiguration = UIHostingConfiguration {
+                switch item {
+                case .folder(let data):
+                    VoiceNoteCardView(
+                        title: data.name,
+                        subTitle: data.createdAt.description
+                    )
+                case .voiceNote(let data):
+                    VoiceNoteCardView(
+                        title: data.title,
+                        subTitle: Date.now.voiceNoteDay(
+                            createdAt: data.createdAt,
+                            updatedAt: data.updatedAt,
+                            duration: data.voiceRecord.duration
+                        )
+                    )
+                    .onTapGesture { [weak self] in
+                        self?.vm.pushVoiceNoteView(voiceNote: data)
+                    }
+                }
+            }
+            .margins(.all, 0)
+        }
+
+        let emptyRegistration = EmptyCellRegistration { cell, _, _ in
+            cell.backgroundConfiguration = .clear()
+            cell.contentConfiguration = MainEmptyContentConfiguration()
+        }
+
+        let categoryHeaderRegistration = CategoryHeaderRegistration(
+            elementKind: MainCategoryHeaderView.elementKind
+        ) { [weak self] header, _, _ in
+            guard let self else { return }
+            header.configure(
+                categories: vm.categoryData,
+                selectedIndex: vm.selectedCategoryIndex,
+                didScroll: vm.didScroll
+            ) { [weak self] selectedIndex in
+                self?.selectCategory(at: selectedIndex)
+            }
+        }
+
+        let sectionHeaderRegistration = SectionHeaderRegistration(
+            elementKind: UICollectionView.elementKindSectionHeader
+        ) { header, _, indexPath in
+            guard let section = self.dataSource.sectionIdentifier(for: indexPath.section),
+                  case .groupedList(let group) = section else { return }
+            header.configure(title: group.title)
+        }
+
+        setupDataSource(
+            listRegistration: listRegistration,
+            emptyRegistration: emptyRegistration,
+            categoryHeaderRegistration: categoryHeaderRegistration,
+            sectionHeaderRegistration: sectionHeaderRegistration
+        )
     }
 
     private func collectionViewConstraint() {
@@ -135,40 +196,89 @@ public final class MainViewController: ViewController {
 
 extension MainViewController {
     private func createLayout() -> UICollectionViewCompositionalLayout {
-        UICollectionViewCompositionalLayout { [weak self] sectionIndex, _ in
-            guard let self else { return self?.emptySection() }
-            let section = dataSource.sectionIdentifier(for: sectionIndex)
+        let sectionProvider: UICollectionViewCompositionalLayoutSectionProvider = { [weak self] sectionIndex, _ in
+            guard let self,
+                  let section = dataSource.sectionIdentifier(for: sectionIndex)
+            else {
+                return self?.emptySection()
+            }
+
             switch section {
-            case .category:
+            case .list:
                 return createSection(
                     itemWidth: .fractionalWidth(1.0),
-                    itemHeight: .absolute(120),
-                    groupWidth: .absolute(92),
-                    groupHeight: .absolute(120),
+                    itemHeight: .estimated(120),
+                    groupWidth: .fractionalWidth(1.0),
+                    groupHeight: .estimated(120),
                     interGroupSpacing: 8,
-                    contentInsets: .init(top: 0, leading: 20, bottom: 0, trailing: 20),
-                    scrollBehavior: .continuous
+                    contentInsets: .init(top: 32, leading: 20, bottom: 0, trailing: 20)
                 )
-            case .list:
-                if vm.isEmptyList {
-                    return createSection(
-                        itemWidth: .fractionalWidth(1.0),
-                        itemHeight: .estimated(300),
-                        groupWidth: .fractionalWidth(1.0),
-                        groupHeight: .estimated(300)
-                    )
-                } else {
-                    return createSection(
-                        itemWidth: .fractionalWidth(1.0),
-                        itemHeight: .absolute(80),
-                        groupWidth: .fractionalWidth(1.0),
-                        groupHeight: .absolute(80),
-                        interGroupSpacing: 10,
-                        contentInsets: .init(top: 32, leading: 20, bottom: 20, trailing: 20)
-                    )
-                }
-            default: return emptySection()
+            case .groupedList:
+                return createSection(
+                    itemWidth: .fractionalWidth(1.0),
+                    itemHeight: .estimated(120),
+                    groupWidth: .fractionalWidth(1.0),
+                    groupHeight: .estimated(120),
+                    interGroupSpacing: 8,
+                    contentInsets: .init(top: 0, leading: 20, bottom: 32, trailing: 20),
+                    headerHeight: 72
+                )
+            case .emptyList:
+                return createSection(
+                    itemWidth: .fractionalWidth(1.0),
+                    itemHeight: .estimated(300),
+                    groupWidth: .fractionalWidth(1.0),
+                    groupHeight: .estimated(300)
+                )
             }
+        }
+
+        let configuration = UICollectionViewCompositionalLayoutConfiguration()
+        let categoryHeader = NSCollectionLayoutBoundarySupplementaryItem(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .absolute(
+                    vm.didScroll ? LayoutConstant.collapsedCategoryHeaderHeight : LayoutConstant
+                        .expandedCategoryHeaderHeight
+                )
+            ),
+            elementKind: MainCategoryHeaderView.elementKind,
+            alignment: .top
+        )
+        categoryHeader.pinToVisibleBounds = true
+        categoryHeader.zIndex = 10
+        configuration.boundarySupplementaryItems = [categoryHeader]
+
+        return UICollectionViewCompositionalLayout(
+            sectionProvider: sectionProvider,
+            configuration: configuration
+        )
+    }
+
+    private func group(for item: LibraryItem, now: Date = .now) -> MainListDateGroup {
+        let calendar = Calendar.current
+        let date = item.createdAt
+
+        if calendar.isDate(date, inSameDayAs: now) {
+            return .today
+        }
+
+        let startOfToday = calendar.startOfDay(for: now)
+        let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: startOfToday) ?? startOfToday
+        if date >= sevenDaysAgo {
+            return .recentSevenDays
+        }
+
+        return .older
+    }
+
+    private func groupedItems(_ items: [LibraryItem]) -> [(section: MainSection, items: [MainCellItem])] {
+        let grouped = Dictionary(grouping: items) { group(for: $0) }
+
+        return MainListDateGroup.allCases.compactMap { group in
+            guard let items = grouped[group], !items.isEmpty else { return nil }
+            let sortedItems = items.sorted { $0.createdAt > $1.createdAt }
+            return (.groupedList(group), sortedItems.map(MainCellItem.list))
         }
     }
 
@@ -197,7 +307,20 @@ extension MainViewController {
         section.interGroupSpacing = interGroupSpacing
         section.contentInsets = contentInsets
         section.orthogonalScrollingBehavior = scrollBehavior
-        // Header Content 추가
+
+        if let headerHeight {
+            let headerSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .absolute(headerHeight)
+            )
+            let header = NSCollectionLayoutBoundarySupplementaryItem(
+                layoutSize: headerSize,
+                elementKind: UICollectionView.elementKindSectionHeader,
+                alignment: .top
+            )
+            header.contentInsets = .init(top: 0, leading: 4, bottom: 16, trailing: 4)
+            section.boundarySupplementaryItems = [header]
+        }
 
         return section
     }
@@ -215,93 +338,136 @@ extension MainViewController {
 // MARK: - setup DataSource
 
 extension MainViewController {
-    private func setupDataSource() {
-        createDataSource()
-    }
-
-    private func createDataSource() {
+    private func setupDataSource(
+        listRegistration: ListCellRegistration,
+        emptyRegistration: EmptyCellRegistration,
+        categoryHeaderRegistration: CategoryHeaderRegistration,
+        sectionHeaderRegistration: SectionHeaderRegistration
+    ) {
         dataSource = UICollectionViewDiffableDataSource(
             collectionView: collectionView,
             cellProvider: { collectionView, indexPath, itemIdentifier in
                 switch itemIdentifier {
-                case .category(let categoryToggle):
-                    let cell =
-                        collectionView.dequeueReusableCell(
-                            withReuseIdentifier: MainCategoryViewCell.reuseIdentifier,
-                            for: indexPath
-                        ) as! MainCategoryViewCell
-                    cell.configure(
-                        imageName: categoryToggle.imageName,
-                        title: categoryToggle.title,
-                        totalCount: categoryToggle.items.count
+                case .list(let item):
+                    return collectionView.dequeueConfiguredReusableCell(
+                        using: listRegistration,
+                        for: indexPath,
+                        item: item
                     )
-                    return cell
-                case .list(let libraryItem):
-                    let cell =
-                        collectionView.dequeueReusableCell(
-                            withReuseIdentifier: MainViewListCell.reuseIdentifier,
-                            for: indexPath
-                        ) as! MainViewListCell
-
-                    cell.configure(libraryItem: libraryItem)
-                    return cell
                 case .emptyList:
-                    return collectionView.dequeueReusableCell(
-                        withReuseIdentifier: MainEmptyListCell.reuseIdentifier,
-                        for: indexPath
+                    return collectionView.dequeueConfiguredReusableCell(
+                        using: emptyRegistration,
+                        for: indexPath,
+                        item: itemIdentifier
                     )
                 }
             }
         )
+
+        dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
+            if kind == MainCategoryHeaderView.elementKind {
+                return collectionView.dequeueConfiguredReusableSupplementary(
+                    using: categoryHeaderRegistration,
+                    for: indexPath
+                )
+            }
+
+            guard kind == UICollectionView.elementKindSectionHeader else { return nil }
+            return collectionView.dequeueConfiguredReusableSupplementary(
+                using: sectionHeaderRegistration,
+                for: indexPath
+            )
+        }
     }
 
     private func updateDataSource() {
-        var snapshot = NSDiffableDataSourceSnapshot<MainSection, MainCellItem>()
+        var snapshot = SnapShot()
 
-        // 1. 카테고리 섹션
-        let categorySection = MainSection.category
-        snapshot.appendSections([categorySection])
-        let categoryItems = vm.categoryData.map { MainCellItem.category($0) }
-        snapshot.appendItems(categoryItems, toSection: categorySection)
-
-        // 2. 리스트 섹션
-        let listSection = MainSection.list
-        snapshot.appendSections([listSection])
-
-        let items = vm.categoryData[vm.selectedCategoryIndex].items
+        let selectedCategory = vm.categoryData[vm.selectedCategoryIndex]
+        let items = selectedCategory.items
         if items.isEmpty {
-            snapshot.appendItems([.emptyList], toSection: listSection)
+            snapshot.appendSections([.emptyList])
+            snapshot.appendItems([.emptyList], toSection: .emptyList)
+        } else if vm.shouldGroupSelectedCategory {
+            for group in groupedItems(items) {
+                snapshot.appendSections([group.section])
+                snapshot.appendItems(group.items, toSection: group.section)
+            }
         } else {
-            let cellItems = items.map { MainCellItem.list($0) }
-            snapshot.appendItems(cellItems, toSection: listSection)
+            snapshot.appendSections([.list])
+            let cellItems = items.map(MainCellItem.list)
+            snapshot.appendItems(cellItems, toSection: .list)
         }
 
         dataSource.apply(snapshot, animatingDifferences: false) { [weak self] in
-            guard let self else { return }
-            let indexPath = IndexPath(item: vm.selectedCategoryIndex, section: 0)
-            collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+            self?.updateVisibleCategoryHeader()
+        }
+    }
+
+    private func selectCategory(at index: Int) {
+        vm.setSelectedCategoryIndex(indexPath: IndexPath(item: index, section: 0))
+        updateDataSource()
+    }
+
+    private func updateVisibleCategoryHeader() {
+        guard let header = collectionView.visibleSupplementaryViews(ofKind: MainCategoryHeaderView.elementKind)
+            .first as? MainCategoryHeaderView else { return }
+
+        header.configure(
+            categories: vm.categoryData,
+            selectedIndex: vm.selectedCategoryIndex,
+            didScroll: vm.didScroll
+        ) { [weak self] selectedIndex in
+            self?.selectCategory(at: selectedIndex)
         }
     }
 }
 
-// MARK: - CollectionView Delegate
+// MARK: - Delegate
 
 extension MainViewController: UICollectionViewDelegate {
-    public func collectionView(
-        _ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath
-    ) -> Bool {
-        let section = dataSource.sectionIdentifier(for: indexPath.section)
-        // 카테고리 섹션만 선택 가능하도록 제한하여, 리스트 클릭 시 카테고리 선택이 풀리지 않게 합니다.
-        return section == .category
-    }
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+        let didScroll = offsetY > 0
 
-    public func collectionView(
-        _ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath
-    ) {
-        let section = dataSource.sectionIdentifier(for: indexPath.section)
-        guard case .category = section else { return }
-        vm.setSelectedCategoryIndex(indexPath: indexPath)
-        collectionView.setCollectionViewLayout(createLayout(), animated: false)
-        updateDataSource()
+        guard vm.didScroll != didScroll else { return }
+        vm.didScroll = didScroll
+        guard let header = collectionView.visibleSupplementaryViews(ofKind: MainCategoryHeaderView.elementKind)
+            .first as? MainCategoryHeaderView else { return }
+        header.updateScrollState(didScroll)
     }
 }
+
+#if DEBUG
+    #Preview("최근 기록") {
+        UINavigationController(
+            rootViewController: MainViewController(
+                vm: .preview(selectedCategoryIndex: 0)
+            )
+        )
+    }
+
+    #Preview("기본 폴더") {
+        UINavigationController(
+            rootViewController: MainViewController(
+                vm: .preview(selectedCategoryIndex: 1)
+            )
+        )
+    }
+
+    #Preview("개인 폴더") {
+        UINavigationController(
+            rootViewController: MainViewController(
+                vm: .preview(selectedCategoryIndex: 2)
+            )
+        )
+    }
+
+    #Preview("휴지통") {
+        UINavigationController(
+            rootViewController: MainViewController(
+                vm: .preview(selectedCategoryIndex: 3)
+            )
+        )
+    }
+#endif

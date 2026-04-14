@@ -1,7 +1,21 @@
 import UIKit
 
-final class MainEmptyListCell: UICollectionViewCell {
-    static let reuseIdentifier: String = "MainEmptyListCell"
+struct MainEmptyContentConfiguration: UIContentConfiguration {
+    func makeContentView() -> any UIView & UIContentView {
+        MainEmptyContentView(configuration: self)
+    }
+
+    func updated(for state: any UIConfigurationState) -> MainEmptyContentConfiguration {
+        self
+    }
+}
+
+final class MainEmptyContentView: UIView, UIContentView {
+    var configuration: UIContentConfiguration {
+        didSet { apply(configuration: configuration) }
+    }
+
+    // MARK: - Component
 
     private let messageLabel: UILabel = {
         let l = UILabel()
@@ -12,21 +26,33 @@ final class MainEmptyListCell: UICollectionViewCell {
         return l
     }()
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    // MARK: Initialize
+
+    init(configuration: UIContentConfiguration) {
+        self.configuration = configuration
+        super.init(frame: .zero)
         setup()
+        apply(configuration: configuration)
     }
 
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
+
+    // MARK: - SetUp
 
     private func setup() {
-        contentView.addSubview(messageLabel)
+        addSubview(messageLabel)
         NSLayoutConstraint.activate([
-            messageLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 96),
-            messageLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor)
+            messageLabel.topAnchor.constraint(equalTo: topAnchor, constant: 96),
+            messageLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            messageLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -96)
         ])
+    }
+
+    // MARK: - Apply
+
+    private func apply(configuration: UIContentConfiguration) {
+        guard configuration is MainEmptyContentConfiguration else { return }
     }
 }

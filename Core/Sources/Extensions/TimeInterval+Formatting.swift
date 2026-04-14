@@ -14,8 +14,21 @@ public extension TimeInterval {
         let minutes = (total % 3600) / 60
         let seconds = total % 60
 
-        if hours > 0 { return "\(hours)시간 \(minutes)분 \(seconds)초" }
-        if minutes > 0 { return "\(minutes)분 \(seconds)초" }
-        return "\(seconds)초"
+        var parts: [String] = []
+        if hours > 0 {
+            parts.append("\(hours)시간")
+        }
+        if minutes > 0 {
+            parts.append("\(minutes)분")
+        }
+        if seconds > 0 {
+            parts.append("\(seconds)초")
+        }
+
+        if parts.isEmpty {
+            return "0초"
+        }
+
+        return parts.joined(separator: " ")
     }
 }
