@@ -10,12 +10,12 @@ public actor MockSTTRepository: STTRepository {
     private var requestResult: Result<PermissionStatus, STTPermissionRepositoryError>?
 
     private var actualCallCount = 0
-    private var actualAudioFileURL: URL?
+    private var actualAudioFilePath: String?
     private var actualCheckSTTPermissionCallCount = 0
     private var actualRequestSTTPermissionCallCount = 0
 
     private var expectedCallCount: Int?
-    private var expectedAudioFileURL: URL?
+    private var expectedAudioFilePath: String?
     private var expectedCheckSTTPermissionCallCount: Int?
     private var expectedRequestSTTPermissionCallCount: Int?
 
@@ -31,9 +31,9 @@ public actor MockSTTRepository: STTRepository {
         requestResult = result
     }
 
-    public func expectTranscribe(callCount: Int, audioFileURL: URL? = nil) {
+    public func expectTranscribe(callCount: Int, audioFilePath: String? = nil) {
         expectedCallCount = callCount
-        expectedAudioFileURL = audioFileURL
+        expectedAudioFilePath = audioFilePath
     }
 
     public func expectCheckSTTPermission(callCount: Int) {
@@ -50,9 +50,9 @@ public actor MockSTTRepository: STTRepository {
                 actualCallCount, expected, "변환 호출 횟수가 일치하지 않습니다.", file: file, line: line
             )
         }
-        if let expectedURL = expectedAudioFileURL {
+        if let expectedPath = expectedAudioFilePath {
             XCTAssertEqual(
-                actualAudioFileURL, expectedURL, "변환 오디오 파일 URL이 일치하지 않습니다.", file: file, line: line
+                actualAudioFilePath, expectedPath, "변환 오디오 파일 경로가 일치하지 않습니다.", file: file, line: line
             )
         }
         if let expected = expectedCheckSTTPermissionCallCount {
@@ -75,9 +75,9 @@ public actor MockSTTRepository: STTRepository {
         }
     }
 
-    public func transcribe(audioFileURL: URL) async throws(STTRepositoryError) -> Transcript {
+    public func transcribe(audioFilePath: String) async throws(STTRepositoryError) -> Transcript {
         actualCallCount += 1
-        actualAudioFileURL = audioFileURL
+        actualAudioFilePath = audioFilePath
 
         switch result {
         case .success(let value):

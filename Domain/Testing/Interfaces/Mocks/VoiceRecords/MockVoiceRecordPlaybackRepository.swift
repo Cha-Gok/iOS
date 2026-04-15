@@ -23,7 +23,7 @@ public final class MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackReposit
     private var expectedSeekCallCount: Int?
     private var expectedStopCallCount: Int?
 
-    public private(set) var preparedAudioFileURL: URL?
+    public private(set) var preparedAudioFilePath: String?
     public private(set) var lastSeekTime: TimeInterval?
 
     public func setPrepareResult(_ result: Result<
@@ -88,11 +88,11 @@ public final class MockVoiceRecordPlaybackRepository: VoiceRecordPlaybackReposit
         XCTAssertEqual(actual, expected, "\(label) 호출 횟수 불일치", file: file, line: line)
     }
 
-    public func prepare(audioFileURL: URL) throws(VoiceRecordPlaybackRepositoryError)
+    public func prepare(audioFilePath: String) throws(VoiceRecordPlaybackRepositoryError)
         -> AsyncStream<AudioPlaybackState>
     {
         actualPrepareCallCount += 1
-        preparedAudioFileURL = audioFileURL
+        preparedAudioFilePath = audioFilePath
         switch prepareResult {
         case .success(let stream): return stream
         case .failure(let error): throw error

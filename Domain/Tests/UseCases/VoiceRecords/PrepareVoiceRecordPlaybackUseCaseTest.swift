@@ -10,7 +10,7 @@ extension PrepareVoiceRecordPlaybackUseCaseTest {
     func test_정상상태_prepare호출시_preparedPlayback을반환한다() async throws {
         let repository = MockVoiceRecordPlaybackRepository()
         let sut = DefaultPrepareVoiceRecordPlaybackUseCase(repository: repository)
-        let audioURL = URL(fileURLWithPath: "/tmp/test.m4a")
+        let audioFilePath = "VoiceRecords/test.m4a"
         let stream = AsyncStream<AudioPlaybackState> { continuation in
             continuation.yield(.stub(duration: 42))
             continuation.finish()
@@ -18,13 +18,13 @@ extension PrepareVoiceRecordPlaybackUseCaseTest {
         repository.setPrepareResult(.success(stream))
         repository.expectPrepare(callCount: 1)
 
-        let result = try sut.execute(audioFileURL: audioURL)
-        let preparedAudioFileURL = repository.preparedAudioFileURL
+        let result = try sut.execute(audioFilePath: audioFilePath)
+        let preparedAudioFilePath = repository.preparedAudioFilePath
         var iterator = result.makeAsyncIterator()
         let initialState = await iterator.next()
 
         XCTAssertEqual(initialState, .stub(duration: 42))
-        XCTAssertEqual(preparedAudioFileURL, audioURL)
+        XCTAssertEqual(preparedAudioFilePath, audioFilePath)
         repository.verify()
     }
 
@@ -35,7 +35,7 @@ extension PrepareVoiceRecordPlaybackUseCaseTest {
         repository.expectPrepare(callCount: 1)
 
         do {
-            _ = try sut.execute(audioFileURL: URL(fileURLWithPath: "/tmp/test.m4a"))
+            _ = try sut.execute(audioFilePath: "VoiceRecords/test.m4a")
             XCTFail("PrepareVoiceRecordPlaybackUseCaseError.prepareFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .prepareFailed = error else {

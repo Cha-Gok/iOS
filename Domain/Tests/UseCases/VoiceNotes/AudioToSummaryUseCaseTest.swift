@@ -17,13 +17,13 @@ extension AudioToSummaryUseCaseTest {
         )
 
         // Given
-        let audioURL = URL(fileURLWithPath: "/test.m4a")
+        let audioFilePath = "VoiceRecords/test.m4a"
         let expectedTranscript = Transcript.stub()
         let expectedSummary = Summary.stub()
         let expectedKeywords = [Keyword.stub()]
 
         await sttRepository.setResult(.success(expectedTranscript))
-        await sttRepository.expectTranscribe(callCount: 1, audioFileURL: audioURL)
+        await sttRepository.expectTranscribe(callCount: 1, audioFilePath: audioFilePath)
 
         await summaryRepository.setResult(.success((expectedKeywords, expectedSummary)))
         await summaryRepository.expectSummarize(
@@ -31,7 +31,7 @@ extension AudioToSummaryUseCaseTest {
         )
 
         // When
-        let result = try await sut.execute(audioFileURL: audioURL, language: .ko)
+        let result = try await sut.execute(audioFilePath: audioFilePath, language: .ko)
 
         // Then
         XCTAssertEqual(result.transcript.text, expectedTranscript.text)
@@ -57,15 +57,15 @@ extension AudioToSummaryUseCaseTest {
         )
 
         // Given
-        let audioURL = URL(fileURLWithPath: "/test.m4a")
+        let audioFilePath = "VoiceRecords/test.m4a"
 
         await sttRepository.setResult(.failure(.transcribeFailed))
-        await sttRepository.expectTranscribe(callCount: 1, audioFileURL: audioURL)
+        await sttRepository.expectTranscribe(callCount: 1, audioFilePath: audioFilePath)
         await summaryRepository.expectSummarize(callCount: 0)
 
         // When & Then
         do {
-            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
+            _ = try await sut.execute(audioFilePath: audioFilePath, language: .ko)
             XCTFail("AudioToSummaryUseCaseError.transcribeFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .transcribeFailed = error else {
@@ -87,11 +87,11 @@ extension AudioToSummaryUseCaseTest {
         )
 
         // Given
-        let audioURL = URL(fileURLWithPath: "/test.m4a")
+        let audioFilePath = "VoiceRecords/test.m4a"
         let expectedTranscript = Transcript.stub()
 
         await sttRepository.setResult(.success(expectedTranscript))
-        await sttRepository.expectTranscribe(callCount: 1, audioFileURL: audioURL)
+        await sttRepository.expectTranscribe(callCount: 1, audioFilePath: audioFilePath)
 
         await summaryRepository.setResult(.failure(.summarizeFailed))
         await summaryRepository.expectSummarize(
@@ -100,7 +100,7 @@ extension AudioToSummaryUseCaseTest {
 
         // When & Then
         do {
-            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
+            _ = try await sut.execute(audioFilePath: audioFilePath, language: .ko)
             XCTFail("AudioToSummaryUseCaseError.summarizeFailed 에러를 throw 해야 합니다.")
         } catch {
             guard case .summarizeFailed = error else {
@@ -122,16 +122,16 @@ extension AudioToSummaryUseCaseTest {
         )
 
         // Given
-        let audioURL = URL(fileURLWithPath: "/test.m4a")
+        let audioFilePath = "VoiceRecords/test.m4a"
         struct DummyError: Error {}
         let expectedError = DummyError()
 
         await sttRepository.setResult(.failure(.unknown(expectedError)))
-        await sttRepository.expectTranscribe(callCount: 1, audioFileURL: audioURL)
+        await sttRepository.expectTranscribe(callCount: 1, audioFilePath: audioFilePath)
 
         // When & Then
         do {
-            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
+            _ = try await sut.execute(audioFilePath: audioFilePath, language: .ko)
             XCTFail("AudioToSummaryUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
             guard case .unknown(let underlyingError) = error else {
@@ -158,14 +158,14 @@ extension AudioToSummaryUseCaseTest {
         )
 
         // Given
-        let audioURL = URL(fileURLWithPath: "/test.m4a")
+        let audioFilePath = "VoiceRecords/test.m4a"
 
         await sttRepository.setResult(.failure(.cancelled))
-        await sttRepository.expectTranscribe(callCount: 1, audioFileURL: audioURL)
+        await sttRepository.expectTranscribe(callCount: 1, audioFilePath: audioFilePath)
 
         // When & Then
         do {
-            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
+            _ = try await sut.execute(audioFilePath: audioFilePath, language: .ko)
             XCTFail("AudioToSummaryUseCaseError.cancelled 에러를 throw 해야 합니다.")
         } catch {
             guard case .cancelled = error else {
@@ -187,14 +187,14 @@ extension AudioToSummaryUseCaseTest {
         )
 
         // Given
-        let audioURL = URL(fileURLWithPath: "/test.m4a")
+        let audioFilePath = "VoiceRecords/test.m4a"
 
         await sttRepository.expectTranscribe(callCount: 0)
 
         // When & Then
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            _ = try await sut.execute(audioFileURL: audioURL, language: .ko)
+            _ = try await sut.execute(audioFilePath: audioFilePath, language: .ko)
         }
 
         do {
