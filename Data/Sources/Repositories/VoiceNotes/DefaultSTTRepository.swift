@@ -5,15 +5,18 @@ import Foundation
 /// 음성 인식(STT) 리포지토리 기본 구현체.
 public struct DefaultSTTRepository: STTRepository {
     private let service: any STTService
+    private let storageService: any StorageService
 
-    public init(service: any STTService) {
+    public init(service: any STTService, storageService: any StorageService) {
         self.service = service
+        self.storageService = storageService
     }
 
-    public func transcribe(audioFileURL: URL) async throws(STTRepositoryError) -> Transcript {
+    public func transcribe(audioFilePath: String) async throws(STTRepositoryError) -> Transcript {
         if Task.isCancelled { throw .cancelled }
+        let absoluteURL = storageService.absoluteURL(for: audioFilePath)
         do {
-            let result = try await service.transcribe(audioFileURL: audioFileURL)
+            let result = try await service.transcribe(audioFileURL: absoluteURL)
             let segments = result.segments.map {
                 TranscriptSegment(substring: $0.substring, timestamp: $0.timestamp, duration: $0.duration)
             }

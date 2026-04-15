@@ -9,28 +9,33 @@ final class DefaultVoiceRecordPlaybackRepositoryTests: XCTestCase {}
 extension DefaultVoiceRecordPlaybackRepositoryTests {
     func test_prepare호출시_servicePrepare를호출하고결과를반환한다() async throws {
         let service = MockAudioPlaybackService()
-        let sut = DefaultVoiceRecordPlaybackRepository(audioPlaybackService: service)
+        let storageService = MockStorageService()
+        let sut = DefaultVoiceRecordPlaybackRepository(audioPlaybackService: service, storageService: storageService)
         let stream = AsyncStream<AudioPlaybackState> { continuation in
             continuation.yield(.init(status: .idle, currentTime: 0, duration: 90))
             continuation.finish()
         }
-        let audioURL = URL(fileURLWithPath: "/tmp/playback.m4a")
+        let audioFilePath = "VoiceRecords/playback.m4a"
+        let expectedAbsoluteURL = storageService.absoluteURL(for: audioFilePath)
         service.setPrepareResult(.success(stream))
         service.expectPrepare(callCount: 1)
 
-        let result = try sut.prepare(audioFileURL: audioURL)
+        let result = try sut.prepare(audioFilePath: audioFilePath)
         let preparedURL = service.preparedURL
         var iterator = result.makeAsyncIterator()
         let initialState = await iterator.next()
 
         XCTAssertEqual(initialState, .init(status: .idle, currentTime: 0, duration: 90))
-        XCTAssertEqual(preparedURL, audioURL)
+        XCTAssertEqual(preparedURL, expectedAbsoluteURL)
         service.verify()
     }
 
     func test_play실패시_repositoryError로매핑한다() {
         let service = MockAudioPlaybackService()
-        let sut = DefaultVoiceRecordPlaybackRepository(audioPlaybackService: service)
+        let sut = DefaultVoiceRecordPlaybackRepository(
+            audioPlaybackService: service,
+            storageService: MockStorageService()
+        )
         service.setPlayResult(.failure(.playFailed))
         service.expectPlay(callCount: 1)
 
@@ -48,7 +53,10 @@ extension DefaultVoiceRecordPlaybackRepositoryTests {
 
     func test_seek호출시_serviceSeek를호출한다() throws {
         let service = MockAudioPlaybackService()
-        let sut = DefaultVoiceRecordPlaybackRepository(audioPlaybackService: service)
+        let sut = DefaultVoiceRecordPlaybackRepository(
+            audioPlaybackService: service,
+            storageService: MockStorageService()
+        )
         service.setSeekResult(.success(()))
         service.expectSeek(callCount: 1)
 

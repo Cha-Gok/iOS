@@ -294,7 +294,7 @@ extension MainViewModel {
             ) -> VoiceNote {
                 let record = VoiceRecord(
                     createdAt: createdAt,
-                    audioFilePath: URL(fileURLWithPath: "/tmp/\(UUID().uuidString).m4a"),
+                    audioFilePath: "VoiceRecords/\(UUID().uuidString).m4a",
                     duration: duration
                 )
 

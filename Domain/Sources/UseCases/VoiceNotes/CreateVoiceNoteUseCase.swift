@@ -28,20 +28,14 @@ public struct DefaultCreateVoiceNoteUseCase: CreateVoiceNoteUseCase {
             throw error
         }
 
-        if !voiceRecord.audioFilePath.isFileURL {
-            let error = CreateVoiceNoteUseCaseError.invalidAudioFilePath(voiceRecord.audioFilePath)
-            AppLogger.error(error)
-            throw error
-        }
-
-        let fileName = voiceRecord.audioFilePath.lastPathComponent
+        let fileName = (voiceRecord.audioFilePath as NSString).lastPathComponent
         if fileName.isEmpty {
             let error = CreateVoiceNoteUseCaseError.emptyFileName
             AppLogger.error(error)
             throw error
         }
 
-        let pathExtension = voiceRecord.audioFilePath.pathExtension
+        let pathExtension = (voiceRecord.audioFilePath as NSString).pathExtension
         guard let _ = AudioFileFormat(extension: pathExtension) else {
             let error = CreateVoiceNoteUseCaseError.unsupportedExtension(pathExtension)
             AppLogger.error(error)

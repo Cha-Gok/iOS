@@ -31,7 +31,7 @@ extension UpdateVoiceNoteUseCaseTest {
         let repository = MockVoiceNoteUpdateRepository()
         let sut = DefaultUpdateVoiceNoteUseCase(repository: repository)
 
-        let voiceRecord = VoiceRecord.stub(audioFilePath: URL(fileURLWithPath: "/tmp/20260409_120000_000.m4a"))
+        let voiceRecord = VoiceRecord.stub(audioFilePath: "VoiceRecords/20260409_120000_000.m4a")
         let editedVoiceNote = VoiceNote.stub(title: "회의 정리", voiceRecord: voiceRecord)
 
         await repository.setResult(.success(editedVoiceNote))

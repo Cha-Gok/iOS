@@ -5,7 +5,7 @@ public extension VoiceRecord {
     static func stub(
         id: UUID = UUID(),
         createdAt: Date = Date(),
-        audioFilePath: URL = URL(fileURLWithPath: "/test/path.m4a"),
+        audioFilePath: String = "VoiceRecords/test.m4a",
         duration: Double = 60.0
     ) -> VoiceRecord {
         VoiceRecord(

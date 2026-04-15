@@ -39,7 +39,7 @@
         <relationship name="voiceRecord" maxCount="1" deletionRule="Cascade" destinationEntity="VoiceRecord" inverseName="voiceNote" inverseEntity="VoiceRecord"/>
     </entity>
     <entity name="VoiceRecord" representedClassName="VoiceRecordEntity" syncable="YES">
-        <attribute name="audioFilePath" attributeType="URI"/>
+        <attribute name="audioFilePath" attributeType="String"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="duration" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>

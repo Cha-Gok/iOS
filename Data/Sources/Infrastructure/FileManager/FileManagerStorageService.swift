@@ -35,7 +35,7 @@ public actor FileManagerStorageService: StorageService {
         from sourceURL: URL,
         toDirectory directory: String,
         fileName: String
-    ) async throws(StorageServiceError) -> URL {
+    ) async throws(StorageServiceError) -> String {
         AppLogger.debug("파일 이동 시작: \(sourceURL.lastPathComponent) -> \(directory)/\(fileName)")
 
         if Task.isCancelled {
@@ -74,7 +74,7 @@ public actor FileManagerStorageService: StorageService {
 
             try fileManager.moveItem(at: sourceURL, to: destinationURL)
             AppLogger.info("파일 이동 성공: \(destinationURL.path)")
-            return destinationURL
+            return "\(directory)/\(fileName)"
         } catch {
             AppLogger.error("파일 이동 실패: \(error)")
             throw StorageServiceError.moveFailed
@@ -85,7 +85,7 @@ public actor FileManagerStorageService: StorageService {
         data: Data,
         toDirectory directory: String,
         fileName: String
-    ) async throws(StorageServiceError) -> URL {
+    ) async throws(StorageServiceError) -> String {
         AppLogger.debug("파일 저장 시작: \(directory)/\(fileName) (size: \(data.count) bytes)")
 
         if Task.isCancelled {
@@ -114,29 +114,30 @@ public actor FileManagerStorageService: StorageService {
 
             try data.write(to: fileURL, options: .atomic)
             AppLogger.info("파일 저장 성공: \(fileURL.path)")
-            return fileURL
+            return "\(directory)/\(fileName)"
         } catch {
             AppLogger.error("파일 저장 실패: \(error)")
             throw StorageServiceError.writeFailed
         }
     }
 
-    public func load(fileURL: URL) async throws(StorageServiceError) -> Data {
-        AppLogger.debug("파일 로드 시작: \(fileURL.path)")
+    public func load(relativePath: String) async throws(StorageServiceError) -> Data {
+        let absoluteURL = absoluteURL(for: relativePath)
+        AppLogger.debug("파일 로드 시작: \(absoluteURL.path)")
 
         if Task.isCancelled {
             AppLogger.debug("작업 취소됨: load")
             throw StorageServiceError.cancelled
         }
 
-        guard fileManager.fileExists(atPath: fileURL.path) else {
-            AppLogger.error("파일을 찾을 수 없음: \(fileURL.path)")
+        guard fileManager.fileExists(atPath: absoluteURL.path) else {
+            AppLogger.error("파일을 찾을 수 없음: \(absoluteURL.path)")
             throw StorageServiceError.fileNotFound
         }
 
         do {
-            let data = try Data(contentsOf: fileURL)
-            AppLogger.debug("파일 로드 성공: \(fileURL.path) (\(data.count) bytes)")
+            let data = try Data(contentsOf: absoluteURL)
+            AppLogger.debug("파일 로드 성공: \(absoluteURL.path) (\(data.count) bytes)")
             return data
         } catch {
             AppLogger.error("파일 로드 실패: \(error)")
@@ -145,7 +146,7 @@ public actor FileManagerStorageService: StorageService {
     }
 
     public func delete(fileURL: URL) async throws(StorageServiceError) {
-        AppLogger.debug("파일 삭제 시작: \(fileURL.path)")
+        AppLogger.debug("임시 파일 삭제 시작: \(fileURL.path)")
 
         if Task.isCancelled {
             AppLogger.debug("작업 취소됨: delete")
@@ -159,16 +160,22 @@ public actor FileManagerStorageService: StorageService {
 
         do {
             try fileManager.removeItem(at: fileURL)
-            AppLogger.info("파일 삭제 성공: \(fileURL.path)")
+            AppLogger.info("임시 파일 삭제 성공: \(fileURL.path)")
         } catch {
-            AppLogger.error("파일 삭제 실패: \(error)")
+            AppLogger.error("임시 파일 삭제 실패: \(error)")
             throw StorageServiceError.deleteFailed
         }
     }
 
-    public func exists(fileURL: URL) async -> Bool {
-        let isExists = fileManager.fileExists(atPath: fileURL.path)
-        AppLogger.debug("파일 존재 확인 (\(isExists)): \(fileURL.path)")
+    public func exists(relativePath: String) async -> Bool {
+        let absoluteURL = absoluteURL(for: relativePath)
+        let isExists = fileManager.fileExists(atPath: absoluteURL.path)
+        AppLogger.debug("파일 존재 확인 (\(isExists)): \(absoluteURL.path)")
         return isExists
+    }
+
+    public nonisolated func absoluteURL(for relativePath: String) -> URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(relativePath)
     }
 }

@@ -5,16 +5,19 @@ import Foundation
 @MainActor
 public struct DefaultVoiceRecordPlaybackRepository: VoiceRecordPlaybackRepository {
     private let audioPlaybackService: any AudioPlaybackService
+    private let storageService: any StorageService
 
-    public init(audioPlaybackService: any AudioPlaybackService) {
+    public init(audioPlaybackService: any AudioPlaybackService, storageService: any StorageService) {
         self.audioPlaybackService = audioPlaybackService
+        self.storageService = storageService
     }
 
-    public func prepare(audioFileURL: URL) throws(VoiceRecordPlaybackRepositoryError)
+    public func prepare(audioFilePath: String) throws(VoiceRecordPlaybackRepositoryError)
         -> AsyncStream<AudioPlaybackState>
     {
+        let absoluteURL = storageService.absoluteURL(for: audioFilePath)
         do {
-            return try audioPlaybackService.preparePlayback(at: audioFileURL)
+            return try audioPlaybackService.preparePlayback(at: absoluteURL)
         } catch {
             AppLogger.error(error)
             throw VoiceRecordPlaybackRepositoryError(error)

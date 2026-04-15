@@ -3,10 +3,10 @@ import Foundation
 /// 음성 인식(Speech-to-Text) 및 STT 권한을 담당하는 리포지토리 프로토콜.
 public protocol STTRepository: Sendable {
     /// 오디오 파일을 전사(Transcription)합니다.
-    /// - Parameter audioFileURL: 전사할 오디오 파일의 URL
+    /// - Parameter audioFilePath: 전사할 오디오 파일의 상대 경로 (예: `"VoiceRecords/file.m4a"`)
     /// - Returns: 전사된 텍스트 엔티티
     /// - Throws: `STTRepositoryError` (전사 실패)
-    func transcribe(audioFileURL: URL) async throws(STTRepositoryError) -> Transcript
+    func transcribe(audioFilePath: String) async throws(STTRepositoryError) -> Transcript
 
     /// STT 권한이 허용되어 있는지 확인합니다.
     /// - Returns: 현재 권한 상태.

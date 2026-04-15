@@ -3,7 +3,7 @@ import Foundation
 
 @MainActor
 public protocol PrepareVoiceRecordPlaybackUseCase: Sendable {
-    func execute(audioFileURL: URL) throws(PrepareVoiceRecordPlaybackUseCaseError)
+    func execute(audioFilePath: String) throws(PrepareVoiceRecordPlaybackUseCaseError)
         -> AsyncStream<AudioPlaybackState>
 }
 
@@ -15,11 +15,11 @@ public struct DefaultPrepareVoiceRecordPlaybackUseCase: PrepareVoiceRecordPlayba
         self.repository = repository
     }
 
-    public func execute(audioFileURL: URL) throws(PrepareVoiceRecordPlaybackUseCaseError)
+    public func execute(audioFilePath: String) throws(PrepareVoiceRecordPlaybackUseCaseError)
         -> AsyncStream<AudioPlaybackState>
     {
         do {
-            return try repository.prepare(audioFileURL: audioFileURL)
+            return try repository.prepare(audioFilePath: audioFilePath)
         } catch {
             AppLogger.error(error)
             throw PrepareVoiceRecordPlaybackUseCaseError(error)

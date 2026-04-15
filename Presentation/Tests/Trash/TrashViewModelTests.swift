@@ -126,7 +126,7 @@ final class TrashViewModelTests: XCTestCase {
             .voiceNote(obj: VoiceNote(
                 title: "테스트 노트",
                 folderID: UUID(),
-                voiceRecord: VoiceRecord(audioFilePath: XCTUnwrap(URL(string: "file://null")), duration: 10)
+                voiceRecord: VoiceRecord(audioFilePath: "VoiceRecords/null.m4a", duration: 10)
             ))
         ]
 

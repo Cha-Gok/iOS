@@ -10,13 +10,13 @@ extension DefaultSTTRepositoryTest {
     func test_정상상태_전사시_Transcript를반환한다() async throws {
         // Given
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
-        let audioURL = URL(fileURLWithPath: "/test/audio.m4a")
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
+        let audioFilePath = "VoiceRecords/audio.m4a"
         await mockService.setResult(.success(STTResult(text: "테스트 전사 텍스트", segments: [])))
-        await mockService.expectTranscribe(callCount: 1, audioFileURL: audioURL)
+        await mockService.expectTranscribe(callCount: 1)
 
         // When
-        let result = try await sut.transcribe(audioFileURL: audioURL)
+        let result = try await sut.transcribe(audioFilePath: audioFilePath)
 
         // Then
         XCTAssertEqual(result.text, "테스트 전사 텍스트")
@@ -30,8 +30,7 @@ extension DefaultSTTRepositoryTest {
     func test_서비스에러상태_전사시_transcribeFailed에러를던진다() async throws {
         // Given
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
-        let audioURL = URL(fileURLWithPath: "/test/audio.m4a")
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
         let serviceErrors: [STTServiceError] = [
             .transcribeFailed,
             .recognizerUnavailable,
@@ -44,7 +43,7 @@ extension DefaultSTTRepositoryTest {
 
             // When & Then
             do {
-                _ = try await sut.transcribe(audioFileURL: audioURL)
+                _ = try await sut.transcribe(audioFilePath: "VoiceRecords/audio.m4a")
                 XCTFail("STTRepositoryError.transcribeFailed 에러를 throw 해야 합니다. (serviceError: \(serviceError))")
             } catch {
                 guard case .transcribeFailed = error else {
@@ -60,13 +59,13 @@ extension DefaultSTTRepositoryTest {
     func test_서비스취소에러상태_전사시_cancelled에러를던진다() async throws {
         // Given
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
         // STTServiceError.cancelled (서비스 레벨 취소) → STTRepositoryError.cancelled 매핑 검증
         await mockService.setResult(.failure(.cancelled))
 
         // When & Then
         do {
-            _ = try await sut.transcribe(audioFileURL: URL(fileURLWithPath: "/test/audio.m4a"))
+            _ = try await sut.transcribe(audioFilePath: "VoiceRecords/audio.m4a")
             XCTFail("STTRepositoryError.cancelled 에러를 throw 해야 합니다.")
         } catch {
             guard case .cancelled = error else {
@@ -80,13 +79,13 @@ extension DefaultSTTRepositoryTest {
     func test_알수없는에러상태_전사시_unknown에러를던진다() async throws {
         // Given
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
         let underlyingError = NSError(domain: "TestDomain", code: -1)
         await mockService.setResult(.failure(.unknown(underlyingError)))
 
         // When & Then
         do {
-            _ = try await sut.transcribe(audioFileURL: URL(fileURLWithPath: "/test/audio.m4a"))
+            _ = try await sut.transcribe(audioFilePath: "VoiceRecords/audio.m4a")
             XCTFail("STTRepositoryError.unknown 에러를 throw 해야 합니다.")
         } catch {
             guard case .unknown = error else {
@@ -104,12 +103,12 @@ extension DefaultSTTRepositoryTest {
     func test_태스크취소상태_전사시_cancelled에러를던진다() async throws {
         // Given
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
         await mockService.expectTranscribe(callCount: 0)
 
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            return try await sut.transcribe(audioFileURL: URL(fileURLWithPath: "/test/audio.m4a"))
+            return try await sut.transcribe(audioFilePath: "VoiceRecords/audio.m4a")
         }
 
         // When & Then
@@ -133,7 +132,7 @@ extension DefaultSTTRepositoryTest {
 extension DefaultSTTRepositoryTest {
     func test_STT권한허용상태_권한확인시_authorized를반환한다() async throws {
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
 
         // Given
         await mockService.setCheckResult(.authorized)
@@ -149,7 +148,7 @@ extension DefaultSTTRepositoryTest {
 
     func test_STT권한거부상태_권한확인시_denied를반환한다() async throws {
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
 
         // Given
         await mockService.setCheckResult(.denied)
@@ -165,7 +164,7 @@ extension DefaultSTTRepositoryTest {
 
     func test_STT권한미결정상태_권한확인시_notDetermined를반환한다() async throws {
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
 
         // Given
         await mockService.setCheckResult(.notDetermined)
@@ -185,7 +184,7 @@ extension DefaultSTTRepositoryTest {
 extension DefaultSTTRepositoryTest {
     func test_태스크취소상태_권한확인시_cancelled에러를던진다() async throws {
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
 
         // Given
         await mockService.expectCheck(callCount: 0)
@@ -216,7 +215,7 @@ extension DefaultSTTRepositoryTest {
 extension DefaultSTTRepositoryTest {
     func test_STT권한허용상태_권한요청시_authorized를반환한다() async throws {
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
 
         // Given
         await mockService.setRequestResult(.authorized)
@@ -232,7 +231,7 @@ extension DefaultSTTRepositoryTest {
 
     func test_STT권한거부상태_권한요청시_denied를반환한다() async throws {
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
 
         // Given
         await mockService.setRequestResult(.denied)
@@ -252,7 +251,7 @@ extension DefaultSTTRepositoryTest {
 extension DefaultSTTRepositoryTest {
     func test_태스크취소상태_권한요청시_cancelled에러를던진다() async throws {
         let mockService = MockSTTService()
-        let sut = DefaultSTTRepository(service: mockService)
+        let sut = DefaultSTTRepository(service: mockService, storageService: MockStorageService())
 
         // Given
         await mockService.expectRequest(callCount: 0)

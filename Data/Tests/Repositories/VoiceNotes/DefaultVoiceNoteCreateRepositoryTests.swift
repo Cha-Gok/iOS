@@ -11,7 +11,7 @@ final class DefaultVoiceNoteCreateRepositoryTests: XCTestCase {
         let createdAt = Date(timeIntervalSince1970: 1_710_000_000)
         let voiceRecord = VoiceRecord(
             createdAt: createdAt,
-            audioFilePath: URL(fileURLWithPath: "/tmp/1710000000000.m4a"),
+            audioFilePath: "VoiceRecords/1710000000000.m4a",
             duration: 60
         )
         let sut = DefaultVoiceNoteCreateRepository(store: store)

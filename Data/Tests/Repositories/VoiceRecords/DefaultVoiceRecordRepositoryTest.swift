@@ -252,7 +252,7 @@ extension DefaultVoiceRecordRepositoryTest {
         // Given
         let createdAt = Date(timeIntervalSince1970: 1234)
         let tempURL = URL(fileURLWithPath: "/temp/path.m4a")
-        let permanentURL = URL(fileURLWithPath: "/permanent/path.m4a")
+        let permanentPath = "VoiceRecords/\(createdAt.yyyyMMddHHmmssString).m4a"
         let duration = 12.34
         let recordedAudio = RecordedAudio(
             createdAt: createdAt,
@@ -260,7 +260,7 @@ extension DefaultVoiceRecordRepositoryTest {
             duration: duration
         )
         await audioService.setFinishResult(Result<RecordedAudio, AudioRecorderServiceError>.success(recordedAudio))
-        await storageService.setMoveFileResult(Result<URL, StorageServiceError>.success(permanentURL))
+        await storageService.setMoveFileResult(Result<String, StorageServiceError>.success(permanentPath))
 
         await audioService.expectFinish(callCount: 1)
         await storageService.expectMoveFile(callCount: 1)
@@ -270,7 +270,7 @@ extension DefaultVoiceRecordRepositoryTest {
 
         // Then
         XCTAssertEqual(voiceRecord.createdAt, createdAt)
-        XCTAssertEqual(voiceRecord.audioFilePath, permanentURL)
+        XCTAssertEqual(voiceRecord.audioFilePath, permanentPath)
         XCTAssertEqual(voiceRecord.duration, duration, accuracy: 0.001)
 
         let movedSourceURL = await storageService.movedSourceURL

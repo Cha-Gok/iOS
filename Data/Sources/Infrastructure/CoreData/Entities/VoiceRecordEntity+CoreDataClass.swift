@@ -7,7 +7,7 @@ public final class VoiceRecordEntity: NSManagedObject {
     public var id: UUID
 
     @NSManaged
-    public var audioFilePath: URL
+    public var audioFilePath: String
 
     @NSManaged
     public var createdAt: Date

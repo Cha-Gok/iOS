@@ -17,7 +17,7 @@ extension FetchWasteBasketFolderUseCaseTest {
         let voiceNote = VoiceNote(
             title: "테스트 음성 메모",
             folderID: UUID(),
-            voiceRecord: VoiceRecord(audioFilePath: URL(fileURLWithPath: "test.m4a"), duration: 10)
+            voiceRecord: VoiceRecord(audioFilePath: "VoiceRecords/test.m4a", duration: 10)
         )
         let expectedItems: [WasteBasketItem] = [
             .folder(obj: folder),
