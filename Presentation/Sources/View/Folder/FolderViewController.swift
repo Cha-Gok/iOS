@@ -1,36 +1,18 @@
 import Domain
 import Observation
 import UIKit
+import SwiftUI
 
-public final class FolderViewController: UITableViewController {
-    private enum Section {
+public final class FolderViewController: CollectionViewController {
+    enum Section {
         case main
     }
-
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, LibraryItem>
+    typealias SnapShot = NSDiffableDataSourceSnapshot<Section, LibraryItem>
     private let vm: FolderViewModel
-    private var dataSource: UITableViewDiffableDataSource<Section, LibraryItem>!
-
+    private var dataSource: DataSource!
+    private var listConfiguration: UICollectionLayoutListConfiguration = .init(appearance: .plain)
     // MARK: - Component
-
-    private let overlayView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .black.withAlphaComponent(0.3)
-        view.alpha = 0
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
-    private let textField: TextFieldView = {
-        let tf = TextFieldView(
-            isEdit: false,
-            title: "새 폴더",
-            subTitle: "새로 만들 폴더의 이름을 입력해주세요.",
-            placeholder: "폴더 이름을 적어주세요"
-        )
-        tf.alpha = 0
-        tf.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
-        return tf
-    }()
 
     private lazy var backButton: UIButton = {
         let btn = UIButton(type: .system)
@@ -51,17 +33,35 @@ public final class FolderViewController: UITableViewController {
         btn.tintColor = UIColor.gray950
         return btn
     }()
+    
+    private var cancelButton: GlassButton = .close("취소")
+    private var primaryButton: GlassButton = .primary("만들기")
+    private var isKeyboardVisible = false
+    private var textFieldCenterYConstraint: NSLayoutConstraint?
+    
+    private lazy var textField = TextFieldView(
+        field: .init(
+            mode: .create,
+            title: "새 폴더",
+            subTitle: "새로 만들 폴더의 이름을\n입력해주세요.",
+            placeHolder: "폴더 이름을 적어주세요"),
+        cancelButton: cancelButton,
+        primaryButton: primaryButton
+    )
 
     // MARK: - Initialize
 
     public init(vm: FolderViewModel) {
         self.vm = vm
-        super.init(nibName: nil, bundle: nil)
+        listConfiguration.backgroundColor = .clear
+        listConfiguration.showsSeparators = false
+        let layout = UICollectionViewCompositionalLayout.list(using: listConfiguration)
+        super.init(collectionViewLayout: layout)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
 
     // MARK: - LifeCycle
@@ -70,10 +70,15 @@ public final class FolderViewController: UITableViewController {
         super.viewDidLoad()
         setup()
         setupNavigationBar()
-        bindTextFieldCancel()
-        bindTextFieldConfirm()
+        setupSwipeAction()
+        setupButtons()
         setupDataSource()
         updateDataSource(animated: false)
+    }
+
+    override public func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        vm.fetchAll()
     }
 
     override public func viewWillLayoutSubviews() {
@@ -82,24 +87,59 @@ public final class FolderViewController: UITableViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        if vm.showAlert {
-            presentAlert()
-        } else {
-            dismissAlert()
+        syncTextFieldField()
+        textField.isHidden = !vm.showTextField
+        let centerYOffset: CGFloat = isKeyboardVisible ? -24 : 0
+        guard textFieldCenterYConstraint?.constant != centerYOffset else { return }
+
+        view.setNeedsUpdateConstraints()
+
+        guard view.window != nil else { return }
+
+        UIView.animate(
+            withDuration: Constant.animationDuration,
+            delay: 0,
+            options: [.curveEaseInOut, .beginFromCurrentState, .allowUserInteraction]
+        ) {
+            self.view.layoutIfNeeded()
         }
-        // tableview 업데이트
-        updateDataSource()
+    }
+
+    override public func updateViewConstraints() {
+        textFieldCenterYConstraint?.constant = isKeyboardVisible ? -24 : 0
+        super.updateViewConstraints()
     }
 
     // MARK: - Setup
 
     private func setup() {
-        view.backgroundColor = UIColor.gray50
-        tableView.separatorStyle = .none
-        tableView.register(FolderViewCell.self, forCellReuseIdentifier: FolderViewCell.reuseIdentifier)
-    }
+        collectionView.showsVerticalScrollIndicator = false
+        view.addSubview(textField)
+        textFieldCenterYConstraint = textField.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        
+        NSLayoutConstraint.activate([
+            textField.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            textField.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.35),
+            textField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            textFieldCenterYConstraint
+        ].compactMap { $0 })
 
+        // TextField 콜백 연결
+        textField.onEditingDidBegin = { [weak self] in
+            self?.isKeyboardVisible = true
+            self?.updateProperties()
+        }
+        
+        textField.onEditingDidEnd = { [weak self] in
+            self?.isKeyboardVisible = false
+            self?.updateProperties()
+        }
+    }
+    
     private func setupNavigationBar() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = UIColor.gray50
         backButton.addAction(
             UIAction { [weak self] _ in
                 self?.vm.didTapBack()
@@ -110,19 +150,80 @@ public final class FolderViewController: UITableViewController {
 
         addButton.addAction(
             UIAction { [weak self] _ in
-                self?.textField.configure(
-                    isEdit: false,
-                    title: "새 폴더",
-                    subTitle: "새로 만들 폴더의 이름을 입력해주세요."
-                )
-                self?.vm.openTextFieldView()
+                self?.vm.openTextField()
             }, for: .touchUpInside
         )
         let rightItem = UIBarButtonItem(customView: addButton)
         navigationItem.rightBarButtonItem = rightItem
-
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         navigationItem.rightBarButtonItem?.hidesSharedBackground = true
+    }
+    
+    /// 오른쪽 Swipe 액션을 제어하는 함수
+    private func setupSwipeAction() {
+        listConfiguration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
+            self?.trailingAction(indexPath: indexPath)
+        }
+        
+        // List 레이아웃을 사용하되, 섹션 설정을 통해 간격을 조정합니다.
+        let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, layoutEnvironment in
+            guard let self else { return nil }
+            let config = self.listConfiguration
+            // 개별 셀의 높이가 카드에 딱 맞게 설정되도록 여백 제거
+            let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: layoutEnvironment)
+            section.interGroupSpacing = 8
+            section.contentInsets = .init(top: 14, leading: 20, bottom: 14, trailing: 20)
+            return section
+        }
+        collectionView.setCollectionViewLayout(layout, animated: false)
+    }
+    
+    private func setupButtons() {
+        cancelButton.addAction(
+            UIAction { [weak self] _ in
+                guard let self else { return }
+                textField.field.text = ""
+                vm.closeTextField()
+            },
+            for: .touchUpInside
+        )
+        
+        primaryButton.addAction(
+            UIAction { [weak self] _ in
+                guard let self else { return }
+                let name = textField.field.trimmedText
+                guard !name.isEmpty else { return }
+
+                switch vm.mode {
+                case .create:
+                    vm.create(name: name)
+                case .edit:
+                    vm.update(name: name)
+                }
+                textField.field.text = ""
+                vm.closeTextField()
+            },
+            for: .touchUpInside
+        )
+    }
+
+    private func syncTextFieldField() {
+        textField.field.mode = vm.mode
+
+        switch vm.mode {
+        case .create:
+            textField.field.title = "새 폴더"
+            textField.field.subTitle = "새로 만들 폴더의 이름을\n입력해주세요."
+            textField.field.placeHolder = "폴더 이름을 적어주세요"
+            if !vm.showTextField {
+                textField.field.text = ""
+            }
+        case .edit:
+            textField.field.title = "폴더 이름 수정"
+            textField.field.subTitle = "수정할 폴더의 이름을\n입력해주세요."
+            textField.field.placeHolder = "폴더 이름을 적어주세요"
+            textField.field.text = vm.editFolder?.name ?? ""
+        }
     }
 }
 
@@ -130,95 +231,51 @@ public final class FolderViewController: UITableViewController {
 
 extension FolderViewController {
     private func setupDataSource() {
-        dataSource = UITableViewDiffableDataSource<
-            Section,
-            LibraryItem
-        >(tableView: tableView) { tableView, indexPath, item in
-            guard let cell = tableView.dequeueReusableCell(
-                withIdentifier: FolderViewCell.reuseIdentifier,
-                for: indexPath
-            ) as? FolderViewCell else {
-                return UITableViewCell()
+        let cellRegistraint = UICollectionView.CellRegistration<UICollectionViewCell, LibraryItem> { cell, indexPath, item in
+            cell.backgroundConfiguration = .clear()
+            cell.contentConfiguration = UIHostingConfiguration {
+                switch item {
+                case .folder(let data):
+                    FolderCardView(
+                        name: data.name,
+                        totalCount: data.content.count
+                    )
+                case .voiceNote(let data):
+                    VoiceNoteCardView(title: data.title, subTitle: Date.now.voiceNoteDay(createdAt: data.createdAt, updatedAt: data.updatedAt, duration: data.voiceRecord.duration))
+                }
             }
-            cell.configure(with: item)
-            return cell
+            .margins(.all, 0)
         }
+            
+
+        dataSource = DataSource(
+            collectionView: collectionView, 
+            cellProvider: { col, indexPath, item in
+                return col.dequeueConfiguredReusableCell(using: cellRegistraint, for: indexPath, item: item)
+            }
+        )
+        updateDataSource()
     }
 
     private func updateDataSource(animated: Bool = true) {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, LibraryItem>()
+        var snapshot = SnapShot()
         snapshot.appendSections([.main])
         snapshot.appendItems(vm.category.items, toSection: .main)
         dataSource.apply(snapshot, animatingDifferences: animated)
     }
 }
 
-// MARK: - Bind TextField
-
-extension FolderViewController {
-    private func bindTextFieldCancel() {
-        textField.onCancel = { [weak self] in
-            self?.vm.closeTextFieldView()
-        }
-    }
-
-    private func bindTextFieldConfirm() {
-        textField.onConfirm = { [weak self] name in
-            guard let self else { return }
-            if textField.isEdit {
-                vm.update(name: name)
-            } else {
-                vm.create(name: name)
-            }
-        }
-    }
-}
-
 // MARK: - TextField Alert Animation
 
 extension FolderViewController {
-    private func presentAlert() {
-        guard overlayView.superview == nil else { return }
-
-        // Add to window or navigation view to avoid scrolling with table
-        let parentView = navigationController?.view ?? view!
-        parentView.addSubview(overlayView)
-        parentView.addSubview(textField)
-
-        NSLayoutConstraint.activate([
-            overlayView.topAnchor.constraint(equalTo: parentView.topAnchor),
-            overlayView.leadingAnchor.constraint(equalTo: parentView.leadingAnchor),
-            overlayView.trailingAnchor.constraint(equalTo: parentView.trailingAnchor),
-            overlayView.bottomAnchor.constraint(equalTo: parentView.bottomAnchor)
-        ])
-
-        UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut) {
-            self.overlayView.alpha = 1
-            self.textField.alpha = 1
-            self.textField.transform = .identity
-        }
-    }
-
-    private func dismissAlert() {
-        UIView.animate(withDuration: 0.2, animations: {
-            self.overlayView.alpha = 0
-            self.textField.alpha = 0
-            self.textField.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        }) { _ in
-            self.overlayView.removeFromSuperview()
-            self.textField.removeFromSuperview()
-        }
-    }
+    
 }
 
 // MARK: - Swipe Action Delegate
 
 public extension FolderViewController {
-    override func tableView(
-        _ tableView: UITableView,
-        trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
-    ) -> UISwipeActionsConfiguration? {
-        guard let item = dataSource.itemIdentifier(for: indexPath) else { return nil }
+    private func trailingAction(indexPath: IndexPath) -> UISwipeActionsConfiguration {
+        guard let item = self.dataSource.itemIdentifier(for: indexPath) else { return .init() }
 
         let deleteAction = UIContextualAction(style: .destructive, title: "삭제") {
             [weak self] _, _, completion in
@@ -232,13 +289,7 @@ public extension FolderViewController {
         let editAction = UIContextualAction(style: .normal, title: "수정") {
             [weak self] _, _, completion in
             if case .folder(let folder) = item {
-                self?.textField.configure(
-                    isEdit: true,
-                    name: folder.name,
-                    title: "폴더 이름 수정",
-                    subTitle: "수정할 폴더의 이름을 입력해주세요."
-                )
-                self?.vm.openTextFieldView(for: folder)
+                self?.vm.openTextField(for: folder)
             }
             completion(true)
         }
@@ -252,9 +303,9 @@ public extension FolderViewController {
 // MARK: - Cell Touch Delegate
 
 public extension FolderViewController {
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // 터치 시 배경색 진해진 상태를 부드럽게 원래대로 돌려줍니다.
-        tableView.deselectRow(at: indexPath, animated: true)
+        collectionView.deselectItem(at: indexPath, animated: true)
 
         // 클릭한 셀의 데이터를 가져옵니다.
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
@@ -266,37 +317,12 @@ public extension FolderViewController {
     }
 }
 
-// #Preview {
-//    let dummyItems: [LibraryItem] = [
-//        .folder(
-//            Folder(
-//                name: "개인 아카이브",
-//                content: [
-//                    VoiceNote(
-//                        title: "백업",
-//                        folderID: UUID(),
-//                        voiceRecord: VoiceRecord(audioFilePath: URL(string: "file://2")!, duration: 10)
-//                    )
-//                ]
-//            )
-//        ),
-//        .folder(
-//            Folder(
-//                name: "test 1",
-//                content: [
-//                    VoiceNote(
-//                        title: "백업",
-//                        folderID: UUID(),
-//                        voiceRecord: VoiceRecord(audioFilePath: URL(string: "file://2")!, duration: 10)
-//                    )
-//                ]
-//            )
-//        )
-//    ]
-//
-//    let testFolder = CategoryToggle(imageName: "folder", title: "개인 폴더", items: dummyItems)
-//    let vm = FolderViewModel(category: testFolder)
-//    let folderVC = FolderViewController(vm: vm)
-//
-//    return UINavigationController(rootViewController: folderVC)
-// }
+#if DEBUG
+    #Preview("개인 폴더") {
+        UINavigationController(
+            rootViewController: FolderViewController(
+                vm: .preview()
+            )
+        )
+    }
+#endif
