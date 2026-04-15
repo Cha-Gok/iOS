@@ -1,19 +1,47 @@
 import UIKit
 
-final class MoveFolderListViewController: UIViewController {
-    let titleStack = UIView()
-    let folderList = UIView()
-    let moveButton = UIView()
+public final class MoveFolderListViewController: UIViewController {
+    private let viewModel: MoveFolderListViewModel = .init()
 
-    override func viewDidLoad() {
+    private lazy var leftTitleLable: UILabel = {
+        let label = UILabel()
+        label.setTypography(text: viewModel.state.leftTitle, style: .title3)
+        label.textColor = .gray950
+
+        return label
+    }()
+
+    private lazy var addFolderButton: UIButton = {
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = viewModel.state.addFolderButtonTitle
+        configuration.image = UIImage(systemName: "plus")
+        configuration.baseForegroundColor = .gray800
+        configuration.contentInsets = .zero
+
+        return UIButton(configuration: configuration)
+    }()
+
+    private lazy var titleStack: UIStackView = {
+        let stackView = UIStackView()
+        [leftTitleLable, addFolderButton].forEach { stackView.addArrangedSubview($0) }
+        stackView.distribution = .equalSpacing
+
+        return stackView
+    }()
+
+    private let folderList = UIView()
+    private let moveButton = UIView()
+
+    override public func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        titleStack.backgroundColor = .red
         folderList.backgroundColor = .blue
         moveButton.backgroundColor = .green
     }
 
     private func setupUI() {
+        view.backgroundColor = .gray100
+
         for view in [titleStack, folderList, moveButton] {
             view.translatesAutoresizingMaskIntoConstraints = false
             self.view.addSubview(view)
@@ -36,6 +64,17 @@ final class MoveFolderListViewController: UIViewController {
             moveButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -74),
         ])
     }
+}
+
+@MainActor
+@Observable
+public final class MoveFolderListViewModel {
+    public struct State {
+        public let leftTitle = "이동할 폴더 선택"
+        public let addFolderButtonTitle = "새 폴더"
+    }
+
+    private(set) var state: State = .init()
 }
 
 #Preview {
