@@ -138,8 +138,24 @@ extension MainCoordinator: FolderCoordinatorDelegate {
 
 extension MainCoordinator: VoiceNoteCoordinatorDelegate {
     func presentFolderList(with voiceNote: VoiceNote) {
-        let moveFolderListViewController = MoveFolderListViewController()
-        presenter.present(moveFolderListViewController, animated: true)
+        let viewModel = dependencyContainer.makeMoveFolderListViewModel(voiceNote: voiceNote)
+        viewModel.coordinator = self
+        let viewController = MoveFolderListViewController(viewModel: viewModel)
+
+        if let sheet = viewController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        presenter.present(viewController, animated: true)
+    }
+}
+
+// MARK: - MoveFolderListCoordinatorDelegate
+
+extension MainCoordinator: MoveFolderListCoordinatorDelegate {
+    func dismiss() {
+        presenter.dismiss(animated: true)
     }
 }
 

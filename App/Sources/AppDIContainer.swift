@@ -197,4 +197,12 @@ public final class AppDIContainer {
             fetchVoiceNoteUseCase: fetchVoiceNoteUseCase
         )
     }
+
+    public func makeMoveFolderListViewModel(voiceNote: VoiceNote) -> MoveFolderListViewModel {
+        return MoveFolderListViewModel(
+            voiceNote: voiceNote,
+            fetchFolderUseCase: fetchFolderUseCase,
+            updateVoiceNoteUseCase: updateVoiceNoteUseCase
+        )
+    }
 }
