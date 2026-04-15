@@ -30,13 +30,27 @@ public final class MoveFolderListViewController: UIViewController {
     }()
 
     private let folderList = UIView()
-    private let moveButton = UIView()
+
+    private lazy var moveButton: UIButton = {
+        var configuration = UIButton.Configuration.bordered()
+        configuration.contentInsets.top = 16
+        configuration.contentInsets.bottom = 16
+        configuration.title = viewModel.state.moveButtonTitle
+        configuration.baseBackgroundColor = viewModel.state.isMoveButtonEnabled ? .point600 : .gray300
+        configuration.baseForegroundColor = viewModel.state.isMoveButtonEnabled ? .gray950 : .gray600
+        configuration.background.cornerRadius = 20
+
+        return UIButton(configuration: configuration)
+    }()
 
     override public func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         folderList.backgroundColor = .blue
-        moveButton.backgroundColor = .green
+    }
+
+    override public func updateProperties() {
+        super.updateProperties()
     }
 
     private func setupUI() {
@@ -72,6 +86,11 @@ public final class MoveFolderListViewModel {
     public struct State {
         public let leftTitle = "이동할 폴더 선택"
         public let addFolderButtonTitle = "새 폴더"
+        public let moveButtonTitle = "이동하기"
+
+        public var isMoveButtonEnabled: Bool {
+            true
+        }
     }
 
     private(set) var state: State = .init()
