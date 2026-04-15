@@ -14,7 +14,7 @@ final class VoiceNoteEntityTests: XCTestCase {
     }
 
     private func makeVoiceRecord(
-        audioFilePath: URL = URL(fileURLWithPath: "/tmp/test.m4a"),
+        audioFilePath: String = "VoiceRecords/test.m4a",
         duration: Double = 60.0
     ) -> VoiceRecord {
         VoiceRecord(audioFilePath: audioFilePath, duration: duration)

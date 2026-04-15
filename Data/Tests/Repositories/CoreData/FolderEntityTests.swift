@@ -21,7 +21,7 @@ final class FolderEntityTests: XCTestCase {
     }
 
     private func makeVoiceRecord() -> VoiceRecord {
-        VoiceRecord(audioFilePath: URL(fileURLWithPath: "/tmp/test.m4a"), duration: 60.0)
+        VoiceRecord(audioFilePath: "VoiceRecords/test.m4a", duration: 60.0)
     }
 
     // MARK: - Create → Fetch(byId) 속성 유지
