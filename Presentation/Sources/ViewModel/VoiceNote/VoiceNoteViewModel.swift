@@ -148,7 +148,7 @@ public final class VoiceNoteViewModel {
         do {
             let language = try await fetchLanguageUseCase.execute()
             let result = try await audioToSummaryUseCase.execute(
-                audioFileURL: state.voiceNote.voiceRecord.audioFilePath,
+                audioFilePath: state.voiceNote.voiceRecord.audioFilePath,
                 language: language
             )
             let updated = VoiceNote(
@@ -176,7 +176,7 @@ public final class VoiceNoteViewModel {
         playbackObservationTask = nil
         do {
             let stream = try prepareVoiceRecordPlaybackUseCase.execute(
-                audioFileURL: state.voiceNote.voiceRecord.audioFilePath
+                audioFilePath: state.voiceNote.voiceRecord.audioFilePath
             )
             playbackObservationTask = Task {
                 for await playbackState in stream {
