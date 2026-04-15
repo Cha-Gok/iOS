@@ -1,251 +1,233 @@
 import UIKit
 
-public final class TextFieldView: UIView {
+final class TextFieldView: UIView {
     // MARK: - Properties
+    var field: Field
+    
+    // 키보드 상태 변화를 알리기 위한 콜백
+    var onEditingDidBegin: (() -> Void)?
+    var onEditingDidEnd: (() -> Void)?
 
-    var isEdit: Bool
-    var title: String
-    var subTitle: String
-    private let placeholder: String
-
-    var onConfirm: ((String) -> Void)?
-    var onCancel: (() -> Void)?
-
-    // MARK: - UI Components
-
-    private let containerStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.distribution = .fill
-        stack.spacing = Constant.alertTopAndBottomContentSpacing
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
+    // MARK: - Componenet
+    private let container: UIStackView = {
+        let c = UIStackView()
+        c.translatesAutoresizingMaskIntoConstraints = false
+        c.axis = .vertical
+        c.spacing = 12
+        return c
     }()
-
-    private let topContentStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 12
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
+    
+    private lazy var titleLabel: UILabel = {
+        let t = UILabel()
+        t.translatesAutoresizingMaskIntoConstraints = false
+        t.setTypography(text: field.title, style: .title2)
+        t.textAlignment = .center
+        t.textColor = .gray950
+        return t
     }()
-
-    private let headerLabel: UILabel = {
-        let label = UILabel()
-        label.textAlignment = .center
-        label.textColor = .gray950
-        return label
+    
+    private lazy var subTitleLabel: UILabel = {
+        let t = UILabel()
+        t.translatesAutoresizingMaskIntoConstraints = false
+        t.setTypography(text: field.subTitle, style: .body2)
+        t.textAlignment = .center
+        t.textColor = .gray950
+        t.numberOfLines = 0
+        return t
     }()
-
-    private let bodyLabel: UILabel = {
-        let label = UILabel()
-        label.textAlignment = .center
-        label.textColor = .gray800
-        label.numberOfLines = 0
-        return label
-    }()
-
+    
     private lazy var textField: UITextField = {
         let tf = UITextField()
         tf.translatesAutoresizingMaskIntoConstraints = false
-        tf.backgroundColor = .white.withAlphaComponent(0.5)
-        tf.layer.cornerRadius = 12
-        tf.layer.borderWidth = 1
-        tf.layer.borderColor = UIColor.gray300.cgColor
-        tf.placeholder = placeholder
-        tf.font = Typography.body1.font
+        tf.backgroundColor = .gray100
+        tf.layer.cornerRadius = 8
         tf.textColor = .gray950
-        tf.autocorrectionType = .no
-        tf.spellCheckingType = .no
-        tf.clearButtonMode = .whileEditing
-
-        // Left Padding
-        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
-        tf.leftView = paddingView
-        tf.leftViewMode = .always
-
+        tf.font = Typography.body1.font
+        tf.defaultTextAttributes = Typography.body1.textAttributes
         tf.delegate = self
         tf.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
+        tf.leftViewMode = .always
+        tf.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
+        tf.rightViewMode = .always
         return tf
     }()
 
-    private let bottomContentStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.distribution = .fillEqually
-        stack.spacing = Constant.alertSpacing
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
+    private lazy var placeholderLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.setTypography(text: field.placeHolder, style: .body1)
+        label.textColor = .gray600
+        label.numberOfLines = 0
+        return label
     }()
+    
+    private let bottomContainer: UIStackView = {
+        let c = UIStackView()
+        c.translatesAutoresizingMaskIntoConstraints = false
+        c.axis = .horizontal
+        c.spacing = 8
 
-    private let cancelButton: GlassButton = .close("취소")
-    private lazy var confirmButton: GlassButton = .primary(isEdit ? "수정" : "추가")
-
-    // MARK: - Initializer
-
-    init(isEdit: Bool, title: String, subTitle: String, placeholder: String) {
-        self.isEdit = isEdit
-        self.title = title
-        self.subTitle = subTitle
-        self.placeholder = placeholder
+        return c
+    }()
+    
+    private let cancelButton: GlassButton
+    private let primaryButton: GlassButton
+    // MARK: - Initialize
+    
+    init(
+        field: Field,
+        cancelButton: GlassButton,
+        primaryButton: GlassButton
+    ) {
+        self.field = field
+        self.cancelButton = cancelButton
+        self.primaryButton = primaryButton
         super.init(frame: .zero)
         setup()
-        setupConstraints()
-        setupActions()
     }
-
-    @available(*, unavailable)
+    
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
-
-    // MARK: - Lifecycle
-
-    override public func didMoveToSuperview() {
-        super.didMoveToSuperview()
-        guard let superview else { return }
-
-        NSLayoutConstraint.activate([
-            centerXAnchor.constraint(equalTo: superview.centerXAnchor),
-            centerYAnchor.constraint(equalTo: superview.centerYAnchor, constant: -100), // Keyboard offset
-            widthAnchor.constraint(equalTo: superview.widthAnchor, multiplier: Constant.alertMultiplierWidth)
-        ])
-
-        // Auto focus
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.textField.becomeFirstResponder()
-        }
-    }
-
-    override public func layoutSubviews() {
+    
+    // MARK: - LifeCycle
+    override func layoutSubviews() {
         super.layoutSubviews()
-        layer.cornerRadius = Constant.cornerRadius
-
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = Constant.shadowOpacity
         layer.shadowOffset = CGSize(width: Constant.shadowOffsetWidth, height: Constant.shadowOffsetHeight)
         layer.shadowRadius = Constant.cornerRadius
+        layer.shadowPath =
+            UIBezierPath(
+                roundedRect: bounds,
+                cornerRadius: Constant.cornerRadius
+            ).cgPath
     }
-}
+    
+    override func updateProperties() {
+        super.updateProperties()
+        titleLabel.setTypography(text: field.title, style: .title2)
+        subTitleLabel.setTypography(text: field.subTitle, style: .body2)
+        placeholderLabel.setTypography(text: field.placeHolder, style: .body1)
 
-// MARK: - Setup
+        if textField.text != field.text {
+            textField.text = field.text
+        }
 
-private extension TextFieldView {
-    func setup() {
+        switch field.mode {
+        case .create:
+            primaryButton.configuration?.title = "만들기"
+        case .edit:
+            primaryButton.configuration?.title = "수정하기"
+        }
+        primaryButton.isEnabled = field.isSubmitEnabled
+        updatePlaceholderVisibility()
+    }
+    
+    // MARK: - Setup
+    private func setup() {
         translatesAutoresizingMaskIntoConstraints = false
-        backgroundColor = .point200.withAlphaComponent(0.9) // More opaque for readability
-        layer.borderWidth = Constant.borderWidth
+        backgroundColor = .point200.withAlphaComponent(0.2)
+        layer.cornerRadius = Constant.cornerRadius
         layer.borderColor = UIColor.gray600.cgColor
-
-        headerLabel.setTypography(text: title, style: .title2)
-        bodyLabel.setTypography(text: subTitle, style: .body1)
-
-        confirmButton.isEnabled = false
-
-        addSubview(containerStack)
-        containerStack.addArrangedSubview(topContentStack)
-        containerStack.addArrangedSubview(bottomContentStack)
-
-        topContentStack.addArrangedSubview(headerLabel)
-        topContentStack.addArrangedSubview(bodyLabel)
-        topContentStack.addArrangedSubview(textField)
-
-        bottomContentStack.addArrangedSubview(cancelButton)
-        bottomContentStack.addArrangedSubview(confirmButton)
+        layer.borderWidth = Constant.borderWidth
+        setupConstraint()
+        setupStyle()
     }
-
-    func setupConstraints() {
+    
+    private func setupConstraint() {
+        bottomContainer.addArrangedSubview(cancelButton)
+        bottomContainer.addArrangedSubview(primaryButton)
+        container.addArrangedSubview(titleLabel)
+        container.addArrangedSubview(subTitleLabel)
+        container.addArrangedSubview(textField)
+        container.setCustomSpacing(24, after: textField)
+        container.addArrangedSubview(bottomContainer)
+        addSubview(container)
+        textField.addSubview(placeholderLabel)
+        
         NSLayoutConstraint.activate([
-            containerStack.topAnchor.constraint(
-                equalTo: topAnchor,
-                constant: Constant.alertTopAndBottomValueForTopContent
-            ),
-            containerStack.leadingAnchor.constraint(
-                equalTo: leadingAnchor,
-                constant: Constant.alertLeftAndRightValueForTopContent
-            ),
-            containerStack.trailingAnchor.constraint(
-                equalTo: trailingAnchor,
-                constant: -Constant.alertLeftAndRightValueForTopContent
-            ),
-            containerStack.bottomAnchor.constraint(
-                equalTo: bottomAnchor,
-                constant: -Constant.alertTopAndBottomValueForBottomContent
-            ),
-
+            container.topAnchor.constraint(equalTo: topAnchor, constant: 32),
+            container.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            container.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            container.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -32),
             textField.heightAnchor.constraint(equalToConstant: 48),
-            bottomContentStack.heightAnchor.constraint(equalToConstant: Constant.alertBottomContentHeight)
+            placeholderLabel.centerYAnchor.constraint(equalTo: textField.centerYAnchor),
+            placeholderLabel.leadingAnchor.constraint(equalTo: textField.leadingAnchor, constant: 12),
+            placeholderLabel.trailingAnchor.constraint(lessThanOrEqualTo: textField.trailingAnchor, constant: -12),
+            cancelButton.heightAnchor.constraint(equalToConstant: 46),
+            primaryButton.heightAnchor.constraint(equalToConstant: 46),
         ])
     }
+    
+    private func setupStyle() {
+        cancelButton.setShadow(true)
+        cancelButton.setCapsuleCornerRadius()
+        primaryButton.setShadow(true)
+        primaryButton.setCapsuleCornerRadius()
+        updatePlaceholderVisibility()
+    }
 
-    func setupActions() {
-        cancelButton.addAction(UIAction { [weak self] _ in
-            self?.onCancel?()
-            self?.textField.text = ""
-        }, for: .touchUpInside)
-
-        confirmButton.addAction(UIAction { [weak self] _ in
-            guard let text = self?.textField.text, !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-            self?.onConfirm?(text)
-            self?.textField.text = ""
-        }, for: .touchUpInside)
+    private func updatePlaceholderVisibility() {
+        placeholderLabel.isHidden = !field.text.isEmpty
     }
 
     @objc
-    func textFieldDidChange() {
-        let text = textField.text ?? ""
-        confirmButton.isEnabled = !text.trimmingCharacters(in: .whitespaces).isEmpty
+    private func textFieldDidChange() {
+        field.text = textField.text ?? ""
+        updatePlaceholderVisibility()
     }
 }
 
-// MARK: - Public API
 
-public extension TextFieldView {
-    func configure(
-        isEdit: Bool,
-        name: String? = nil,
-        title: String? = nil,
-        subTitle: String? = nil
-    ) {
-        self.isEdit = isEdit
-        if let title { self.title = title }
-        if let subTitle { self.subTitle = subTitle }
+//MARK: - Observable 구조
 
-        headerLabel.setTypography(text: self.title, style: .title2)
-        bodyLabel.setTypography(text: self.subTitle, style: .body1)
+extension TextFieldView {
+    @Observable
+    final class Field {
+        var mode: Mode
+        var title: String
+        var subTitle: String
+        var placeHolder: String
+        var text: String
 
-        if isEdit {
-            textField.text = name
-            confirmButton.setTitle("수정", for: .normal)
-            confirmButton.isEnabled = !(name?.isEmpty ?? true)
-        } else {
-            textField.text = ""
-            confirmButton.setTitle("추가", for: .normal)
-            confirmButton.isEnabled = false
+        var trimmedText: String {
+            text.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        var isSubmitEnabled: Bool {
+            !trimmedText.isEmpty
+        }
+        
+        init(mode: Mode, title: String, subTitle: String, placeHolder: String, text: String = "") {
+            self.mode = mode
+            self.title = title
+            self.subTitle = subTitle
+            self.placeHolder = placeHolder
+            self.text = text
         }
     }
+
+    enum Mode {
+        case create
+        case edit
+    }
 }
 
-// MARK: - UITextFieldDelegate
+// MARK: TextField Delegate
 
 extension TextFieldView: UITextFieldDelegate {
-    public func textField(
-        _ textField: UITextField,
-        shouldChangeCharactersIn range: NSRange,
-        replacementString string: String
-    ) -> Bool {
-        let currentText = textField.text ?? ""
-        guard let stringRange = Range(range, in: currentText) else { return false }
-        let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
-
-        return updatedText.count <= 20
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 
-    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        if confirmButton.isEnabled {
-            guard let text = textField.text else { return true }
-            onConfirm?(text)
-        }
-        return true
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        onEditingDidBegin?()
+    }
+
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        onEditingDidEnd?()
     }
 }

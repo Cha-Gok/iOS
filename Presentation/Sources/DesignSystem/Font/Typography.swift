@@ -53,6 +53,24 @@ public enum Typography {
             return size * -0.03
         }
     }
+
+    var textAttributes: [NSAttributedString.Key: Any] {
+        let paragraphStyle = NSMutableParagraphStyle()
+        let fontLineHeight = font.lineHeight
+        let targetLineHeight = fontLineHeight * lineHeightMultiple
+
+        paragraphStyle.minimumLineHeight = targetLineHeight
+        paragraphStyle.maximumLineHeight = targetLineHeight
+
+        let baselineOffset = (targetLineHeight - fontLineHeight) / 2
+
+        return [
+            .font: font,
+            .paragraphStyle: paragraphStyle,
+            .kern: letterSpacing,
+            .baselineOffset: baselineOffset
+        ]
+    }
 }
 
 public extension UILabel {
@@ -62,24 +80,6 @@ public extension UILabel {
     ///   - typography: 글씨체, 행간 , 자간 복합적인 열겨형 데이터
     func setTypography(text: String? = nil, style typography: Typography) {
         let textToUse = text ?? self.text ?? ""
-
-        let paragraphStyle = NSMutableParagraphStyle()
-        // lineHeightMultiple을 설정하면 남는 여백이 주로 위쪽에 추가되어 텍스트가 아래로 쏠려 보입니다.
-        let fontLineHeight = typography.font.lineHeight
-        let targetLineHeight = fontLineHeight * typography.lineHeightMultiple
-
-        paragraphStyle.minimumLineHeight = targetLineHeight
-        paragraphStyle.maximumLineHeight = targetLineHeight
-
-        // 여백(targetLineHeight - fontLineHeight)의 절반만큼 위로 끌어올리면 정확히 중앙에 배치됩니다.
-        let baselineOffset = (targetLineHeight - fontLineHeight) / 2
-
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: typography.font,
-            .paragraphStyle: paragraphStyle,
-            .kern: typography.letterSpacing,
-            .baselineOffset: baselineOffset // 계산된 값 적용
-        ]
-        attributedText = NSAttributedString(string: textToUse, attributes: attributes)
+        attributedText = NSAttributedString(string: textToUse, attributes: typography.textAttributes)
     }
 }
