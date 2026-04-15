@@ -32,7 +32,10 @@ extension DefaultVoiceRecordPlaybackRepositoryTests {
 
     func test_play실패시_repositoryError로매핑한다() {
         let service = MockAudioPlaybackService()
-        let sut = DefaultVoiceRecordPlaybackRepository(audioPlaybackService: service, storageService: MockStorageService())
+        let sut = DefaultVoiceRecordPlaybackRepository(
+            audioPlaybackService: service,
+            storageService: MockStorageService()
+        )
         service.setPlayResult(.failure(.playFailed))
         service.expectPlay(callCount: 1)
 
@@ -50,7 +53,10 @@ extension DefaultVoiceRecordPlaybackRepositoryTests {
 
     func test_seek호출시_serviceSeek를호출한다() throws {
         let service = MockAudioPlaybackService()
-        let sut = DefaultVoiceRecordPlaybackRepository(audioPlaybackService: service, storageService: MockStorageService())
+        let sut = DefaultVoiceRecordPlaybackRepository(
+            audioPlaybackService: service,
+            storageService: MockStorageService()
+        )
         service.setSeekResult(.success(()))
         service.expectSeek(callCount: 1)
 
