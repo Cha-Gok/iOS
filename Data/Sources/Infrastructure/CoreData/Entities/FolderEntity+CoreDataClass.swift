@@ -49,13 +49,12 @@ extension FolderEntity: ManagedObjectMapping {
     }
 
     public func toModel() -> ModelType {
-        // voiceNotes는 별도 fetch로 가져오도록 빈 배열로 반환합니다.
-        // Folder.toModel() 시 모든 VoiceNote + 하위 관계를 재귀 로드하는 성능 문제를 방지합니다.
-        Folder(
+        let voiceNoteModels = (voiceNotes?.allObjects as? [VoiceNoteEntity])?.map { $0.toModel() } ?? []
+        return Folder(
             id: id,
             name: name,
             createdAt: createdAt,
-            content: [],
+            content: voiceNoteModels,
             isDeletable: isDeletable,
             deletedAt: deletedAt
         )
