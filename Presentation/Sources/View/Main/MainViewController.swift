@@ -182,7 +182,7 @@ public final class MainViewController: ViewController {
 
         NSLayoutConstraint.activate([
             floatingButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            floatingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            floatingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -42)
         ])
     }
 }
@@ -215,7 +215,7 @@ extension MainViewController {
                     groupWidth: .fractionalWidth(1.0),
                     groupHeight: .estimated(120),
                     interGroupSpacing: 8,
-                    contentInsets: .init(top: 0, leading: 20, bottom: 32, trailing: 20),
+                    contentInsets: .init(top: 0, leading: 20, bottom: 0, trailing: 20),
                     headerHeight: 72
                 )
             case .emptyList:
