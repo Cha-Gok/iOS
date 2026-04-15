@@ -9,7 +9,7 @@ public protocol AudioToSummaryUseCase: Sendable {
     ///   - language: 요약 및 키워드 생성에 사용할 출력 언어
     /// - Returns: 전사, 키워드, 요약이 포함된 `AudioToSummaryResult`
     /// - Throws: `AudioToSummaryUseCaseError` (전사·요약 실패)
-    func execute(audioFileURL: URL, language: Language) async throws(AudioToSummaryUseCaseError) -> AudioToSummaryResult
+    func execute(audioFilePath: String, language: Language) async throws(AudioToSummaryUseCaseError) -> AudioToSummaryResult
 }
 
 public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
@@ -24,13 +24,13 @@ public struct DefaultAudioToSummaryUseCase: AudioToSummaryUseCase {
         self.summaryRepository = summaryRepository
     }
 
-    public func execute(audioFileURL: URL, language: Language) async throws(AudioToSummaryUseCaseError)
+    public func execute(audioFilePath: String, language: Language) async throws(AudioToSummaryUseCaseError)
         -> AudioToSummaryResult
     {
         do {
             try Task.checkCancellation()
 
-            let transcript = try await sttRepository.transcribe(audioFileURL: audioFileURL)
+            let transcript = try await sttRepository.transcribe(audioFilePath: audioFilePath)
 
             try Task.checkCancellation()
 
