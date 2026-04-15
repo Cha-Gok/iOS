@@ -23,7 +23,8 @@ public final class AppDIContainer {
         storageService: storageService
     )
     private lazy var voiceRecordPlaybackRepository = DefaultVoiceRecordPlaybackRepository(
-        audioPlaybackService: audioPlaybackService
+        audioPlaybackService: audioPlaybackService,
+        storageService: storageService
     )
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
@@ -31,7 +32,7 @@ public final class AppDIContainer {
     private lazy var voiceNoteFetchRepository = DefaultVoiceNoteFetchRepository(store: localDataBase)
     private lazy var voiceNoteUpdateRepository = DefaultVoiceNoteUpdateRepository(store: localDataBase)
     private lazy var wasteBasketRepository = DefaultWasteBasketRepository(store: localDataBase)
-    private lazy var sttRepository = DefaultSTTRepository(service: SpeechService())
+    private lazy var sttRepository = DefaultSTTRepository(service: SpeechService(), storageService: storageService)
     private lazy var summaryRepository = DefaultSummaryRepository(service: AppleFoundationSummaryService())
 
     /// UseCase
