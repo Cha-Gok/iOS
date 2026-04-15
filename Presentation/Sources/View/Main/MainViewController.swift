@@ -12,11 +12,6 @@ public final class MainViewController: ViewController {
     typealias DataSource = UICollectionViewDiffableDataSource<MainSection, MainCellItem>
     typealias SnapShot = NSDiffableDataSourceSnapshot<MainSection, MainCellItem>
 
-    private enum LayoutConstant {
-        static let expandedCategoryHeaderHeight: CGFloat = 120
-        static let collapsedCategoryHeaderHeight: CGFloat = 40
-    }
-
     // MARK: - View Model
 
     private let vm: MainViewModel
@@ -237,10 +232,7 @@ extension MainViewController {
         let categoryHeader = NSCollectionLayoutBoundarySupplementaryItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(
-                    vm.didScroll ? LayoutConstant.collapsedCategoryHeaderHeight : LayoutConstant
-                        .expandedCategoryHeaderHeight
-                )
+                heightDimension: .estimated(120)
             ),
             elementKind: MainCategoryHeaderView.elementKind,
             alignment: .top
@@ -435,6 +427,7 @@ extension MainViewController: UICollectionViewDelegate {
         guard let header = collectionView.visibleSupplementaryViews(ofKind: MainCategoryHeaderView.elementKind)
             .first as? MainCategoryHeaderView else { return }
         header.updateScrollState(didScroll)
+        collectionView.collectionViewLayout.invalidateLayout()
     }
 }
 
