@@ -71,8 +71,14 @@ public final class MoveFolderListViewController: UIViewController {
         configuration.baseBackgroundColor = .gray300
         configuration.baseForegroundColor = .gray600
         configuration.background.cornerRadius = 20
-
-        return UIButton(configuration: configuration)
+        let isEnabled = viewModel.state.isMoveButtonEnabled
+        configuration.baseBackgroundColor = isEnabled ? .point600 : .gray300
+        configuration.baseForegroundColor = isEnabled ? .gray950 : .gray600
+        let button = UIButton(configuration: configuration)
+        button.addAction(UIAction(handler: { [weak self] _ in
+            self?.viewModel.send(.view(.moveButtonTapped))
+        }), for: .touchUpInside)
+        return button
     }()
 
     override public func viewDidLoad() {
@@ -84,7 +90,6 @@ public final class MoveFolderListViewController: UIViewController {
     override public func updateProperties() {
         super.updateProperties()
         applySnapshot()
-        updateMoveButton()
     }
 
     private func makeDataSource() -> DataSource {
@@ -102,12 +107,6 @@ public final class MoveFolderListViewController: UIViewController {
         snapshot.appendSections([.main])
         snapshot.appendItems(viewModel.state.folders)
         dataSource.apply(snapshot)
-    }
-
-    private func updateMoveButton() {
-        let isEnabled = viewModel.state.isMoveButtonEnabled
-        moveButton.configuration?.baseBackgroundColor = isEnabled ? .point600 : .gray300
-        moveButton.configuration?.baseForegroundColor = isEnabled ? .gray950 : .gray600
     }
 
     private func setupUI() {
@@ -144,20 +143,40 @@ extension MoveFolderListViewController: UICollectionViewDelegate {
     }
 }
 
-#Preview {
-    struct StubFetchFolderUseCase: FetchFolderUseCase {
-        func fetchAll() async throws(FetchFolderUseCaseError) -> [Folder] {
-            [Folder(name: "내 폴더"), Folder(name: "작업 폴더"), Folder(name: "강의 노트")]
-        }
-
-        func fetchDeletableFolders() async throws(FetchFolderUseCaseError) -> [Folder] {
-            []
-        }
-
-        func fetch(by id: UUID) async throws(FetchFolderUseCaseError) -> Folder {
-            Folder(name: "폴더")
-        }
-    }
-    let viewModel = MoveFolderListViewModel(fetchFolderUseCase: StubFetchFolderUseCase())
-    return MoveFolderListViewController(viewModel: viewModel)
-}
+// #Preview {
+//    struct StubFetchFolderUseCase: FetchFolderUseCase {
+//        func fetchAll() async throws(FetchFolderUseCaseError) -> [Folder] {
+//            [Folder(name: "내 폴더"), Folder(name: "작업 폴더"), Folder(name: "강의 노트")]
+//        }
+//
+//        func fetchDeletableFolders() async throws(FetchFolderUseCaseError) -> [Folder] {
+//            []
+//        }
+//
+//        func fetch(by id: UUID) async throws(FetchFolderUseCaseError) -> Folder {
+//            Folder(name: "폴더")
+//        }
+//    }
+//    struct StubUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
+//        func execute(_ voiceNote: VoiceNote) async throws(UpdateVoiceNoteUseCaseError) -> VoiceNote {
+//            voiceNote
+//        }
+//    }
+//    let voiceNote = VoiceNote(
+//        id: UUID(),
+//        title: "테스트",
+//        createdAt: .now,
+//        updatedAt: .now,
+//        folderID: UUID(),
+//        voiceRecord: VoiceRecord(audioFilePath: "", duration: 0),
+//        keywords: [],
+//        transcript: nil,
+//        summary: nil
+//    )
+//    let viewModel = MoveFolderListViewModel(
+//        voiceNote: voiceNote,
+//        fetchFolderUseCase: StubFetchFolderUseCase(),
+//        updateVoiceNoteUseCase: StubUpdateVoiceNoteUseCase()
+//    )
+//    MoveFolderListViewController(viewModel: viewModel)
+// }
