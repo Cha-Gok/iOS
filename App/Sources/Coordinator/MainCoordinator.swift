@@ -136,7 +136,12 @@ extension MainCoordinator: FolderCoordinatorDelegate {
 
 // MARK: VoiceNoteCoordinating
 
-extension MainCoordinator: VoiceNoteCoordinatorDelegate {}
+extension MainCoordinator: VoiceNoteCoordinatorDelegate {
+    func presentFolderList(with voiceNote: VoiceNote) {
+        let moveFolderListViewController = MoveFolderListViewController()
+        presenter.present(moveFolderListViewController, animated: true)
+    }
+}
 
 // MARK: Base 공통 함수 묶음
 

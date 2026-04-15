@@ -135,9 +135,12 @@ private extension VoiceNoteViewController {
             }, for: .touchUpInside
         )
         let menu = UIMenu(children: [
-            UIAction(title: "기록 이동하기", handler: { _ in }),
+            UIAction(title: "기록 이동하기", handler: { _ in
+                self.viewModel.send(.view(.moveVoiceNoteButtonTapped))
+            }),
             UIAction(title: "편집하기", handler: { _ in }),
-            UIAction(title: "삭제하기", attributes: .destructive, handler: { _ in }),
+            UIAction(title: "삭제하기", attributes: .destructive, handler: { _ in
+            }),
         ])
         let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: menu)
         let searchItem = UIBarButtonItem(

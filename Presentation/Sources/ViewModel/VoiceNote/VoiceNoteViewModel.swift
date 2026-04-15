@@ -2,17 +2,17 @@ import Core
 import Domain
 import Foundation
 
-public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {}
+public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {
+    func presentFolderList(with: VoiceNote)
+}
 
 @MainActor
 @Observable
 public final class VoiceNoteViewModel {
     public private(set) var state: State
 
-    @ObservationIgnored
-    private var playbackObservationTask: Task<Void, Never>?
-    @ObservationIgnored
-    private var wasPlayingBeforeSeek = false
+    @ObservationIgnored private var playbackObservationTask: Task<Void, Never>?
+    @ObservationIgnored private var wasPlayingBeforeSeek = false
 
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
@@ -62,7 +62,7 @@ public final class VoiceNoteViewModel {
 
     public func send(_ action: Action) {
         switch action {
-        case .view(let viewAction):
+        case let .view(viewAction):
             switch viewAction {
             case .onAppear:
                 // 재생 스트림 구독 시작 및 폴더명·AI 분석 로드
@@ -91,39 +91,41 @@ public final class VoiceNoteViewModel {
                 // 슬라이더 드래그 시작 — 재생 중이었으면 일시정지하고 상태 보존
                 wasPlayingBeforeSeek = state.currentPlaybackState.status == .playing
                 if wasPlayingBeforeSeek { pause() }
-            case .seekEnded(let time):
+            case let .seekEnded(time):
                 // 슬라이더 드래그 종료 — 목표 위치로 이동 후 드래그 전 재생 상태 복원
                 seek(to: time)
                 if wasPlayingBeforeSeek {
                     wasPlayingBeforeSeek = false
                     play()
                 }
-            case .scriptTimestampTapped(let time):
+            case let .scriptTimestampTapped(time):
                 // 스크립트 타임스탬프 탭 — 해당 시간으로 이동 후 재생
                 seek(to: time)
                 play()
             case .pop:
                 coordinator?.pop()
+            case .moveVoiceNoteButtonTapped:
+                coordinator?.presentFolderList(with: state.voiceNote)
             }
 
-        case .internal(let internalAction):
+        case let .internal(internalAction):
             switch internalAction {
-            case .metadataLoaded(let folderName):
+            case let .metadataLoaded(folderName):
                 // 폴더명 비동기 로드 완료
                 state.folderName = folderName
-            case .analysisCompleted(let note):
+            case let .analysisCompleted(note):
                 // AI 분석 완료 — keywords/transcript/summary가 채워진 노트로 교체
                 state.voiceNote = note
                 state.analysisState = .completed
-            case .analysisFailed(let message):
+            case let .analysisFailed(message):
                 // AI 분석 실패 — 에러 메시지 표시
                 state.errorMessage = message
                 state.analysisState = .failed
-            case .playbackStateChanged(let playbackState):
+            case let .playbackStateChanged(playbackState):
                 // 재생 진행 스트림에서 수신한 최신 상태 반영
                 state.currentPlaybackState = playbackState
                 state.updatePlayingParagraph()
-            case .errorOccurred(let message):
+            case let .errorOccurred(message):
                 // 재생 제어 중 에러 발생 — 알럿 표시
                 state.errorMessage = message
             case .errorDismissed:
@@ -294,6 +296,7 @@ public extension VoiceNoteViewModel {
             case seekEnded(TimeInterval)
             case scriptTimestampTapped(TimeInterval)
             case pop
+            case moveVoiceNoteButtonTapped
         }
 
         public enum Internal {
