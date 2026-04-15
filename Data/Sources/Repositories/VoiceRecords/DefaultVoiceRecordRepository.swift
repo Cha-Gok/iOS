@@ -94,7 +94,7 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
                 in: CharacterSet(charactersIn: ".")
             )
             let fileName = "\(recorded.createdAt.yyyyMMddHHmmssString).\(normalizedExtension)"
-            let permanentURL = try await storageService.moveFile(
+            let relativePath = try await storageService.moveFile(
                 from: recorded.audioFilePath,
                 toDirectory: "VoiceRecords",
                 fileName: fileName
@@ -102,7 +102,7 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
 
             return VoiceRecord(
                 createdAt: recorded.createdAt,
-                audioFilePath: permanentURL,
+                audioFilePath: relativePath,
                 duration: recorded.duration
             )
         } catch {
