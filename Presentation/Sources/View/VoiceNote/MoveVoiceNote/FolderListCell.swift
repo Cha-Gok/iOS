@@ -41,7 +41,7 @@ final class FolderCellContentView: UIView, UIContentView {
 
     private let backgroundView: UIVisualEffectView = {
         let glassEffect = UIGlassEffect()
-        glassEffect.tintColor = UIColor(red: 0x13 / 255, green: 0x00 / 255, blue: 0x3F / 255, alpha: 0x33 / 255)
+        glassEffect.tintColor = UIColor(red: 0x13 / 255, green: 0x00 / 255, blue: 0x3f / 255, alpha: 0x33 / 255)
         let view = UIVisualEffectView(effect: glassEffect)
         view.layer.cornerRadius = 20
         view.layer.masksToBounds = true
@@ -86,7 +86,7 @@ final class FolderCellContentView: UIView, UIContentView {
             titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: countLabel.leadingAnchor, constant: -8),
 
             countLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            countLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+            countLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
     }
 
@@ -96,7 +96,7 @@ final class FolderCellContentView: UIView, UIContentView {
         countLabel.text = configuration.number.formatted()
         backgroundView.layer.borderWidth = configuration.isSelected ? 1 : 0
         backgroundView.layer.borderColor = configuration.isSelected
-            ? UIColor(red: 0xD9 / 255, green: 0xB5 / 255, blue: 0xFF / 255, alpha: 1).cgColor
+            ? UIColor(red: 0xd9 / 255, green: 0xb5 / 255, blue: 0xff / 255, alpha: 1).cgColor
             : UIColor.clear.cgColor
     }
 }
@@ -121,7 +121,7 @@ final class FolderCellContentView: UIView, UIContentView {
     NSLayoutConstraint.activate([
         stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
         stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
-        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
     ])
 
     return container

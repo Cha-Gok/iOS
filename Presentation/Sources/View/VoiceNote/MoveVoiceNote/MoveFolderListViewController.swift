@@ -64,16 +64,11 @@ public final class MoveFolderListViewController: UIViewController {
     }()
 
     private lazy var moveButton: UIButton = {
-        var configuration = UIButton.Configuration.bordered()
+        var configuration = UIButton.Configuration.filled()
         configuration.contentInsets.top = 16
         configuration.contentInsets.bottom = 16
         configuration.title = viewModel.state.moveButtonTitle
-        configuration.baseBackgroundColor = .gray300
-        configuration.baseForegroundColor = .gray600
         configuration.background.cornerRadius = 20
-        let isEnabled = viewModel.state.isMoveButtonEnabled
-        configuration.baseBackgroundColor = isEnabled ? .point600 : .gray300
-        configuration.baseForegroundColor = isEnabled ? .gray950 : .gray600
         let button = UIButton(configuration: configuration)
         button.addAction(UIAction(handler: { [weak self] _ in
             self?.viewModel.send(.view(.moveButtonTapped))
@@ -90,12 +85,24 @@ public final class MoveFolderListViewController: UIViewController {
     override public func updateProperties() {
         super.updateProperties()
         applySnapshot()
+
+        let isEnabled = viewModel.state.isMoveButtonEnabled
+        moveButton.isEnabled = isEnabled
+        moveButton.configuration?.baseBackgroundColor = isEnabled ? .point600 : .gray300
+        moveButton.configuration?.baseForegroundColor = isEnabled ? .gray950 : .gray600
     }
 
     private func makeDataSource() -> DataSource {
-        let cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            cell.contentConfiguration = FolderCellContentConfiguration(title: item.name, number: item.content.count)
-        }
+        let cellRegistration = UICollectionView
+            .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
+                guard let self else { return }
+                let isSelected = viewModel.state.selectedFolder?.id == item.id
+                cell.contentConfiguration = FolderCellContentConfiguration(
+                    title: item.name,
+                    number: item.content.count,
+                    isSelected: isSelected
+                )
+            }
 
         return DataSource(collectionView: folderListView) { collectionView, indexPath, item in
             collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: item)
@@ -131,7 +138,7 @@ public final class MoveFolderListViewController: UIViewController {
             moveButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             moveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             moveButton.heightAnchor.constraint(equalToConstant: 54),
-            moveButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -74),
+            moveButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -74)
         ])
     }
 }
@@ -142,41 +149,3 @@ extension MoveFolderListViewController: UICollectionViewDelegate {
         viewModel.send(.view(.folderSelected(folder)))
     }
 }
-
-// #Preview {
-//    struct StubFetchFolderUseCase: FetchFolderUseCase {
-//        func fetchAll() async throws(FetchFolderUseCaseError) -> [Folder] {
-//            [Folder(name: "내 폴더"), Folder(name: "작업 폴더"), Folder(name: "강의 노트")]
-//        }
-//
-//        func fetchDeletableFolders() async throws(FetchFolderUseCaseError) -> [Folder] {
-//            []
-//        }
-//
-//        func fetch(by id: UUID) async throws(FetchFolderUseCaseError) -> Folder {
-//            Folder(name: "폴더")
-//        }
-//    }
-//    struct StubUpdateVoiceNoteUseCase: UpdateVoiceNoteUseCase {
-//        func execute(_ voiceNote: VoiceNote) async throws(UpdateVoiceNoteUseCaseError) -> VoiceNote {
-//            voiceNote
-//        }
-//    }
-//    let voiceNote = VoiceNote(
-//        id: UUID(),
-//        title: "테스트",
-//        createdAt: .now,
-//        updatedAt: .now,
-//        folderID: UUID(),
-//        voiceRecord: VoiceRecord(audioFilePath: "", duration: 0),
-//        keywords: [],
-//        transcript: nil,
-//        summary: nil
-//    )
-//    let viewModel = MoveFolderListViewModel(
-//        voiceNote: voiceNote,
-//        fetchFolderUseCase: StubFetchFolderUseCase(),
-//        updateVoiceNoteUseCase: StubUpdateVoiceNoteUseCase()
-//    )
-//    MoveFolderListViewController(viewModel: viewModel)
-// }

@@ -11,8 +11,10 @@ public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {
 public final class VoiceNoteViewModel {
     public private(set) var state: State
 
-    @ObservationIgnored private var playbackObservationTask: Task<Void, Never>?
-    @ObservationIgnored private var wasPlayingBeforeSeek = false
+    @ObservationIgnored
+    private var playbackObservationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var wasPlayingBeforeSeek = false
 
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
@@ -62,7 +64,7 @@ public final class VoiceNoteViewModel {
 
     public func send(_ action: Action) {
         switch action {
-        case let .view(viewAction):
+        case .view(let viewAction):
             switch viewAction {
             case .onAppear:
                 // 재생 스트림 구독 시작 및 폴더명·AI 분석 로드
@@ -91,14 +93,14 @@ public final class VoiceNoteViewModel {
                 // 슬라이더 드래그 시작 — 재생 중이었으면 일시정지하고 상태 보존
                 wasPlayingBeforeSeek = state.currentPlaybackState.status == .playing
                 if wasPlayingBeforeSeek { pause() }
-            case let .seekEnded(time):
+            case .seekEnded(let time):
                 // 슬라이더 드래그 종료 — 목표 위치로 이동 후 드래그 전 재생 상태 복원
                 seek(to: time)
                 if wasPlayingBeforeSeek {
                     wasPlayingBeforeSeek = false
                     play()
                 }
-            case let .scriptTimestampTapped(time):
+            case .scriptTimestampTapped(let time):
                 // 스크립트 타임스탬프 탭 — 해당 시간으로 이동 후 재생
                 seek(to: time)
                 play()
@@ -108,24 +110,24 @@ public final class VoiceNoteViewModel {
                 coordinator?.presentFolderList(with: state.voiceNote)
             }
 
-        case let .internal(internalAction):
+        case .internal(let internalAction):
             switch internalAction {
-            case let .metadataLoaded(folderName):
+            case .metadataLoaded(let folderName):
                 // 폴더명 비동기 로드 완료
                 state.folderName = folderName
-            case let .analysisCompleted(note):
+            case .analysisCompleted(let note):
                 // AI 분석 완료 — keywords/transcript/summary가 채워진 노트로 교체
                 state.voiceNote = note
                 state.analysisState = .completed
-            case let .analysisFailed(message):
+            case .analysisFailed(let message):
                 // AI 분석 실패 — 에러 메시지 표시
                 state.errorMessage = message
                 state.analysisState = .failed
-            case let .playbackStateChanged(playbackState):
+            case .playbackStateChanged(let playbackState):
                 // 재생 진행 스트림에서 수신한 최신 상태 반영
                 state.currentPlaybackState = playbackState
                 state.updatePlayingParagraph()
-            case let .errorOccurred(message):
+            case .errorOccurred(let message):
                 // 재생 제어 중 에러 발생 — 알럿 표시
                 state.errorMessage = message
             case .errorDismissed:
