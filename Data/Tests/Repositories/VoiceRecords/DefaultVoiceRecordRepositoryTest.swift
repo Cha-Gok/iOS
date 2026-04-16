@@ -16,10 +16,10 @@ extension DefaultVoiceRecordRepositoryTest {
         // Given
         let stubStream = AsyncStream<Waveform> { _ in }
         let tempURL = URL(fileURLWithPath: "/temp/recording.m4a")
-        await storageService.setGenerateTempResult(Result<URL, StorageServiceError>.success(tempURL))
+        storageService.setGenerateTempResult(Result<URL, StorageServiceError>.success(tempURL))
         await audioService.setStartResult(Result<AsyncStream<Waveform>, AudioRecorderServiceError>.success(stubStream))
 
-        await storageService.expectGenerateTemp(callCount: 1)
+        storageService.expectGenerateTemp(callCount: 1)
         await audioService.expectStart(callCount: 1)
 
         // When
@@ -27,7 +27,7 @@ extension DefaultVoiceRecordRepositoryTest {
 
         // Then
         await audioService.verify()
-        await storageService.verify()
+        storageService.verify()
     }
 
     func test_정상상태_녹음시작시_임시파일명이날짜기반형식으로생성된다() async throws {
@@ -38,14 +38,14 @@ extension DefaultVoiceRecordRepositoryTest {
         // Given
         let stubStream = AsyncStream<Waveform> { _ in }
         let tempURL = URL(fileURLWithPath: "/temp/recording.m4a")
-        await storageService.setGenerateTempResult(Result<URL, StorageServiceError>.success(tempURL))
+        storageService.setGenerateTempResult(Result<URL, StorageServiceError>.success(tempURL))
         await audioService.setStartResult(Result<AsyncStream<Waveform>, AudioRecorderServiceError>.success(stubStream))
 
         // When
         _ = try await sut.startRecording()
 
         // Then
-        let generatedFileName = await storageService.generatedTempFileName
+        let generatedFileName = storageService.generatedTempFileName
         XCTAssertNotNil(generatedFileName)
         XCTAssertTrue(
             generatedFileName?.range(of: #"^\d{14}\.m4a$"#, options: .regularExpression) != nil,
@@ -60,13 +60,13 @@ extension DefaultVoiceRecordRepositoryTest {
 
         // Given
         let tempURL = URL(fileURLWithPath: "/temp/recording.m4a")
-        await storageService.setGenerateTempResult(Result<URL, StorageServiceError>.success(tempURL))
-        await storageService.setDeleteResult(Result<Void, StorageServiceError>.success(()))
+        storageService.setGenerateTempResult(Result<URL, StorageServiceError>.success(tempURL))
+        storageService.setDeleteResult(Result<Void, StorageServiceError>.success(()))
         await audioService
             .setStartResult(Result<AsyncStream<Waveform>, AudioRecorderServiceError>
                 .failure(AudioRecorderServiceError.startFailed))
         await audioService.expectStart(callCount: 1)
-        await storageService.expectDelete(callCount: 1)
+        storageService.expectDelete(callCount: 1)
 
         // When & Then
         do {
@@ -78,7 +78,7 @@ extension DefaultVoiceRecordRepositoryTest {
             }
         }
         await audioService.verify()
-        await storageService.verify()
+        storageService.verify()
     }
 
     func test_태스크취소상태_녹음시작시_cancelled에러를던진다() async throws {
@@ -260,10 +260,10 @@ extension DefaultVoiceRecordRepositoryTest {
             duration: duration
         )
         await audioService.setFinishResult(Result<RecordedAudio, AudioRecorderServiceError>.success(recordedAudio))
-        await storageService.setMoveFileResult(Result<String, StorageServiceError>.success(permanentPath))
+        storageService.setMoveFileResult(Result<String, StorageServiceError>.success(permanentPath))
 
         await audioService.expectFinish(callCount: 1)
-        await storageService.expectMoveFile(callCount: 1)
+        storageService.expectMoveFile(callCount: 1)
 
         // When
         let voiceRecord = try await sut.finishRecording()
@@ -273,16 +273,16 @@ extension DefaultVoiceRecordRepositoryTest {
         XCTAssertEqual(voiceRecord.audioFilePath, permanentPath)
         XCTAssertEqual(voiceRecord.duration, duration, accuracy: 0.001)
 
-        let movedSourceURL = await storageService.movedSourceURL
-        let movedDirectory = await storageService.movedDirectory
-        let movedFileName = await storageService.movedFileName
+        let movedSourceURL = storageService.movedSourceURL
+        let movedDirectory = storageService.movedDirectory
+        let movedFileName = storageService.movedFileName
 
         XCTAssertEqual(movedSourceURL, tempURL)
         XCTAssertEqual(movedDirectory, "VoiceRecords")
         XCTAssertEqual(movedFileName, "\(createdAt.yyyyMMddHHmmssString).m4a")
 
         await audioService.verify()
-        await storageService.verify()
+        storageService.verify()
     }
 
     func test_서비스종료실패상태_녹음종료시_encodingFailed에러를던진다() async throws {
@@ -295,9 +295,9 @@ extension DefaultVoiceRecordRepositoryTest {
             .setFinishResult(Result<RecordedAudio, AudioRecorderServiceError>
                 .failure(AudioRecorderServiceError.encodingFailed))
         await audioService.setCurrentURL(URL(fileURLWithPath: "/temp/path.m4a"))
-        await storageService.setDeleteResult(Result<Void, StorageServiceError>.success(()))
+        storageService.setDeleteResult(Result<Void, StorageServiceError>.success(()))
         await audioService.expectFinish(callCount: 1)
-        await storageService.expectDelete(callCount: 1)
+        storageService.expectDelete(callCount: 1)
 
         // When & Then
         do {
@@ -309,7 +309,7 @@ extension DefaultVoiceRecordRepositoryTest {
             }
         }
         await audioService.verify()
-        await storageService.verify()
+        storageService.verify()
     }
 
     func test_태스크취소상태_녹음종료시_cancelled에러를던진다() async throws {

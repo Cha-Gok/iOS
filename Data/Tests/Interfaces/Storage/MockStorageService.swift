@@ -2,7 +2,7 @@
 import Foundation
 import XCTest
 
-actor MockStorageService: StorageService {
+class MockStorageService: StorageService, @unchecked Sendable {
     private var generateTempResult: Result<URL, StorageServiceError>?
     private var moveFileResult: Result<String, StorageServiceError>?
     private var saveResult: Result<String, StorageServiceError>?
@@ -98,7 +98,7 @@ actor MockStorageService: StorageService {
         }
     }
 
-    func generateTemporaryURL(fileName: String) async throws(StorageServiceError) -> URL {
+    func generateTemporaryURL(fileName: String) throws(StorageServiceError) -> URL {
         generateTempCallCount += 1
         generatedTempFileName = fileName
         guard let result = generateTempResult else {
@@ -112,7 +112,7 @@ actor MockStorageService: StorageService {
         from sourceURL: URL,
         toDirectory directory: String,
         fileName: String
-    ) async throws(StorageServiceError) -> String {
+    ) throws(StorageServiceError) -> String {
         moveFileCallCount += 1
         movedSourceURL = sourceURL
         movedDirectory = directory
@@ -124,7 +124,7 @@ actor MockStorageService: StorageService {
         return try result.get()
     }
 
-    func save(data: Data, toDirectory directory: String, fileName: String) async throws(StorageServiceError) -> String {
+    func save(data: Data, toDirectory directory: String, fileName: String) throws(StorageServiceError) -> String {
         saveCallCount += 1
         guard let result = saveResult else {
             XCTFail("saveResult가 설정되지 않았습니다.")
@@ -133,7 +133,7 @@ actor MockStorageService: StorageService {
         return try result.get()
     }
 
-    func load(relativePath: String) async throws(StorageServiceError) -> Data {
+    func load(relativePath: String) throws(StorageServiceError) -> Data {
         loadCallCount += 1
         guard let result = loadResult else {
             XCTFail("loadResult가 설정되지 않았습니다.")
@@ -142,7 +142,7 @@ actor MockStorageService: StorageService {
         return try result.get()
     }
 
-    func delete(fileURL: URL) async throws(StorageServiceError) {
+    func delete(fileURL: URL) throws(StorageServiceError) {
         deleteCallCount += 1
         guard let result = deleteResult else {
             XCTFail("deleteResult가 설정되지 않았습니다.")
@@ -151,12 +151,12 @@ actor MockStorageService: StorageService {
         _ = try result.get()
     }
 
-    func exists(relativePath: String) async -> Bool {
+    func exists(relativePath: String) -> Bool {
         existsCallCount += 1
         return existsResult
     }
 
-    nonisolated func absoluteURL(for relativePath: String) -> URL {
+    func absoluteURL(for relativePath: String) -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent(relativePath)
     }
