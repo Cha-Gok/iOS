@@ -28,14 +28,12 @@ public final class FolderViewModel {
 
     public init(
         category: CategoryToggle,
-        createUseCase: CreateFolderUseCase,
-        updateUseCase: UpdateFolderUseCase,
-        moveToTrashUseCase: MoveWasteBasketUseCase
+        folderUseCase: any FolderUseCase,
+        wasteBasketRepository: WasteBasketRepository
     ) {
         self.category = category
-        self.createUseCase = createUseCase
-        self.updateUseCase = updateUseCase
-        self.moveToTrashUseCase = moveToTrashUseCase
+        self.folderUseCase = folderUseCase
+        self.wasteBasketRepository = wasteBasketRepository
     }
 }
 
@@ -90,7 +88,7 @@ extension FolderViewModel {
     func fetchAll() {
         Task {
             do {
-                let folders: [Folder] = try await fetchUseCase.fetchDeletableFolders()
+                let folders: [Folder] = try await folderUseCase.fetchDeletableFolders()
                 let items: [LibraryItem] = folders.map { .folder($0) }
                 category.items = items
             } catch {
@@ -156,10 +154,8 @@ extension FolderViewModel {
 
             return FolderViewModel(
                 category: category,
-                createUseCase: PreviewCreateFolderUseCase(),
-                fetchUseCase: PreviewFetchFolderUseCase(items: previewData.folders),
-                updateUseCase: PreviewUpdateFolderUseCase(),
-                moveToTrashUseCase: PreviewMoveWasteBasketUseCase()
+                folderUseCase: PreviewFolderUseCase(items: previewData.folders),
+                wasteBasketRepository: PreviewWasteBasketRepository()
             )
         }
     }
@@ -182,41 +178,47 @@ extension FolderViewModel {
             }
         }
 
-        struct PreviewCreateFolderUseCase: CreateFolderUseCase {
-            func execute(name: String) async throws(CreateFolderUseCaseError) -> Folder {
-                Folder(name: name, createdAt: .now, content: [], isDeletable: true)
-            }
-        }
-
-        struct PreviewFetchFolderUseCase: FetchFolderUseCase {
+        struct PreviewFolderUseCase: FolderUseCase {
             let items: [Folder]
 
-            func fetchAll() async throws(FetchFolderUseCaseError) -> [Folder] {
+            func create(name: String) async throws(FolderUseCaseError) -> Folder {
+                Folder(name: name, createdAt: .now, content: [], isDeletable: true)
+            }
+
+            func createDefault() async throws(FolderUseCaseError) -> Folder {
+                Folder(name: "기본 폴더", isDeletable: false)
+            }
+
+            func fetchAll() async throws(FolderUseCaseError) -> [Folder] {
                 items
             }
 
-            func fetchDeletableFolders() async throws(FetchFolderUseCaseError) -> [Folder] {
+            func fetchDeletableFolders() async throws(FolderUseCaseError) -> [Folder] {
                 items.filter(\.isDeletable)
             }
 
-            func fetch(by id: UUID) async throws(FetchFolderUseCaseError) -> Folder {
-                guard let item = items.first(where: { $0.id == id }) else {
-                    throw .notFound
-                }
+            func fetch(by id: UUID) async throws(FolderUseCaseError) -> Folder {
+                guard let item = items.first(where: { $0.id == id }) else { throw .notFound }
                 return item
             }
-        }
 
-        struct PreviewUpdateFolderUseCase: UpdateFolderUseCase {
-            func execute(_ folder: Folder) async throws(UpdateFolderUseCaseError) -> Folder {
+            func update(_ folder: Folder) async throws(FolderUseCaseError) -> Folder {
                 folder
             }
         }
 
-        struct PreviewMoveWasteBasketUseCase: MoveWasteBasketUseCase {
-            func execute(method: MoveWasteBasketMethod) async throws(MoveWasteBasketUseCaseError) {
-                // Preview 환경이므로 실제 삭제 로직은 수행하지 않습니다.
+        struct PreviewWasteBasketRepository: WasteBasketRepository {
+            func allClear() async throws(DeleteWasteBasketRepositoryError) {}
+            func delete(item: WasteBasketItem) async throws(DeleteWasteBasketRepositoryError) {}
+            func deleteAll(items: [WasteBasketItem]) async throws(DeleteWasteBasketRepositoryError) {}
+            func moveToWasteBasket(item: WasteBasketItem) async throws(MoveWasteBasketRepositoryError) {}
+            func moveAllToWasteBasket(items: [WasteBasketItem]) async throws(MoveWasteBasketRepositoryError) {}
+            func fetchAll() async throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
+                []
             }
+
+            func restore(item: WasteBasketItem) async throws(RestoreWasteBasketRepositoryError) {}
+            func restoreAll(items: [WasteBasketItem]) async throws(RestoreWasteBasketRepositoryError) {}
         }
     }
 #endif
