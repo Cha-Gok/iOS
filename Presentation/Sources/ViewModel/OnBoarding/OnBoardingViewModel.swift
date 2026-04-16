@@ -21,7 +21,7 @@ public final class OnBoardingViewModel {
     let languageRepository: any LanguageRepository
     let voiceRecordRepository: any VoiceRecordRepository
     let completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase
-    let createDefaultFolderUseCase: any CreateDefaultFolderUseCase
+    let folderUseCase: any FolderUseCase
 
     // MARK: - 생성자
 
@@ -29,12 +29,12 @@ public final class OnBoardingViewModel {
         languageRepository: any LanguageRepository,
         voiceRecordRepository: any VoiceRecordRepository,
         completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase,
-        createDefaultFolderUseCase: any CreateDefaultFolderUseCase
+        folderUseCase: any FolderUseCase
     ) {
         self.languageRepository = languageRepository
         self.voiceRecordRepository = voiceRecordRepository
         self.completeFirstLaunchUseCase = completeFirstLaunchUseCase
-        self.createDefaultFolderUseCase = createDefaultFolderUseCase
+        self.folderUseCase = folderUseCase
     }
 
     // MARK: - State
@@ -153,7 +153,7 @@ extension OnBoardingViewModel {
         Task {
             do {
                 try await languageRepository.saveLanguage(language)
-                _ = try await createDefaultFolderUseCase.execute()
+                _ = try await folderUseCase.createDefault()
                 _ = completeFirstLaunchUseCase.execute()
                 onBoardingCoordinator?.finishOnBoarding()
             } catch {

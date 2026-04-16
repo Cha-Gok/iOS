@@ -14,16 +14,16 @@ public final class MoveFolderListViewModel {
     private(set) var state: State = .init()
 
     private let voiceNote: VoiceNote
-    private let fetchFolderUseCase: any FetchFolderUseCase
+    private let folderUseCase: any FolderUseCase
     private let voiceNoteUseCase: any VoiceNoteUseCase
 
     public init(
         voiceNote: VoiceNote,
-        fetchFolderUseCase: any FetchFolderUseCase,
+        folderUseCase: any FolderUseCase,
         voiceNoteUseCase: any VoiceNoteUseCase
     ) {
         self.voiceNote = voiceNote
-        self.fetchFolderUseCase = fetchFolderUseCase
+        self.folderUseCase = folderUseCase
         self.voiceNoteUseCase = voiceNoteUseCase
     }
 
@@ -52,7 +52,7 @@ public final class MoveFolderListViewModel {
 
     private func fetchFolders() async {
         do {
-            let folders = try await fetchFolderUseCase.fetchAll()
+            let folders = try await folderUseCase.fetchAll()
             let otherFolders = folders.filter { $0.id != voiceNote.folderID }
             send(.internal(.foldersLoaded(otherFolders)))
         } catch {

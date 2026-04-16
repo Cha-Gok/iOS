@@ -21,7 +21,7 @@ public final class VoiceNoteViewModel {
     // MARK: - UseCases
 
     private let voiceNoteUseCase: any VoiceNoteUseCase
-    private let fetchFolderUseCase: any FetchFolderUseCase
+    private let folderUseCase: any FolderUseCase
     private let languageRepository: any LanguageRepository
     private let playbackRepository: any VoiceRecordPlaybackRepository
 
@@ -30,13 +30,13 @@ public final class VoiceNoteViewModel {
     public init(
         voiceNote: VoiceNote,
         voiceNoteUseCase: any VoiceNoteUseCase,
-        fetchFolderUseCase: any FetchFolderUseCase,
+        folderUseCase: any FolderUseCase,
         languageRepository: any LanguageRepository,
         playbackRepository: any VoiceRecordPlaybackRepository
     ) {
         state = State(voiceNote: voiceNote)
         self.voiceNoteUseCase = voiceNoteUseCase
-        self.fetchFolderUseCase = fetchFolderUseCase
+        self.folderUseCase = folderUseCase
         self.languageRepository = languageRepository
         self.playbackRepository = playbackRepository
     }
@@ -126,7 +126,7 @@ public final class VoiceNoteViewModel {
 
     private func fetchFolderName() async {
         do {
-            let folderName = try await fetchFolderUseCase.fetch(by: state.voiceNote.folderID).name
+            let folderName = try await folderUseCase.fetch(by: state.voiceNote.folderID).name
             send(.internal(.metadataLoaded(folderName: folderName)))
         } catch {
             AppLogger.error(error)

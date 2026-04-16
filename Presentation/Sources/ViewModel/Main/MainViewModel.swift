@@ -49,7 +49,7 @@ public final class MainViewModel {
     // MARK: - UseCase
 
     let voiceNoteUseCase: any VoiceNoteUseCase
-    let fetchFolderUseCase: any FetchFolderUseCase
+    let folderUseCase: any FolderUseCase
     let wasteBasketRepository: any WasteBasketRepository
 
     // TODO: 화면 전환
@@ -57,11 +57,11 @@ public final class MainViewModel {
 
     public init(
         voiceNoteUseCase: any VoiceNoteUseCase,
-        fetchFolderUseCase: any FetchFolderUseCase,
+        folderUseCase: any FolderUseCase,
         wasteBasketRepository: any WasteBasketRepository
     ) {
         self.voiceNoteUseCase = voiceNoteUseCase
-        self.fetchFolderUseCase = fetchFolderUseCase
+        self.folderUseCase = folderUseCase
         self.wasteBasketRepository = wasteBasketRepository
     }
 }
@@ -143,7 +143,7 @@ extension MainViewModel {
     func updateMyFolderCategory() {
         Task {
             do {
-                let folders: [Folder] = try await fetchFolderUseCase.fetchDeletableFolders()
+                let folders: [Folder] = try await folderUseCase.fetchDeletableFolders()
                 let items: [LibraryItem] = folders.map { folder in
                     LibraryItem.folder(folder)
                 }
@@ -179,7 +179,7 @@ extension MainViewModel {
                     recentItems: previewData.recentVoiceNotes,
                     defaultItems: previewData.defaultVoiceNotes
                 ),
-                fetchFolderUseCase: PreviewFetchFolderUseCase(items: previewData.folders),
+                folderUseCase: PreviewFolderUseCase(items: previewData.folders),
                 wasteBasketRepository: PreviewWasteBasketRepository(items: previewData.wasteBasketItems)
             )
 
@@ -349,23 +349,26 @@ extension MainViewModel {
             }
         }
 
-        struct PreviewFetchFolderUseCase: FetchFolderUseCase {
+        struct PreviewFolderUseCase: FolderUseCase {
             let items: [Folder]
 
-            func fetchAll() async throws(FetchFolderUseCaseError) -> [Folder] {
+            func create(name: String) async throws(FolderUseCaseError) -> Folder { items[0] }
+            func createDefault() async throws(FolderUseCaseError) -> Folder { items[0] }
+
+            func fetchAll() async throws(FolderUseCaseError) -> [Folder] {
                 items
             }
 
-            func fetchDeletableFolders() async throws(FetchFolderUseCaseError) -> [Folder] {
+            func fetchDeletableFolders() async throws(FolderUseCaseError) -> [Folder] {
                 items.filter(\.isDeletable)
             }
 
-            func fetch(by id: UUID) async throws(FetchFolderUseCaseError) -> Folder {
-                guard let item = items.first(where: { $0.id == id }) else {
-                    throw .notFound
-                }
+            func fetch(by id: UUID) async throws(FolderUseCaseError) -> Folder {
+                guard let item = items.first(where: { $0.id == id }) else { throw .notFound }
                 return item
             }
+
+            func update(_ folder: Folder) async throws(FolderUseCaseError) -> Folder { folder }
         }
 
         struct PreviewWasteBasketRepository: WasteBasketRepository {

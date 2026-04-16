@@ -13,10 +13,10 @@ public final class NewFolderViewModel {
     public weak var coordinator: NewFolderCoordinatorDelegate?
     private(set) var state: State = .init()
 
-    private let createFolderUseCase: any CreateFolderUseCase
+    private let folderUseCase: any FolderUseCase
 
-    public init(createFolderUseCase: any CreateFolderUseCase) {
-        self.createFolderUseCase = createFolderUseCase
+    public init(folderUseCase: any FolderUseCase) {
+        self.folderUseCase = folderUseCase
     }
 
     func send(_ action: Action) {
@@ -37,7 +37,7 @@ public final class NewFolderViewModel {
 
     private func createFolder(name: String) async {
         do {
-            _ = try await createFolderUseCase.execute(name: name)
+            _ = try await folderUseCase.create(name: name)
             coordinator?.folderCreated()
         } catch {
             AppLogger.error(error)

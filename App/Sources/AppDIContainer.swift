@@ -40,12 +40,7 @@ public final class AppDIContainer {
     private lazy var completeFirstLaunchUseCase = DefaultCompleteFirstLaunchUseCase(
         repository: checkFirstLaunchRepository
     )
-    private lazy var createFolderUseCase = DefaultCreateFolderUseCase(repository: folderRepository)
-    private lazy var fetchFolderUseCase = DefaultFetchFolderUseCase(repository: folderRepository)
-    private lazy var updateFolderUseCase = DefaultUpdateFolderUseCase(repository: folderRepository)
-    private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(
-        repository: folderRepository
-    )
+    private lazy var folderUseCase = DefaultFolderUseCase(repository: folderRepository)
     private lazy var voiceNoteUseCase = DefaultVoiceNoteUseCase(
         repository: voiceNoteRepository,
         sttRepository: sttRepository,
@@ -72,7 +67,7 @@ public final class AppDIContainer {
             languageRepository: languageRepository,
             voiceRecordRepository: voiceRecordRepository,
             completeFirstLaunchUseCase: completeFirstLaunchUseCase,
-            createDefaultFolderUseCase: createDefaultFolderUseCase
+            folderUseCase: folderUseCase
         )
     }
 
@@ -87,7 +82,7 @@ public final class AppDIContainer {
         VoiceNoteViewModel(
             voiceNote: voiceNote,
             voiceNoteUseCase: voiceNoteUseCase,
-            fetchFolderUseCase: fetchFolderUseCase,
+            folderUseCase: folderUseCase,
             languageRepository: languageRepository,
             playbackRepository: voiceRecordPlaybackRepository
         )
@@ -96,7 +91,7 @@ public final class AppDIContainer {
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
             voiceNoteUseCase: voiceNoteUseCase,
-            fetchFolderUseCase: fetchFolderUseCase,
+            folderUseCase: folderUseCase,
             wasteBasketRepository: wasteBasketRepository
         )
     }
@@ -110,8 +105,7 @@ public final class AppDIContainer {
     public func makeMyFolderViewModel(_ category: CategoryToggle) -> FolderViewModel {
         return FolderViewModel(
             category: category,
-            createUseCase: createFolderUseCase,
-            updateUseCase: updateFolderUseCase,
+            folderUseCase: folderUseCase,
             wasteBasketRepository: wasteBasketRepository
         )
     }
@@ -127,12 +121,12 @@ public final class AppDIContainer {
     public func makeMoveFolderListViewModel(voiceNote: VoiceNote) -> MoveFolderListViewModel {
         return MoveFolderListViewModel(
             voiceNote: voiceNote,
-            fetchFolderUseCase: fetchFolderUseCase,
+            folderUseCase: folderUseCase,
             voiceNoteUseCase: voiceNoteUseCase
         )
     }
 
     public func makeNewFolderViewModel() -> NewFolderViewModel {
-        return NewFolderViewModel(createFolderUseCase: createFolderUseCase)
+        return NewFolderViewModel(folderUseCase: folderUseCase)
     }
 }
