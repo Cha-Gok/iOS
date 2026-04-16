@@ -83,6 +83,10 @@ public final class MoveFolderListViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+    }
+
+    override public func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         viewModel.send(.view(.onAppear))
     }
 
