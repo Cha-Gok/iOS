@@ -16,9 +16,9 @@ public final class OnBoardingViewModel {
 
     public weak var onBoardingCoordinator: OnboardingCoordinatorDelegate?
 
-    // MARK: - UseCase
+    // MARK: - Dependencies
 
-    let selectLanguageUseCase: any SelectLanguageUseCase
+    let languageRepository: any LanguageRepository
     let voiceRecordRepository: any VoiceRecordRepository
     let completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase
     let createDefaultFolderUseCase: any CreateDefaultFolderUseCase
@@ -26,12 +26,12 @@ public final class OnBoardingViewModel {
     // MARK: - 생성자
 
     public init(
-        selectLanguageUseCase: any SelectLanguageUseCase,
+        languageRepository: any LanguageRepository,
         voiceRecordRepository: any VoiceRecordRepository,
         completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase,
         createDefaultFolderUseCase: any CreateDefaultFolderUseCase
     ) {
-        self.selectLanguageUseCase = selectLanguageUseCase
+        self.languageRepository = languageRepository
         self.voiceRecordRepository = voiceRecordRepository
         self.completeFirstLaunchUseCase = completeFirstLaunchUseCase
         self.createDefaultFolderUseCase = createDefaultFolderUseCase
@@ -152,7 +152,7 @@ extension OnBoardingViewModel {
     private func finishOnBoarding() {
         Task {
             do {
-                try await selectLanguageUseCase.execute(lang: language)
+                try await languageRepository.saveLanguage(language)
                 _ = try await createDefaultFolderUseCase.execute()
                 _ = completeFirstLaunchUseCase.execute()
                 onBoardingCoordinator?.finishOnBoarding()

@@ -34,9 +34,6 @@ public final class AppDIContainer {
     private lazy var summaryRepository = DefaultSummaryRepository(service: AppleFoundationSummaryService())
 
     /// UseCase
-    private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(
-        repository: languageRepository
-    )
     private lazy var checkFirstLaunchUseCase = DefaultCheckFirstLaunchUseCase(
         repository: checkFirstLaunchRepository
     )
@@ -54,8 +51,6 @@ public final class AppDIContainer {
         sttRepository: sttRepository,
         summaryRepository: summaryRepository
     )
-    private lazy var fetchLanguageUseCase = DefaultFetchLanguageUseCase(repository: languageRepository)
-
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
     }
@@ -74,7 +69,7 @@ public final class AppDIContainer {
 
     public func makeOnBoardingViewModel() -> OnBoardingViewModel {
         OnBoardingViewModel(
-            selectLanguageUseCase: selectLanguageUseCase,
+            languageRepository: languageRepository,
             voiceRecordRepository: voiceRecordRepository,
             completeFirstLaunchUseCase: completeFirstLaunchUseCase,
             createDefaultFolderUseCase: createDefaultFolderUseCase
@@ -92,8 +87,8 @@ public final class AppDIContainer {
         VoiceNoteViewModel(
             voiceNote: voiceNote,
             voiceNoteUseCase: voiceNoteUseCase,
-            fetchLanguageUseCase: fetchLanguageUseCase,
             fetchFolderUseCase: fetchFolderUseCase,
+            languageRepository: languageRepository,
             playbackRepository: voiceRecordPlaybackRepository
         )
     }

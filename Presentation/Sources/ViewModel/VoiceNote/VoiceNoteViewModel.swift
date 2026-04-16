@@ -21,8 +21,8 @@ public final class VoiceNoteViewModel {
     // MARK: - UseCases
 
     private let voiceNoteUseCase: any VoiceNoteUseCase
-    private let fetchLanguageUseCase: any FetchLanguageUseCase
     private let fetchFolderUseCase: any FetchFolderUseCase
+    private let languageRepository: any LanguageRepository
     private let playbackRepository: any VoiceRecordPlaybackRepository
 
     // MARK: - Init
@@ -30,14 +30,14 @@ public final class VoiceNoteViewModel {
     public init(
         voiceNote: VoiceNote,
         voiceNoteUseCase: any VoiceNoteUseCase,
-        fetchLanguageUseCase: any FetchLanguageUseCase,
         fetchFolderUseCase: any FetchFolderUseCase,
+        languageRepository: any LanguageRepository,
         playbackRepository: any VoiceRecordPlaybackRepository
     ) {
         state = State(voiceNote: voiceNote)
         self.voiceNoteUseCase = voiceNoteUseCase
-        self.fetchLanguageUseCase = fetchLanguageUseCase
         self.fetchFolderUseCase = fetchFolderUseCase
+        self.languageRepository = languageRepository
         self.playbackRepository = playbackRepository
     }
 
@@ -135,7 +135,7 @@ public final class VoiceNoteViewModel {
 
     private func performNewAnalysis() async {
         do {
-            let language = try await fetchLanguageUseCase.execute()
+            let language = try await languageRepository.fetchLanguage()
             let result = try await voiceNoteUseCase.summarize(
                 audioFilePath: state.voiceNote.voiceRecord.audioFilePath,
                 language: language
