@@ -8,6 +8,7 @@ final class AlertView: UIView {
     private let title: String
 
     private let subTitle: String
+    private var widthConstraint: NSLayoutConstraint?
 
     private let topContent: UIStackView = {
         let view = UIStackView()
@@ -32,6 +33,7 @@ final class AlertView: UIView {
         t.setTypography(text: title, style: .title2)
         t.textAlignment = .center
         t.textColor = UIColor.gray950
+        t.numberOfLines = 0
         return t
     }()
 
@@ -41,6 +43,7 @@ final class AlertView: UIView {
         d.setTypography(text: subTitle, style: .body1)
         d.textAlignment = .center
         d.textColor = UIColor.gray950
+        d.numberOfLines = 0
         return d
     }()
 
@@ -72,11 +75,15 @@ final class AlertView: UIView {
 extension AlertView {
     override func didMoveToSuperview() {
         super.didMoveToSuperview()
-        guard let superview else { return }
-        NSLayoutConstraint.activate([
-            widthAnchor.constraint(equalTo: superview.widthAnchor, multiplier: Constant.alertMultiplierWidth),
-            heightAnchor.constraint(equalTo: superview.heightAnchor, multiplier: Constant.alertMultiplierHeight)
-        ])
+        guard let superview else {
+            widthConstraint?.isActive = false
+            widthConstraint = nil
+            return
+        }
+        guard widthConstraint == nil else { return }
+        let width = widthAnchor.constraint(equalTo: superview.widthAnchor, multiplier: Constant.alertMultiplierWidth)
+        width.isActive = true
+        widthConstraint = width
     }
 
     override func layoutSubviews() {
@@ -121,7 +128,6 @@ extension AlertView {
     private func childSetup() {
         topContent.addArrangedSubview(header)
         topContent.addArrangedSubview(body)
-        topContent.addArrangedSubview(UIView())
         bottomContent.addArrangedSubview(closeButton)
         bottomContent.addArrangedSubview(primaryButton)
         addSubview(topContent)
