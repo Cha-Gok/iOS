@@ -5,24 +5,17 @@ import XCTest
 public actor MockLanguageRepository: LanguageRepository {
     public init() {}
 
-    private var fetchResult: Result<Language, FetchLanguagesRepositoryError>?
-    private var saveResult: Result<Void, SetLanguagesRepositoryError>?
-
-    private var fetchCallCount = 0
-    private var saveCallCount = 0
+    nonisolated(unsafe) private var fetchResult: Language?
+    nonisolated(unsafe) private var fetchCallCount = 0
+    nonisolated(unsafe) private var saveCallCount = 0
+    nonisolated(unsafe) private var lastSavedLanguage: Language?
 
     private var expectedFetchCallCount: Int?
     private var expectedSaveCallCount: Int?
     private var expectedLastSavedLanguage: Language?
 
-    private var lastSavedLanguage: Language?
-
-    public func setFetchResult(_ result: Result<Language, FetchLanguagesRepositoryError>) {
-        fetchResult = result
-    }
-
-    public func setSaveResult(_ result: Result<Void, SetLanguagesRepositoryError>) {
-        saveResult = result
+    public func setFetchResult(_ language: Language) {
+        fetchResult = language
     }
 
     public func expectFetch(callCount: Int) {
@@ -53,7 +46,6 @@ public actor MockLanguageRepository: LanguageRepository {
                 line: line
             )
         }
-
         if let expected = expectedLastSavedLanguage {
             XCTAssertEqual(
                 lastSavedLanguage,
@@ -65,34 +57,13 @@ public actor MockLanguageRepository: LanguageRepository {
         }
     }
 
-    public func fetchLanguage() async throws(FetchLanguagesRepositoryError) -> Language {
+    public nonisolated func fetchLanguage() -> Language {
         fetchCallCount += 1
-
-        switch fetchResult {
-        case .success(let lang):
-            return lang
-        case .failure(let error):
-            throw error
-        case .none:
-            XCTFail("MockLanguageRepository.fetchResult 가 설정되지 않았습니다.")
-            let error = NSError(domain: "MockLanguageRepository.fetchResult", code: 0)
-            throw .unknown(error)
-        }
+        return fetchResult ?? .ko
     }
 
-    public func saveLanguage(_ language: Language) async throws(SetLanguagesRepositoryError) {
+    public nonisolated func saveLanguage(_ language: Language) {
         saveCallCount += 1
         lastSavedLanguage = language
-
-        switch saveResult {
-        case .success:
-            return
-        case .failure(let error):
-            throw error
-        case .none:
-            XCTFail("MockLanguageRepository.saveResult 가 설정되지 않았습니다.")
-            let error = NSError(domain: "MockLanguageRepository.saveResult", code: 0)
-            throw .unknown(error)
-        }
     }
 }

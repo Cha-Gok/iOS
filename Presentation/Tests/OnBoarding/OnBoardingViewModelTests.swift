@@ -120,7 +120,6 @@ final class OnBoardingViewModelTests: XCTestCase {
 
         sut.viewModel.syncPageState(nextStep: Step.finish.rawValue)
 
-        await sut.mockLanguageRepo.setSaveResult(.success(()))
         sut.mockCheckFirstLaunchRepo.setReturnValue(true)
         await sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName, isDeletable: false)))
         await sut.mockFolderRepo.expectCreate(name: Policy.defaultFolderName, isDeletable: false, callCount: 1)

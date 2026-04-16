@@ -152,7 +152,7 @@ extension OnBoardingViewModel {
     private func finishOnBoarding() {
         Task {
             do {
-                try await languageRepository.saveLanguage(language)
+                languageRepository.saveLanguage(language)
                 _ = try await folderUseCase.createDefault()
                 _ = checkFirstLaunchRepository.checkAndMarkFirstLaunch()
                 onBoardingCoordinator?.finishOnBoarding()

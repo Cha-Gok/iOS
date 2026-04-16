@@ -135,7 +135,7 @@ public final class VoiceNoteViewModel {
 
     private func performNewAnalysis() async {
         do {
-            let language = try await languageRepository.fetchLanguage()
+            let language = languageRepository.fetchLanguage()
             let result = try await voiceNoteUseCase.summarize(
                 audioFilePath: state.voiceNote.voiceRecord.audioFilePath,
                 language: language
