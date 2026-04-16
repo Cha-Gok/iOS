@@ -11,27 +11,20 @@ import UIKit
 public final class AppDIContainer {
     /// InfraStructure
     private lazy var store = UserDefaultsKeyValueStoreService()
-    private lazy var audioService = AudioService()
-    private lazy var audioPlaybackService = AudioPlaybackPlayerService()
     private lazy var storageService = FileManagerStorageService()
     private let localDataBase: CoreDataLocalDataBase
 
     /// Repository
     private lazy var languageRepository = DefaultLanguageRepository(store: store)
-    private lazy var voiceRecordRepository = DefaultVoiceRecordRepository(
-        audioService: audioService,
-        storageService: storageService
-    )
-    private lazy var voiceRecordPlaybackRepository = DefaultVoiceRecordPlaybackRepository(
-        audioPlaybackService: audioPlaybackService,
-        storageService: storageService
-    )
+    private lazy var voiceRecordRepository = DefaultVoiceRecordRepository(storageService: storageService)
+    private lazy var voiceRecordPlaybackRepository =
+        DefaultVoiceRecordPlaybackRepository(storageService: storageService)
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
     private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(store: localDataBase)
     private lazy var wasteBasketRepository = DefaultWasteBasketRepository(store: localDataBase)
-    private lazy var sttRepository = DefaultSTTRepository(service: SpeechService(), storageService: storageService)
-    private lazy var summaryRepository = DefaultSummaryRepository(service: AppleFoundationSummaryService())
+    private lazy var sttRepository = DefaultSTTRepository(storageService: storageService)
+    private lazy var summaryRepository = DefaultSummaryRepository()
 
     /// UseCase
     private lazy var folderUseCase = DefaultFolderUseCase(repository: folderRepository)
