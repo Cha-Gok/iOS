@@ -24,18 +24,22 @@ final class RecordingViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: RecordingViewModel
         let repository: MockVoiceRecordRepository
-        let voiceNoteRepository: MockVoiceNoteCreateRepository
+        let voiceNoteRepository: MockVoiceNoteRepository
         let coordinator: MockRecordingCoordinator
     }
 
     private func makeSUT() -> SUT {
         let repository = MockVoiceRecordRepository()
-        let voiceNoteRepository = MockVoiceNoteCreateRepository()
+        let voiceNoteRepository = MockVoiceNoteRepository()
         let coordinator = MockRecordingCoordinator()
 
         let viewModel = RecordingViewModel(
             repository: repository,
-            createVoiceNoteUseCase: DefaultCreateVoiceNoteUseCase(repository: voiceNoteRepository)
+            voiceNoteUseCase: DefaultVoiceNoteUseCase(
+                repository: voiceNoteRepository,
+                sttRepository: MockSTTRepository(),
+                summaryRepository: MockSummaryRepository()
+            )
         )
         viewModel.coordinator = coordinator
 
@@ -210,7 +214,7 @@ extension RecordingViewModelTests {
         let voiceRecordStub = VoiceRecord.stub()
         let voiceNoteStub = VoiceNote.stub(voiceRecord: voiceRecordStub)
         await sut.repository.setFinishResult(.success(voiceRecordStub))
-        await sut.voiceNoteRepository.setResult(.success(voiceNoteStub))
+        await sut.voiceNoteRepository.setCreateResult(.success(voiceNoteStub))
 
         // When
         sut.viewModel.send(.finishButtonTapped)
@@ -239,7 +243,7 @@ extension RecordingViewModelTests {
         // Given
         let sut = makeSUT()
         await sut.repository.setFinishResult(.success(.stub()))
-        await sut.voiceNoteRepository.setResult(.failure(.createFailed))
+        await sut.voiceNoteRepository.setCreateResult(.failure(.createFailed))
 
         // When
         sut.viewModel.send(.finishButtonTapped)

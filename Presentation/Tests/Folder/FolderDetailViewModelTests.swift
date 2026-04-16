@@ -9,19 +9,23 @@ final class FolderDetailViewModelTests: XCTestCase {
 
     private struct SUT {
         let viewModel: FolderDetailViewModel
-        let mockVoiceNoteRepo: MockVoiceNoteFetchRepository
+        let mockVoiceNoteRepo: MockVoiceNoteRepository
         let mockCoordinator: MockBaseCoordinatorDelegate
         let testFolderID: UUID
     }
 
     private func makeSUT(title: String = "상세 폴더", folderID: UUID = UUID()) -> SUT {
-        let mockVoiceNoteRepo = MockVoiceNoteFetchRepository()
+        let mockVoiceNoteRepo = MockVoiceNoteRepository()
         let mockCoordinator = MockBaseCoordinatorDelegate()
 
         let viewModel = FolderDetailViewModel(
             title: title,
             folderID: folderID,
-            fetchVoiceNoteUseCase: DefaultFetchVoiceNoteUseCase(repository: mockVoiceNoteRepo)
+            voiceNoteUseCase: DefaultVoiceNoteUseCase(
+                repository: mockVoiceNoteRepo,
+                sttRepository: MockSTTRepository(),
+                summaryRepository: MockSummaryRepository()
+            )
         )
         viewModel.coordinator = mockCoordinator
 

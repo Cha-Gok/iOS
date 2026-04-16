@@ -20,8 +20,7 @@ public final class VoiceNoteViewModel {
 
     // MARK: - UseCases
 
-    private let audioToSummaryUseCase: any AudioToSummaryUseCase
-    private let updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
+    private let voiceNoteUseCase: any VoiceNoteUseCase
     private let fetchLanguageUseCase: any FetchLanguageUseCase
     private let fetchFolderUseCase: any FetchFolderUseCase
     private let playbackRepository: any VoiceRecordPlaybackRepository
@@ -30,15 +29,13 @@ public final class VoiceNoteViewModel {
 
     public init(
         voiceNote: VoiceNote,
-        audioToSummaryUseCase: any AudioToSummaryUseCase,
-        updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase,
+        voiceNoteUseCase: any VoiceNoteUseCase,
         fetchLanguageUseCase: any FetchLanguageUseCase,
         fetchFolderUseCase: any FetchFolderUseCase,
         playbackRepository: any VoiceRecordPlaybackRepository
     ) {
         state = State(voiceNote: voiceNote)
-        self.audioToSummaryUseCase = audioToSummaryUseCase
-        self.updateVoiceNoteUseCase = updateVoiceNoteUseCase
+        self.voiceNoteUseCase = voiceNoteUseCase
         self.fetchLanguageUseCase = fetchLanguageUseCase
         self.fetchFolderUseCase = fetchFolderUseCase
         self.playbackRepository = playbackRepository
@@ -139,7 +136,7 @@ public final class VoiceNoteViewModel {
     private func performNewAnalysis() async {
         do {
             let language = try await fetchLanguageUseCase.execute()
-            let result = try await audioToSummaryUseCase.execute(
+            let result = try await voiceNoteUseCase.summarize(
                 audioFilePath: state.voiceNote.voiceRecord.audioFilePath,
                 language: language
             )
@@ -156,7 +153,7 @@ public final class VoiceNoteViewModel {
             )
 
             // 분석 결과 반영 (폴더명은 metadataLoaded 액션이 별도로 담당)
-            let finalNote = try await updateVoiceNoteUseCase.execute(updated)
+            let finalNote = try await voiceNoteUseCase.update(updated)
             send(.internal(.analysisCompleted(note: finalNote)))
         } catch {
             send(.internal(.analysisFailed(error.localizedDescription)))

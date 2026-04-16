@@ -15,16 +15,16 @@ public final class MoveFolderListViewModel {
 
     private let voiceNote: VoiceNote
     private let fetchFolderUseCase: any FetchFolderUseCase
-    private let updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
+    private let voiceNoteUseCase: any VoiceNoteUseCase
 
     public init(
         voiceNote: VoiceNote,
         fetchFolderUseCase: any FetchFolderUseCase,
-        updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
+        voiceNoteUseCase: any VoiceNoteUseCase
     ) {
         self.voiceNote = voiceNote
         self.fetchFolderUseCase = fetchFolderUseCase
-        self.updateVoiceNoteUseCase = updateVoiceNoteUseCase
+        self.voiceNoteUseCase = voiceNoteUseCase
     }
 
     func send(_ action: Action) {
@@ -74,7 +74,7 @@ public final class MoveFolderListViewModel {
                 transcript: voiceNote.transcript,
                 summary: voiceNote.summary
             )
-            _ = try await updateVoiceNoteUseCase.execute(updatedVoiceNote)
+            _ = try await voiceNoteUseCase.update(updatedVoiceNote)
             coordinator?.dismiss()
         } catch {
             AppLogger.error(error)

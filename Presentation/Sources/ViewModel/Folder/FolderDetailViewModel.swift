@@ -28,18 +28,18 @@ public final class FolderDetailViewModel {
 
     // MARK: - UseCase
 
-    private let fetchVoiceNoteUseCase: FetchVoiceNoteUseCase
+    private let voiceNoteUseCase: any VoiceNoteUseCase
 
     // MARK: - Initialize
 
     public init(
         title: String,
         folderID: UUID,
-        fetchVoiceNoteUseCase: FetchVoiceNoteUseCase
+        voiceNoteUseCase: any VoiceNoteUseCase
     ) {
         self.title = title
         self.folderID = folderID
-        self.fetchVoiceNoteUseCase = fetchVoiceNoteUseCase
+        self.voiceNoteUseCase = voiceNoteUseCase
         sortItems()
     }
 }
@@ -113,7 +113,7 @@ extension FolderDetailViewModel {
     func fetchItems() {
         Task {
             do {
-                let voiceNotes: [VoiceNote] = try await fetchVoiceNoteUseCase.execute(folderID: folderID)
+                let voiceNotes: [VoiceNote] = try await voiceNoteUseCase.fetchAll(folderID: folderID)
                 self.items = voiceNotes.map { .voiceNote($0) }
                 sortItems()
             } catch {

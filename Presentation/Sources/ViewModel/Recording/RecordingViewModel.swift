@@ -50,7 +50,7 @@ public final class RecordingViewModel {
     }
 
     private let repository: any VoiceRecordRepository
-    private let createVoiceNoteUseCase: any CreateVoiceNoteUseCase
+    private let voiceNoteUseCase: any VoiceNoteUseCase
 
     public weak var coordinator: RecordingCoordinating?
 
@@ -61,10 +61,10 @@ public final class RecordingViewModel {
 
     public init(
         repository: any VoiceRecordRepository,
-        createVoiceNoteUseCase: any CreateVoiceNoteUseCase
+        voiceNoteUseCase: any VoiceNoteUseCase
     ) {
         self.repository = repository
-        self.createVoiceNoteUseCase = createVoiceNoteUseCase
+        self.voiceNoteUseCase = voiceNoteUseCase
     }
 
     public func send(_ action: Action) {
@@ -95,7 +95,7 @@ public final class RecordingViewModel {
                     waveformTask?.cancel()
                     waveformTask = nil
                     let voiceRecord = try await repository.finishRecording()
-                    let voiceNote = try await createVoiceNoteUseCase.execute(voiceRecord)
+                    let voiceNote = try await voiceNoteUseCase.create(voiceRecord)
                     coordinator?.finishRecording(voiceNote: voiceNote)
                 } catch {
                     send(.errorOccurred(error))

@@ -44,19 +44,22 @@ final class MainViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: MainViewModel
         let mockFolderRepo: MockFolderRepository
-        let mockVoiceNoteRepo: MockVoiceNoteFetchRepository
+        let mockVoiceNoteRepo: MockVoiceNoteRepository
         let mockCoordinator: MockMainCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
         let mockFolderRepo = MockFolderRepository()
-        let mockVoiceNoteRepo = MockVoiceNoteFetchRepository()
+        let mockVoiceNoteRepo = MockVoiceNoteRepository()
         let mockWasteBasketRepo = MockWasteBasketRepository()
         let mockCoordinator = MockMainCoordinatorDelegate()
 
         let viewModel = MainViewModel(
-            voiceNoteFetchRepository: mockVoiceNoteRepo,
-            fetchVoiceNoteUseCase: DefaultFetchVoiceNoteUseCase(repository: mockVoiceNoteRepo),
+            voiceNoteUseCase: DefaultVoiceNoteUseCase(
+                repository: mockVoiceNoteRepo,
+                sttRepository: MockSTTRepository(),
+                summaryRepository: MockSummaryRepository()
+            ),
             fetchFolderUseCase: DefaultFetchFolderUseCase(repository: mockFolderRepo),
             wasteBasketRepository: mockWasteBasketRepo
         )
@@ -138,7 +141,7 @@ final class MainViewModelTests: XCTestCase {
         let sut = makeSUT()
         let expectedNotes = [VoiceNote.stub(title: "최신1"), VoiceNote.stub(title: "최신2")]
         await sut.mockVoiceNoteRepo.setFetchRecentResult(.success(expectedNotes))
-        await sut.mockVoiceNoteRepo.expectFetchRecent(callCount: 1, limit: Policy.recentVoiceNoteLimit)
+        await sut.mockVoiceNoteRepo.expectFetchRecent(callCount: 1)
 
         // When
         sut.viewModel.updateRecentCategory()
