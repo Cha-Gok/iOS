@@ -48,24 +48,24 @@ public final class MainViewModel {
 
     // MARK: - UseCase
 
-    let fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase
+    let voiceNoteFetchRepository: VoiceNoteFetchRepository
     let fetchVoiceNoteUseCase: FetchVoiceNoteUseCase
     let fetchFolderUseCase: FetchFolderUseCase
-    let fetchTrashUseCase: FetchWasteBasketFolderUseCase
+    let wasteBasketRepository: WasteBasketRepository
 
     // TODO: 화면 전환
     public weak var mainCoordinator: MainCoordinatorDelegate?
 
     public init(
-        fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase,
+        voiceNoteFetchRepository: VoiceNoteFetchRepository,
         fetchVoiceNoteUseCase: FetchVoiceNoteUseCase,
         fetchFolderUseCase: FetchFolderUseCase,
-        fetchTrashUseCase: FetchWasteBasketFolderUseCase
+        wasteBasketRepository: WasteBasketRepository
     ) {
-        self.fetchRecentVoiceNoteUseCase = fetchRecentVoiceNoteUseCase
+        self.voiceNoteFetchRepository = voiceNoteFetchRepository
         self.fetchVoiceNoteUseCase = fetchVoiceNoteUseCase
         self.fetchFolderUseCase = fetchFolderUseCase
-        self.fetchTrashUseCase = fetchTrashUseCase
+        self.wasteBasketRepository = wasteBasketRepository
     }
 }
 
@@ -117,7 +117,8 @@ extension MainViewModel {
     func updateRecentCategory() {
         Task {
             do {
-                let voiceNotes: [VoiceNote] = try await fetchRecentVoiceNoteUseCase.execute()
+                let voiceNotes: [VoiceNote] = try await voiceNoteFetchRepository
+                    .fetchRecent(limit: Policy.recentVoiceNoteLimit)
                 let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
                 categoryData[0].items = items
             } catch {
@@ -161,7 +162,7 @@ extension MainViewModel {
     func updateTrashCategory() {
         Task {
             do {
-                let wasteBasket: [WasteBasketItem] = try await fetchTrashUseCase.execute()
+                let wasteBasket: [WasteBasketItem] = try await wasteBasketRepository.fetchAll()
                 let items: [LibraryItem] = wasteBasket.map(\.toLibraryItem)
                 categoryData[3].items = items
             } catch {
@@ -177,10 +178,13 @@ extension MainViewModel {
         static func preview(selectedCategoryIndex: Int = 0) -> MainViewModel {
             let previewData = PreviewData.make()
             let viewModel = MainViewModel(
-                fetchRecentVoiceNoteUseCase: PreviewFetchRecentVoiceNoteUseCase(items: previewData.recentVoiceNotes),
+                voiceNoteFetchRepository: PreviewVoiceNoteFetchRepository(
+                    recentItems: previewData.recentVoiceNotes,
+                    defaultItems: previewData.defaultVoiceNotes
+                ),
                 fetchVoiceNoteUseCase: PreviewFetchVoiceNoteUseCase(items: previewData.defaultVoiceNotes),
                 fetchFolderUseCase: PreviewFetchFolderUseCase(items: previewData.folders),
-                fetchTrashUseCase: PreviewFetchWasteBasketFolderUseCase(items: previewData.wasteBasketItems)
+                wasteBasketRepository: PreviewWasteBasketRepository(items: previewData.wasteBasketItems)
             )
 
             viewModel.categoryData[0].items = previewData.recentVoiceNotes.map(LibraryItem.voiceNote)
@@ -310,11 +314,27 @@ extension MainViewModel {
             }
         }
 
-        struct PreviewFetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase {
-            let items: [VoiceNote]
+        struct PreviewVoiceNoteFetchRepository: VoiceNoteFetchRepository {
+            let recentItems: [VoiceNote]
+            let defaultItems: [VoiceNote]
 
-            func execute() async throws(FetchRecentVoiceNoteUseCaseError) -> [VoiceNote] {
-                items
+            func fetchRecent(limit: Int) async throws(VoiceNoteFetchRepositoryError) -> [VoiceNote] {
+                Array(recentItems.prefix(limit))
+            }
+
+            func fetchAllFromDefaultFolder() async throws(VoiceNoteFetchRepositoryError) -> [VoiceNote] {
+                defaultItems
+            }
+
+            func fetchAll(folderID: UUID) async throws(VoiceNoteFetchRepositoryError) -> [VoiceNote] {
+                defaultItems.filter { $0.folderID == folderID }
+            }
+
+            func fetch(byId id: UUID) async throws(VoiceNoteFetchRepositoryError) -> VoiceNote {
+                guard let item = defaultItems.first(where: { $0.id == id }) else {
+                    throw .recordNotFound(id: id)
+                }
+                return item
             }
         }
 
@@ -356,12 +376,20 @@ extension MainViewModel {
             }
         }
 
-        struct PreviewFetchWasteBasketFolderUseCase: FetchWasteBasketFolderUseCase {
+        struct PreviewWasteBasketRepository: WasteBasketRepository {
             let items: [WasteBasketItem]
 
-            func execute() async throws(FetchWasteBasketFolderUseCaseError) -> [WasteBasketItem] {
+            func fetchAll() async throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
                 items
             }
+
+            func allClear() async throws(DeleteWasteBasketRepositoryError) {}
+            func delete(item: WasteBasketItem) async throws(DeleteWasteBasketRepositoryError) {}
+            func deleteAll(items: [WasteBasketItem]) async throws(DeleteWasteBasketRepositoryError) {}
+            func moveToWasteBasket(item: WasteBasketItem) async throws(MoveWasteBasketRepositoryError) {}
+            func moveAllToWasteBasket(items: [WasteBasketItem]) async throws(MoveWasteBasketRepositoryError) {}
+            func restore(item: WasteBasketItem) async throws(RestoreWasteBasketRepositoryError) {}
+            func restoreAll(items: [WasteBasketItem]) async throws(RestoreWasteBasketRepositoryError) {}
         }
     }
 #endif

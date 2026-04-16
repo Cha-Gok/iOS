@@ -19,7 +19,7 @@ public final class OnBoardingViewModel {
     // MARK: - UseCase
 
     let selectLanguageUseCase: any SelectLanguageUseCase
-    let microphonePermissionUseCase: any MicrophonePermissionUseCase
+    let voiceRecordRepository: any VoiceRecordRepository
     let completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase
     let createDefaultFolderUseCase: any CreateDefaultFolderUseCase
 
@@ -27,12 +27,12 @@ public final class OnBoardingViewModel {
 
     public init(
         selectLanguageUseCase: any SelectLanguageUseCase,
-        microphonePermissionUseCase: any MicrophonePermissionUseCase,
+        voiceRecordRepository: any VoiceRecordRepository,
         completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase,
         createDefaultFolderUseCase: any CreateDefaultFolderUseCase
     ) {
         self.selectLanguageUseCase = selectLanguageUseCase
-        self.microphonePermissionUseCase = microphonePermissionUseCase
+        self.voiceRecordRepository = voiceRecordRepository
         self.completeFirstLaunchUseCase = completeFirstLaunchUseCase
         self.createDefaultFolderUseCase = createDefaultFolderUseCase
     }
@@ -138,9 +138,9 @@ extension OnBoardingViewModel {
     private func requestPermission() {
         Task {
             do {
-                let status: PermissionStatus = try await microphonePermissionUseCase.checkPermission()
+                let status: PermissionStatus = try await voiceRecordRepository.checkMicrophonePermission()
                 if status == .notDetermined {
-                    _ = try await microphonePermissionUseCase.requestPermission()
+                    _ = try await voiceRecordRepository.requestMicrophonePermission()
                 }
             } catch {
                 errorMessage = error.localizedDescription

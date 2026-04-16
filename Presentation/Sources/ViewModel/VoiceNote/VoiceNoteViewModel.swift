@@ -24,7 +24,7 @@ public final class VoiceNoteViewModel {
     private let updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
     private let fetchLanguageUseCase: any FetchLanguageUseCase
     private let fetchFolderUseCase: any FetchFolderUseCase
-    private let playbackUseCase: any PlaybackUseCase
+    private let playbackRepository: any VoiceRecordPlaybackRepository
 
     // MARK: - Init
 
@@ -34,14 +34,14 @@ public final class VoiceNoteViewModel {
         updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase,
         fetchLanguageUseCase: any FetchLanguageUseCase,
         fetchFolderUseCase: any FetchFolderUseCase,
-        playbackUseCase: any PlaybackUseCase
+        playbackRepository: any VoiceRecordPlaybackRepository
     ) {
         state = State(voiceNote: voiceNote)
         self.audioToSummaryUseCase = audioToSummaryUseCase
         self.updateVoiceNoteUseCase = updateVoiceNoteUseCase
         self.fetchLanguageUseCase = fetchLanguageUseCase
         self.fetchFolderUseCase = fetchFolderUseCase
-        self.playbackUseCase = playbackUseCase
+        self.playbackRepository = playbackRepository
     }
 
     deinit {
@@ -167,7 +167,7 @@ public final class VoiceNoteViewModel {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
         do {
-            let stream = try playbackUseCase.prepare(
+            let stream = try playbackRepository.prepare(
                 audioFilePath: state.voiceNote.voiceRecord.audioFilePath
             )
             playbackObservationTask = Task {
@@ -184,7 +184,7 @@ public final class VoiceNoteViewModel {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
         do {
-            try playbackUseCase.stop()
+            try playbackRepository.stop()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
@@ -192,7 +192,7 @@ public final class VoiceNoteViewModel {
 
     private func play() {
         do {
-            try playbackUseCase.play()
+            try playbackRepository.play()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
@@ -200,7 +200,7 @@ public final class VoiceNoteViewModel {
 
     private func pause() {
         do {
-            try playbackUseCase.pause()
+            try playbackRepository.pause()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
@@ -208,7 +208,7 @@ public final class VoiceNoteViewModel {
 
     private func seek(to time: TimeInterval) {
         do {
-            try playbackUseCase.seek(to: time)
+            try playbackRepository.seek(to: time)
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }

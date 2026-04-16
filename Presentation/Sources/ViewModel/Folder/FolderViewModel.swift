@@ -23,7 +23,7 @@ public final class FolderViewModel {
 
     private let createUseCase: CreateFolderUseCase
     private let updateUseCase: UpdateFolderUseCase
-    private let moveToTrashUseCase: MoveWasteBasketUseCase
+    private let wasteBasketRepository: WasteBasketRepository
 
     // MARK: - Initialize
 
@@ -31,12 +31,12 @@ public final class FolderViewModel {
         category: CategoryToggle,
         createUseCase: CreateFolderUseCase,
         updateUseCase: UpdateFolderUseCase,
-        moveToTrashUseCase: MoveWasteBasketUseCase
+        wasteBasketRepository: WasteBasketRepository
     ) {
         self.category = category
         self.createUseCase = createUseCase
         self.updateUseCase = updateUseCase
-        self.moveToTrashUseCase = moveToTrashUseCase
+        self.wasteBasketRepository = wasteBasketRepository
     }
 }
 
@@ -120,7 +120,7 @@ extension FolderViewModel {
     func move(folder: Folder) {
         Task {
             do {
-                try await moveToTrashUseCase.execute(method: .single(item: .folder(obj: folder)))
+                try await wasteBasketRepository.moveToWasteBasket(item: .folder(obj: folder))
                 category.items.removeAll {
                     if case .folder(let obj) = $0 { return obj.id == folder.id }
                     return false

@@ -49,7 +49,7 @@ public final class RecordingViewModel {
         case errorOccurred(Error)
     }
 
-    private let recordingUseCase: any RecordingUseCase
+    private let repository: any VoiceRecordRepository
     private let createVoiceNoteUseCase: any CreateVoiceNoteUseCase
 
     public weak var coordinator: RecordingCoordinating?
@@ -57,12 +57,13 @@ public final class RecordingViewModel {
     private(set) var state: State = .init()
     private var waveformTask: Task<Void, Never>?
     private var timerTask: Task<Void, Never>?
+    private var actionTask: Task<Void, Never>?
 
     public init(
-        recordingUseCase: any RecordingUseCase,
+        repository: any VoiceRecordRepository,
         createVoiceNoteUseCase: any CreateVoiceNoteUseCase
     ) {
-        self.recordingUseCase = recordingUseCase
+        self.repository = repository
         self.createVoiceNoteUseCase = createVoiceNoteUseCase
     }
 
@@ -81,17 +82,19 @@ public final class RecordingViewModel {
             stopTimer()
             waveformTask?.cancel()
             waveformTask = nil
-            Task {
-                try? await recordingUseCase.cancel()
+            actionTask?.cancel()
+            actionTask = Task {
+                try? await repository.cancelRecording()
                 coordinator?.cancelRecording()
             }
         case .finishButtonTapped:
-            Task {
+            actionTask?.cancel()
+            actionTask = Task {
                 do {
                     stopTimer()
                     waveformTask?.cancel()
                     waveformTask = nil
-                    let voiceRecord = try await recordingUseCase.finish()
+                    let voiceRecord = try await repository.finishRecording()
                     let voiceNote = try await createVoiceNoteUseCase.execute(voiceRecord)
                     coordinator?.finishRecording(voiceNote: voiceNote)
                 } catch {
@@ -106,7 +109,7 @@ public final class RecordingViewModel {
     private func startRecording() {
         Task {
             do {
-                let waveformStream = try await recordingUseCase.start()
+                let waveformStream = try await repository.startRecording()
                 state.recordingStartDate = .now
                 state.recordingState = .recording
                 startTimer()
@@ -128,7 +131,7 @@ public final class RecordingViewModel {
     private func pauseRecording() {
         Task {
             do {
-                try await recordingUseCase.pause()
+                try await repository.pauseRecording()
                 stopTimer()
                 state.recordingState = .paused
             } catch {
@@ -140,7 +143,7 @@ public final class RecordingViewModel {
     private func resumeRecording() {
         Task {
             do {
-                try await recordingUseCase.resume()
+                try await repository.resumeRecording()
                 startTimer()
                 state.recordingState = .recording
             } catch {
