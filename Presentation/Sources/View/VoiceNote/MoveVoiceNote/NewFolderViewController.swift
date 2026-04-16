@@ -1,12 +1,18 @@
 import UIKit
 
-@MainActor
-public protocol NewFolderCoordinatorDelegate: AnyObject {
-    func cancel()
-}
+public final class NewFolderViewController: UIViewController, Alertable {
+    private let viewModel: NewFolderViewModel
 
-public final class NewFolderViewController: UIViewController {
-    public weak var coordinator: NewFolderCoordinatorDelegate?
+    public init(viewModel: NewFolderViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.setTypography(text: "새 폴더 만들기", style: .title3)
@@ -39,11 +45,7 @@ public final class NewFolderViewController: UIViewController {
         configuration.baseBackgroundColor = .gray300
         configuration.baseForegroundColor = .gray950
         configuration.contentInsets = .zero
-        let button = UIButton(configuration: configuration)
-        button.addAction(UIAction { [weak self] _ in
-            self?.coordinator?.cancel()
-        }, for: .touchUpInside)
-        return button
+        return UIButton(configuration: configuration)
     }()
 
     private lazy var createButton: UIButton = {
@@ -66,15 +68,6 @@ public final class NewFolderViewController: UIViewController {
         return stack
     }()
 
-    public init() {
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
-
     override public var preferredContentSize: CGSize {
         get {
             view.layoutIfNeeded()
@@ -91,6 +84,14 @@ public final class NewFolderViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        addActions()
+    }
+
+    override public func updateProperties() {
+        super.updateProperties()
+        guard let message = viewModel.state.errorMessage else { return }
+        viewModel.clearErrorMessage()
+        showAlert(message: message)
     }
 
     private func setupUI() {
@@ -129,5 +130,17 @@ public final class NewFolderViewController: UIViewController {
             spacerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             spacerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+
+    private func addActions() {
+        cancelButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            viewModel.send(.view(.cancelButtonTapped))
+        }, for: .touchUpInside)
+
+        createButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            viewModel.send(.view(.createButtonTapped(name: folderNameTextField.text ?? "")))
+        }, for: .touchUpInside)
     }
 }
