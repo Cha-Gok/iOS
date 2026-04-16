@@ -34,11 +34,7 @@ final class RecordingViewModelTests: XCTestCase {
         let coordinator = MockRecordingCoordinator()
 
         let viewModel = RecordingViewModel(
-            startRecordingUseCase: DefaultStartRecordingUseCase(recordingRepository: repository),
-            pauseRecordingUseCase: DefaultPauseRecordingUseCase(recordingRepository: repository),
-            resumeRecordingUseCase: DefaultResumeRecordingUseCase(recordingRepository: repository),
-            finishRecordingUseCase: DefaultFinishRecordingUseCase(recordingRepository: repository),
-            cancelRecordingUseCase: DefaultCancelRecordingUseCase(recordingRepository: repository),
+            recordingUseCase: DefaultRecordingUseCase(repository: repository),
             createVoiceNoteUseCase: DefaultCreateVoiceNoteUseCase(repository: voiceNoteRepository)
         )
         viewModel.coordinator = coordinator

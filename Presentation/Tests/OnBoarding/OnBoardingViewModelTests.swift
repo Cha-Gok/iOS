@@ -36,10 +36,7 @@ final class OnBoardingViewModelTests: XCTestCase {
 
         let viewModel = OnBoardingViewModel(
             selectLanguageUseCase: DefaultSelectLanguageUseCase(repository: mockLanguageRepo),
-            checkMicrophonePermissionUseCase: DefaultCheckMicrophonePermissionUseCase(
-                repository: mockVoiceRecordRepo
-            ),
-            requestMicrophonePermissionUseCase: DefaultRequestMicrophonePermissionUseCase(
+            microphonePermissionUseCase: DefaultMicrophonePermissionUseCase(
                 repository: mockVoiceRecordRepo
             ),
             completeFirstLaunchUseCase: DefaultCompleteFirstLaunchUseCase(repository: mockCheckFirstLaunchRepo),
