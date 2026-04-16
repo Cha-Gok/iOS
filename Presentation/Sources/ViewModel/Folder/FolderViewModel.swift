@@ -14,9 +14,9 @@ public final class FolderViewModel {
     // MARK: - State
 
     var category: CategoryToggle
-    private(set) var showAlert: Bool = false
+    private(set) var showTextField: Bool = false
     private(set) var editFolder: Folder?
-
+    private(set) var mode: TextFieldView.Mode = .create
     public weak var coordinator: FolderCoordinatorDelegate?
 
     // MARK: - Dependencies
@@ -40,8 +40,20 @@ public final class FolderViewModel {
 // MARK: - Setter / Getter
 
 extension FolderViewModel {
-    private func setEditFolder(_ folder: Folder?) {
+    private func setMode(_ mode: TextFieldView.Mode) {
+        self.mode = mode
+    }
+
+    func openTextField(for folder: Folder? = nil) {
         editFolder = folder
+        setMode(folder == nil ? .create : .edit)
+        showTextField = true
+    }
+
+    func closeTextField() {
+        editFolder = nil
+        setMode(.create)
+        showTextField = false
     }
 }
 
@@ -55,16 +67,6 @@ extension FolderViewModel {
     func pushDetail(_ folder: Folder) {
         coordinator?.pushMyFolderDetailView(folder)
     }
-
-    func openTextFieldView(for folder: Folder? = nil) {
-        setEditFolder(folder)
-        showAlert = true
-    }
-
-    func closeTextFieldView() {
-        editFolder = nil
-        showAlert = false
-    }
 }
 
 // MARK: - C R U D
@@ -72,11 +74,23 @@ extension FolderViewModel {
 extension FolderViewModel {
     /// Domain.Folder를 생성하는 함수
     func create(name: String) {
-        closeTextFieldView()
         Task {
             do {
                 let folder = try await folderUseCase.create(name: name)
                 category.items.insert(.folder(folder), at: 0)
+                closeTextField()
+            } catch {
+                AppLogger.error(error)
+            }
+        }
+    }
+
+    func fetchAll() {
+        Task {
+            do {
+                let folders: [Folder] = try await folderUseCase.fetchDeletableFolders()
+                let items: [LibraryItem] = folders.map { .folder($0) }
+                category.items = items
             } catch {
                 AppLogger.error(error)
             }
@@ -95,8 +109,6 @@ extension FolderViewModel {
             deletedAt: folder.deletedAt
         )
 
-        closeTextFieldView()
-
         Task {
             do {
                 let updated = try await folderUseCase.update(updatedFolder)
@@ -108,6 +120,7 @@ extension FolderViewModel {
                 }) {
                     category.items[index] = .folder(updated)
                 }
+                closeTextField()
             } catch {
                 AppLogger.error(error)
             }
@@ -128,3 +141,84 @@ extension FolderViewModel {
         }
     }
 }
+
+#if DEBUG
+    extension FolderViewModel {
+        static func preview() -> FolderViewModel {
+            let previewData = PreviewData.make()
+            let category = CategoryToggle(
+                imageName: "folder",
+                title: "개인 폴더",
+                items: previewData.folders.map(LibraryItem.folder)
+            )
+
+            return FolderViewModel(
+                category: category,
+                folderUseCase: PreviewFolderUseCase(items: previewData.folders),
+                wasteBasketRepository: PreviewWasteBasketRepository()
+            )
+        }
+    }
+
+    private extension FolderViewModel {
+        struct PreviewData {
+            let folders: [Folder]
+
+            static func make(now: Date = .now) -> Self {
+                let folders: [Folder] = (0 ..< 10).map { index in
+                    let createdOffset = TimeInterval((index + 1) * 86400) * -1
+                    return Folder(
+                        name: "개인 폴더 \(index + 1)",
+                        createdAt: now.addingTimeInterval(createdOffset),
+                        content: [],
+                        isDeletable: true
+                    )
+                }
+                return PreviewData(folders: folders)
+            }
+        }
+
+        struct PreviewFolderUseCase: FolderUseCase {
+            let items: [Folder]
+
+            func create(name: String) async throws(FolderUseCaseError) -> Folder {
+                Folder(name: name, createdAt: .now, content: [], isDeletable: true)
+            }
+
+            func createDefault() async throws(FolderUseCaseError) -> Folder {
+                Folder(name: "기본 폴더", isDeletable: false)
+            }
+
+            func fetchAll() async throws(FolderUseCaseError) -> [Folder] {
+                items
+            }
+
+            func fetchDeletableFolders() async throws(FolderUseCaseError) -> [Folder] {
+                items.filter(\.isDeletable)
+            }
+
+            func fetch(by id: UUID) async throws(FolderUseCaseError) -> Folder {
+                guard let item = items.first(where: { $0.id == id }) else { throw .notFound }
+                return item
+            }
+
+            func update(_ folder: Folder) async throws(FolderUseCaseError) -> Folder {
+                folder
+            }
+        }
+
+        struct PreviewWasteBasketRepository: WasteBasketRepository {
+            func allClear() async throws(DeleteWasteBasketRepositoryError) {}
+            func delete(item: WasteBasketItem) async throws(DeleteWasteBasketRepositoryError) {}
+            func deleteAll(items: [WasteBasketItem]) async throws(DeleteWasteBasketRepositoryError) {}
+            func moveToWasteBasket(item: WasteBasketItem) async throws(MoveWasteBasketRepositoryError) {}
+            func moveAllToWasteBasket(items: [WasteBasketItem]) async throws(MoveWasteBasketRepositoryError) {}
+            func fetchAll() async throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
+                []
+            }
+
+            func restore(item: WasteBasketItem) async throws(RestoreWasteBasketRepositoryError) {}
+            func restoreAll(items: [WasteBasketItem]) async throws(RestoreWasteBasketRepositoryError) {}
+        }
+    }
+#endif

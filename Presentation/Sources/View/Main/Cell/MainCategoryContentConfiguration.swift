@@ -99,20 +99,29 @@ final class MainCategoryContentView: UIView, UIContentView {
         container.setCustomSpacing(6, after: imageRow)
         container.setCustomSpacing(16, after: titleLabel)
 
+        let bottomConstraint = container.bottomAnchor.constraint(equalTo: bottomAnchor)
+        bottomConstraint.priority = .defaultHigh
+
         NSLayoutConstraint.activate([
             container.topAnchor.constraint(equalTo: topAnchor),
             container.leadingAnchor.constraint(equalTo: leadingAnchor),
             container.trailingAnchor.constraint(equalTo: trailingAnchor),
-            container.bottomAnchor.constraint(equalTo: bottomAnchor)
+            bottomConstraint
         ])
+
+        let widthConstraint = imageView.widthAnchor.constraint(equalToConstant: 20)
+        let heightConstraint = imageView.heightAnchor.constraint(equalToConstant: 20)
+        widthConstraint.priority = .init(999)
+        heightConstraint.priority = .init(999)
 
         NSLayoutConstraint.activate([
-            imageView.widthAnchor.constraint(equalToConstant: 20),
-            imageView.heightAnchor.constraint(equalToConstant: 20)
+            widthConstraint,
+            heightConstraint
         ])
 
-        imageRow.setContentHuggingPriority(.required, for: .horizontal)
-        imageRow.setContentCompressionResistancePriority(.required, for: .horizontal)
+        imageRow.setContentHuggingPriority(.init(999), for: .horizontal)
+        imageRow.setContentCompressionResistancePriority(.init(999), for: .horizontal)
+        titleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
         titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
     }
 
@@ -131,7 +140,7 @@ final class MainCategoryContentView: UIView, UIContentView {
         container.alignment = didScroll ? .center : .fill
         container.spacing = didScroll ? 6 : 0
         container.layoutMargins = didScroll
-            ? UIEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
+            ? UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
             : UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         container.layer.cornerRadius = didScroll ? 18 : 20
         imageSpacer.isHidden = didScroll

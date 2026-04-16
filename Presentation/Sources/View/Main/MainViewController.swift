@@ -12,11 +12,6 @@ public final class MainViewController: ViewController {
     typealias DataSource = UICollectionViewDiffableDataSource<MainSection, MainCellItem>
     typealias SnapShot = NSDiffableDataSourceSnapshot<MainSection, MainCellItem>
 
-    private enum LayoutConstant {
-        static let expandedCategoryHeaderHeight: CGFloat = 120
-        static let collapsedCategoryHeaderHeight: CGFloat = 40
-    }
-
     // MARK: - View Model
 
     private let vm: MainViewModel
@@ -187,7 +182,7 @@ public final class MainViewController: ViewController {
 
         NSLayoutConstraint.activate([
             floatingButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            floatingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            floatingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -42)
         ])
     }
 }
@@ -220,7 +215,7 @@ extension MainViewController {
                     groupWidth: .fractionalWidth(1.0),
                     groupHeight: .estimated(120),
                     interGroupSpacing: 8,
-                    contentInsets: .init(top: 0, leading: 20, bottom: 32, trailing: 20),
+                    contentInsets: .init(top: 0, leading: 20, bottom: 0, trailing: 20),
                     headerHeight: 72
                 )
             case .emptyList:
@@ -237,10 +232,7 @@ extension MainViewController {
         let categoryHeader = NSCollectionLayoutBoundarySupplementaryItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(
-                    vm.didScroll ? LayoutConstant.collapsedCategoryHeaderHeight : LayoutConstant
-                        .expandedCategoryHeaderHeight
-                )
+                heightDimension: .estimated(120)
             ),
             elementKind: MainCategoryHeaderView.elementKind,
             alignment: .top
@@ -435,6 +427,7 @@ extension MainViewController: UICollectionViewDelegate {
         guard let header = collectionView.visibleSupplementaryViews(ofKind: MainCategoryHeaderView.elementKind)
             .first as? MainCategoryHeaderView else { return }
         header.updateScrollState(didScroll)
+        collectionView.collectionViewLayout.invalidateLayout()
     }
 }
 
