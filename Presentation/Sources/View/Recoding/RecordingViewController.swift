@@ -6,6 +6,32 @@ public final class RecordingViewController: ViewController {
 
     // MARK: - UI Components
 
+    private lazy var cancelButton: GlassButton = {
+        let button = GlassButton()
+        button.configure(
+            type: .plain(),
+            viewModel.state.cancelTitle,
+            typography: .header2,
+            backgroundColor: .color(.clear),
+            foregroundColor: UIColor.gray950
+        )
+
+        return button
+    }()
+
+    private lazy var completeButton: GlassButton = {
+        let button = GlassButton()
+        button.configure(
+            type: .plain(),
+            viewModel.state.completeTitle,
+            typography: .header2,
+            backgroundColor: .color(.clear),
+            foregroundColor: UIColor.point800
+        )
+
+        return button
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
@@ -33,20 +59,22 @@ public final class RecordingViewController: ViewController {
         return label
     }()
 
-    private lazy var recordButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.layer.cornerRadius = 30
-        button.clipsToBounds = true
-        button.backgroundColor = .gray50
-        button.tintColor = .gray950
+    private lazy var recordButton: GlassButton = {
+        let button = GlassButton()
         button.setPreferredSymbolConfiguration(
-            UIImage.SymbolConfiguration(pointSize: 22, weight: .semibold),
+            UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold),
             forImageIn: .normal
         )
+        button.configure(
+            type: .clearGlass(),
+            nil,
+            typography: .body1,
+            image: .init(imageName: recordButtonSymbolName, type: .system)
+        )
+        button.setCapsuleCornerRadius()
         button.addAction(UIAction { [weak self] _ in
             self?.viewModel.send(.recordButtonTapped)
         }, for: .touchUpInside)
-
         return button
     }()
 
@@ -81,19 +109,20 @@ public final class RecordingViewController: ViewController {
     // MARK: - Private Methods
 
     private func setupNavigation() {
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            systemItem: .cancel,
-            primaryAction: UIAction { [weak self] _ in
-                self?.viewModel.send(.cancelButtonTapped)
-            }
-        )
+        cancelButton.addAction(UIAction { [weak self] _ in
+            self?.viewModel.send(.cancelButtonTapped)
+        }, for: .touchUpInside)
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            systemItem: .done,
-            primaryAction: UIAction { [weak self] _ in
-                self?.viewModel.send(.finishButtonTapped)
-            }
-        )
+        completeButton.addAction(UIAction { [weak self] _ in
+            self?.viewModel.send(.finishButtonTapped)
+        }, for: .touchUpInside)
+
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: cancelButton)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: completeButton)
+
+        for item in [navigationItem.leftBarButtonItem, navigationItem.rightBarButtonItem] {
+            item?.hidesSharedBackground = true
+        }
     }
 
     private func setupUI() {
@@ -135,3 +164,10 @@ public final class RecordingViewController: ViewController {
         }
     }
 }
+
+#if DEBUG
+    #Preview {
+        UINavigationController(rootViewController: RecordingViewController(viewModel: .preview())
+        )
+    }
+#endif

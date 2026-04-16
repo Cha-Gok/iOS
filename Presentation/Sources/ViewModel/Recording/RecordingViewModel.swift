@@ -18,6 +18,8 @@ public final class RecordingViewModel {
         }
 
         let title: String = "새 기록"
+        let cancelTitle: String = "취소"
+        let completeTitle: String = "종료"
         var recordingStartDate: Date = .now
         var recordingDuration: TimeInterval = 0
         var amplitude: Float = 0
@@ -168,3 +170,84 @@ public final class RecordingViewModel {
         timerTask = nil
     }
 }
+
+// MARK: - Preview Data
+
+#if DEBUG
+    extension RecordingViewModel {
+        public static func preview() -> RecordingViewModel {
+            RecordingViewModel(
+                repository: PreviewVoiceRecordRepository(),
+                voiceNoteUseCase: PreviewVoiceNoteUseCase()
+            )
+        }
+
+        private struct PreviewVoiceRecordRepository: VoiceRecordRepository {
+            func checkMicrophonePermission() -> PermissionStatus {
+                .authorized
+            }
+
+            func requestMicrophonePermission() async throws(VoiceRecordRepositoryError)
+                -> PermissionStatus
+            {
+                .authorized
+            }
+
+            func startRecording() async throws(VoiceRecordRepositoryError) -> AsyncStream<Waveform> {
+                AsyncStream { continuation in
+                    continuation.finish()
+                }
+            }
+
+            func pauseRecording() async throws(VoiceRecordRepositoryError) {}
+            func resumeRecording() async throws(VoiceRecordRepositoryError) {}
+            func finishRecording() async throws(VoiceRecordRepositoryError) -> VoiceRecord {
+                VoiceRecord(audioFilePath: "", duration: 0)
+            }
+
+            func cancelRecording() async throws(VoiceRecordRepositoryError) {}
+        }
+
+        private struct PreviewVoiceNoteUseCase: VoiceNoteUseCase {
+            func create(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+                VoiceNote(
+                    title: "미리보기 기록",
+                    createdAt: .now,
+                    updatedAt: .now,
+                    folderID: UUID(),
+                    voiceRecord: voiceRecord,
+                    keywords: [],
+                    transcript: nil,
+                    summary: nil
+                )
+            }
+
+            func fetchAllFromDefaultFolder() async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+                []
+            }
+
+            func fetchAll(folderID: UUID) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+                []
+            }
+
+            func fetch(byId id: UUID) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+                throw .recordNotFound(id)
+            }
+
+            func fetchRecent(limit: Int) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+                []
+            }
+
+            func update(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+                voiceNote
+            }
+
+            func summarize(
+                audioFilePath: String,
+                language: Language
+            ) async throws(VoiceNoteUseCaseError) -> AudioToSummaryResult {
+                AudioToSummaryResult(transcript: Transcript(text: ""), keywords: [], summary: Summary(text: ""))
+            }
+        }
+    }
+#endif
