@@ -24,11 +24,7 @@ public final class VoiceNoteViewModel {
     private let updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
     private let fetchLanguageUseCase: any FetchLanguageUseCase
     private let fetchFolderUseCase: any FetchFolderUseCase
-    private let prepareVoiceRecordPlaybackUseCase: any PrepareVoiceRecordPlaybackUseCase
-    private let playVoiceRecordUseCase: any PlayVoiceRecordUseCase
-    private let pauseVoiceRecordPlaybackUseCase: any PauseVoiceRecordPlaybackUseCase
-    private let seekVoiceRecordPlaybackUseCase: any SeekVoiceRecordPlaybackUseCase
-    private let stopVoiceRecordPlaybackUseCase: any StopVoiceRecordPlaybackUseCase
+    private let playbackUseCase: any PlaybackUseCase
 
     // MARK: - Init
 
@@ -38,22 +34,14 @@ public final class VoiceNoteViewModel {
         updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase,
         fetchLanguageUseCase: any FetchLanguageUseCase,
         fetchFolderUseCase: any FetchFolderUseCase,
-        prepareVoiceRecordPlaybackUseCase: any PrepareVoiceRecordPlaybackUseCase,
-        playVoiceRecordUseCase: any PlayVoiceRecordUseCase,
-        pauseVoiceRecordPlaybackUseCase: any PauseVoiceRecordPlaybackUseCase,
-        seekVoiceRecordPlaybackUseCase: any SeekVoiceRecordPlaybackUseCase,
-        stopVoiceRecordPlaybackUseCase: any StopVoiceRecordPlaybackUseCase
+        playbackUseCase: any PlaybackUseCase
     ) {
         state = State(voiceNote: voiceNote)
         self.audioToSummaryUseCase = audioToSummaryUseCase
         self.updateVoiceNoteUseCase = updateVoiceNoteUseCase
         self.fetchLanguageUseCase = fetchLanguageUseCase
         self.fetchFolderUseCase = fetchFolderUseCase
-        self.prepareVoiceRecordPlaybackUseCase = prepareVoiceRecordPlaybackUseCase
-        self.playVoiceRecordUseCase = playVoiceRecordUseCase
-        self.pauseVoiceRecordPlaybackUseCase = pauseVoiceRecordPlaybackUseCase
-        self.seekVoiceRecordPlaybackUseCase = seekVoiceRecordPlaybackUseCase
-        self.stopVoiceRecordPlaybackUseCase = stopVoiceRecordPlaybackUseCase
+        self.playbackUseCase = playbackUseCase
     }
 
     deinit {
@@ -179,7 +167,7 @@ public final class VoiceNoteViewModel {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
         do {
-            let stream = try prepareVoiceRecordPlaybackUseCase.execute(
+            let stream = try playbackUseCase.prepare(
                 audioFilePath: state.voiceNote.voiceRecord.audioFilePath
             )
             playbackObservationTask = Task {
@@ -196,7 +184,7 @@ public final class VoiceNoteViewModel {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
         do {
-            try stopVoiceRecordPlaybackUseCase.execute()
+            try playbackUseCase.stop()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
@@ -204,7 +192,7 @@ public final class VoiceNoteViewModel {
 
     private func play() {
         do {
-            try playVoiceRecordUseCase.execute()
+            try playbackUseCase.play()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
@@ -212,7 +200,7 @@ public final class VoiceNoteViewModel {
 
     private func pause() {
         do {
-            try pauseVoiceRecordPlaybackUseCase.execute()
+            try playbackUseCase.pause()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
@@ -220,7 +208,7 @@ public final class VoiceNoteViewModel {
 
     private func seek(to time: TimeInterval) {
         do {
-            try seekVoiceRecordPlaybackUseCase.execute(time: time)
+            try playbackUseCase.seek(to: time)
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }

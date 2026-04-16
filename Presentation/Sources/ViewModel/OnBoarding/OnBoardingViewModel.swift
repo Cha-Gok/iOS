@@ -19,8 +19,7 @@ public final class OnBoardingViewModel {
     // MARK: - UseCase
 
     let selectLanguageUseCase: any SelectLanguageUseCase
-    let checkMicrophonePermissionUseCase: any CheckMicrophonePermissionUseCase
-    let requestMicrophonePermissionUseCase: any RequestMicrophonePermissionUseCase
+    let microphonePermissionUseCase: any MicrophonePermissionUseCase
     let completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase
     let createDefaultFolderUseCase: any CreateDefaultFolderUseCase
 
@@ -28,14 +27,12 @@ public final class OnBoardingViewModel {
 
     public init(
         selectLanguageUseCase: any SelectLanguageUseCase,
-        checkMicrophonePermissionUseCase: any CheckMicrophonePermissionUseCase,
-        requestMicrophonePermissionUseCase: any RequestMicrophonePermissionUseCase,
+        microphonePermissionUseCase: any MicrophonePermissionUseCase,
         completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase,
         createDefaultFolderUseCase: any CreateDefaultFolderUseCase
     ) {
         self.selectLanguageUseCase = selectLanguageUseCase
-        self.checkMicrophonePermissionUseCase = checkMicrophonePermissionUseCase
-        self.requestMicrophonePermissionUseCase = requestMicrophonePermissionUseCase
+        self.microphonePermissionUseCase = microphonePermissionUseCase
         self.completeFirstLaunchUseCase = completeFirstLaunchUseCase
         self.createDefaultFolderUseCase = createDefaultFolderUseCase
     }
@@ -141,9 +138,9 @@ extension OnBoardingViewModel {
     private func requestPermission() {
         Task {
             do {
-                let status: PermissionStatus = try await checkMicrophonePermissionUseCase.execute()
+                let status: PermissionStatus = try await microphonePermissionUseCase.checkPermission()
                 if status == .notDetermined {
-                    _ = try await requestMicrophonePermissionUseCase.execute()
+                    _ = try await microphonePermissionUseCase.requestPermission()
                 }
             } catch {
                 errorMessage = error.localizedDescription
