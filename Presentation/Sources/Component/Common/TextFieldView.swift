@@ -20,8 +20,7 @@ final class TextFieldView: UIView {
     private lazy var titleLabel: UILabel = {
         let t = UILabel()
         t.translatesAutoresizingMaskIntoConstraints = false
-        t.setTypography(text: field.title, style: .title2)
-        t.textAlignment = .center
+        t.setTypography(text: field.title, style: .title2, textAlignment: .center)
         t.textColor = .gray950
         return t
     }()
@@ -29,8 +28,7 @@ final class TextFieldView: UIView {
     private lazy var subTitleLabel: UILabel = {
         let t = UILabel()
         t.translatesAutoresizingMaskIntoConstraints = false
-        t.setTypography(text: field.subTitle, style: .body2)
-        t.textAlignment = .center
+        t.setTypography(text: field.subTitle, style: .body2, textAlignment: .center)
         t.textColor = .gray950
         t.numberOfLines = 0
         return t
@@ -43,7 +41,14 @@ final class TextFieldView: UIView {
         tf.layer.cornerRadius = 8
         tf.textColor = .gray950
         tf.font = Typography.body1.font
-        tf.defaultTextAttributes = Typography.body1.textAttributes
+        // UITextField는 한 줄 입력 요소이므로 줄간격(paragraphStyle)이나
+        // baselineOffset이 들어가면 자체 수직 정렬(Center Y) 계산과 충돌해 텍스트가 살짝 아래로 처집니다.
+        // 따라서 폰트, 글자색상, 자간(kern)만 명시적으로 넣어줍니다.
+        tf.defaultTextAttributes = [
+            .font: Typography.body1.font,
+            .foregroundColor: UIColor.gray950,
+            .kern: Typography.body1.letterSpacing
+        ]
         tf.delegate = self
         tf.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
@@ -107,8 +112,8 @@ final class TextFieldView: UIView {
     
     override func updateProperties() {
         super.updateProperties()
-        titleLabel.setTypography(text: field.title, style: .title2)
-        subTitleLabel.setTypography(text: field.subTitle, style: .body2)
+        titleLabel.setTypography(text: field.title, style: .title2, textAlignment: .center)
+        subTitleLabel.setTypography(text: field.subTitle, style: .body2, textAlignment: .center)
         placeholderLabel.setTypography(text: field.placeHolder, style: .body1)
 
         if textField.text != field.text {

@@ -78,8 +78,16 @@ public extension UILabel {
     /// - Parameters:
     ///   - text: UILabel의 텍스트 입니다.
     ///   - typography: 글씨체, 행간 , 자간 복합적인 열겨형 데이터
-    func setTypography(text: String? = nil, style typography: Typography) {
+    ///   - textAlignment: 텍스트 정렬 설정 (기본값: .left)
+    func setTypography(text: String? = nil, style typography: Typography, textAlignment: NSTextAlignment = .left) {
         let textToUse = text ?? self.text ?? ""
-        attributedText = NSAttributedString(string: textToUse, attributes: typography.textAttributes)
+        var attributes = typography.textAttributes
+        
+        if let paragraphStyle = (attributes[.paragraphStyle] as? NSParagraphStyle)?.mutableCopy() as? NSMutableParagraphStyle {
+            paragraphStyle.alignment = textAlignment
+            attributes[.paragraphStyle] = paragraphStyle
+        }
+        
+        attributedText = NSAttributedString(string: textToUse, attributes: attributes)
     }
 }
