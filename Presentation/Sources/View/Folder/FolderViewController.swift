@@ -36,8 +36,6 @@ public final class FolderViewController: CollectionViewController {
     
     private var cancelButton: GlassButton = .close("취소")
     private var primaryButton: GlassButton = .primary("만들기")
-    private var isKeyboardVisible = false
-    private var textFieldCenterYConstraint: NSLayoutConstraint?
     
     private lazy var textField = TextFieldView(
         field: .init(
@@ -89,51 +87,27 @@ public final class FolderViewController: CollectionViewController {
         super.updateProperties()
         syncTextFieldField()
         textField.isHidden = !vm.showTextField
-        let centerYOffset: CGFloat = isKeyboardVisible ? -24 : 0
-        guard textFieldCenterYConstraint?.constant != centerYOffset else { return }
-
-        view.setNeedsUpdateConstraints()
-
-        guard view.window != nil else { return }
-
-        UIView.animate(
-            withDuration: Constant.animationDuration,
-            delay: 0,
-            options: [.curveEaseInOut, .beginFromCurrentState, .allowUserInteraction]
-        ) {
-            self.view.layoutIfNeeded()
-        }
-    }
-
-    override public func updateViewConstraints() {
-        textFieldCenterYConstraint?.constant = isKeyboardVisible ? -24 : 0
-        super.updateViewConstraints()
+        updateDataSource()
     }
 
     // MARK: - Setup
 
     private func setup() {
         collectionView.showsVerticalScrollIndicator = false
+        let containerGuide = UILayoutGuide()
+        view.addLayoutGuide(containerGuide)
         view.addSubview(textField)
-        textFieldCenterYConstraint = textField.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         
         NSLayoutConstraint.activate([
+            containerGuide.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            containerGuide.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            containerGuide.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            containerGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),            
             textField.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
             textField.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.35),
-            textField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            textFieldCenterYConstraint
-        ].compactMap { $0 })
-
-        // TextField 콜백 연결
-        textField.onEditingDidBegin = { [weak self] in
-            self?.isKeyboardVisible = true
-            self?.updateProperties()
-        }
-        
-        textField.onEditingDidEnd = { [weak self] in
-            self?.isKeyboardVisible = false
-            self?.updateProperties()
-        }
+            textField.centerXAnchor.constraint(equalTo: containerGuide.centerXAnchor),
+            textField.centerYAnchor.constraint(equalTo: containerGuide.centerYAnchor)
+        ])
     }
     
     private func setupNavigationBar() {
