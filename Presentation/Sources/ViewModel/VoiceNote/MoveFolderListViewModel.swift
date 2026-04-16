@@ -14,17 +14,17 @@ public final class MoveFolderListViewModel {
     private(set) var state: State = .init()
 
     private let voiceNote: VoiceNote
-    private let fetchFolderUseCase: any FetchFolderUseCase
-    private let updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
+    private let folderUseCase: any FolderUseCase
+    private let voiceNoteUseCase: any VoiceNoteUseCase
 
     public init(
         voiceNote: VoiceNote,
-        fetchFolderUseCase: any FetchFolderUseCase,
-        updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
+        folderUseCase: any FolderUseCase,
+        voiceNoteUseCase: any VoiceNoteUseCase
     ) {
         self.voiceNote = voiceNote
-        self.fetchFolderUseCase = fetchFolderUseCase
-        self.updateVoiceNoteUseCase = updateVoiceNoteUseCase
+        self.folderUseCase = folderUseCase
+        self.voiceNoteUseCase = voiceNoteUseCase
     }
 
     func send(_ action: Action) {
@@ -52,7 +52,7 @@ public final class MoveFolderListViewModel {
 
     private func fetchFolders() async {
         do {
-            let folders = try await fetchFolderUseCase.fetchAll()
+            let folders = try await folderUseCase.fetchAll()
             let otherFolders = folders.filter { $0.id != voiceNote.folderID }
             send(.internal(.foldersLoaded(otherFolders)))
         } catch {
@@ -74,7 +74,7 @@ public final class MoveFolderListViewModel {
                 transcript: voiceNote.transcript,
                 summary: voiceNote.summary
             )
-            _ = try await updateVoiceNoteUseCase.execute(updatedVoiceNote)
+            _ = try await voiceNoteUseCase.update(updatedVoiceNote)
             coordinator?.dismiss()
         } catch {
             AppLogger.error(error)

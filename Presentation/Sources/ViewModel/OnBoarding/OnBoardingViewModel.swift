@@ -16,28 +16,25 @@ public final class OnBoardingViewModel {
 
     public weak var onBoardingCoordinator: OnboardingCoordinatorDelegate?
 
-    // MARK: - UseCase
+    // MARK: - Dependencies
 
-    let selectLanguageUseCase: any SelectLanguageUseCase
-    let checkMicrophonePermissionUseCase: any CheckMicrophonePermissionUseCase
-    let requestMicrophonePermissionUseCase: any RequestMicrophonePermissionUseCase
-    let completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase
-    let createDefaultFolderUseCase: any CreateDefaultFolderUseCase
+    let languageRepository: any LanguageRepository
+    let voiceRecordRepository: any VoiceRecordRepository
+    let checkFirstLaunchRepository: any CheckFirstLaunchRepository
+    let folderUseCase: any FolderUseCase
 
     // MARK: - 생성자
 
     public init(
-        selectLanguageUseCase: any SelectLanguageUseCase,
-        checkMicrophonePermissionUseCase: any CheckMicrophonePermissionUseCase,
-        requestMicrophonePermissionUseCase: any RequestMicrophonePermissionUseCase,
-        completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase,
-        createDefaultFolderUseCase: any CreateDefaultFolderUseCase
+        languageRepository: any LanguageRepository,
+        voiceRecordRepository: any VoiceRecordRepository,
+        checkFirstLaunchRepository: any CheckFirstLaunchRepository,
+        folderUseCase: any FolderUseCase
     ) {
-        self.selectLanguageUseCase = selectLanguageUseCase
-        self.checkMicrophonePermissionUseCase = checkMicrophonePermissionUseCase
-        self.requestMicrophonePermissionUseCase = requestMicrophonePermissionUseCase
-        self.completeFirstLaunchUseCase = completeFirstLaunchUseCase
-        self.createDefaultFolderUseCase = createDefaultFolderUseCase
+        self.languageRepository = languageRepository
+        self.voiceRecordRepository = voiceRecordRepository
+        self.checkFirstLaunchRepository = checkFirstLaunchRepository
+        self.folderUseCase = folderUseCase
     }
 
     // MARK: - State
@@ -140,14 +137,14 @@ extension OnBoardingViewModel {
 extension OnBoardingViewModel {
     private func requestPermission() {
         Task {
-            do {
-                let status: PermissionStatus = try await checkMicrophonePermissionUseCase.execute()
-                if status == .notDetermined {
-                    _ = try await requestMicrophonePermissionUseCase.execute()
+            let status = voiceRecordRepository.checkMicrophonePermission()
+            if status == .notDetermined {
+                do {
+                    _ = try await voiceRecordRepository.requestMicrophonePermission()
+                } catch {
+                    errorMessage = error.localizedDescription
+                    AppLogger.error(error)
                 }
-            } catch {
-                errorMessage = error.localizedDescription
-                AppLogger.error(error)
             }
         }
     }
@@ -155,9 +152,9 @@ extension OnBoardingViewModel {
     private func finishOnBoarding() {
         Task {
             do {
-                try await selectLanguageUseCase.execute(lang: language)
-                _ = try await createDefaultFolderUseCase.execute()
-                _ = completeFirstLaunchUseCase.execute()
+                languageRepository.saveLanguage(language)
+                _ = try await folderUseCase.createDefault()
+                _ = checkFirstLaunchRepository.checkAndMarkFirstLaunch()
                 onBoardingCoordinator?.finishOnBoarding()
             } catch {
                 isPaging = false

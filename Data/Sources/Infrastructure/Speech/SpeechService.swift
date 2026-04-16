@@ -20,7 +20,7 @@ public actor SpeechService: STTService {
 
     // MARK: - STTPermissionService
 
-    public func checkPermission() async -> PermissionStatus {
+    public nonisolated func checkPermission() -> PermissionStatus {
         switch SFSpeechRecognizer.authorizationStatus() {
         case .authorized:
             return .authorized

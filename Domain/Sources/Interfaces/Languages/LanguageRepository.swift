@@ -4,10 +4,9 @@ import Foundation
 public protocol LanguageRepository: Sendable {
     /// 현재 설정된 언어를 가져옵니다.
     /// - Returns: 현재 설정된 언어 (기본값: ko)
-    func fetchLanguage() async throws(FetchLanguagesRepositoryError) -> Language
+    func fetchLanguage() -> Language
 
     /// 새로운 언어를 저장합니다.
     /// - Parameter language: 저장할 언어 (ko, en 등)
-    /// - Throws: 언어 저장 실패 시
-    func saveLanguage(_ language: Language) async throws(SetLanguagesRepositoryError)
+    func saveLanguage(_ language: Language)
 }

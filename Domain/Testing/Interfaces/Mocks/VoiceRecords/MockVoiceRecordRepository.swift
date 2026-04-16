@@ -10,7 +10,7 @@ public actor MockVoiceRecordRepository: VoiceRecordRepository {
     private var resumeResult: Result<Void, VoiceRecordRepositoryError>?
     private var finishResult: Result<VoiceRecord, VoiceRecordRepositoryError>?
     private var cancelResult: Result<Void, VoiceRecordRepositoryError>?
-    private var checkPermissionResult: Result<PermissionStatus, VoiceRecordRepositoryError>?
+    private nonisolated(unsafe) var checkPermissionResult: PermissionStatus?
     private var requestPermissionResult: Result<PermissionStatus, VoiceRecordRepositoryError>?
 
     private var actualStartRecordingCallCount = 0
@@ -18,7 +18,7 @@ public actor MockVoiceRecordRepository: VoiceRecordRepository {
     private var actualResumeRecordingCallCount = 0
     private var actualFinishRecordingCallCount = 0
     private var actualCancelRecordingCallCount = 0
-    private var actualCheckPermissionCallCount = 0
+    private nonisolated(unsafe) var actualCheckPermissionCallCount = 0
     private var actualRequestPermissionCallCount = 0
 
     private var expectedStartRecordingCallCount: Int?
@@ -26,7 +26,7 @@ public actor MockVoiceRecordRepository: VoiceRecordRepository {
     private var expectedResumeRecordingCallCount: Int?
     private var expectedFinishRecordingCallCount: Int?
     private var expectedCancelRecordingCallCount: Int?
-    private var expectedCheckPermissionCallCount: Int?
+    private nonisolated(unsafe) var expectedCheckPermissionCallCount: Int?
     private var expectedRequestPermissionCallCount: Int?
 
     public func setStartResult(_ result: Result<AsyncStream<Waveform>, VoiceRecordRepositoryError>) {
@@ -49,7 +49,7 @@ public actor MockVoiceRecordRepository: VoiceRecordRepository {
         cancelResult = result
     }
 
-    public func setCheckPermissionResult(_ result: Result<PermissionStatus, VoiceRecordRepositoryError>) {
+    public func setCheckPermissionResult(_ result: PermissionStatus) {
         checkPermissionResult = result
     }
 
@@ -172,16 +172,13 @@ public actor MockVoiceRecordRepository: VoiceRecordRepository {
         }
     }
 
-    public func checkMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus {
-        if Task.isCancelled { throw .cancelled }
+    public nonisolated func checkMicrophonePermission() -> PermissionStatus {
         actualCheckPermissionCallCount += 1
-        switch checkPermissionResult {
-        case .success(let state): return state
-        case .failure(let error): throw error
-        case .none:
-            XCTFail("MockVoiceRecordRepository.checkPermissionResult 미설정")
-            throw .unknown(NSError(domain: "Mock", code: -1))
+        if let checkPermissionResult {
+            return checkPermissionResult
         }
+        XCTFail("MockVoiceRecordRepository.checkPermissionResult 미설정")
+        return .notDetermined
     }
 
     public func requestMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus {

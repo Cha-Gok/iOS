@@ -2,14 +2,14 @@ import Core
 import Foundation
 
 /// 파일 시스템 기반의 스토리지 서비스 구현체
-public actor FileManagerStorageService: StorageService {
+public struct FileManagerStorageService: StorageService, @unchecked Sendable {
     private let fileManager: FileManager
 
     public init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
     }
 
-    public func generateTemporaryURL(fileName: String) async throws(StorageServiceError) -> URL {
+    public func generateTemporaryURL(fileName: String) throws(StorageServiceError) -> URL {
         AppLogger.debug("임시 URL 생성 시작: \(fileName)")
 
         if Task.isCancelled {
@@ -35,7 +35,7 @@ public actor FileManagerStorageService: StorageService {
         from sourceURL: URL,
         toDirectory directory: String,
         fileName: String
-    ) async throws(StorageServiceError) -> String {
+    ) throws(StorageServiceError) -> String {
         AppLogger.debug("파일 이동 시작: \(sourceURL.lastPathComponent) -> \(directory)/\(fileName)")
 
         if Task.isCancelled {
@@ -85,7 +85,7 @@ public actor FileManagerStorageService: StorageService {
         data: Data,
         toDirectory directory: String,
         fileName: String
-    ) async throws(StorageServiceError) -> String {
+    ) throws(StorageServiceError) -> String {
         AppLogger.debug("파일 저장 시작: \(directory)/\(fileName) (size: \(data.count) bytes)")
 
         if Task.isCancelled {
@@ -121,7 +121,7 @@ public actor FileManagerStorageService: StorageService {
         }
     }
 
-    public func load(relativePath: String) async throws(StorageServiceError) -> Data {
+    public func load(relativePath: String) throws(StorageServiceError) -> Data {
         let absoluteURL = absoluteURL(for: relativePath)
         AppLogger.debug("파일 로드 시작: \(absoluteURL.path)")
 
@@ -145,7 +145,7 @@ public actor FileManagerStorageService: StorageService {
         }
     }
 
-    public func delete(fileURL: URL) async throws(StorageServiceError) {
+    public func delete(fileURL: URL) throws(StorageServiceError) {
         AppLogger.debug("임시 파일 삭제 시작: \(fileURL.path)")
 
         if Task.isCancelled {
@@ -167,14 +167,14 @@ public actor FileManagerStorageService: StorageService {
         }
     }
 
-    public func exists(relativePath: String) async -> Bool {
+    public func exists(relativePath: String) -> Bool {
         let absoluteURL = absoluteURL(for: relativePath)
         let isExists = fileManager.fileExists(atPath: absoluteURL.path)
         AppLogger.debug("파일 존재 확인 (\(isExists)): \(absoluteURL.path)")
         return isExists
     }
 
-    public nonisolated func absoluteURL(for relativePath: String) -> URL {
+    public func absoluteURL(for relativePath: String) -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent(relativePath)
     }

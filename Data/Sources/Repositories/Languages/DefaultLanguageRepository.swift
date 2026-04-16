@@ -8,14 +8,12 @@ public struct DefaultLanguageRepository: LanguageRepository {
         self.store = store
     }
 
-    public func fetchLanguage() async throws(FetchLanguagesRepositoryError) -> Language {
-        if Task.isCancelled { throw .cancelled }
+    public func fetchLanguage() -> Language {
         guard let raw = store.string(forKey: Policy.appSelectedLanguageKey) else { return .ko }
         return Language(rawValue: raw) ?? .ko
     }
 
-    public func saveLanguage(_ language: Language) async throws(SetLanguagesRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
+    public func saveLanguage(_ language: Language) {
         store.set(language.rawValue, forKey: Policy.appSelectedLanguageKey)
     }
 }

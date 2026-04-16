@@ -18,9 +18,7 @@ final class TrashViewModelTests: XCTestCase {
         let mockCoordinator = MockBaseCoordinatorDelegate()
 
         let viewModel = TrashViewModel(
-            fetchUseCase: DefaultFetchWasteBasketFolderUseCase(repository: mockRepo),
-            deleteUseCase: DefaultDeleteWasteBasketUseCase(repository: mockRepo),
-            restoreUseCase: DefaultRestoreWasteBasketUseCase(repository: mockRepo)
+            repository: mockRepo
         )
         viewModel.coordinator = mockCoordinator
 

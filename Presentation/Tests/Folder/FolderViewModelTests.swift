@@ -41,9 +41,8 @@ final class FolderViewModelTests: XCTestCase {
 
         let viewModel = FolderViewModel(
             category: initialCategory,
-            createUseCase: DefaultCreateFolderUseCase(repository: mockFolderRepo),
-            updateUseCase: DefaultUpdateFolderUseCase(repository: mockFolderRepo),
-            moveToTrashUseCase: DefaultMoveWasteBasketUseCase(repository: mockWasteBasketRepo)
+            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
+            wasteBasketRepository: mockWasteBasketRepo
         )
         viewModel.coordinator = mockCoordinator
 

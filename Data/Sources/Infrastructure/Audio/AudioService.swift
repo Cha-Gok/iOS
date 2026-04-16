@@ -28,7 +28,7 @@ public actor AudioService: AudioRecorderService {
     // MARK: - MicrophonePermissionService
 
     /// 기기의 마이크 접근 권한 상태를 확인합니다.
-    public func checkPermission() async -> PermissionStatus {
+    public nonisolated func checkPermission() -> PermissionStatus {
         switch AVAudioApplication.shared.recordPermission {
         case .granted:
             return .authorized
@@ -59,14 +59,14 @@ public actor AudioService: AudioRecorderService {
         guard AVAudioApplication.shared.recordPermission == .granted else {
             throw .startFailed
         }
-        try await activateSession()
+        try activateSession()
 
         let recordingCreatedAt = Date.now
         let recorder: AVAudioRecorder
         do {
             recorder = try makeRecorder(filePath: filePath)
         } catch {
-            await deactivateSession()
+            deactivateSession()
             throw error
         }
 
@@ -87,7 +87,7 @@ public actor AudioService: AudioRecorderService {
 
         guard recorder.record() else {
             waveformContinuation.finish()
-            await deactivateSession()
+            deactivateSession()
             throw .startFailed
         }
 
@@ -123,7 +123,7 @@ public actor AudioService: AudioRecorderService {
         )
 
         clearRecordingSession()
-        await deactivateSession()
+        deactivateSession()
         AppLogger.info("녹음 종료")
 
         switch result {
@@ -150,7 +150,7 @@ public actor AudioService: AudioRecorderService {
         guard let recorder else { throw .notPaused }
         guard isPaused else { throw .notPaused }
 
-        try await activateSession()
+        try activateSession()
 
         guard recorder.record() else {
             throw .resumeFailed
@@ -170,7 +170,7 @@ public actor AudioService: AudioRecorderService {
     }
 
     /// 오디오 세션을 녹음 모드로 활성화합니다.
-    private func activateSession() async throws(AudioRecorderServiceError) {
+    private func activateSession() throws(AudioRecorderServiceError) {
         let avSession = AVAudioSession.sharedInstance()
         do {
             try avSession.setCategory(.record, mode: .default)
@@ -248,7 +248,7 @@ public actor AudioService: AudioRecorderService {
         await stopWaveformTask()
 
         clearRecordingSession()
-        await deactivateSession()
+        deactivateSession()
         AppLogger.info("녹음 중단")
     }
 
@@ -315,7 +315,7 @@ public actor AudioService: AudioRecorderService {
         return Waveform(amplitudes: amplitudes)
     }
 
-    private func deactivateSession() async {
+    private func deactivateSession() {
         do {
             try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         } catch {

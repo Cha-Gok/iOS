@@ -48,7 +48,10 @@ private let dataTestsTarget = Target.target(
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
     sources: ["Tests/**/*.swift"],
-    dependencies: [.target(name: "Data")]
+    dependencies: [
+        .target(name: "Data"),
+        .project(target: "DomainTesting", path: "../Domain")
+    ]
 )
 
 let project = Project(

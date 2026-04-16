@@ -35,15 +35,10 @@ final class OnBoardingViewModelTests: XCTestCase {
         let mockNavDelegate = MockNavigationDelegate()
 
         let viewModel = OnBoardingViewModel(
-            selectLanguageUseCase: DefaultSelectLanguageUseCase(repository: mockLanguageRepo),
-            checkMicrophonePermissionUseCase: DefaultCheckMicrophonePermissionUseCase(
-                repository: mockVoiceRecordRepo
-            ),
-            requestMicrophonePermissionUseCase: DefaultRequestMicrophonePermissionUseCase(
-                repository: mockVoiceRecordRepo
-            ),
-            completeFirstLaunchUseCase: DefaultCompleteFirstLaunchUseCase(repository: mockCheckFirstLaunchRepo),
-            createDefaultFolderUseCase: DefaultCreateDefaultFolderUseCase(repository: mockFolderRepo)
+            languageRepository: mockLanguageRepo,
+            voiceRecordRepository: mockVoiceRecordRepo,
+            checkFirstLaunchRepository: mockCheckFirstLaunchRepo,
+            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo)
         )
         viewModel.onBoardingCoordinator = mockNavDelegate
 
@@ -96,7 +91,7 @@ final class OnBoardingViewModelTests: XCTestCase {
     func test_syncPageState호출시_마이크권한스텝이면_권한을_요청한다() async {
         let sut = makeSUT()
 
-        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.success(.notDetermined))
+        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.notDetermined)
         await sut.mockVoiceRecordRepo.setRequestPermissionResult(.success(.authorized))
 
         sut.viewModel.syncPageState(nextStep: Step.micPermission.rawValue)
@@ -125,7 +120,6 @@ final class OnBoardingViewModelTests: XCTestCase {
 
         sut.viewModel.syncPageState(nextStep: Step.finish.rawValue)
 
-        await sut.mockLanguageRepo.setSaveResult(.success(()))
         sut.mockCheckFirstLaunchRepo.setReturnValue(true)
         await sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName, isDeletable: false)))
         await sut.mockFolderRepo.expectCreate(name: Policy.defaultFolderName, isDeletable: false, callCount: 1)
@@ -166,7 +160,7 @@ final class OnBoardingViewModelTests: XCTestCase {
         let sut = makeSUT()
 
         // Background Task가 실행되므로 미리 모의 객체(Mock) 응답을 세팅해 두어야 에러(미설정)가 나지 않습니다.
-        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.success(.notDetermined))
+        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.notDetermined)
         await sut.mockVoiceRecordRepo.setRequestPermissionResult(.success(.authorized))
 
         sut.viewModel.syncPageState(nextStep: Step.micPermission.rawValue)

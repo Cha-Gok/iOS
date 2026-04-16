@@ -6,24 +6,24 @@ public actor MockSTTRepository: STTRepository {
     public init() {}
 
     private var result: Result<Transcript, STTRepositoryError>?
-    private var checkResult: Result<PermissionStatus, STTPermissionRepositoryError>?
+    private nonisolated(unsafe) var checkResult: PermissionStatus?
     private var requestResult: Result<PermissionStatus, STTPermissionRepositoryError>?
 
     private var actualCallCount = 0
     private var actualAudioFilePath: String?
-    private var actualCheckSTTPermissionCallCount = 0
+    private nonisolated(unsafe) var actualCheckSTTPermissionCallCount = 0
     private var actualRequestSTTPermissionCallCount = 0
 
     private var expectedCallCount: Int?
     private var expectedAudioFilePath: String?
-    private var expectedCheckSTTPermissionCallCount: Int?
+    private nonisolated(unsafe) var expectedCheckSTTPermissionCallCount: Int?
     private var expectedRequestSTTPermissionCallCount: Int?
 
     public func setResult(_ result: Result<Transcript, STTRepositoryError>) {
         self.result = result
     }
 
-    public func setCheckResult(_ result: Result<PermissionStatus, STTPermissionRepositoryError>) {
+    public func setCheckResult(_ result: PermissionStatus) {
         checkResult = result
     }
 
@@ -92,18 +92,13 @@ public actor MockSTTRepository: STTRepository {
         }
     }
 
-    public func checkSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus {
+    public nonisolated func checkSTTPermission() -> PermissionStatus {
         actualCheckSTTPermissionCallCount += 1
-
-        switch checkResult {
-        case .success(let state):
-            return state
-        case .failure(let error):
-            throw error
-        case .none:
-            XCTFail("MockSTTRepository.checkResult 가 설정되지 않았습니다.")
-            throw .unknown(NSError(domain: "MockSTTRepository.checkResult", code: -1))
+        if let checkResult {
+            return checkResult
         }
+        XCTFail("MockSTTRepository.checkResult 가 설정되지 않았습니다.")
+        return .notDetermined
     }
 
     public func requestSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus {

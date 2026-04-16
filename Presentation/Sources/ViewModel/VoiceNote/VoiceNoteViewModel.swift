@@ -20,40 +20,25 @@ public final class VoiceNoteViewModel {
 
     // MARK: - UseCases
 
-    private let audioToSummaryUseCase: any AudioToSummaryUseCase
-    private let updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase
-    private let fetchLanguageUseCase: any FetchLanguageUseCase
-    private let fetchFolderUseCase: any FetchFolderUseCase
-    private let prepareVoiceRecordPlaybackUseCase: any PrepareVoiceRecordPlaybackUseCase
-    private let playVoiceRecordUseCase: any PlayVoiceRecordUseCase
-    private let pauseVoiceRecordPlaybackUseCase: any PauseVoiceRecordPlaybackUseCase
-    private let seekVoiceRecordPlaybackUseCase: any SeekVoiceRecordPlaybackUseCase
-    private let stopVoiceRecordPlaybackUseCase: any StopVoiceRecordPlaybackUseCase
+    private let voiceNoteUseCase: any VoiceNoteUseCase
+    private let folderUseCase: any FolderUseCase
+    private let languageRepository: any LanguageRepository
+    private let playbackRepository: any VoiceRecordPlaybackRepository
 
     // MARK: - Init
 
     public init(
         voiceNote: VoiceNote,
-        audioToSummaryUseCase: any AudioToSummaryUseCase,
-        updateVoiceNoteUseCase: any UpdateVoiceNoteUseCase,
-        fetchLanguageUseCase: any FetchLanguageUseCase,
-        fetchFolderUseCase: any FetchFolderUseCase,
-        prepareVoiceRecordPlaybackUseCase: any PrepareVoiceRecordPlaybackUseCase,
-        playVoiceRecordUseCase: any PlayVoiceRecordUseCase,
-        pauseVoiceRecordPlaybackUseCase: any PauseVoiceRecordPlaybackUseCase,
-        seekVoiceRecordPlaybackUseCase: any SeekVoiceRecordPlaybackUseCase,
-        stopVoiceRecordPlaybackUseCase: any StopVoiceRecordPlaybackUseCase
+        voiceNoteUseCase: any VoiceNoteUseCase,
+        folderUseCase: any FolderUseCase,
+        languageRepository: any LanguageRepository,
+        playbackRepository: any VoiceRecordPlaybackRepository
     ) {
         state = State(voiceNote: voiceNote)
-        self.audioToSummaryUseCase = audioToSummaryUseCase
-        self.updateVoiceNoteUseCase = updateVoiceNoteUseCase
-        self.fetchLanguageUseCase = fetchLanguageUseCase
-        self.fetchFolderUseCase = fetchFolderUseCase
-        self.prepareVoiceRecordPlaybackUseCase = prepareVoiceRecordPlaybackUseCase
-        self.playVoiceRecordUseCase = playVoiceRecordUseCase
-        self.pauseVoiceRecordPlaybackUseCase = pauseVoiceRecordPlaybackUseCase
-        self.seekVoiceRecordPlaybackUseCase = seekVoiceRecordPlaybackUseCase
-        self.stopVoiceRecordPlaybackUseCase = stopVoiceRecordPlaybackUseCase
+        self.voiceNoteUseCase = voiceNoteUseCase
+        self.folderUseCase = folderUseCase
+        self.languageRepository = languageRepository
+        self.playbackRepository = playbackRepository
     }
 
     deinit {
@@ -141,7 +126,7 @@ public final class VoiceNoteViewModel {
 
     private func fetchFolderName() async {
         do {
-            let folderName = try await fetchFolderUseCase.fetch(by: state.voiceNote.folderID).name
+            let folderName = try await folderUseCase.fetch(by: state.voiceNote.folderID).name
             send(.internal(.metadataLoaded(folderName: folderName)))
         } catch {
             AppLogger.error(error)
@@ -150,8 +135,8 @@ public final class VoiceNoteViewModel {
 
     private func performNewAnalysis() async {
         do {
-            let language = try await fetchLanguageUseCase.execute()
-            let result = try await audioToSummaryUseCase.execute(
+            let language = languageRepository.fetchLanguage()
+            let result = try await voiceNoteUseCase.summarize(
                 audioFilePath: state.voiceNote.voiceRecord.audioFilePath,
                 language: language
             )
@@ -168,7 +153,7 @@ public final class VoiceNoteViewModel {
             )
 
             // 분석 결과 반영 (폴더명은 metadataLoaded 액션이 별도로 담당)
-            let finalNote = try await updateVoiceNoteUseCase.execute(updated)
+            let finalNote = try await voiceNoteUseCase.update(updated)
             send(.internal(.analysisCompleted(note: finalNote)))
         } catch {
             send(.internal(.analysisFailed(error.localizedDescription)))
@@ -179,7 +164,7 @@ public final class VoiceNoteViewModel {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
         do {
-            let stream = try prepareVoiceRecordPlaybackUseCase.execute(
+            let stream = try playbackRepository.prepare(
                 audioFilePath: state.voiceNote.voiceRecord.audioFilePath
             )
             playbackObservationTask = Task {
@@ -196,7 +181,7 @@ public final class VoiceNoteViewModel {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
         do {
-            try stopVoiceRecordPlaybackUseCase.execute()
+            try playbackRepository.stop()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
@@ -204,7 +189,7 @@ public final class VoiceNoteViewModel {
 
     private func play() {
         do {
-            try playVoiceRecordUseCase.execute()
+            try playbackRepository.play()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
@@ -212,7 +197,7 @@ public final class VoiceNoteViewModel {
 
     private func pause() {
         do {
-            try pauseVoiceRecordPlaybackUseCase.execute()
+            try playbackRepository.pause()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
@@ -220,7 +205,7 @@ public final class VoiceNoteViewModel {
 
     private func seek(to time: TimeInterval) {
         do {
-            try seekVoiceRecordPlaybackUseCase.execute(time: time)
+            try playbackRepository.seek(to: time)
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }

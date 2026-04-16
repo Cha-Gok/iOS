@@ -19,24 +19,21 @@ public final class FolderViewModel {
 
     public weak var coordinator: FolderCoordinatorDelegate?
 
-    // MARK: - UseCase
+    // MARK: - Dependencies
 
-    private let createUseCase: CreateFolderUseCase
-    private let updateUseCase: UpdateFolderUseCase
-    private let moveToTrashUseCase: MoveWasteBasketUseCase
+    private let folderUseCase: any FolderUseCase
+    private let wasteBasketRepository: WasteBasketRepository
 
     // MARK: - Initialize
 
     public init(
         category: CategoryToggle,
-        createUseCase: CreateFolderUseCase,
-        updateUseCase: UpdateFolderUseCase,
-        moveToTrashUseCase: MoveWasteBasketUseCase
+        folderUseCase: any FolderUseCase,
+        wasteBasketRepository: WasteBasketRepository
     ) {
         self.category = category
-        self.createUseCase = createUseCase
-        self.updateUseCase = updateUseCase
-        self.moveToTrashUseCase = moveToTrashUseCase
+        self.folderUseCase = folderUseCase
+        self.wasteBasketRepository = wasteBasketRepository
     }
 }
 
@@ -78,7 +75,7 @@ extension FolderViewModel {
         closeTextFieldView()
         Task {
             do {
-                let folder = try await createUseCase.execute(name: name)
+                let folder = try await folderUseCase.create(name: name)
                 category.items.insert(.folder(folder), at: 0)
             } catch {
                 AppLogger.error(error)
@@ -102,7 +99,7 @@ extension FolderViewModel {
 
         Task {
             do {
-                let updated = try await updateUseCase.execute(updatedFolder)
+                let updated = try await folderUseCase.update(updatedFolder)
                 if let index = category.items.firstIndex(where: {
                     if case .folder(let folder) = $0 {
                         return folder.id == updated.id
@@ -120,7 +117,7 @@ extension FolderViewModel {
     func move(folder: Folder) {
         Task {
             do {
-                try await moveToTrashUseCase.execute(method: .single(item: .folder(obj: folder)))
+                try await wasteBasketRepository.moveToWasteBasket(item: .folder(obj: folder))
                 category.items.removeAll {
                     if case .folder(let obj) = $0 { return obj.id == folder.id }
                     return false

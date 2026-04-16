@@ -27,20 +27,14 @@ public final class TrashViewModel {
 
     // MARK: - UseCase
 
-    private let fetchUseCase: FetchWasteBasketFolderUseCase
-    private let deleteUseCase: DeleteWasteBasketUseCase
-    private let restoreUseCase: RestoreWasteBasketUseCase
+    private let repository: WasteBasketRepository
 
     // MARK: - Initialize
 
     public init(
-        fetchUseCase: FetchWasteBasketFolderUseCase,
-        deleteUseCase: DeleteWasteBasketUseCase,
-        restoreUseCase: RestoreWasteBasketUseCase
+        repository: WasteBasketRepository
     ) {
-        self.fetchUseCase = fetchUseCase
-        self.deleteUseCase = deleteUseCase
-        self.restoreUseCase = restoreUseCase
+        self.repository = repository
         sortItems()
     }
 }
@@ -105,7 +99,7 @@ extension TrashViewModel {
     func fetchItems() {
         Task {
             do {
-                let wasteBaskets: [WasteBasketItem] = try await fetchUseCase.execute()
+                let wasteBaskets: [WasteBasketItem] = try await repository.fetchAll()
                 self.items = wasteBaskets.map(\.toLibraryItem)
             } catch {
                 AppLogger.error(error)
@@ -121,7 +115,7 @@ extension TrashViewModel {
     func deleteAll() {
         Task {
             do {
-                try await deleteUseCase.execute(method: .all)
+                try await repository.allClear()
                 items.removeAll()
             } catch {
                 AppLogger.error(error)
@@ -133,7 +127,7 @@ extension TrashViewModel {
     func delete(item: WasteBasketItem) {
         Task {
             do {
-                try await deleteUseCase.execute(method: .single(item: item))
+                try await repository.delete(item: item)
                 items.removeAll { $0.id == item.id }
             } catch {
                 AppLogger.error(error)
@@ -145,7 +139,7 @@ extension TrashViewModel {
     private func delete(items deleteItems: [WasteBasketItem]) {
         Task {
             do {
-                try await deleteUseCase.execute(method: .multiple(items: deleteItems))
+                try await repository.deleteAll(items: deleteItems)
                 let deleteIDs = Set(deleteItems.map(\.id))
                 items.removeAll { deleteIDs.contains($0.id) }
             } catch {
@@ -162,7 +156,7 @@ extension TrashViewModel {
     func restore(item: WasteBasketItem) {
         Task {
             do {
-                try await restoreUseCase.execute(method: .single(item: item))
+                try await repository.restore(item: item)
                 items.removeAll { $0.id == item.id }
             } catch {
                 AppLogger.error(error)
@@ -174,7 +168,7 @@ extension TrashViewModel {
     func restore(items restoreItems: [WasteBasketItem]) {
         Task {
             do {
-                try await restoreUseCase.execute(method: .multiple(items: restoreItems))
+                try await repository.restoreAll(items: restoreItems)
                 let restoreIDs = Set(restoreItems.map(\.id))
                 items.removeAll { restoreIDs.contains($0.id) }
             } catch {

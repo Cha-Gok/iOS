@@ -28,165 +28,79 @@ public final class AppDIContainer {
     )
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
-    private lazy var voiceNoteCreateRepository = DefaultVoiceNoteCreateRepository(store: localDataBase)
-    private lazy var voiceNoteFetchRepository = DefaultVoiceNoteFetchRepository(store: localDataBase)
-    private lazy var voiceNoteUpdateRepository = DefaultVoiceNoteUpdateRepository(store: localDataBase)
+    private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(store: localDataBase)
     private lazy var wasteBasketRepository = DefaultWasteBasketRepository(store: localDataBase)
     private lazy var sttRepository = DefaultSTTRepository(service: SpeechService(), storageService: storageService)
     private lazy var summaryRepository = DefaultSummaryRepository(service: AppleFoundationSummaryService())
 
     /// UseCase
-    private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(
-        repository: languageRepository
-    )
-    private lazy var checkMicrophonePermissionUseCase =
-        DefaultCheckMicrophonePermissionUseCase(repository: voiceRecordRepository)
-    private lazy var requestMicrophonePermissionUseCase =
-        DefaultRequestMicrophonePermissionUseCase(repository: voiceRecordRepository)
-    private lazy var checkFirstLaunchUseCase = DefaultCheckFirstLaunchUseCase(
-        repository: checkFirstLaunchRepository
-    )
-    private lazy var completeFirstLaunchUseCase = DefaultCompleteFirstLaunchUseCase(
-        repository: checkFirstLaunchRepository
-    )
-    private lazy var createFolderUseCase = DefaultCreateFolderUseCase(repository: folderRepository)
-    private lazy var fetchFolderUseCase = DefaultFetchFolderUseCase(repository: folderRepository)
-    private lazy var updateFolderUseCase = DefaultUpdateFolderUseCase(repository: folderRepository)
-    private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(
-        repository: folderRepository
-    )
-    private lazy var createVoiceNoteUseCase = DefaultCreateVoiceNoteUseCase(
-        repository: voiceNoteCreateRepository
-    )
-    private lazy var fetchVoiceNoteUseCase = DefaultFetchVoiceNoteUseCase(
-        repository: voiceNoteFetchRepository
-    )
-    private lazy var fetchRecentVoiceNoteUseCase = DefaultFetchRecentVoiceNoteUseCase(
-        repository: voiceNoteFetchRepository
-    )
-    private lazy var fetchWasteBasketUseCase = DefaultFetchWasteBasketFolderUseCase(
-        repository: wasteBasketRepository
-    )
-    private lazy var deleteWasteBasketUseCase = DefaultDeleteWasteBasketUseCase(
-        repository: wasteBasketRepository
-    )
-    private lazy var moveWasteBasketUseCase = DefaultMoveWasteBasketUseCase(
-        repository: wasteBasketRepository
-    )
-    private lazy var restoreWasteBasketUseCase = DefaultRestoreWasteBasketUseCase(
-        repository: wasteBasketRepository
-    )
-    private lazy var fetchLanguageUseCase = DefaultFetchLanguageUseCase(repository: languageRepository)
-    private lazy var updateVoiceNoteUseCase = DefaultUpdateVoiceNoteUseCase(repository: voiceNoteUpdateRepository)
-    private lazy var audioToSummaryUseCase = DefaultAudioToSummaryUseCase(
+    private lazy var folderUseCase = DefaultFolderUseCase(repository: folderRepository)
+    private lazy var voiceNoteUseCase = DefaultVoiceNoteUseCase(
+        repository: voiceNoteRepository,
         sttRepository: sttRepository,
         summaryRepository: summaryRepository
     )
-    private lazy var prepareVoiceRecordPlaybackUseCase = DefaultPrepareVoiceRecordPlaybackUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
-    private lazy var playVoiceRecordUseCase = DefaultPlayVoiceRecordUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
-    private lazy var pauseVoiceRecordPlaybackUseCase = DefaultPauseVoiceRecordPlaybackUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
-    private lazy var seekVoiceRecordPlaybackUseCase = DefaultSeekVoiceRecordPlaybackUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
-    private lazy var stopVoiceRecordPlaybackUseCase = DefaultStopVoiceRecordPlaybackUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
-
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
     }
 
-    // MARK: - UseCase
+    // MARK: - Repository
 
-    func makeCheckFirstLaunchUseCase() -> CheckFirstLaunchUseCase {
-        checkFirstLaunchUseCase
+    func makeCheckFirstLaunchRepository() -> CheckFirstLaunchRepository {
+        checkFirstLaunchRepository
     }
 
-    func makeCheckMicrophonePermissionUseCase() -> CheckMicrophonePermissionUseCase {
-        checkMicrophonePermissionUseCase
-    }
-
-    func makeRequestMicrophonePermissionUseCase() -> RequestMicrophonePermissionUseCase {
-        requestMicrophonePermissionUseCase
+    func makeVoiceRecordRepository() -> VoiceRecordRepository {
+        voiceRecordRepository
     }
 
     // MARK: - ViewModel
 
     public func makeOnBoardingViewModel() -> OnBoardingViewModel {
         OnBoardingViewModel(
-            selectLanguageUseCase: selectLanguageUseCase,
-            checkMicrophonePermissionUseCase: checkMicrophonePermissionUseCase,
-            requestMicrophonePermissionUseCase: requestMicrophonePermissionUseCase,
-            completeFirstLaunchUseCase: completeFirstLaunchUseCase,
-            createDefaultFolderUseCase: createDefaultFolderUseCase
+            languageRepository: languageRepository,
+            voiceRecordRepository: voiceRecordRepository,
+            checkFirstLaunchRepository: checkFirstLaunchRepository,
+            folderUseCase: folderUseCase
         )
     }
 
     public func makeRecordingViewModel() -> RecordingViewModel {
         RecordingViewModel(
-            startRecordingUseCase: DefaultStartRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
-            pauseRecordingUseCase: DefaultPauseRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
-            resumeRecordingUseCase: DefaultResumeRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
-            finishRecordingUseCase: DefaultFinishRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
-            cancelRecordingUseCase: DefaultCancelRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
-            createVoiceNoteUseCase: createVoiceNoteUseCase
+            repository: voiceRecordRepository,
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 
     public func makeVoiceNoteViewModel(voiceNote: VoiceNote) -> VoiceNoteViewModel {
         VoiceNoteViewModel(
             voiceNote: voiceNote,
-            audioToSummaryUseCase: audioToSummaryUseCase,
-            updateVoiceNoteUseCase: updateVoiceNoteUseCase,
-            fetchLanguageUseCase: fetchLanguageUseCase,
-            fetchFolderUseCase: fetchFolderUseCase,
-            prepareVoiceRecordPlaybackUseCase: prepareVoiceRecordPlaybackUseCase,
-            playVoiceRecordUseCase: playVoiceRecordUseCase,
-            pauseVoiceRecordPlaybackUseCase: pauseVoiceRecordPlaybackUseCase,
-            seekVoiceRecordPlaybackUseCase: seekVoiceRecordPlaybackUseCase,
-            stopVoiceRecordPlaybackUseCase: stopVoiceRecordPlaybackUseCase
+            voiceNoteUseCase: voiceNoteUseCase,
+            folderUseCase: folderUseCase,
+            languageRepository: languageRepository,
+            playbackRepository: voiceRecordPlaybackRepository
         )
     }
 
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
-            fetchRecentVoiceNoteUseCase: fetchRecentVoiceNoteUseCase,
-            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase,
-            fetchFolderUseCase: fetchFolderUseCase,
-            fetchTrashUseCase: fetchWasteBasketUseCase
+            voiceNoteUseCase: voiceNoteUseCase,
+            folderUseCase: folderUseCase,
+            wasteBasketRepository: wasteBasketRepository
         )
     }
 
     public func makeTrashViewModel() -> TrashViewModel {
         return TrashViewModel(
-            fetchUseCase: fetchWasteBasketUseCase,
-            deleteUseCase: deleteWasteBasketUseCase,
-            restoreUseCase: restoreWasteBasketUseCase
+            repository: wasteBasketRepository
         )
     }
 
     public func makeMyFolderViewModel(_ category: CategoryToggle) -> FolderViewModel {
         return FolderViewModel(
             category: category,
-            createUseCase: createFolderUseCase,
-            updateUseCase: updateFolderUseCase,
-            moveToTrashUseCase: moveWasteBasketUseCase
+            folderUseCase: folderUseCase,
+            wasteBasketRepository: wasteBasketRepository
         )
     }
 
@@ -194,19 +108,19 @@ public final class AppDIContainer {
         return FolderDetailViewModel(
             title: folder.name,
             folderID: folder.id,
-            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 
     public func makeMoveFolderListViewModel(voiceNote: VoiceNote) -> MoveFolderListViewModel {
         return MoveFolderListViewModel(
             voiceNote: voiceNote,
-            fetchFolderUseCase: fetchFolderUseCase,
-            updateVoiceNoteUseCase: updateVoiceNoteUseCase
+            folderUseCase: folderUseCase,
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 
     public func makeNewFolderViewModel() -> NewFolderViewModel {
-        return NewFolderViewModel(createFolderUseCase: createFolderUseCase)
+        return NewFolderViewModel(folderUseCase: folderUseCase)
     }
 }

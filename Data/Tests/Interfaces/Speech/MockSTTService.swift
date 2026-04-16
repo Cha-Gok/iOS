@@ -4,17 +4,17 @@ import XCTest
 
 actor MockSTTService: STTService {
     private var transcribeResult: Result<STTResult, STTServiceError>?
-    private var checkResult: PermissionStatus?
+    private nonisolated(unsafe) var checkResult: PermissionStatus?
     private var requestResult: PermissionStatus?
 
     private var actualTranscribeCallCount = 0
     private var actualTranscribeAudioFileURL: URL?
-    private var actualCheckCallCount = 0
+    private nonisolated(unsafe) var actualCheckCallCount = 0
     private var actualRequestCallCount = 0
 
     private var expectedTranscribeCallCount: Int?
     private var expectedTranscribeAudioFileURL: URL?
-    private var expectedCheckCallCount: Int?
+    private nonisolated(unsafe) var expectedCheckCallCount: Int?
     private var expectedRequestCallCount: Int?
 
     func setResult(_ result: Result<STTResult, STTServiceError>) {
@@ -81,7 +81,7 @@ actor MockSTTService: STTService {
         }
     }
 
-    func checkPermission() async -> PermissionStatus {
+    nonisolated func checkPermission() -> PermissionStatus {
         guard let checkResult else {
             XCTFail("checkResult이 설정되지 않았습니다. setCheckResult()를 먼저 호출하세요.")
             return .notDetermined

@@ -48,24 +48,21 @@ public final class MainViewModel {
 
     // MARK: - UseCase
 
-    let fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase
-    let fetchVoiceNoteUseCase: FetchVoiceNoteUseCase
-    let fetchFolderUseCase: FetchFolderUseCase
-    let fetchTrashUseCase: FetchWasteBasketFolderUseCase
+    let voiceNoteUseCase: any VoiceNoteUseCase
+    let folderUseCase: any FolderUseCase
+    let wasteBasketRepository: any WasteBasketRepository
 
     // TODO: 화면 전환
     public weak var mainCoordinator: MainCoordinatorDelegate?
 
     public init(
-        fetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase,
-        fetchVoiceNoteUseCase: FetchVoiceNoteUseCase,
-        fetchFolderUseCase: FetchFolderUseCase,
-        fetchTrashUseCase: FetchWasteBasketFolderUseCase
+        voiceNoteUseCase: any VoiceNoteUseCase,
+        folderUseCase: any FolderUseCase,
+        wasteBasketRepository: any WasteBasketRepository
     ) {
-        self.fetchRecentVoiceNoteUseCase = fetchRecentVoiceNoteUseCase
-        self.fetchVoiceNoteUseCase = fetchVoiceNoteUseCase
-        self.fetchFolderUseCase = fetchFolderUseCase
-        self.fetchTrashUseCase = fetchTrashUseCase
+        self.voiceNoteUseCase = voiceNoteUseCase
+        self.folderUseCase = folderUseCase
+        self.wasteBasketRepository = wasteBasketRepository
     }
 }
 
@@ -117,7 +114,8 @@ extension MainViewModel {
     func updateRecentCategory() {
         Task {
             do {
-                let voiceNotes: [VoiceNote] = try await fetchRecentVoiceNoteUseCase.execute()
+                let voiceNotes: [VoiceNote] = try await voiceNoteUseCase
+                    .fetchRecent(limit: Policy.recentVoiceNoteLimit)
                 let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
                 categoryData[0].items = items
             } catch {
@@ -131,7 +129,7 @@ extension MainViewModel {
     func updateVoiceNoteCategory() {
         Task {
             do {
-                let voiceNotes: [VoiceNote] = try await fetchVoiceNoteUseCase.execute()
+                let voiceNotes: [VoiceNote] = try await voiceNoteUseCase.fetchAllFromDefaultFolder()
                 let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
                 categoryData[1].items = items
             } catch {
@@ -145,7 +143,7 @@ extension MainViewModel {
     func updateMyFolderCategory() {
         Task {
             do {
-                let folders: [Folder] = try await fetchFolderUseCase.fetchDeletableFolders()
+                let folders: [Folder] = try await folderUseCase.fetchDeletableFolders()
                 let items: [LibraryItem] = folders.map { folder in
                     LibraryItem.folder(folder)
                 }
@@ -161,7 +159,7 @@ extension MainViewModel {
     func updateTrashCategory() {
         Task {
             do {
-                let wasteBasket: [WasteBasketItem] = try await fetchTrashUseCase.execute()
+                let wasteBasket: [WasteBasketItem] = try await wasteBasketRepository.fetchAll()
                 let items: [LibraryItem] = wasteBasket.map(\.toLibraryItem)
                 categoryData[3].items = items
             } catch {
@@ -177,10 +175,12 @@ extension MainViewModel {
         static func preview(selectedCategoryIndex: Int = 0) -> MainViewModel {
             let previewData = PreviewData.make()
             let viewModel = MainViewModel(
-                fetchRecentVoiceNoteUseCase: PreviewFetchRecentVoiceNoteUseCase(items: previewData.recentVoiceNotes),
-                fetchVoiceNoteUseCase: PreviewFetchVoiceNoteUseCase(items: previewData.defaultVoiceNotes),
-                fetchFolderUseCase: PreviewFetchFolderUseCase(items: previewData.folders),
-                fetchTrashUseCase: PreviewFetchWasteBasketFolderUseCase(items: previewData.wasteBasketItems)
+                voiceNoteUseCase: PreviewVoiceNoteUseCase(
+                    recentItems: previewData.recentVoiceNotes,
+                    defaultItems: previewData.defaultVoiceNotes
+                ),
+                folderUseCase: PreviewFolderUseCase(items: previewData.folders),
+                wasteBasketRepository: PreviewWasteBasketRepository(items: previewData.wasteBasketItems)
             )
 
             viewModel.categoryData[0].items = previewData.recentVoiceNotes.map(LibraryItem.voiceNote)
@@ -310,58 +310,88 @@ extension MainViewModel {
             }
         }
 
-        struct PreviewFetchRecentVoiceNoteUseCase: FetchRecentVoiceNoteUseCase {
-            let items: [VoiceNote]
+        struct PreviewVoiceNoteUseCase: VoiceNoteUseCase {
+            let recentItems: [VoiceNote]
+            let defaultItems: [VoiceNote]
 
-            func execute() async throws(FetchRecentVoiceNoteUseCaseError) -> [VoiceNote] {
-                items
-            }
-        }
-
-        struct PreviewFetchVoiceNoteUseCase: FetchVoiceNoteUseCase {
-            let items: [VoiceNote]
-
-            func execute() async throws(FetchVoiceNoteUseCaseError) -> [VoiceNote] {
-                items
+            func create(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+                defaultItems[0]
             }
 
-            func execute(folderID: UUID) async throws(FetchVoiceNoteUseCaseError) -> [VoiceNote] {
-                items.filter { $0.folderID == folderID }
+            func fetchAllFromDefaultFolder() async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+                defaultItems
             }
 
-            func execute(byId id: UUID) async throws(FetchVoiceNoteUseCaseError) -> VoiceNote {
-                guard let item = items.first(where: { $0.id == id }) else {
-                    throw .recordNotFound(id: id)
+            func fetchRecent(limit: Int) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+                Array(recentItems.prefix(limit))
+            }
+
+            func fetchAll(folderID: UUID) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+                defaultItems.filter { $0.folderID == folderID }
+            }
+
+            func fetch(byId id: UUID) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+                guard let item = defaultItems.first(where: { $0.id == id }) else {
+                    throw .recordNotFound(id)
                 }
                 return item
             }
+
+            func update(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+                voiceNote
+            }
+
+            func summarize(
+                audioFilePath: String,
+                language: Language
+            ) async throws(VoiceNoteUseCaseError) -> AudioToSummaryResult {
+                AudioToSummaryResult(transcript: Transcript(text: ""), keywords: [], summary: Summary(text: ""))
+            }
         }
 
-        struct PreviewFetchFolderUseCase: FetchFolderUseCase {
+        struct PreviewFolderUseCase: FolderUseCase {
             let items: [Folder]
 
-            func fetchAll() async throws(FetchFolderUseCaseError) -> [Folder] {
+            func create(name: String) async throws(FolderUseCaseError) -> Folder {
+                items[0]
+            }
+
+            func createDefault() async throws(FolderUseCaseError) -> Folder {
+                items[0]
+            }
+
+            func fetchAll() async throws(FolderUseCaseError) -> [Folder] {
                 items
             }
 
-            func fetchDeletableFolders() async throws(FetchFolderUseCaseError) -> [Folder] {
+            func fetchDeletableFolders() async throws(FolderUseCaseError) -> [Folder] {
                 items.filter(\.isDeletable)
             }
 
-            func fetch(by id: UUID) async throws(FetchFolderUseCaseError) -> Folder {
-                guard let item = items.first(where: { $0.id == id }) else {
-                    throw .notFound
-                }
+            func fetch(by id: UUID) async throws(FolderUseCaseError) -> Folder {
+                guard let item = items.first(where: { $0.id == id }) else { throw .notFound }
                 return item
+            }
+
+            func update(_ folder: Folder) async throws(FolderUseCaseError) -> Folder {
+                folder
             }
         }
 
-        struct PreviewFetchWasteBasketFolderUseCase: FetchWasteBasketFolderUseCase {
+        struct PreviewWasteBasketRepository: WasteBasketRepository {
             let items: [WasteBasketItem]
 
-            func execute() async throws(FetchWasteBasketFolderUseCaseError) -> [WasteBasketItem] {
+            func fetchAll() async throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
                 items
             }
+
+            func allClear() async throws(DeleteWasteBasketRepositoryError) {}
+            func delete(item: WasteBasketItem) async throws(DeleteWasteBasketRepositoryError) {}
+            func deleteAll(items: [WasteBasketItem]) async throws(DeleteWasteBasketRepositoryError) {}
+            func moveToWasteBasket(item: WasteBasketItem) async throws(MoveWasteBasketRepositoryError) {}
+            func moveAllToWasteBasket(items: [WasteBasketItem]) async throws(MoveWasteBasketRepositoryError) {}
+            func restore(item: WasteBasketItem) async throws(RestoreWasteBasketRepositoryError) {}
+            func restoreAll(items: [WasteBasketItem]) async throws(RestoreWasteBasketRepositoryError) {}
         }
     }
 #endif
