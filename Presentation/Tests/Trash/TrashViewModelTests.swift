@@ -118,10 +118,10 @@ final class TrashViewModelTests: XCTestCase {
 
     // MARK: - Update & Fetch Tests
 
-    func test_fetchItems_정상적으로_가져오기() async throws {
+    func test_fetchItems_정상적으로_가져오기() async {
         // Given
         let sut = makeSUT()
-        let fetchResult: [WasteBasketItem] = try [
+        let fetchResult: [WasteBasketItem] = [
             .folder(obj: Folder(name: "테스트 폴더")),
             .voiceNote(obj: VoiceNote(
                 title: "테스트 노트",
