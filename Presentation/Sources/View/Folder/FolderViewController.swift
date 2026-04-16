@@ -1,17 +1,19 @@
 import Domain
 import Observation
-import UIKit
 import SwiftUI
+import UIKit
 
 public final class FolderViewController: CollectionViewController {
     enum Section {
         case main
     }
+
     typealias DataSource = UICollectionViewDiffableDataSource<Section, LibraryItem>
     typealias SnapShot = NSDiffableDataSourceSnapshot<Section, LibraryItem>
     private let vm: FolderViewModel
     private var dataSource: DataSource!
     private var listConfiguration: UICollectionLayoutListConfiguration = .init(appearance: .plain)
+
     // MARK: - Component
 
     private lazy var backButton: UIButton = {
@@ -33,16 +35,17 @@ public final class FolderViewController: CollectionViewController {
         btn.tintColor = UIColor.gray950
         return btn
     }()
-    
+
     private var cancelButton: GlassButton = .close("취소")
     private var primaryButton: GlassButton = .primary("만들기")
-    
+
     private lazy var textField = TextFieldView(
         field: .init(
             mode: .create,
             title: "새 폴더",
             subTitle: "새로 만들 폴더의 이름을\n입력해주세요.",
-            placeHolder: "폴더 이름을 적어주세요"),
+            placeHolder: "폴더 이름을 적어주세요"
+        ),
         cancelButton: cancelButton,
         primaryButton: primaryButton
     )
@@ -97,19 +100,19 @@ public final class FolderViewController: CollectionViewController {
         let containerGuide = UILayoutGuide()
         view.addLayoutGuide(containerGuide)
         view.addSubview(textField)
-        
+
         NSLayoutConstraint.activate([
             containerGuide.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             containerGuide.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             containerGuide.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            containerGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),            
+            containerGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
             textField.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
             textField.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.35),
             textField.centerXAnchor.constraint(equalTo: containerGuide.centerXAnchor),
             textField.centerYAnchor.constraint(equalTo: containerGuide.centerYAnchor)
         ])
     }
-    
+
     private func setupNavigationBar() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
@@ -132,17 +135,17 @@ public final class FolderViewController: CollectionViewController {
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         navigationItem.rightBarButtonItem?.hidesSharedBackground = true
     }
-    
+
     /// 오른쪽 Swipe 액션을 제어하는 함수
     private func setupSwipeAction() {
         listConfiguration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
             self?.trailingAction(indexPath: indexPath)
         }
-        
+
         // List 레이아웃을 사용하되, 섹션 설정을 통해 간격을 조정합니다.
         let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, layoutEnvironment in
             guard let self else { return nil }
-            let config = self.listConfiguration
+            let config = listConfiguration
             // 개별 셀의 높이가 카드에 딱 맞게 설정되도록 여백 제거
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: layoutEnvironment)
             section.interGroupSpacing = 8
@@ -151,7 +154,7 @@ public final class FolderViewController: CollectionViewController {
         }
         collectionView.setCollectionViewLayout(layout, animated: false)
     }
-    
+
     private func setupButtons() {
         cancelButton.addAction(
             UIAction { [weak self] _ in
@@ -161,7 +164,7 @@ public final class FolderViewController: CollectionViewController {
             },
             for: .touchUpInside
         )
-        
+
         primaryButton.addAction(
             UIAction { [weak self] _ in
                 guard let self else { return }
@@ -175,7 +178,6 @@ public final class FolderViewController: CollectionViewController {
                     vm.update(name: name)
                 }
                 textField.field.text = ""
-                vm.closeTextField()
             },
             for: .touchUpInside
         )
@@ -205,25 +207,32 @@ public final class FolderViewController: CollectionViewController {
 
 extension FolderViewController {
     private func setupDataSource() {
-        let cellRegistraint = UICollectionView.CellRegistration<UICollectionViewCell, LibraryItem> { cell, indexPath, item in
-            cell.backgroundConfiguration = .clear()
-            cell.contentConfiguration = UIHostingConfiguration {
-                switch item {
-                case .folder(let data):
-                    FolderCardView(
-                        name: data.name,
-                        totalCount: data.content.count
-                    )
-                case .voiceNote(let data):
-                    VoiceNoteCardView(title: data.title, subTitle: Date.now.voiceNoteDay(createdAt: data.createdAt, updatedAt: data.updatedAt, duration: data.voiceRecord.duration))
+        let cellRegistraint = UICollectionView
+            .CellRegistration<UICollectionViewCell, LibraryItem> { cell, indexPath, item in
+                cell.backgroundConfiguration = .clear()
+                cell.contentConfiguration = UIHostingConfiguration {
+                    switch item {
+                    case .folder(let data):
+                        FolderCardView(
+                            name: data.name,
+                            totalCount: data.content.count
+                        )
+                    case .voiceNote(let data):
+                        VoiceNoteCardView(
+                            title: data.title,
+                            subTitle: Date.now.voiceNoteDay(
+                                createdAt: data.createdAt,
+                                updatedAt: data.updatedAt,
+                                duration: data.voiceRecord.duration
+                            )
+                        )
+                    }
                 }
+                .margins(.all, 0)
             }
-            .margins(.all, 0)
-        }
-            
 
         dataSource = DataSource(
-            collectionView: collectionView, 
+            collectionView: collectionView,
             cellProvider: { col, indexPath, item in
                 return col.dequeueConfiguredReusableCell(using: cellRegistraint, for: indexPath, item: item)
             }
@@ -239,17 +248,11 @@ extension FolderViewController {
     }
 }
 
-// MARK: - TextField Alert Animation
-
-extension FolderViewController {
-    
-}
-
 // MARK: - Swipe Action Delegate
 
 public extension FolderViewController {
     private func trailingAction(indexPath: IndexPath) -> UISwipeActionsConfiguration {
-        guard let item = self.dataSource.itemIdentifier(for: indexPath) else { return .init() }
+        guard let item = dataSource.itemIdentifier(for: indexPath) else { return .init() }
 
         let deleteAction = UIContextualAction(style: .destructive, title: "삭제") {
             [weak self] _, _, completion in

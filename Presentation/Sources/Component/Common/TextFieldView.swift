@@ -2,13 +2,15 @@ import UIKit
 
 final class TextFieldView: UIView {
     // MARK: - Properties
+
     var field: Field
-    
+
     // 키보드 상태 변화를 알리기 위한 콜백
     var onEditingDidBegin: (() -> Void)?
     var onEditingDidEnd: (() -> Void)?
 
     // MARK: - Componenet
+
     private let container: UIStackView = {
         let c = UIStackView()
         c.translatesAutoresizingMaskIntoConstraints = false
@@ -16,7 +18,7 @@ final class TextFieldView: UIView {
         c.spacing = 12
         return c
     }()
-    
+
     private lazy var titleLabel: UILabel = {
         let t = UILabel()
         t.translatesAutoresizingMaskIntoConstraints = false
@@ -24,7 +26,7 @@ final class TextFieldView: UIView {
         t.textColor = .gray950
         return t
     }()
-    
+
     private lazy var subTitleLabel: UILabel = {
         let t = UILabel()
         t.translatesAutoresizingMaskIntoConstraints = false
@@ -33,7 +35,7 @@ final class TextFieldView: UIView {
         t.numberOfLines = 0
         return t
     }()
-    
+
     private lazy var textField: UITextField = {
         let tf = UITextField()
         tf.translatesAutoresizingMaskIntoConstraints = false
@@ -66,7 +68,7 @@ final class TextFieldView: UIView {
         label.numberOfLines = 0
         return label
     }()
-    
+
     private let bottomContainer: UIStackView = {
         let c = UIStackView()
         c.translatesAutoresizingMaskIntoConstraints = false
@@ -75,11 +77,12 @@ final class TextFieldView: UIView {
 
         return c
     }()
-    
+
     private let cancelButton: GlassButton
     private let primaryButton: GlassButton
+
     // MARK: - Initialize
-    
+
     init(
         field: Field,
         cancelButton: GlassButton,
@@ -91,12 +94,13 @@ final class TextFieldView: UIView {
         super.init(frame: .zero)
         setup()
     }
-    
+
     required init?(coder: NSCoder) {
         nil
     }
-    
+
     // MARK: - LifeCycle
+
     override func layoutSubviews() {
         super.layoutSubviews()
         layer.shadowColor = UIColor.black.cgColor
@@ -109,7 +113,7 @@ final class TextFieldView: UIView {
                 cornerRadius: Constant.cornerRadius
             ).cgPath
     }
-    
+
     override func updateProperties() {
         super.updateProperties()
         titleLabel.setTypography(text: field.title, style: .title2, textAlignment: .center)
@@ -129,8 +133,9 @@ final class TextFieldView: UIView {
         primaryButton.isEnabled = field.isSubmitEnabled
         updatePlaceholderVisibility()
     }
-    
+
     // MARK: - Setup
+
     private func setup() {
         translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = .point200.withAlphaComponent(0.2)
@@ -140,7 +145,7 @@ final class TextFieldView: UIView {
         setupConstraint()
         setupStyle()
     }
-    
+
     private func setupConstraint() {
         bottomContainer.addArrangedSubview(cancelButton)
         bottomContainer.addArrangedSubview(primaryButton)
@@ -151,7 +156,7 @@ final class TextFieldView: UIView {
         container.addArrangedSubview(bottomContainer)
         addSubview(container)
         textField.addSubview(placeholderLabel)
-        
+
         NSLayoutConstraint.activate([
             container.topAnchor.constraint(equalTo: topAnchor, constant: 32),
             container.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
@@ -162,10 +167,10 @@ final class TextFieldView: UIView {
             placeholderLabel.leadingAnchor.constraint(equalTo: textField.leadingAnchor, constant: 12),
             placeholderLabel.trailingAnchor.constraint(lessThanOrEqualTo: textField.trailingAnchor, constant: -12),
             cancelButton.heightAnchor.constraint(equalToConstant: 46),
-            primaryButton.heightAnchor.constraint(equalToConstant: 46),
+            primaryButton.heightAnchor.constraint(equalToConstant: 46)
         ])
     }
-    
+
     private func setupStyle() {
         cancelButton.setShadow(true)
         cancelButton.setCapsuleCornerRadius()
@@ -185,8 +190,7 @@ final class TextFieldView: UIView {
     }
 }
 
-
-//MARK: - Observable 구조
+// MARK: - Observable 구조
 
 extension TextFieldView {
     @Observable
@@ -204,7 +208,7 @@ extension TextFieldView {
         var isSubmitEnabled: Bool {
             !trimmedText.isEmpty
         }
-        
+
         init(mode: Mode, title: String, subTitle: String, placeHolder: String, text: String = "") {
             self.mode = mode
             self.title = title

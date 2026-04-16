@@ -3,7 +3,7 @@ import SwiftUI
 struct FolderCardView: View {
     let name: String
     let totalCount: Int
-    
+
     var body: some View {
         HStack(spacing: 8) {
             Group {
@@ -12,8 +12,8 @@ struct FolderCardView: View {
                     .font(Font.custom("Pretendard", size: 16))
                 Spacer()
                 Text(String(totalCount))
-                  .font(Font.custom("Pretendard", size: 16))
-                  .multilineTextAlignment(.trailing)
+                    .font(Font.custom("Pretendard", size: 16))
+                    .multilineTextAlignment(.trailing)
             }
             .foregroundColor(.gray800)
         }

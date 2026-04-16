@@ -82,12 +82,14 @@ public extension UILabel {
     func setTypography(text: String? = nil, style typography: Typography, textAlignment: NSTextAlignment = .left) {
         let textToUse = text ?? self.text ?? ""
         var attributes = typography.textAttributes
-        
-        if let paragraphStyle = (attributes[.paragraphStyle] as? NSParagraphStyle)?.mutableCopy() as? NSMutableParagraphStyle {
+
+        if let paragraphStyle = (attributes[.paragraphStyle] as? NSParagraphStyle)?
+            .mutableCopy() as? NSMutableParagraphStyle
+        {
             paragraphStyle.alignment = textAlignment
             attributes[.paragraphStyle] = paragraphStyle
         }
-        
+
         attributedText = NSAttributedString(string: textToUse, attributes: attributes)
     }
 }

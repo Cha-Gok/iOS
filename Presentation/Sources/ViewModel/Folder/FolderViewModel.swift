@@ -45,17 +45,17 @@ extension FolderViewModel {
     private func setMode(_ mode: TextFieldView.Mode) {
         self.mode = mode
     }
-    
+
     func openTextField(for folder: Folder? = nil) {
         editFolder = folder
         setMode(folder == nil ? .create : .edit)
-        self.showTextField = true
+        showTextField = true
     }
-    
+
     func closeTextField() {
         editFolder = nil
         setMode(.create)
-        self.showTextField = false
+        showTextField = false
     }
 }
 
@@ -80,6 +80,7 @@ extension FolderViewModel {
             do {
                 let folder = try await folderUseCase.create(name: name)
                 category.items.insert(.folder(folder), at: 0)
+                closeTextField()
             } catch {
                 AppLogger.error(error)
             }
@@ -97,7 +98,7 @@ extension FolderViewModel {
             }
         }
     }
-    
+
     func update(name: String) {
         guard let folder = editFolder else { return }
 
@@ -121,6 +122,7 @@ extension FolderViewModel {
                 }) {
                     category.items[index] = .folder(updated)
                 }
+                closeTextField()
             } catch {
                 AppLogger.error(error)
             }
