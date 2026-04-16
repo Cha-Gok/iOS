@@ -72,11 +72,10 @@ extension MainCoordinator: MainCoordinatorDelegate {
 
     func presentRecodingView() {
         Task {
-            let checkUseCase = dependencyContainer.makeCheckMicrophonePermissionUseCase()
-            let requestUseCase = dependencyContainer.makeRequestMicrophonePermissionUseCase()
+            let permissionUseCase = dependencyContainer.makeMicrophonePermissionUseCase()
 
             do {
-                let status = try await checkUseCase.execute()
+                let status = try await permissionUseCase.checkPermission()
 
                 switch status {
                 case .authorized:
@@ -84,7 +83,7 @@ extension MainCoordinator: MainCoordinatorDelegate {
                 case .denied:
                     showPermissionDeniedAlert()
                 case .notDetermined:
-                    let grantedStatus = try await requestUseCase.execute()
+                    let grantedStatus = try await permissionUseCase.requestPermission()
                     if grantedStatus == .authorized {
                         showRecordingView()
                     }

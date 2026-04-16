@@ -39,10 +39,15 @@ public final class AppDIContainer {
     private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(
         repository: languageRepository
     )
-    private lazy var checkMicrophonePermissionUseCase =
-        DefaultCheckMicrophonePermissionUseCase(repository: voiceRecordRepository)
-    private lazy var requestMicrophonePermissionUseCase =
-        DefaultRequestMicrophonePermissionUseCase(repository: voiceRecordRepository)
+    private lazy var microphonePermissionUseCase = DefaultMicrophonePermissionUseCase(
+        repository: voiceRecordRepository
+    )
+    private lazy var recordingUseCase = DefaultRecordingUseCase(
+        repository: voiceRecordRepository
+    )
+    private lazy var playbackUseCase = DefaultPlaybackUseCase(
+        repository: voiceRecordPlaybackRepository
+    )
     private lazy var checkFirstLaunchUseCase = DefaultCheckFirstLaunchUseCase(
         repository: checkFirstLaunchRepository
     )
@@ -82,21 +87,6 @@ public final class AppDIContainer {
         sttRepository: sttRepository,
         summaryRepository: summaryRepository
     )
-    private lazy var prepareVoiceRecordPlaybackUseCase = DefaultPrepareVoiceRecordPlaybackUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
-    private lazy var playVoiceRecordUseCase = DefaultPlayVoiceRecordUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
-    private lazy var pauseVoiceRecordPlaybackUseCase = DefaultPauseVoiceRecordPlaybackUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
-    private lazy var seekVoiceRecordPlaybackUseCase = DefaultSeekVoiceRecordPlaybackUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
-    private lazy var stopVoiceRecordPlaybackUseCase = DefaultStopVoiceRecordPlaybackUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
 
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
@@ -108,12 +98,8 @@ public final class AppDIContainer {
         checkFirstLaunchUseCase
     }
 
-    func makeCheckMicrophonePermissionUseCase() -> CheckMicrophonePermissionUseCase {
-        checkMicrophonePermissionUseCase
-    }
-
-    func makeRequestMicrophonePermissionUseCase() -> RequestMicrophonePermissionUseCase {
-        requestMicrophonePermissionUseCase
+    func makeMicrophonePermissionUseCase() -> MicrophonePermissionUseCase {
+        microphonePermissionUseCase
     }
 
     // MARK: - ViewModel
@@ -121,8 +107,7 @@ public final class AppDIContainer {
     public func makeOnBoardingViewModel() -> OnBoardingViewModel {
         OnBoardingViewModel(
             selectLanguageUseCase: selectLanguageUseCase,
-            checkMicrophonePermissionUseCase: checkMicrophonePermissionUseCase,
-            requestMicrophonePermissionUseCase: requestMicrophonePermissionUseCase,
+            microphonePermissionUseCase: microphonePermissionUseCase,
             completeFirstLaunchUseCase: completeFirstLaunchUseCase,
             createDefaultFolderUseCase: createDefaultFolderUseCase
         )
@@ -130,21 +115,7 @@ public final class AppDIContainer {
 
     public func makeRecordingViewModel() -> RecordingViewModel {
         RecordingViewModel(
-            startRecordingUseCase: DefaultStartRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
-            pauseRecordingUseCase: DefaultPauseRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
-            resumeRecordingUseCase: DefaultResumeRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
-            finishRecordingUseCase: DefaultFinishRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
-            cancelRecordingUseCase: DefaultCancelRecordingUseCase(
-                recordingRepository: voiceRecordRepository
-            ),
+            recordingUseCase: recordingUseCase,
             createVoiceNoteUseCase: createVoiceNoteUseCase
         )
     }
@@ -156,11 +127,7 @@ public final class AppDIContainer {
             updateVoiceNoteUseCase: updateVoiceNoteUseCase,
             fetchLanguageUseCase: fetchLanguageUseCase,
             fetchFolderUseCase: fetchFolderUseCase,
-            prepareVoiceRecordPlaybackUseCase: prepareVoiceRecordPlaybackUseCase,
-            playVoiceRecordUseCase: playVoiceRecordUseCase,
-            pauseVoiceRecordPlaybackUseCase: pauseVoiceRecordPlaybackUseCase,
-            seekVoiceRecordPlaybackUseCase: seekVoiceRecordPlaybackUseCase,
-            stopVoiceRecordPlaybackUseCase: stopVoiceRecordPlaybackUseCase
+            playbackUseCase: playbackUseCase
         )
     }
 
@@ -210,3 +177,4 @@ public final class AppDIContainer {
         return NewFolderViewModel(createFolderUseCase: createFolderUseCase)
     }
 }
+
