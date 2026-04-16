@@ -4,6 +4,7 @@ import Foundation
 
 public protocol MoveFolderListCoordinatorDelegate: BaseCoordinatorDelegate {
     func dismiss()
+    func pushNewFolder()
 }
 
 @MainActor
@@ -38,6 +39,8 @@ public final class MoveFolderListViewModel {
                 Task { await moveVoiceNote() }
             case .closeButtonTapped:
                 coordinator?.dismiss()
+            case .addFolderButtonTapped:
+                coordinator?.pushNewFolder()
             }
         case .internal(let internalAction):
             switch internalAction {
@@ -98,6 +101,7 @@ extension MoveFolderListViewModel {
             case folderSelected(Folder)
             case moveButtonTapped
             case closeButtonTapped
+            case addFolderButtonTapped
         }
 
         public enum Internal {
