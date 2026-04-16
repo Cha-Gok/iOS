@@ -20,7 +20,7 @@ public final class OnBoardingViewModel {
 
     let languageRepository: any LanguageRepository
     let voiceRecordRepository: any VoiceRecordRepository
-    let completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase
+    let checkFirstLaunchRepository: any CheckFirstLaunchRepository
     let folderUseCase: any FolderUseCase
 
     // MARK: - 생성자
@@ -28,12 +28,12 @@ public final class OnBoardingViewModel {
     public init(
         languageRepository: any LanguageRepository,
         voiceRecordRepository: any VoiceRecordRepository,
-        completeFirstLaunchUseCase: any CompleteFirstLaunchUseCase,
+        checkFirstLaunchRepository: any CheckFirstLaunchRepository,
         folderUseCase: any FolderUseCase
     ) {
         self.languageRepository = languageRepository
         self.voiceRecordRepository = voiceRecordRepository
-        self.completeFirstLaunchUseCase = completeFirstLaunchUseCase
+        self.checkFirstLaunchRepository = checkFirstLaunchRepository
         self.folderUseCase = folderUseCase
     }
 
@@ -154,7 +154,7 @@ extension OnBoardingViewModel {
             do {
                 try await languageRepository.saveLanguage(language)
                 _ = try await folderUseCase.createDefault()
-                _ = completeFirstLaunchUseCase.execute()
+                _ = checkFirstLaunchRepository.checkAndMarkFirstLaunch()
                 onBoardingCoordinator?.finishOnBoarding()
             } catch {
                 isPaging = false

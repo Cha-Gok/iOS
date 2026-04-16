@@ -34,12 +34,6 @@ public final class AppDIContainer {
     private lazy var summaryRepository = DefaultSummaryRepository(service: AppleFoundationSummaryService())
 
     /// UseCase
-    private lazy var checkFirstLaunchUseCase = DefaultCheckFirstLaunchUseCase(
-        repository: checkFirstLaunchRepository
-    )
-    private lazy var completeFirstLaunchUseCase = DefaultCompleteFirstLaunchUseCase(
-        repository: checkFirstLaunchRepository
-    )
     private lazy var folderUseCase = DefaultFolderUseCase(repository: folderRepository)
     private lazy var voiceNoteUseCase = DefaultVoiceNoteUseCase(
         repository: voiceNoteRepository,
@@ -50,10 +44,10 @@ public final class AppDIContainer {
         localDataBase = try CoreDataLocalDataBase()
     }
 
-    // MARK: - UseCase
+    // MARK: - Repository
 
-    func makeCheckFirstLaunchUseCase() -> CheckFirstLaunchUseCase {
-        checkFirstLaunchUseCase
+    func makeCheckFirstLaunchRepository() -> CheckFirstLaunchRepository {
+        checkFirstLaunchRepository
     }
 
     func makeVoiceRecordRepository() -> VoiceRecordRepository {
@@ -66,7 +60,7 @@ public final class AppDIContainer {
         OnBoardingViewModel(
             languageRepository: languageRepository,
             voiceRecordRepository: voiceRecordRepository,
-            completeFirstLaunchUseCase: completeFirstLaunchUseCase,
+            checkFirstLaunchRepository: checkFirstLaunchRepository,
             folderUseCase: folderUseCase
         )
     }

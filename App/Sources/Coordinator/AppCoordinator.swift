@@ -19,8 +19,8 @@ final class AppCoordinator: BaseCoordinator<UINavigationController> {
     }
 
     override func start() {
-        let checkFirstLaunchUseCase = dependencyContainer.makeCheckFirstLaunchUseCase()
-        if checkFirstLaunchUseCase.checkIsFirstLaunch() {
+        let checkFirstLaunchRepository = dependencyContainer.makeCheckFirstLaunchRepository()
+        if checkFirstLaunchRepository.checkIsFirstLaunch() {
             startOnboarding()
         } else {
             startMain()
