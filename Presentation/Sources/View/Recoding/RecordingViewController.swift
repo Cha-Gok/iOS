@@ -11,7 +11,7 @@ public final class RecordingViewController: ViewController {
         button.configure(
             type: .plain(),
             viewModel.state.cancelTitle,
-            typography: .header2,
+            typography: .title2,
             backgroundColor: .color(.clear),
             foregroundColor: UIColor.gray950
         )
@@ -24,7 +24,7 @@ public final class RecordingViewController: ViewController {
         button.configure(
             type: .plain(),
             viewModel.state.completeTitle,
-            typography: .header2,
+            typography: .title2,
             backgroundColor: .color(.clear),
             foregroundColor: UIColor.point800
         )
