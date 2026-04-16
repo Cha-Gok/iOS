@@ -43,18 +43,21 @@ final class MainViewModelTests: XCTestCase {
 
     private struct SUT {
         let viewModel: MainViewModel
+        let mockVoiceRecordRepo: MockVoiceRecordRepository
         let mockFolderRepo: MockFolderRepository
         let mockVoiceNoteRepo: MockVoiceNoteRepository
         let mockCoordinator: MockMainCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
+        let mockVoiceRecordRepo = MockVoiceRecordRepository()
         let mockFolderRepo = MockFolderRepository()
         let mockVoiceNoteRepo = MockVoiceNoteRepository()
         let mockWasteBasketRepo = MockWasteBasketRepository()
         let mockCoordinator = MockMainCoordinatorDelegate()
 
         let viewModel = MainViewModel(
+            microphoneRepository: mockVoiceRecordRepo,
             voiceNoteUseCase: DefaultVoiceNoteUseCase(
                 repository: mockVoiceNoteRepo,
                 sttRepository: MockSTTRepository(),
@@ -67,6 +70,7 @@ final class MainViewModelTests: XCTestCase {
 
         return SUT(
             viewModel: viewModel,
+            mockVoiceRecordRepo: mockVoiceRecordRepo,
             mockFolderRepo: mockFolderRepo,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
             mockCoordinator: mockCoordinator
@@ -111,6 +115,44 @@ final class MainViewModelTests: XCTestCase {
         sut.viewModel.presentRecodingView()
 
         XCTAssertTrue(sut.mockCoordinator.presentRecodingViewCalled)
+    }
+
+    func test_handleRecordButtonTap_권한허용_바로녹음화면이동() async {
+        let sut = makeSUT()
+        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.authorized)
+        await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
+
+        await sut.viewModel.handleRecordButtonTap()
+
+        await sut.mockVoiceRecordRepo.verify()
+        XCTAssertTrue(sut.mockCoordinator.presentRecodingViewCalled)
+        XCTAssertFalse(sut.viewModel.showAlert)
+    }
+
+    func test_handleRecordButtonTap_권한거부_알럿노출() async {
+        let sut = makeSUT()
+        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.denied)
+        await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
+
+        await sut.viewModel.handleRecordButtonTap()
+
+        await sut.mockVoiceRecordRepo.verify()
+        XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
+        XCTAssertTrue(sut.viewModel.showAlert)
+    }
+
+    func test_handleRecordButtonTap_최초요청후허용_녹음화면이동() async {
+        let sut = makeSUT()
+        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.notDetermined)
+        await sut.mockVoiceRecordRepo.setRequestPermissionResult(.success(.authorized))
+        await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
+        await sut.mockVoiceRecordRepo.expectRequestPermission(callCount: 1)
+
+        await sut.viewModel.handleRecordButtonTap()
+
+        await sut.mockVoiceRecordRepo.verify()
+        XCTAssertTrue(sut.mockCoordinator.presentRecodingViewCalled)
+        XCTAssertFalse(sut.viewModel.showAlert)
     }
 
     // MARK: - Update Tests

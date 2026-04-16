@@ -34,7 +34,7 @@ public final class MainViewModel {
     @ObservationIgnored
     private(set) var selectedCategoryIndex: Int = 0
     @ObservationIgnored
-    var didScroll: Bool = false
+    private(set) var didScroll: Bool = false
 
     var shouldGroupSelectedCategory: Bool {
         selectedCategoryIndex == 1
@@ -44,10 +44,13 @@ public final class MainViewModel {
         categoryData[selectedCategoryIndex].items.isEmpty
     }
 
-    var errorMessage: String?
+    private(set) var showAlert: Bool = false
+
+    private(set) var errorMessage: String?
 
     // MARK: - UseCase
 
+    let microphoneRepository: VoiceRecordRepository
     let voiceNoteUseCase: any VoiceNoteUseCase
     let folderUseCase: any FolderUseCase
     let wasteBasketRepository: any WasteBasketRepository
@@ -56,10 +59,12 @@ public final class MainViewModel {
     public weak var mainCoordinator: MainCoordinatorDelegate?
 
     public init(
+        microphoneRepository: any VoiceRecordRepository,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
         wasteBasketRepository: any WasteBasketRepository
     ) {
+        self.microphoneRepository = microphoneRepository
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.wasteBasketRepository = wasteBasketRepository
@@ -84,6 +89,18 @@ extension MainViewModel {
             // 화면 이동 후 index를 되돌린다.
             selectedCategoryIndex = 0
         }
+    }
+
+    func getDidScroll(_ didScroll: Bool) {
+        self.didScroll = didScroll
+    }
+
+    func closeAlertView() {
+        showAlert = false
+    }
+
+    func openAlertView() {
+        showAlert = true
     }
 }
 
@@ -162,11 +179,44 @@ extension MainViewModel {
     }
 }
 
+// MARK: - Mic Permission
+
+extension MainViewModel {
+    func handleRecordButtonTap() async {
+        let status = microphoneRepository.checkMicrophonePermission()
+
+        switch status {
+        case .authorized:
+            closeAlertView()
+            presentRecodingView()
+
+        case .notDetermined:
+            do {
+                let requested = try await microphoneRepository.requestMicrophonePermission()
+                if requested == .authorized {
+                    closeAlertView()
+                    presentRecodingView()
+                } else {
+                    openAlertView()
+                }
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
+                openAlertView()
+            }
+
+        case .denied:
+            openAlertView()
+        }
+    }
+}
+
 #if DEBUG
     extension MainViewModel {
         static func preview(selectedCategoryIndex: Int = 0) -> MainViewModel {
             let previewData = PreviewData.make()
             let viewModel = MainViewModel(
+                microphoneRepository: PreviewMicrophoneRepository(),
                 voiceNoteUseCase: PreviewVoiceNoteUseCase(
                     recentItems: previewData.recentVoiceNotes,
                     defaultItems: previewData.defaultVoiceNotes
@@ -299,6 +349,46 @@ extension MainViewModel {
                     transcript: summarized ? Transcript(text: "\(title) 전사본") : nil,
                     summary: summarized ? Summary(text: "\(title) 요약") : nil
                 )
+            }
+        }
+
+        struct PreviewMicrophoneRepository: VoiceRecordRepository {
+            func checkMicrophonePermission() -> PermissionStatus {
+                .authorized
+            }
+
+            func requestMicrophonePermission() async throws(Domain.VoiceRecordRepositoryError) -> Domain
+                .PermissionStatus
+            {
+                .authorized
+            }
+
+            func startRecording() async throws(Domain.VoiceRecordRepositoryError) -> AsyncStream<Domain.Waveform> {
+                AsyncStream { continuation in
+                    continuation.yield(Domain.Waveform(amplitudes: [0.12, 0.31, 0.45, 0.22, 0.38]))
+                    continuation.yield(Domain.Waveform(amplitudes: [0.27, 0.51, 0.18, 0.34, 0.42]))
+                    continuation.finish()
+                }
+            }
+
+            func pauseRecording() async throws(Domain.VoiceRecordRepositoryError) {
+                // Preview mock: no-op
+            }
+
+            func resumeRecording() async throws(Domain.VoiceRecordRepositoryError) {
+                // Preview mock: no-op
+            }
+
+            func finishRecording() async throws(Domain.VoiceRecordRepositoryError) -> Domain.VoiceRecord {
+                Domain.VoiceRecord(
+                    createdAt: .now,
+                    audioFilePath: "VoiceRecords/preview.m4a",
+                    duration: 95
+                )
+            }
+
+            func cancelRecording() async throws(Domain.VoiceRecordRepositoryError) {
+                // Preview mock: no-op
             }
         }
 
