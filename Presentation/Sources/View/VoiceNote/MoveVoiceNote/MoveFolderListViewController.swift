@@ -37,7 +37,11 @@ public final class MoveFolderListViewController: UIViewController {
         configuration.baseForegroundColor = .gray800
         configuration.contentInsets = .zero
 
-        return UIButton(configuration: configuration)
+        let button = UIButton(configuration: configuration)
+        button.addAction(UIAction { [weak self] _ in
+            self?.viewModel.send(.view(.addFolderButtonTapped))
+        }, for: .touchUpInside)
+        return button
     }()
 
     private lazy var titleStack: UIStackView = {
@@ -79,6 +83,10 @@ public final class MoveFolderListViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+    }
+
+    override public func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         viewModel.send(.view(.onAppear))
     }
 

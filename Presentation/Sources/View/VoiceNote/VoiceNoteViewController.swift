@@ -1,7 +1,7 @@
 import Domain
 import UIKit
 
-public final class VoiceNoteViewController: UIViewController {
+public final class VoiceNoteViewController: UIViewController, Alertable {
     typealias Section = VoiceNoteViewModel.Section
     typealias Item = VoiceNoteViewModel.Item
 
@@ -78,7 +78,9 @@ public final class VoiceNoteViewController: UIViewController {
             break
         }
         if let message = errorObservable.message {
-            showErrorAlert(message: message)
+            showAlert(title: "오류", message: message) { [weak self] in
+                self?.viewModel.send(.internal(.errorDismissed))
+            }
         }
     }
 }
@@ -177,19 +179,6 @@ private extension VoiceNoteViewController {
         playerView.onForward = { [weak self] in self?.viewModel.send(.view(.forwardButtonTapped)) }
         playerView.onSeekBegan = { [weak self] in self?.viewModel.send(.view(.seekBegan)) }
         playerView.onSeekEnded = { [weak self] time in self?.viewModel.send(.view(.seekEnded(time))) }
-    }
-}
-
-// MARK: - Alert
-
-private extension VoiceNoteViewController {
-    func showErrorAlert(message: String) {
-        guard presentedViewController == nil else { return }
-        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default) { [weak self] _ in
-            self?.viewModel.send(.internal(.errorDismissed))
-        })
-        present(alert, animated: true)
     }
 }
 

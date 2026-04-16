@@ -141,13 +141,41 @@ extension MainCoordinator: VoiceNoteCoordinatorDelegate {
         let viewModel = dependencyContainer.makeMoveFolderListViewModel(voiceNote: voiceNote)
         viewModel.coordinator = self
         let viewController = MoveFolderListViewController(viewModel: viewModel)
+        let nav = UINavigationController(rootViewController: viewController)
+        nav.isNavigationBarHidden = true
 
-        if let sheet = viewController.sheetPresentationController {
+        if let sheet = nav.sheetPresentationController {
             sheet.detents = [.medium()]
             sheet.prefersGrabberVisible = true
         }
 
-        presenter.present(viewController, animated: true)
+        presenter.present(nav, animated: true)
+    }
+}
+
+// MARK: - NewFolderCoordinatorDelegate
+
+extension MainCoordinator: NewFolderCoordinatorDelegate {
+    func cancel() {
+        guard let nav = presenter.presentedViewController as? UINavigationController,
+              let sheet = nav.sheetPresentationController else { return }
+
+        nav.popViewController(animated: true)
+
+        sheet.animateChanges {
+            sheet.detents = [.medium()]
+        }
+    }
+
+    func folderCreated() {
+        guard let nav = presenter.presentedViewController as? UINavigationController,
+              let sheet = nav.sheetPresentationController else { return }
+
+        nav.popViewController(animated: true)
+
+        sheet.animateChanges {
+            sheet.detents = [.medium()]
+        }
     }
 }
 
@@ -156,6 +184,24 @@ extension MainCoordinator: VoiceNoteCoordinatorDelegate {
 extension MainCoordinator: MoveFolderListCoordinatorDelegate {
     func dismiss() {
         presenter.dismiss(animated: true)
+    }
+
+    func pushNewFolder() {
+        guard let nav = presenter.presentedViewController as? UINavigationController,
+              let sheet = nav.sheetPresentationController else { return }
+
+        let viewModel = dependencyContainer.makeNewFolderViewModel()
+        viewModel.coordinator = self
+        let newFolderVC = NewFolderViewController(viewModel: viewModel)
+        newFolderVC.view.layoutIfNeeded()
+
+        nav.pushViewController(newFolderVC, animated: true)
+
+        sheet.animateChanges {
+            sheet.detents = [.custom { [weak newFolderVC] _ in
+                newFolderVC?.preferredContentSize.height
+            }]
+        }
     }
 }
 

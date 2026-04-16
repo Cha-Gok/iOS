@@ -205,4 +205,8 @@ public final class AppDIContainer {
             updateVoiceNoteUseCase: updateVoiceNoteUseCase
         )
     }
+
+    public func makeNewFolderViewModel() -> NewFolderViewModel {
+        return NewFolderViewModel(createFolderUseCase: createFolderUseCase)
+    }
 }
