@@ -28,9 +28,7 @@ public final class AppDIContainer {
     )
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
-    private lazy var voiceNoteCreateRepository = DefaultVoiceNoteCreateRepository(store: localDataBase)
-    private lazy var voiceNoteFetchRepository = DefaultVoiceNoteFetchRepository(store: localDataBase)
-    private lazy var voiceNoteUpdateRepository = DefaultVoiceNoteUpdateRepository(store: localDataBase)
+    private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(store: localDataBase)
     private lazy var wasteBasketRepository = DefaultWasteBasketRepository(store: localDataBase)
     private lazy var sttRepository = DefaultSTTRepository(service: SpeechService(), storageService: storageService)
     private lazy var summaryRepository = DefaultSummaryRepository(service: AppleFoundationSummaryService())
@@ -51,18 +49,12 @@ public final class AppDIContainer {
     private lazy var createDefaultFolderUseCase = DefaultCreateDefaultFolderUseCase(
         repository: folderRepository
     )
-    private lazy var createVoiceNoteUseCase = DefaultCreateVoiceNoteUseCase(
-        repository: voiceNoteCreateRepository
-    )
-    private lazy var fetchVoiceNoteUseCase = DefaultFetchVoiceNoteUseCase(
-        repository: voiceNoteFetchRepository
-    )
-    private lazy var fetchLanguageUseCase = DefaultFetchLanguageUseCase(repository: languageRepository)
-    private lazy var updateVoiceNoteUseCase = DefaultUpdateVoiceNoteUseCase(repository: voiceNoteUpdateRepository)
-    private lazy var audioToSummaryUseCase = DefaultAudioToSummaryUseCase(
+    private lazy var voiceNoteUseCase = DefaultVoiceNoteUseCase(
+        repository: voiceNoteRepository,
         sttRepository: sttRepository,
         summaryRepository: summaryRepository
     )
+    private lazy var fetchLanguageUseCase = DefaultFetchLanguageUseCase(repository: languageRepository)
 
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
@@ -92,15 +84,14 @@ public final class AppDIContainer {
     public func makeRecordingViewModel() -> RecordingViewModel {
         RecordingViewModel(
             repository: voiceRecordRepository,
-            createVoiceNoteUseCase: createVoiceNoteUseCase
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 
     public func makeVoiceNoteViewModel(voiceNote: VoiceNote) -> VoiceNoteViewModel {
         VoiceNoteViewModel(
             voiceNote: voiceNote,
-            audioToSummaryUseCase: audioToSummaryUseCase,
-            updateVoiceNoteUseCase: updateVoiceNoteUseCase,
+            voiceNoteUseCase: voiceNoteUseCase,
             fetchLanguageUseCase: fetchLanguageUseCase,
             fetchFolderUseCase: fetchFolderUseCase,
             playbackRepository: voiceRecordPlaybackRepository
@@ -109,8 +100,7 @@ public final class AppDIContainer {
 
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
-            voiceNoteFetchRepository: voiceNoteFetchRepository,
-            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase,
+            voiceNoteUseCase: voiceNoteUseCase,
             fetchFolderUseCase: fetchFolderUseCase,
             wasteBasketRepository: wasteBasketRepository
         )
@@ -135,7 +125,7 @@ public final class AppDIContainer {
         return FolderDetailViewModel(
             title: folder.name,
             folderID: folder.id,
-            fetchVoiceNoteUseCase: fetchVoiceNoteUseCase
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 
@@ -143,7 +133,7 @@ public final class AppDIContainer {
         return MoveFolderListViewModel(
             voiceNote: voiceNote,
             fetchFolderUseCase: fetchFolderUseCase,
-            updateVoiceNoteUseCase: updateVoiceNoteUseCase
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 
