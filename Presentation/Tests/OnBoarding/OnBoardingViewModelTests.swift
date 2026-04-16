@@ -38,7 +38,7 @@ final class OnBoardingViewModelTests: XCTestCase {
             languageRepository: mockLanguageRepo,
             voiceRecordRepository: mockVoiceRecordRepo,
             completeFirstLaunchUseCase: DefaultCompleteFirstLaunchUseCase(repository: mockCheckFirstLaunchRepo),
-            createDefaultFolderUseCase: DefaultCreateDefaultFolderUseCase(repository: mockFolderRepo)
+            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo)
         )
         viewModel.onBoardingCoordinator = mockNavDelegate
 

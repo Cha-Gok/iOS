@@ -60,7 +60,7 @@ final class MainViewModelTests: XCTestCase {
                 sttRepository: MockSTTRepository(),
                 summaryRepository: MockSummaryRepository()
             ),
-            fetchFolderUseCase: DefaultFetchFolderUseCase(repository: mockFolderRepo),
+            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
             wasteBasketRepository: mockWasteBasketRepo
         )
         viewModel.mainCoordinator = mockCoordinator
