@@ -60,7 +60,7 @@ final class FolderViewModelTests: XCTestCase {
         let sut = makeSUT()
 
         XCTAssertEqual(sut.viewModel.category.title, "개인 폴더")
-        XCTAssertFalse(sut.viewModel.showAlert)
+        XCTAssertFalse(sut.viewModel.showTextField)
         XCTAssertNil(sut.viewModel.editFolder)
     }
 
@@ -78,19 +78,19 @@ final class FolderViewModelTests: XCTestCase {
         let sut = makeSUT()
         let folder = Folder(name: "수정 폴더")
 
-        sut.viewModel.openTextFieldView(for: folder)
+        sut.viewModel.openTextField(for: folder)
 
-        XCTAssertTrue(sut.viewModel.showAlert)
+        XCTAssertTrue(sut.viewModel.showTextField)
         XCTAssertEqual(sut.viewModel.editFolder?.name, "수정 폴더")
     }
 
     func test_closeTextFieldView_호출시_상태초기화() {
         let sut = makeSUT()
-        sut.viewModel.openTextFieldView()
+        sut.viewModel.openTextField()
 
-        sut.viewModel.closeTextFieldView()
+        sut.viewModel.closeTextField()
 
-        XCTAssertFalse(sut.viewModel.showAlert)
+        XCTAssertFalse(sut.viewModel.showTextField)
         XCTAssertNil(sut.viewModel.editFolder)
     }
 
@@ -111,7 +111,7 @@ final class FolderViewModelTests: XCTestCase {
 
         await sut.mockFolderRepo.verify()
         XCTAssertEqual(sut.viewModel.category.items.count, 1)
-        XCTAssertFalse(sut.viewModel.showAlert)
+        XCTAssertFalse(sut.viewModel.showTextField)
     }
 
     func test_move_성공시_리스트에서제거() async {
@@ -148,7 +148,7 @@ final class FolderViewModelTests: XCTestCase {
         await sut.mockFolderRepo.expectUpdate(folderID: initialFolder.id, callCount: 1)
 
         // 수정 모드 진입
-        sut.viewModel.openTextFieldView(for: initialFolder)
+        sut.viewModel.openTextField(for: initialFolder)
 
         sut.viewModel.update(name: newName)
 
@@ -165,6 +165,6 @@ final class FolderViewModelTests: XCTestCase {
         }
 
         XCTAssertNil(sut.viewModel.editFolder)
-        XCTAssertFalse(sut.viewModel.showAlert)
+        XCTAssertFalse(sut.viewModel.showTextField)
     }
 }
