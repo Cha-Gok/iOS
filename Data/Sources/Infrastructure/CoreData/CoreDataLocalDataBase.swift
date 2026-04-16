@@ -11,7 +11,7 @@ private final class BundleInfo: Sendable {
 public final class CoreDataLocalDataBase: Sendable {
     /// NSManagedObjectModel은 인스턴스마다 새로 생성하면 동일 Entity 클래스를 중복 소유해
     /// CoreData 경고가 발생하므로 프로세스 전체에서 단 한 번만 로드합니다.
-    private static let sharedModel: NSManagedObjectModel = {
+    private nonisolated(unsafe) static let sharedModel: NSManagedObjectModel = {
         let bundle = Bundle(for: BundleInfo.self)
         guard let model = NSManagedObjectModel.mergedModel(from: [bundle]) else {
             fatalError("CoreDataLocalDataBase: NSManagedObjectModel 로드 실패 — 번들에 .momd 파일이 있는지 확인하세요.")
