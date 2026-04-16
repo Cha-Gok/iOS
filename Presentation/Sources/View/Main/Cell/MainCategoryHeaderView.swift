@@ -80,6 +80,7 @@ final class MainCategoryHeaderView: UICollectionReusableView {
         heightConstraint = collectionView.heightAnchor.constraint(
             equalToConstant: LayoutConstant.expandedItemSize.height
         )
+        heightConstraint.priority = .defaultHigh
 
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: topAnchor),
