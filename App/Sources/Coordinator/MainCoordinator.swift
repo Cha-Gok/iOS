@@ -166,6 +166,17 @@ extension MainCoordinator: NewFolderCoordinatorDelegate {
             sheet.detents = [.medium()]
         }
     }
+
+    func folderCreated() {
+        guard let nav = presenter.presentedViewController as? UINavigationController,
+              let sheet = nav.sheetPresentationController else { return }
+
+        nav.popViewController(animated: true)
+
+        sheet.animateChanges {
+            sheet.detents = [.medium()]
+        }
+    }
 }
 
 // MARK: - MoveFolderListCoordinatorDelegate
@@ -179,8 +190,9 @@ extension MainCoordinator: MoveFolderListCoordinatorDelegate {
         guard let nav = presenter.presentedViewController as? UINavigationController,
               let sheet = nav.sheetPresentationController else { return }
 
-        let newFolderVC = NewFolderViewController()
-        newFolderVC.coordinator = self
+        let viewModel = dependencyContainer.makeNewFolderViewModel()
+        viewModel.coordinator = self
+        let newFolderVC = NewFolderViewController(viewModel: viewModel)
         newFolderVC.view.layoutIfNeeded()
 
         nav.pushViewController(newFolderVC, animated: true)
