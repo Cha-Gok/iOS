@@ -2,7 +2,9 @@ import Core
 import Domain
 import Foundation
 
-public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {}
+public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {
+    func presentFolderList(with: VoiceNote)
+}
 
 @MainActor
 @Observable
@@ -104,6 +106,8 @@ public final class VoiceNoteViewModel {
                 play()
             case .pop:
                 coordinator?.pop()
+            case .moveVoiceNoteButtonTapped:
+                coordinator?.presentFolderList(with: state.voiceNote)
             }
 
         case .internal(let internalAction):
@@ -294,6 +298,7 @@ public extension VoiceNoteViewModel {
             case seekEnded(TimeInterval)
             case scriptTimestampTapped(TimeInterval)
             case pop
+            case moveVoiceNoteButtonTapped
         }
 
         public enum Internal {

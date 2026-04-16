@@ -136,7 +136,28 @@ extension MainCoordinator: FolderCoordinatorDelegate {
 
 // MARK: VoiceNoteCoordinating
 
-extension MainCoordinator: VoiceNoteCoordinatorDelegate {}
+extension MainCoordinator: VoiceNoteCoordinatorDelegate {
+    func presentFolderList(with voiceNote: VoiceNote) {
+        let viewModel = dependencyContainer.makeMoveFolderListViewModel(voiceNote: voiceNote)
+        viewModel.coordinator = self
+        let viewController = MoveFolderListViewController(viewModel: viewModel)
+
+        if let sheet = viewController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        presenter.present(viewController, animated: true)
+    }
+}
+
+// MARK: - MoveFolderListCoordinatorDelegate
+
+extension MainCoordinator: MoveFolderListCoordinatorDelegate {
+    func dismiss() {
+        presenter.dismiss(animated: true)
+    }
+}
 
 // MARK: Base 공통 함수 묶음
 
