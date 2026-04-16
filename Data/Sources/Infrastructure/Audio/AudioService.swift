@@ -28,7 +28,7 @@ public actor AudioService: AudioRecorderService {
     // MARK: - MicrophonePermissionService
 
     /// 기기의 마이크 접근 권한 상태를 확인합니다.
-    public func checkPermission() async -> PermissionStatus {
+    public nonisolated func checkPermission() -> PermissionStatus {
         switch AVAudioApplication.shared.recordPermission {
         case .granted:
             return .authorized

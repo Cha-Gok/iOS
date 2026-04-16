@@ -28,7 +28,7 @@ public protocol AudioRecorderService: Sendable {
     func currentRecordingURL() async -> URL?
 
     /// 기기의 마이크 접근 권한 상태를 확인합니다.
-    func checkPermission() async -> PermissionStatus
+    func checkPermission() -> PermissionStatus
 
     /// 사용자에게 마이크 접근 권한을 요청합니다.
     func requestPermission() async -> PermissionStatus

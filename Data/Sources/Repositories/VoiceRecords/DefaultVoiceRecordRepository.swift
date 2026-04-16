@@ -14,9 +14,8 @@ public struct DefaultVoiceRecordRepository: VoiceRecordRepository {
         self.storageService = storageService
     }
 
-    public func checkMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus {
-        if Task.isCancelled { throw .cancelled }
-        return await audioService.checkPermission()
+    public func checkMicrophonePermission() -> PermissionStatus {
+        audioService.checkPermission()
     }
 
     public func requestMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus {

@@ -137,14 +137,14 @@ extension OnBoardingViewModel {
 extension OnBoardingViewModel {
     private func requestPermission() {
         Task {
-            do {
-                let status: PermissionStatus = try await voiceRecordRepository.checkMicrophonePermission()
-                if status == .notDetermined {
+            let status = voiceRecordRepository.checkMicrophonePermission()
+            if status == .notDetermined {
+                do {
                     _ = try await voiceRecordRepository.requestMicrophonePermission()
+                } catch {
+                    errorMessage = error.localizedDescription
+                    AppLogger.error(error)
                 }
-            } catch {
-                errorMessage = error.localizedDescription
-                AppLogger.error(error)
             }
         }
     }

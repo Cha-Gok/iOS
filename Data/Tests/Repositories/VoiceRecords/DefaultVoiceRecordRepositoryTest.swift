@@ -341,7 +341,7 @@ extension DefaultVoiceRecordRepositoryTest {
 // MARK: - 권한 확인 케이스
 
 extension DefaultVoiceRecordRepositoryTest {
-    func test_마이크권한허용상태_권한조회시_authorized를반환한다() async throws {
+    func test_마이크권한허용상태_권한조회시_authorized를반환한다() async {
         let audioService = MockAudioRecorderService()
         let storageService = MockStorageService()
         let sut = DefaultVoiceRecordRepository(audioService: audioService, storageService: storageService)
@@ -351,13 +351,14 @@ extension DefaultVoiceRecordRepositoryTest {
         await audioService.expectCheckPermission(callCount: 1)
 
         // When
-        let result = try await sut.checkMicrophonePermission()
+        let result = sut.checkMicrophonePermission()
 
         // Then
         XCTAssertEqual(result, Domain.PermissionStatus.authorized)
+        await audioService.verify()
     }
 
-    func test_마이크권한미결정상태_권한조회시_notDetermined를반환한다() async throws {
+    func test_마이크권한미결정상태_권한조회시_notDetermined를반환한다() async {
         let audioService = MockAudioRecorderService()
         let storageService = MockStorageService()
         let sut = DefaultVoiceRecordRepository(audioService: audioService, storageService: storageService)
@@ -367,34 +368,11 @@ extension DefaultVoiceRecordRepositoryTest {
         await audioService.expectCheckPermission(callCount: 1)
 
         // When
-        let result = try await sut.checkMicrophonePermission()
+        let result = sut.checkMicrophonePermission()
 
         // Then
         XCTAssertEqual(result, Domain.PermissionStatus.notDetermined)
-    }
-
-    func test_태스크취소상태_권한조회시_cancelled에러를던진다() async throws {
-        let audioService = MockAudioRecorderService()
-        let storageService = MockStorageService()
-        let sut = DefaultVoiceRecordRepository(audioService: audioService, storageService: storageService)
-
-        // Given
-        await audioService.expectCheckPermission(callCount: 0)
-
-        let task = Task {
-            withUnsafeCurrentTask { $0?.cancel() }
-            return try await sut.checkMicrophonePermission()
-        }
-
-        // When & Then
-        do {
-            _ = try await task.value
-            XCTFail("VoiceRecordRepositoryError.cancelled 에러를 throw 해야 합니다.")
-        } catch {
-            guard case .cancelled = error as? VoiceRecordRepositoryError else {
-                return XCTFail("예상한 에러는 VoiceRecordRepositoryError.cancelled 이지만, 실제 받은 에러는 \(error) 입니다.")
-            }
-        }
+        await audioService.verify()
     }
 }
 

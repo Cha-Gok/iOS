@@ -9,9 +9,8 @@ public protocol STTRepository: Sendable {
     func transcribe(audioFilePath: String) async throws(STTRepositoryError) -> Transcript
 
     /// STT 권한이 허용되어 있는지 확인합니다.
-    /// - Returns: 현재 권한 상태.
-    /// - Throws: `STTPermissionRepositoryError`
-    func checkSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus
+    /// - Returns: 현재 STT 권한 상태.
+    func checkSTTPermission() -> PermissionStatus
 
     /// STT 권한을 요청합니다.
     /// - Returns: 요청 결과 권한 상태.

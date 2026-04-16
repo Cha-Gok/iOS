@@ -3,9 +3,8 @@ import Foundation
 /// 예약, 설정, 오디오 녹음 및 관련 마이크 권한을 관리하는 리포지토리 프로토콜.
 public protocol VoiceRecordRepository: Sendable {
     /// 마이크 권한이 허용되어 있는지 확인합니다.
-    /// - Returns: 요청 결과 권한 상태.
-    /// - Throws: `VoiceRecordRepositoryError.cancelled` 등
-    func checkMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus
+    /// - Returns: 현재 마이크 권한 상태.
+    func checkMicrophonePermission() -> PermissionStatus
 
     /// 마이크 권한을 요청합니다.
     /// - Returns: 요청 결과 권한 상태.

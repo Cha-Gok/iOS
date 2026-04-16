@@ -27,9 +27,8 @@ public struct DefaultSTTRepository: STTRepository {
         }
     }
 
-    public func checkSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus {
-        if Task.isCancelled { throw .cancelled }
-        return await service.checkPermission()
+    public func checkSTTPermission() -> PermissionStatus {
+        service.checkPermission()
     }
 
     public func requestSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus {
