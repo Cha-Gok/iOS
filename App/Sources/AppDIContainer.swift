@@ -39,15 +39,6 @@ public final class AppDIContainer {
     private lazy var selectLanguageUseCase = DefaultSelectLanguageUseCase(
         repository: languageRepository
     )
-    private lazy var microphonePermissionUseCase = DefaultMicrophonePermissionUseCase(
-        repository: voiceRecordRepository
-    )
-    private lazy var recordingUseCase = DefaultRecordingUseCase(
-        repository: voiceRecordRepository
-    )
-    private lazy var playbackUseCase = DefaultPlaybackUseCase(
-        repository: voiceRecordPlaybackRepository
-    )
     private lazy var checkFirstLaunchUseCase = DefaultCheckFirstLaunchUseCase(
         repository: checkFirstLaunchRepository
     )
@@ -66,21 +57,6 @@ public final class AppDIContainer {
     private lazy var fetchVoiceNoteUseCase = DefaultFetchVoiceNoteUseCase(
         repository: voiceNoteFetchRepository
     )
-    private lazy var fetchRecentVoiceNoteUseCase = DefaultFetchRecentVoiceNoteUseCase(
-        repository: voiceNoteFetchRepository
-    )
-    private lazy var fetchWasteBasketUseCase = DefaultFetchWasteBasketFolderUseCase(
-        repository: wasteBasketRepository
-    )
-    private lazy var deleteWasteBasketUseCase = DefaultDeleteWasteBasketUseCase(
-        repository: wasteBasketRepository
-    )
-    private lazy var moveWasteBasketUseCase = DefaultMoveWasteBasketUseCase(
-        repository: wasteBasketRepository
-    )
-    private lazy var restoreWasteBasketUseCase = DefaultRestoreWasteBasketUseCase(
-        repository: wasteBasketRepository
-    )
     private lazy var fetchLanguageUseCase = DefaultFetchLanguageUseCase(repository: languageRepository)
     private lazy var updateVoiceNoteUseCase = DefaultUpdateVoiceNoteUseCase(repository: voiceNoteUpdateRepository)
     private lazy var audioToSummaryUseCase = DefaultAudioToSummaryUseCase(
@@ -98,8 +74,8 @@ public final class AppDIContainer {
         checkFirstLaunchUseCase
     }
 
-    func makeMicrophonePermissionUseCase() -> MicrophonePermissionUseCase {
-        microphonePermissionUseCase
+    func makeVoiceRecordRepository() -> VoiceRecordRepository {
+        voiceRecordRepository
     }
 
     // MARK: - ViewModel
@@ -107,7 +83,7 @@ public final class AppDIContainer {
     public func makeOnBoardingViewModel() -> OnBoardingViewModel {
         OnBoardingViewModel(
             selectLanguageUseCase: selectLanguageUseCase,
-            microphonePermissionUseCase: microphonePermissionUseCase,
+            voiceRecordRepository: voiceRecordRepository,
             completeFirstLaunchUseCase: completeFirstLaunchUseCase,
             createDefaultFolderUseCase: createDefaultFolderUseCase
         )
@@ -115,7 +91,7 @@ public final class AppDIContainer {
 
     public func makeRecordingViewModel() -> RecordingViewModel {
         RecordingViewModel(
-            recordingUseCase: recordingUseCase,
+            repository: voiceRecordRepository,
             createVoiceNoteUseCase: createVoiceNoteUseCase
         )
     }
@@ -127,24 +103,22 @@ public final class AppDIContainer {
             updateVoiceNoteUseCase: updateVoiceNoteUseCase,
             fetchLanguageUseCase: fetchLanguageUseCase,
             fetchFolderUseCase: fetchFolderUseCase,
-            playbackUseCase: playbackUseCase
+            playbackRepository: voiceRecordPlaybackRepository
         )
     }
 
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
-            fetchRecentVoiceNoteUseCase: fetchRecentVoiceNoteUseCase,
+            voiceNoteFetchRepository: voiceNoteFetchRepository,
             fetchVoiceNoteUseCase: fetchVoiceNoteUseCase,
             fetchFolderUseCase: fetchFolderUseCase,
-            fetchTrashUseCase: fetchWasteBasketUseCase
+            wasteBasketRepository: wasteBasketRepository
         )
     }
 
     public func makeTrashViewModel() -> TrashViewModel {
         return TrashViewModel(
-            fetchUseCase: fetchWasteBasketUseCase,
-            deleteUseCase: deleteWasteBasketUseCase,
-            restoreUseCase: restoreWasteBasketUseCase
+            repository: wasteBasketRepository
         )
     }
 
@@ -153,7 +127,7 @@ public final class AppDIContainer {
             category: category,
             createUseCase: createFolderUseCase,
             updateUseCase: updateFolderUseCase,
-            moveToTrashUseCase: moveWasteBasketUseCase
+            wasteBasketRepository: wasteBasketRepository
         )
     }
 
@@ -177,4 +151,3 @@ public final class AppDIContainer {
         return NewFolderViewModel(createFolderUseCase: createFolderUseCase)
     }
 }
-
