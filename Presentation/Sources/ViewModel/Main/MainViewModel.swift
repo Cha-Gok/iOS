@@ -352,8 +352,13 @@ extension MainViewModel {
         struct PreviewFolderUseCase: FolderUseCase {
             let items: [Folder]
 
-            func create(name: String) async throws(FolderUseCaseError) -> Folder { items[0] }
-            func createDefault() async throws(FolderUseCaseError) -> Folder { items[0] }
+            func create(name: String) async throws(FolderUseCaseError) -> Folder {
+                items[0]
+            }
+
+            func createDefault() async throws(FolderUseCaseError) -> Folder {
+                items[0]
+            }
 
             func fetchAll() async throws(FolderUseCaseError) -> [Folder] {
                 items
@@ -368,7 +373,9 @@ extension MainViewModel {
                 return item
             }
 
-            func update(_ folder: Folder) async throws(FolderUseCaseError) -> Folder { folder }
+            func update(_ folder: Folder) async throws(FolderUseCaseError) -> Folder {
+                folder
+            }
         }
 
         struct PreviewWasteBasketRepository: WasteBasketRepository {

@@ -10,7 +10,7 @@ public actor MockVoiceRecordRepository: VoiceRecordRepository {
     private var resumeResult: Result<Void, VoiceRecordRepositoryError>?
     private var finishResult: Result<VoiceRecord, VoiceRecordRepositoryError>?
     private var cancelResult: Result<Void, VoiceRecordRepositoryError>?
-    nonisolated(unsafe) private var checkPermissionResult: PermissionStatus?
+    private nonisolated(unsafe) var checkPermissionResult: PermissionStatus?
     private var requestPermissionResult: Result<PermissionStatus, VoiceRecordRepositoryError>?
 
     private var actualStartRecordingCallCount = 0
@@ -18,7 +18,7 @@ public actor MockVoiceRecordRepository: VoiceRecordRepository {
     private var actualResumeRecordingCallCount = 0
     private var actualFinishRecordingCallCount = 0
     private var actualCancelRecordingCallCount = 0
-    nonisolated(unsafe) private var actualCheckPermissionCallCount = 0
+    private nonisolated(unsafe) var actualCheckPermissionCallCount = 0
     private var actualRequestPermissionCallCount = 0
 
     private var expectedStartRecordingCallCount: Int?
@@ -26,7 +26,7 @@ public actor MockVoiceRecordRepository: VoiceRecordRepository {
     private var expectedResumeRecordingCallCount: Int?
     private var expectedFinishRecordingCallCount: Int?
     private var expectedCancelRecordingCallCount: Int?
-    nonisolated(unsafe) private var expectedCheckPermissionCallCount: Int?
+    private nonisolated(unsafe) var expectedCheckPermissionCallCount: Int?
     private var expectedRequestPermissionCallCount: Int?
 
     public func setStartResult(_ result: Result<AsyncStream<Waveform>, VoiceRecordRepositoryError>) {

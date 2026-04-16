@@ -21,11 +21,11 @@ actor MockAudioRecorderService: AudioRecorderService {
     private var expectedFinishCallCount: Int?
     private var expectedCancelCallCount: Int?
 
-    nonisolated(unsafe) private var checkPermissionResult: PermissionStatus?
+    private nonisolated(unsafe) var checkPermissionResult: PermissionStatus?
     private var requestPermissionResult: PermissionStatus?
-    nonisolated(unsafe) private var checkPermissionCallCount = 0
+    private nonisolated(unsafe) var checkPermissionCallCount = 0
     private var requestPermissionCallCount = 0
-    nonisolated(unsafe) private var expectedCheckPermissionCallCount: Int?
+    private nonisolated(unsafe) var expectedCheckPermissionCallCount: Int?
     private var expectedRequestPermissionCallCount: Int?
 
     func setStartResult(_ result: Result<AsyncStream<Waveform>, AudioRecorderServiceError>) {

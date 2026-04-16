@@ -6,17 +6,17 @@ public actor MockSTTRepository: STTRepository {
     public init() {}
 
     private var result: Result<Transcript, STTRepositoryError>?
-    nonisolated(unsafe) private var checkResult: PermissionStatus?
+    private nonisolated(unsafe) var checkResult: PermissionStatus?
     private var requestResult: Result<PermissionStatus, STTPermissionRepositoryError>?
 
     private var actualCallCount = 0
     private var actualAudioFilePath: String?
-    nonisolated(unsafe) private var actualCheckSTTPermissionCallCount = 0
+    private nonisolated(unsafe) var actualCheckSTTPermissionCallCount = 0
     private var actualRequestSTTPermissionCallCount = 0
 
     private var expectedCallCount: Int?
     private var expectedAudioFilePath: String?
-    nonisolated(unsafe) private var expectedCheckSTTPermissionCallCount: Int?
+    private nonisolated(unsafe) var expectedCheckSTTPermissionCallCount: Int?
     private var expectedRequestSTTPermissionCallCount: Int?
 
     public func setResult(_ result: Result<Transcript, STTRepositoryError>) {

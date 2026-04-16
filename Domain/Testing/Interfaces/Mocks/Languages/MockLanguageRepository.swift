@@ -5,10 +5,10 @@ import XCTest
 public actor MockLanguageRepository: LanguageRepository {
     public init() {}
 
-    nonisolated(unsafe) private var fetchResult: Language?
-    nonisolated(unsafe) private var fetchCallCount = 0
-    nonisolated(unsafe) private var saveCallCount = 0
-    nonisolated(unsafe) private var lastSavedLanguage: Language?
+    private nonisolated(unsafe) var fetchResult: Language?
+    private nonisolated(unsafe) var fetchCallCount = 0
+    private nonisolated(unsafe) var saveCallCount = 0
+    private nonisolated(unsafe) var lastSavedLanguage: Language?
 
     private var expectedFetchCallCount: Int?
     private var expectedSaveCallCount: Int?

@@ -4,17 +4,17 @@ import XCTest
 
 actor MockSTTService: STTService {
     private var transcribeResult: Result<STTResult, STTServiceError>?
-    nonisolated(unsafe) private var checkResult: PermissionStatus?
+    private nonisolated(unsafe) var checkResult: PermissionStatus?
     private var requestResult: PermissionStatus?
 
     private var actualTranscribeCallCount = 0
     private var actualTranscribeAudioFileURL: URL?
-    nonisolated(unsafe) private var actualCheckCallCount = 0
+    private nonisolated(unsafe) var actualCheckCallCount = 0
     private var actualRequestCallCount = 0
 
     private var expectedTranscribeCallCount: Int?
     private var expectedTranscribeAudioFileURL: URL?
-    nonisolated(unsafe) private var expectedCheckCallCount: Int?
+    private nonisolated(unsafe) var expectedCheckCallCount: Int?
     private var expectedRequestCallCount: Int?
 
     func setResult(_ result: Result<STTResult, STTServiceError>) {
