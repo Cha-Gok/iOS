@@ -125,7 +125,7 @@ private extension VoiceNoteViewController {
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
     }
 
@@ -142,7 +142,7 @@ private extension VoiceNoteViewController {
             }),
             UIAction(title: "편집하기", handler: { _ in }),
             UIAction(title: "삭제하기", attributes: .destructive, handler: { _ in
-            })
+            }),
         ])
         let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: menu)
         let searchItem = UIBarButtonItem(
@@ -173,12 +173,24 @@ private extension VoiceNoteViewController {
     }
 
     func setupPlayerView() {
-        playerView.audioPlayerObservable = viewModel.state.audioPlayerObservable
         playerView.onPlayPause = { [weak self] in self?.viewModel.send(.view(.playPauseButtonTapped)) }
         playerView.onRewind = { [weak self] in self?.viewModel.send(.view(.rewindButtonTapped)) }
         playerView.onForward = { [weak self] in self?.viewModel.send(.view(.forwardButtonTapped)) }
         playerView.onSeekBegan = { [weak self] in self?.viewModel.send(.view(.seekBegan)) }
         playerView.onSeekEnded = { [weak self] time in self?.viewModel.send(.view(.seekEnded(time))) }
+        observePlaybackState()
+    }
+
+    private func observePlaybackState() {
+        withObservationTracking {
+            _ = viewModel.state.currentPlaybackState
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.playerView.apply(self.viewModel.state.currentPlaybackState)
+                self.observePlaybackState()
+            }
+        }
     }
 }
 
@@ -234,7 +246,7 @@ private extension VoiceNoteViewController {
         }
 
         let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case .keyPoint(let number, let text) = item else { return }
+            guard case let .keyPoint(number, text) = item else { return }
             cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
         }
 
@@ -245,7 +257,7 @@ private extension VoiceNoteViewController {
         }
 
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard let self, case .script(let index) = item else { return }
+            guard let self, case let .script(index) = item else { return }
             let section = viewModel.state.scriptSections[index]
 
             cell.contentConfiguration = ScriptContentConfiguration(

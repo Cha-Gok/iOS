@@ -15,7 +15,6 @@ public final class VoiceNoteViewModel {
     private var playbackObservationTask: Task<Void, Never>?
     @ObservationIgnored
     private var wasPlayingBeforeSeek = false
-
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
     // MARK: - UseCases
@@ -221,12 +220,6 @@ public extension VoiceNoteViewModel {
         public var playingParagraphInfo: State.PlayingParagraphInfo?
     }
 
-    /// 오디오 플레이어 재생 상태. AudioPlayerView가 직접 관찰합니다.
-    @Observable
-    final class AudioPlayerObservable {
-        public var playbackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
-    }
-
     /// 분석 진행 상태. VoiceNoteViewController가 직접 관찰합니다.
     /// analyzing → completed/failed 로 한 번만 바뀝니다.
     @Observable
@@ -320,10 +313,7 @@ public extension VoiceNoteViewModel {
         let analysisObservable = AnalysisObservable()
         let errorObservable = ErrorObservable()
         let playbackHighlight = PlaybackHighlight()
-        let audioPlayerObservable = AudioPlayerObservable()
-        var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0) {
-            didSet { audioPlayerObservable.playbackState = currentPlaybackState }
-        }
+        var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
 
         init(voiceNote: VoiceNote) {
             self.voiceNote = voiceNote
