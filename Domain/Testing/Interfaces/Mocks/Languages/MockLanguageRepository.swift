@@ -2,13 +2,13 @@
 import Foundation
 import XCTest
 
-public actor MockLanguageRepository: LanguageRepository {
+public final class MockLanguageRepository: LanguageRepository, @unchecked Sendable {
     public init() {}
 
-    private nonisolated(unsafe) var fetchResult: Language?
-    private nonisolated(unsafe) var fetchCallCount = 0
-    private nonisolated(unsafe) var saveCallCount = 0
-    private nonisolated(unsafe) var lastSavedLanguage: Language?
+    private var fetchResult: Language?
+    private var fetchCallCount = 0
+    private var saveCallCount = 0
+    private var lastSavedLanguage: Language?
 
     private var expectedFetchCallCount: Int?
     private var expectedSaveCallCount: Int?
@@ -57,12 +57,12 @@ public actor MockLanguageRepository: LanguageRepository {
         }
     }
 
-    public nonisolated func fetchLanguage() -> Language {
+    public func fetchLanguage() -> Language {
         fetchCallCount += 1
         return fetchResult ?? .ko
     }
 
-    public nonisolated func saveLanguage(_ language: Language) {
+    public func saveLanguage(_ language: Language) {
         saveCallCount += 1
         lastSavedLanguage = language
     }
