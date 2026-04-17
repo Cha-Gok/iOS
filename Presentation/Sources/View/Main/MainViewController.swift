@@ -46,6 +46,23 @@ public final class MainViewController: ViewController {
         return c
     }()
 
+    private let cancelAlertButton: GlassButton = .close("나중에")
+    private let primaryAlertButton: GlassButton = .primary("설정으로 이동")
+    private let permissionAlertOverlayView: UIView = {
+        let overlay = UIView()
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        overlay.isHidden = true
+        return overlay
+    }()
+
+    private lazy var permissionAlertView: AlertView = .init(
+        title: "마이크 권한이 필요해요",
+        subTitle: "설정에서 마이크 권한을 \n허용해주세요.",
+        closeButton: cancelAlertButton,
+        primaryButton: primaryAlertButton
+    )
+
     private let floatingButton: GlassButton = .floating(
         image: .init(imageName: "microphone", type: .system)
     )
@@ -58,7 +75,8 @@ public final class MainViewController: ViewController {
         super.viewDidLoad()
         setup()
         setupCollectionView()
-        floatingButtonConstraint()
+        setupfloatingButton()
+        setupPermissionAlert()
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -71,6 +89,12 @@ public final class MainViewController: ViewController {
 
     override public func updateProperties() {
         super.updateProperties()
+        let shouldShowAlert = vm.showAlert
+        permissionAlertOverlayView.isHidden = !shouldShowAlert
+        updateInteractionForAlert(isPresented: shouldShowAlert)
+        if shouldShowAlert {
+            view.bringSubviewToFront(permissionAlertOverlayView)
+        }
         updateDataSource()
     }
 
@@ -78,9 +102,10 @@ public final class MainViewController: ViewController {
 
     private func setup() {
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
+        appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor.gray50
         appearance.shadowColor = .clear
+        appearance.backgroundEffect = nil
 
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
@@ -93,6 +118,29 @@ public final class MainViewController: ViewController {
         )
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         navigationItem.rightBarButtonItem?.hidesSharedBackground = true
+    }
+
+    private func setupPermissionAlert() {
+        cancelAlertButton.addAction(UIAction { [weak self] _ in
+            self?.vm.closeAlertView()
+        }, for: .touchUpInside)
+
+        primaryAlertButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            vm.closeAlertView()
+            openAppSettings()
+        }, for: .touchUpInside)
+
+        view.addSubview(permissionAlertOverlayView)
+        permissionAlertOverlayView.addSubview(permissionAlertView)
+        NSLayoutConstraint.activate([
+            permissionAlertOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            permissionAlertOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            permissionAlertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            permissionAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            permissionAlertView.centerXAnchor.constraint(equalTo: permissionAlertOverlayView.centerXAnchor),
+            permissionAlertView.centerYAnchor.constraint(equalTo: permissionAlertOverlayView.centerYAnchor)
+        ])
     }
 
     private func setupCollectionView() {
@@ -165,6 +213,18 @@ public final class MainViewController: ViewController {
         )
     }
 
+    private func setupfloatingButton() {
+        floatingButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            vm.handleRecordButtonTap()
+        }, for: .touchUpInside)
+
+        NSLayoutConstraint.activate([
+            floatingButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            floatingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -42)
+        ])
+    }
+
     private func collectionViewConstraint() {
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -174,16 +234,17 @@ public final class MainViewController: ViewController {
         ])
     }
 
-    private func floatingButtonConstraint() {
-        floatingButton.addAction(UIAction { [weak self] _ in
-            guard let self else { return }
-            vm.presentRecodingView()
-        }, for: .touchUpInside)
+    private func updateInteractionForAlert(isPresented: Bool) {
+        collectionView.isUserInteractionEnabled = !isPresented
+        navigationItem.leftBarButtonItem?.isEnabled = !isPresented
+        navigationItem.rightBarButtonItem?.isEnabled = !isPresented
+        navigationItem.rightBarButtonItems?.forEach { $0.isEnabled = !isPresented }
+    }
 
-        NSLayoutConstraint.activate([
-            floatingButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            floatingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -42)
-        ])
+    private func openAppSettings() {
+        guard let settingsURL = URL(string: UIApplication.openSettingsURLString),
+              UIApplication.shared.canOpenURL(settingsURL) else { return }
+        UIApplication.shared.open(settingsURL)
     }
 }
 
@@ -423,7 +484,7 @@ extension MainViewController: UICollectionViewDelegate {
         let didScroll = offsetY > 0
 
         guard vm.didScroll != didScroll else { return }
-        vm.didScroll = didScroll
+        vm.setDidScroll(didScroll)
         guard let header = collectionView.visibleSupplementaryViews(ofKind: MainCategoryHeaderView.elementKind)
             .first as? MainCategoryHeaderView else { return }
         header.updateScrollState(didScroll)

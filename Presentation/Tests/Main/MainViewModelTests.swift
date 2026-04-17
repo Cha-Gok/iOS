@@ -43,18 +43,21 @@ final class MainViewModelTests: XCTestCase {
 
     private struct SUT {
         let viewModel: MainViewModel
+        let mockVoiceRecordRepo: MockVoiceRecordRepository
         let mockFolderRepo: MockFolderRepository
         let mockVoiceNoteRepo: MockVoiceNoteRepository
         let mockCoordinator: MockMainCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
+        let mockVoiceRecordRepo = MockVoiceRecordRepository()
         let mockFolderRepo = MockFolderRepository()
         let mockVoiceNoteRepo = MockVoiceNoteRepository()
         let mockWasteBasketRepo = MockWasteBasketRepository()
         let mockCoordinator = MockMainCoordinatorDelegate()
 
         let viewModel = MainViewModel(
+            microphoneRepository: mockVoiceRecordRepo,
             voiceNoteUseCase: DefaultVoiceNoteUseCase(
                 repository: mockVoiceNoteRepo,
                 sttRepository: MockSTTRepository(),
@@ -67,6 +70,7 @@ final class MainViewModelTests: XCTestCase {
 
         return SUT(
             viewModel: viewModel,
+            mockVoiceRecordRepo: mockVoiceRecordRepo,
             mockFolderRepo: mockFolderRepo,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
             mockCoordinator: mockCoordinator
@@ -113,21 +117,57 @@ final class MainViewModelTests: XCTestCase {
         XCTAssertTrue(sut.mockCoordinator.presentRecodingViewCalled)
     }
 
+    func test_handleRecordButtonTap_권한허용_바로녹음화면이동() async {
+        let sut = makeSUT()
+        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.authorized)
+        await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
+
+        sut.viewModel.handleRecordButtonTap()
+
+        await sut.mockVoiceRecordRepo.verify()
+        XCTAssertTrue(sut.mockCoordinator.presentRecodingViewCalled)
+        XCTAssertFalse(sut.viewModel.showAlert)
+    }
+
+    func test_handleRecordButtonTap_권한거부_알럿노출() async {
+        let sut = makeSUT()
+        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.denied)
+        await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
+
+        sut.viewModel.handleRecordButtonTap()
+
+        await sut.mockVoiceRecordRepo.verify()
+        XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
+        XCTAssertTrue(sut.viewModel.showAlert)
+    }
+
+    func test_handleRecordButtonTap_권한미결정_알럿노출() async {
+        let sut = makeSUT()
+        await sut.mockVoiceRecordRepo.setCheckPermissionResult(.notDetermined)
+        await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
+
+        sut.viewModel.handleRecordButtonTap()
+
+        await sut.mockVoiceRecordRepo.verify()
+        XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
+        XCTAssertTrue(sut.viewModel.showAlert)
+    }
+
     // MARK: - Update Tests
 
     func test_updateVoiceNoteCategory_호출시_기본폴더보이스노트로드확인() async {
         // Given
         let sut = makeSUT()
         let expectedNotes = [VoiceNote.stub(title: "노트1"), VoiceNote.stub(title: "노트2")]
-        await sut.mockVoiceNoteRepo.setFetchAllResult(.success(expectedNotes))
-        await sut.mockVoiceNoteRepo.expectFetchAllFromDefaultFolder(callCount: 1)
+        sut.mockVoiceNoteRepo.setFetchAllResult(.success(expectedNotes))
+        sut.mockVoiceNoteRepo.expectFetchAllFromDefaultFolder(callCount: 1)
 
         // When
         sut.viewModel.updateVoiceNoteCategory()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // Then
-        await sut.mockVoiceNoteRepo.verify()
+        sut.mockVoiceNoteRepo.verify()
         XCTAssertEqual(sut.viewModel.categoryData[1].items.count, 2)
         if case .voiceNote(let note) = sut.viewModel.categoryData[1].items[0] {
             XCTAssertEqual(note.title, "노트1")
@@ -140,15 +180,15 @@ final class MainViewModelTests: XCTestCase {
         // Given
         let sut = makeSUT()
         let expectedNotes = [VoiceNote.stub(title: "최신1"), VoiceNote.stub(title: "최신2")]
-        await sut.mockVoiceNoteRepo.setFetchRecentResult(.success(expectedNotes))
-        await sut.mockVoiceNoteRepo.expectFetchRecent(callCount: 1)
+        sut.mockVoiceNoteRepo.setFetchRecentResult(.success(expectedNotes))
+        sut.mockVoiceNoteRepo.expectFetchRecent(callCount: 1)
 
         // When
         sut.viewModel.updateRecentCategory()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // Then
-        await sut.mockVoiceNoteRepo.verify()
+        sut.mockVoiceNoteRepo.verify()
         XCTAssertEqual(sut.viewModel.categoryData[0].items.count, 2)
         if case .voiceNote(let note) = sut.viewModel.categoryData[0].items[0] {
             XCTAssertEqual(note.title, "최신1")
@@ -164,15 +204,15 @@ final class MainViewModelTests: XCTestCase {
             Folder(name: "테스트 폴더 2")
         ]
 
-        await sut.mockFolderRepo.setFetchAllResult(.success(expectedFolders))
-        await sut.mockFolderRepo.expectFetchAll(callCount: 1)
+        sut.mockFolderRepo.setFetchAllResult(.success(expectedFolders))
+        sut.mockFolderRepo.expectFetchAll(callCount: 1)
 
         sut.viewModel.updateMyFolderCategory()
 
         // Task 내부 비동기 대기
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        await sut.mockFolderRepo.verify()
+        sut.mockFolderRepo.verify()
         XCTAssertEqual(sut.viewModel.categoryData[2].items.count, 2)
 
         if case .folder(let folder) = sut.viewModel.categoryData[2].items[0] {

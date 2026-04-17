@@ -83,6 +83,7 @@ extension GlassButton {
     /// `.color(.point600)`)
     ///   - foregroundColor: 버튼 텍스트 및 이미지의 기본 색상입니다. (기본값: `.white`)
     func configure(
+        type: UIButton.Configuration = .prominentGlass(),
         _ title: String?,
         typography: Typography,
         border: Border? = nil,
@@ -90,7 +91,7 @@ extension GlassButton {
         backgroundColor: GradientSet = .color(.point600),
         foregroundColor: UIColor = .white
     ) {
-        var config: UIButton.Configuration = .prominentGlass()
+        var config: UIButton.Configuration = type
 
         config.title = title
         config.baseForegroundColor = foregroundColor

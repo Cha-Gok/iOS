@@ -64,6 +64,7 @@ extension RecordingViewModelTests {
         XCTAssertEqual(sut.viewModel.state.amplitude, 0)
         XCTAssertNil(sut.viewModel.state.errorMessage)
         XCTAssertEqual(sut.viewModel.state.recordingDuration, 0)
+        XCTAssertFalse(sut.viewModel.state.showAlert)
     }
 }
 
@@ -208,6 +209,45 @@ extension RecordingViewModelTests {
 // MARK: - 완료
 
 extension RecordingViewModelTests {
+    func test_openAlertButtonTapped_showAlert를true로변경한다() {
+        // Given
+        let sut = makeSUT()
+
+        // When
+        sut.viewModel.send(.openAlertButtonTapped)
+
+        // Then
+        XCTAssertTrue(sut.viewModel.state.showAlert)
+    }
+
+    func test_closeAlertButtonTapped_showAlert를false로변경한다() {
+        // Given
+        let sut = makeSUT()
+        sut.viewModel.send(.openAlertButtonTapped)
+
+        // When
+        sut.viewModel.send(.closeAlertButtonTapped)
+
+        // Then
+        XCTAssertFalse(sut.viewModel.state.showAlert)
+    }
+}
+
+// MARK: - 에러 처리
+
+extension RecordingViewModelTests {
+    func test_errorOccurred_errorMessage를설정한다() {
+        // Given
+        let sut = makeSUT()
+        let expectedError = VoiceRecordRepositoryError.startFailed
+
+        // When
+        sut.viewModel.send(.errorOccurred(expectedError))
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.errorMessage, expectedError.localizedDescription)
+    }
+
     func test_finishButtonTapped_녹음완료후보이스노트를생성하고coordinator의finishRecording을호출한다() async {
         // Given
         let sut = makeSUT()

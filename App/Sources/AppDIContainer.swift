@@ -78,6 +78,7 @@ public final class AppDIContainer {
 
     public func makeMainViewModel() -> MainViewModel {
         return MainViewModel(
+            microphoneRepository: voiceRecordRepository,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
             wasteBasketRepository: wasteBasketRepository

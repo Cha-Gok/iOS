@@ -35,7 +35,7 @@ struct VoiceNoteCardView: View {
         .frame(maxWidth: .infinity, maxHeight: 120, alignment: .leading)
         .padding(.horizontal)
         .background(.point200.opacity(0.2))
-        .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 20))
+        .glassEffect(.clear, in: .rect(cornerRadius: 20))
     }
 }
 

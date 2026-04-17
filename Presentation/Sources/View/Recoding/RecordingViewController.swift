@@ -6,6 +6,32 @@ public final class RecordingViewController: ViewController {
 
     // MARK: - UI Components
 
+    private lazy var cancelButton: GlassButton = {
+        let button = GlassButton()
+        button.configure(
+            type: .plain(),
+            viewModel.state.cancelTitle,
+            typography: .title2,
+            backgroundColor: .color(.clear),
+            foregroundColor: UIColor.gray950
+        )
+
+        return button
+    }()
+
+    private lazy var completeButton: GlassButton = {
+        let button = GlassButton()
+        button.configure(
+            type: .plain(),
+            viewModel.state.completeTitle,
+            typography: .title2,
+            backgroundColor: .color(.clear),
+            foregroundColor: UIColor.point800
+        )
+
+        return button
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
@@ -33,22 +59,41 @@ public final class RecordingViewController: ViewController {
         return label
     }()
 
-    private lazy var recordButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.layer.cornerRadius = 30
-        button.clipsToBounds = true
-        button.backgroundColor = .gray50
-        button.tintColor = .gray950
+    private lazy var recordButton: GlassButton = {
+        let button = GlassButton()
         button.setPreferredSymbolConfiguration(
-            UIImage.SymbolConfiguration(pointSize: 22, weight: .semibold),
+            UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold),
             forImageIn: .normal
         )
+        button.configure(
+            type: .clearGlass(),
+            nil,
+            typography: .body1,
+            image: .init(imageName: recordButtonSymbolName, type: .system)
+        )
+        button.setCapsuleCornerRadius()
         button.addAction(UIAction { [weak self] _ in
             self?.viewModel.send(.recordButtonTapped)
         }, for: .touchUpInside)
-
         return button
     }()
+
+    private let cancelAlertButton: GlassButton = .close("아니오")
+    private let primaryAlertButton: GlassButton = .primary("저장 후 종료")
+    private let completeAlertOverlayView: UIView = {
+        let overlay = UIView()
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        overlay.isHidden = true
+        return overlay
+    }()
+
+    private lazy var completeAlertView: AlertView = .init(
+        title: "녹음을 종료하고 저장할까요?",
+        subTitle: "지금까지 녹음한 내용이\n기록됩니다",
+        closeButton: cancelAlertButton,
+        primaryButton: primaryAlertButton
+    )
 
     // MARK: - Initialization
 
@@ -67,6 +112,7 @@ public final class RecordingViewController: ViewController {
         super.viewDidLoad()
         setupNavigation()
         setupUI()
+        setupCompleteAlert()
     }
 
     override public func updateProperties() {
@@ -76,28 +122,36 @@ public final class RecordingViewController: ViewController {
         timestampLabel.setTypography(text: viewModel.state.displayStartDate, style: .subtitle2)
         durationLabel.setTypography(text: viewModel.state.displayDuration, style: .header1)
         recordButton.setImage(UIImage(systemName: recordButtonSymbolName), for: .normal)
+        let shouldShowAlert = viewModel.state.showAlert
+        completeAlertOverlayView.isHidden = !shouldShowAlert
+        completeAlertView.isHidden = !shouldShowAlert
+        updateInteractionForAlert(isPresented: shouldShowAlert)
+        if shouldShowAlert {
+            view.bringSubviewToFront(completeAlertOverlayView)
+        }
     }
 
     // MARK: - Private Methods
 
     private func setupNavigation() {
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            systemItem: .cancel,
-            primaryAction: UIAction { [weak self] _ in
-                self?.viewModel.send(.cancelButtonTapped)
-            }
-        )
+        cancelButton.addAction(UIAction { [weak self] _ in
+            self?.viewModel.send(.cancelButtonTapped)
+        }, for: .touchUpInside)
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            systemItem: .done,
-            primaryAction: UIAction { [weak self] _ in
-                self?.viewModel.send(.finishButtonTapped)
-            }
-        )
+        completeButton.addAction(UIAction { [weak self] _ in
+            self?.viewModel.send(.openAlertButtonTapped)
+        }, for: .touchUpInside)
+
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: cancelButton)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: completeButton)
+
+        for item in [navigationItem.leftBarButtonItem, navigationItem.rightBarButtonItem] {
+            item?.hidesSharedBackground = true
+        }
     }
 
     private func setupUI() {
-        for item in [titleLabel, durationLabel, recordButton, timestampLabel] {
+        for item in [titleLabel, durationLabel, recordButton, timestampLabel, completeAlertOverlayView] {
             item.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(item)
         }
@@ -124,6 +178,31 @@ public final class RecordingViewController: ViewController {
         ])
     }
 
+    private func setupCompleteAlert() {
+        cancelAlertButton.addAction(UIAction { [weak self] _ in
+            self?.viewModel.send(.closeAlertButtonTapped)
+        }, for: .touchUpInside)
+
+        primaryAlertButton.addAction(UIAction { [weak self] _ in
+            self?.viewModel.send(.finishButtonTapped)
+        }, for: .touchUpInside)
+        completeAlertOverlayView.addSubview(completeAlertView)
+        NSLayoutConstraint.activate([
+            completeAlertOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            completeAlertOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            completeAlertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            completeAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            completeAlertView.centerXAnchor.constraint(equalTo: completeAlertOverlayView.centerXAnchor),
+            completeAlertView.centerYAnchor.constraint(equalTo: completeAlertOverlayView.centerYAnchor)
+        ])
+    }
+
+    private func updateInteractionForAlert(isPresented: Bool) {
+        navigationItem.leftBarButtonItem?.isEnabled = !isPresented
+        navigationItem.rightBarButtonItem?.isEnabled = !isPresented
+        navigationItem.rightBarButtonItems?.forEach { $0.isEnabled = !isPresented }
+    }
+
     private var recordButtonSymbolName: String {
         switch viewModel.state.recordingState {
         case .idle:
@@ -135,3 +214,10 @@ public final class RecordingViewController: ViewController {
         }
     }
 }
+
+#if DEBUG
+    #Preview {
+        UINavigationController(rootViewController: RecordingViewController(viewModel: .preview())
+        )
+    }
+#endif
