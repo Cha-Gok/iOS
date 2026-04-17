@@ -57,7 +57,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         super.viewWillDisappear(animated)
         viewModel.send(.view(.onDisappear))
     }
-
 }
 
 // MARK: - Setup
@@ -75,6 +74,9 @@ private extension VoiceNoteViewController {
         setupNavigationBar()
         setupTabBar()
         setupPlayerView()
+        observePlaybackState()
+        observeAnalysisState()
+        observeErrorMessage()
     }
 
     func setupConstraints() {
@@ -100,7 +102,7 @@ private extension VoiceNoteViewController {
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
     }
 
@@ -117,7 +119,7 @@ private extension VoiceNoteViewController {
             }),
             UIAction(title: "편집하기", handler: { _ in }),
             UIAction(title: "삭제하기", attributes: .destructive, handler: { _ in
-            }),
+            })
         ])
         let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: menu)
         let searchItem = UIBarButtonItem(
@@ -153,9 +155,6 @@ private extension VoiceNoteViewController {
         playerView.onForward = { [weak self] in self?.viewModel.send(.view(.forwardButtonTapped)) }
         playerView.onSeekBegan = { [weak self] in self?.viewModel.send(.view(.seekBegan)) }
         playerView.onSeekEnded = { [weak self] time in self?.viewModel.send(.view(.seekEnded(time))) }
-        observePlaybackState()
-        observeAnalysisState()
-        observeErrorMessage()
     }
 
     private func observePlaybackState() {
@@ -172,11 +171,11 @@ private extension VoiceNoteViewController {
 
     private func observeAnalysisState() {
         withObservationTracking {
-            _ = viewModel.state.analysisState
+            _ = viewModel.state.voiceNote.analysisState
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                switch self.viewModel.state.analysisState {
+                switch self.viewModel.state.voiceNote.analysisState {
                 case .analyzing:
                     var snapshot = self.dataSource.snapshot()
                     snapshot.reconfigureItems([.metadata])
@@ -186,7 +185,7 @@ private extension VoiceNoteViewController {
                         self.hasAppliedCompletedSnapshot = true
                         self.applySnapshot()
                     }
-                case .failed:
+                case .failed, .pending:
                     break
                 }
                 self.observeAnalysisState()
@@ -263,7 +262,7 @@ private extension VoiceNoteViewController {
         }
 
         let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case let .keyPoint(number, text) = item else { return }
+            guard case .keyPoint(let number, let text) = item else { return }
             cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
         }
 
@@ -274,7 +273,7 @@ private extension VoiceNoteViewController {
         }
 
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard let self, case let .script(index) = item else { return }
+            guard let self, case .script(let index) = item else { return }
             let section = viewModel.state.scriptSections[index]
 
             cell.contentConfiguration = ScriptContentConfiguration(

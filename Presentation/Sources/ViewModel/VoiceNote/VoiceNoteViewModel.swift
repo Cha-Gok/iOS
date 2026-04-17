@@ -54,7 +54,8 @@ public final class VoiceNoteViewModel {
                 // 재생 스트림 구독 시작 및 폴더명·AI 분석 로드
                 startPlaybackObservation()
                 Task { await fetchFolderName() }
-                if state.analysisState != .completed {
+                if state.voiceNote.analysisState != .completed {
+                    state.voiceNote.analysisState = .analyzing
                     Task { await performNewAnalysis() }
                 }
             case .onDisappear:
@@ -102,11 +103,10 @@ public final class VoiceNoteViewModel {
             case .analysisCompleted(let note):
                 // AI 분석 완료 — keywords/transcript/summary가 채워진 노트로 교체
                 state.voiceNote = note
-                state.analysisState = .completed
             case .analysisFailed(let message):
                 // AI 분석 실패 — 에러 메시지 표시
                 state.errorMessage = message
-                state.analysisState = .failed
+                state.voiceNote.analysisState = .failed
             case .playbackStateChanged(let playbackState):
                 // 재생 진행 스트림에서 수신한 최신 상태 반영
                 state.currentPlaybackState = playbackState
@@ -148,7 +148,8 @@ public final class VoiceNoteViewModel {
                 voiceRecord: state.voiceNote.voiceRecord,
                 keywords: result.keywords,
                 transcript: result.transcript,
-                summary: result.summary
+                summary: result.summary,
+                analysisState: .completed
             )
 
             // 분석 결과 반영 (폴더명은 metadataLoaded 액션이 별도로 담당)
@@ -280,14 +281,7 @@ public extension VoiceNoteViewModel {
     }
 
     struct State {
-        public enum AnalysisState {
-            case analyzing
-            case completed
-            case failed
-        }
-
         var voiceNote: VoiceNote
-        var analysisState: AnalysisState
         var errorMessage: String?
         var folderName: String = ""
         /// State가 struct이므로 let으로 선언해 참조 안정성을 보장합니다.
@@ -296,7 +290,6 @@ public extension VoiceNoteViewModel {
 
         init(voiceNote: VoiceNote) {
             self.voiceNote = voiceNote
-            analysisState = voiceNote.summary != nil && voiceNote.transcript != nil ? .completed : .analyzing
         }
 
         // MARK: - Highlight Logic
