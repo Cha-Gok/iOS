@@ -33,9 +33,6 @@ struct VoiceNoteCardView: View {
             }
 
         }
-        .onChange(of: select) { _,newValue in
-            print("내부 VoiceNote select : \(newValue)")
-        }
         .editCardStyle(isSelected: isSelected)
         .onTapGesture {
             if isEdit {

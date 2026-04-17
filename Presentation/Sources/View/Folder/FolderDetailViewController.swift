@@ -86,13 +86,6 @@ public final class FolderDetailViewController: CollectionViewController {
         self?.vm.setSelectionMode(.all)
     }
     
-    private lazy var cancelAction = UIAction(
-        title: "취소하기",
-        image: nil
-    ) { [weak self] _ in
-        self?.vm.setSelectionMode(.none)
-    }
-    
     private lazy var moveAction = UIAction(
         title: "파일 이동하기",
         image: nil
@@ -201,25 +194,6 @@ public final class FolderDetailViewController: CollectionViewController {
         )
         moreAndActionButton.menu = menu
     }
-
-    private func updateRightBarButtonMenu(_ select: FolderDetailViewModel.Select) {
-        let dateSection: UIMenu = .init(
-            title: "",
-            options: .displayInline,
-            children: updateDateSectionChildren
-        )
-
-        let selectSection: UIMenu = .init(
-            title: "",
-            options: .displayInline,
-            children: updateSelectSectionChildren
-        )
-        let menu: UIMenu = .init(
-            title: "",
-            children: [dateSection, selectSection]
-        )
-        moreAndActionButton.menu = menu
-    }
     
     private func setupDataSource() {
         let cellRegistration = UICollectionView.CellRegistration {[weak self](
@@ -284,6 +258,43 @@ extension FolderDetailViewController {
         }
     }
     
+    private func updateRightBarButtonMenu(_ select: FolderDetailViewModel.Select) {
+            let dateSection: UIMenu = .init(
+                title: "",
+                options: .displayInline,
+                children: updateDateSectionChildren
+            )
+
+            let selectSection: UIMenu = .init(
+                title: "",
+                options: .displayInline,
+                children: updateSelectSectionChildren
+            )
+            let menu: UIMenu = .init(
+                title: "",
+                children: [dateSection, selectSection]
+            )
+            moreAndActionButton.menu = menu
+        }
+    
+        private var updateDateSectionChildren: [UIMenuElement] {
+            switch vm.select {
+            case .none:
+                [createdAtAction, updatedAtAction]
+            case .all, .single:
+                []
+            }
+        }
+        
+        private var updateSelectSectionChildren: [UIMenuElement] {
+            switch vm.select {
+            case .none:
+                [selectAction, selectAllAction]
+            case .all, .single:
+                []
+            }
+        }
+    
     private func updateNavigationItems(_ select: FolderDetailViewModel.Select) {
         let isEditMode = (select != .none)
         [backButton, moreAndActionButton, searchAndMoveButton].forEach {
@@ -292,24 +303,6 @@ extension FolderDetailViewController {
             $0.sizeToFit()
         }
         moreAndActionButton.showsMenuAsPrimaryAction = !isEditMode
-    }
-    
-    private var updateDateSectionChildren: [UIMenuElement] {
-        switch vm.select {
-        case .none:
-            [createdAtAction, updatedAtAction]
-        case .all, .single:
-            []
-        }
-    }
-    
-    private var updateSelectSectionChildren: [UIMenuElement] {
-        switch vm.select {
-        case .none:
-            [selectAction, selectAllAction]
-        case .all, .single:
-            [cancelAction, moveAction, deleteAction]
-        }
     }
     
     private func updateDataSource(reconfigure: Bool = false) {
@@ -343,11 +336,12 @@ extension FolderDetailViewController {
             guard let self else { return }
             switch vm.select {
             case .none:
-                // TODO: 더 보기 로직 실행
+                // TODO: 더 보기 로직 실행 ( 실행 X )
                 print("더 보기 버튼 탭됨")
-            case .all, .single:
+            case .single, .all:
                 // TODO: 삭제 로직 실행
                 print("삭제 버튼 탭됨")
+                vm.setSelectionMode(.none)
             }
         }
     }
@@ -362,6 +356,7 @@ extension FolderDetailViewController {
             case .all, .single:
                 // TODO: 이동 로직 실행
                 print("이동 버튼 탭됨")
+                vm.setSelectionMode(.none)
             }
         }
     }
