@@ -1,5 +1,12 @@
 import Foundation
 
+public enum AnalysisState: Sendable, Hashable {
+    case pending
+    case analyzing
+    case completed
+    case failed
+}
+
 public struct VoiceNote: Sendable, Identifiable, Hashable {
     public let id: UUID
     public let title: String
@@ -11,6 +18,7 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
     public var transcript: Transcript?
     public var summary: Summary?
     public var deletedAt: Date?
+    public var analysisState: AnalysisState
 
     public init(
         id: UUID = UUID(),
@@ -22,7 +30,8 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
         keywords: [Keyword] = [],
         transcript: Transcript? = nil,
         summary: Summary? = nil,
-        deletedAt: Date? = nil
+        deletedAt: Date? = nil,
+        analysisState: AnalysisState? = nil
     ) {
         self.id = id
         self.title = title
@@ -34,5 +43,6 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
         self.transcript = transcript
         self.summary = summary
         self.deletedAt = deletedAt
+        self.analysisState = analysisState ?? (summary != nil && transcript != nil ? .completed : .pending)
     }
 }
