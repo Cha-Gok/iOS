@@ -2,24 +2,25 @@ import Core
 import Foundation
 
 /// 음성 메모 통합 유스케이스 프로토콜.
+@MainActor
 public protocol VoiceNoteUseCase: Sendable {
     /// 새로운 음성 메모를 생성합니다.
-    func create(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote
+    func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteUseCaseError) -> VoiceNote
 
     /// 기본 폴더의 모든 음성 메모를 조회합니다.
-    func fetchAllFromDefaultFolder() async throws(VoiceNoteUseCaseError) -> [VoiceNote]
+    func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote]
 
     /// 특정 폴더의 모든 음성 메모를 조회합니다.
-    func fetchAll(folderID: UUID) async throws(VoiceNoteUseCaseError) -> [VoiceNote]
+    func fetchAll(folderID: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote]
 
     /// 특정 음성 메모를 조회합니다.
-    func fetch(byId id: UUID) async throws(VoiceNoteUseCaseError) -> VoiceNote
+    func fetch(byId id: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote
 
     /// 최근 생성된 음성 메모를 조회합니다.
-    func fetchRecent(limit: Int) async throws(VoiceNoteUseCaseError) -> [VoiceNote]
+    func fetchRecent(limit: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote]
 
     /// 음성 메모 정보를 업데이트합니다.
-    func update(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote
+    func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote
 
     /// 오디오 파일을 분석하여 전사·키워드·요약 결과를 반환합니다.
     func summarize(audioFilePath: String, language: Language) async throws(VoiceNoteUseCaseError)
@@ -44,9 +45,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
 
     // MARK: - Create
 
-    public func create(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote {
-        if Task.isCancelled { throw .cancelled }
-
+    public func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteUseCaseError) -> VoiceNote {
         // 1. 녹음 시간 검증
         if !voiceRecord.duration.isFinite || voiceRecord.duration <= 0 {
             let error = VoiceNoteUseCaseError.invalidDuration(duration: voiceRecord.duration)
@@ -70,7 +69,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         }
 
         do {
-            return try await repository.create(voiceRecord)
+            return try repository.create(voiceRecord)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }
@@ -78,37 +77,33 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
 
     // MARK: - Fetch
 
-    public func fetchAllFromDefaultFolder() async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        if Task.isCancelled { throw .cancelled }
+    public func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote] {
         do {
-            return try await repository.fetchAllFromDefaultFolder()
+            return try repository.fetchAllFromDefaultFolder()
         } catch {
             throw VoiceNoteUseCaseError(error)
         }
     }
 
-    public func fetchAll(folderID: UUID) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        if Task.isCancelled { throw .cancelled }
+    public func fetchAll(folderID: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
         do {
-            return try await repository.fetchAll(folderID: folderID)
+            return try repository.fetchAll(folderID: folderID)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }
     }
 
-    public func fetch(byId id: UUID) async throws(VoiceNoteUseCaseError) -> VoiceNote {
-        if Task.isCancelled { throw .cancelled }
+    public func fetch(byId id: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote {
         do {
-            return try await repository.fetch(byId: id)
+            return try repository.fetch(byId: id)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }
     }
 
-    public func fetchRecent(limit: Int) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        if Task.isCancelled { throw .cancelled }
+    public func fetchRecent(limit: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
         do {
-            return try await repository.fetchRecent(limit: limit)
+            return try repository.fetchRecent(limit: limit)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }
@@ -116,9 +111,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
 
     // MARK: - Update
 
-    public func update(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote {
-        if Task.isCancelled { throw .cancelled }
-
+    public func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote {
         // 1. 제목 유효성 검사 (공백)
         let trimmedTitle = voiceNote.title.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedTitle.isEmpty || voiceNote.title != trimmedTitle {
@@ -145,7 +138,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         )
 
         do {
-            return try await repository.update(updatedNote)
+            return try repository.update(updatedNote)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }

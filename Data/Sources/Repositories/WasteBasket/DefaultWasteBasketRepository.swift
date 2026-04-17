@@ -4,6 +4,7 @@ import Foundation
 
 /// 휴지통 리포지토리 구현체.
 /// Soft Delete(`deletedAt` 설정) 및 영구 삭제를 담당합니다.
+@MainActor
 public struct DefaultWasteBasketRepository: WasteBasketRepository {
     private let store: CoreDataLocalDataBase
 
@@ -13,19 +14,17 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
 
     // MARK: - Fetch
 
-    public func fetchAll() async throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
-        if Task.isCancelled { throw .cancelled }
-
+    public func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
         do {
-            async let voiceNoteItems = store.fetchAll(VoiceNoteEntity.self)
+            let voiceNoteItems = try store.fetchAll(VoiceNoteEntity.self)
                 .filter { $0.deletedAt != nil }
                 .map { WasteBasketItem.voiceNote(obj: $0) }
 
-            async let folderItems = store.fetchAll(FolderEntity.self)
+            let folderItems = try store.fetchAll(FolderEntity.self)
                 .filter { $0.deletedAt != nil }
                 .map { WasteBasketItem.folder(obj: $0) }
 
-            return try await voiceNoteItems + folderItems
+            return voiceNoteItems + folderItems
         } catch {
             AppLogger.error(error)
             throw FetchWasteBasketRepositoryError(error)
@@ -34,20 +33,18 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
 
     // MARK: - Delete
 
-    public func allClear() async throws(DeleteWasteBasketRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
-
+    public func allClear() throws(DeleteWasteBasketRepositoryError) {
         do {
-            let voiceNotes = try await store.fetchAll(VoiceNoteEntity.self)
+            let voiceNotes = try store.fetchAll(VoiceNoteEntity.self)
                 .filter { $0.deletedAt != nil }
             for voiceNote in voiceNotes {
-                _ = try await store.delete(byID: voiceNote.id, as: VoiceNoteEntity.self)
+                _ = try store.delete(byID: voiceNote.id, as: VoiceNoteEntity.self)
             }
 
-            let folders = try await store.fetchAll(FolderEntity.self)
+            let folders = try store.fetchAll(FolderEntity.self)
                 .filter { $0.deletedAt != nil }
             for folder in folders {
-                _ = try await store.delete(byID: folder.id, as: FolderEntity.self)
+                _ = try store.delete(byID: folder.id, as: FolderEntity.self)
             }
         } catch {
             AppLogger.error(error)
@@ -55,15 +52,13 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    public func delete(item: WasteBasketItem) async throws(DeleteWasteBasketRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
-
+    public func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {
         do {
             switch item {
             case .voiceNote(let obj):
-                _ = try await store.delete(byID: obj.id, as: VoiceNoteEntity.self)
+                _ = try store.delete(byID: obj.id, as: VoiceNoteEntity.self)
             case .folder(let obj):
-                _ = try await store.delete(byID: obj.id, as: FolderEntity.self)
+                _ = try store.delete(byID: obj.id, as: FolderEntity.self)
             }
         } catch {
             AppLogger.error(error)
@@ -71,16 +66,14 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    public func deleteAll(items: [WasteBasketItem]) async throws(DeleteWasteBasketRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
-
+    public func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {
         do {
             for item in items {
                 switch item {
                 case .voiceNote(let obj):
-                    _ = try await store.delete(byID: obj.id, as: VoiceNoteEntity.self)
+                    _ = try store.delete(byID: obj.id, as: VoiceNoteEntity.self)
                 case .folder(let obj):
-                    _ = try await store.delete(byID: obj.id, as: FolderEntity.self)
+                    _ = try store.delete(byID: obj.id, as: FolderEntity.self)
                 }
             }
         } catch {
@@ -91,13 +84,11 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
 
     // MARK: - Move
 
-    public func moveToWasteBasket(item: WasteBasketItem) async throws(MoveWasteBasketRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
-
+    public func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {
         do {
             switch item {
             case .voiceNote(let obj):
-                let voiceNote = try await store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
+                let voiceNote = try store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
                 let updated = VoiceNote(
                     id: voiceNote.id,
                     title: voiceNote.title,
@@ -110,10 +101,10 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     summary: voiceNote.summary,
                     deletedAt: .now
                 )
-                _ = try await store.update(updated, as: VoiceNoteEntity.self)
+                _ = try store.update(updated, as: VoiceNoteEntity.self)
 
             case .folder(let obj):
-                let folder = try await store.fetch(byID: obj.id, as: FolderEntity.self)
+                let folder = try store.fetch(byID: obj.id, as: FolderEntity.self)
                 let updated = Folder(
                     id: folder.id,
                     name: folder.name,
@@ -121,7 +112,7 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     isDeletable: folder.isDeletable,
                     deletedAt: .now
                 )
-                _ = try await store.update(updated, as: FolderEntity.self)
+                _ = try store.update(updated, as: FolderEntity.self)
             }
         } catch {
             AppLogger.error(error)
@@ -129,14 +120,12 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    public func moveAllToWasteBasket(items: [WasteBasketItem]) async throws(MoveWasteBasketRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
-
+    public func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {
         do {
             for item in items {
                 switch item {
                 case .voiceNote(let obj):
-                    let voiceNote = try await store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
+                    let voiceNote = try store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
                     let updated = VoiceNote(
                         id: voiceNote.id,
                         title: voiceNote.title,
@@ -149,10 +138,10 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                         summary: voiceNote.summary,
                         deletedAt: .now
                     )
-                    _ = try await store.update(updated, as: VoiceNoteEntity.self)
+                    _ = try store.update(updated, as: VoiceNoteEntity.self)
 
                 case .folder(let obj):
-                    let folder = try await store.fetch(byID: obj.id, as: FolderEntity.self)
+                    let folder = try store.fetch(byID: obj.id, as: FolderEntity.self)
                     let updated = Folder(
                         id: folder.id,
                         name: folder.name,
@@ -160,7 +149,7 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                         isDeletable: folder.isDeletable,
                         deletedAt: .now
                     )
-                    _ = try await store.update(updated, as: FolderEntity.self)
+                    _ = try store.update(updated, as: FolderEntity.self)
                 }
             }
         } catch {
@@ -171,13 +160,11 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
 
     // MARK: - Restore
 
-    public func restore(item: WasteBasketItem) async throws(RestoreWasteBasketRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
-
+    public func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {
         do {
             switch item {
             case .voiceNote(let obj):
-                let voiceNote = try await store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
+                let voiceNote = try store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
                 let updated = VoiceNote(
                     id: voiceNote.id,
                     title: voiceNote.title,
@@ -190,10 +177,10 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     summary: voiceNote.summary,
                     deletedAt: nil
                 )
-                _ = try await store.update(updated, as: VoiceNoteEntity.self)
+                _ = try store.update(updated, as: VoiceNoteEntity.self)
 
             case .folder(let obj):
-                let folder = try await store.fetch(byID: obj.id, as: FolderEntity.self)
+                let folder = try store.fetch(byID: obj.id, as: FolderEntity.self)
                 let updated = Folder(
                     id: folder.id,
                     name: folder.name,
@@ -201,7 +188,7 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     isDeletable: folder.isDeletable,
                     deletedAt: nil
                 )
-                _ = try await store.update(updated, as: FolderEntity.self)
+                _ = try store.update(updated, as: FolderEntity.self)
             }
         } catch {
             AppLogger.error(error)
@@ -209,14 +196,12 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
         }
     }
 
-    public func restoreAll(items: [WasteBasketItem]) async throws(RestoreWasteBasketRepositoryError) {
-        if Task.isCancelled { throw .cancelled }
-
+    public func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {
         do {
             for item in items {
                 switch item {
                 case .voiceNote(let obj):
-                    let voiceNote = try await store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
+                    let voiceNote = try store.fetch(byID: obj.id, as: VoiceNoteEntity.self)
                     let updated = VoiceNote(
                         id: voiceNote.id,
                         title: voiceNote.title,
@@ -229,10 +214,10 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                         summary: voiceNote.summary,
                         deletedAt: nil
                     )
-                    _ = try await store.update(updated, as: VoiceNoteEntity.self)
+                    _ = try store.update(updated, as: VoiceNoteEntity.self)
 
                 case .folder(let obj):
-                    let folder = try await store.fetch(byID: obj.id, as: FolderEntity.self)
+                    let folder = try store.fetch(byID: obj.id, as: FolderEntity.self)
                     let updated = Folder(
                         id: folder.id,
                         name: folder.name,
@@ -240,7 +225,7 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                         isDeletable: folder.isDeletable,
                         deletedAt: nil
                     )
-                    _ = try await store.update(updated, as: FolderEntity.self)
+                    _ = try store.update(updated, as: FolderEntity.self)
                 }
             }
         } catch {
