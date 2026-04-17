@@ -66,7 +66,7 @@ extension FolderUseCaseTest {
                 _ = try sut.create(name: name)
                 XCTFail("FolderUseCaseError.invalidName 에러를 throw 해야 합니다. (input: '\(name)')")
             } catch {
-                guard case .invalidName = error as? FolderUseCaseError else {
+                guard case .invalidName = error else {
                     XCTFail(
                         "예상한 에러는 FolderUseCaseError.invalidName 이지만, 실제 받은 에러는 \(error) 입니다. (input: '\(name)')"
                     )
