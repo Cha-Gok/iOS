@@ -23,6 +23,7 @@ public final class VoiceNoteViewModel {
     private let folderUseCase: any FolderUseCase
     private let languageRepository: any LanguageRepository
     private let playbackRepository: any VoiceRecordPlaybackRepository
+    private let wasteBasketRepository: any WasteBasketRepository
 
     // MARK: - Init
 
@@ -31,13 +32,15 @@ public final class VoiceNoteViewModel {
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
         languageRepository: any LanguageRepository,
-        playbackRepository: any VoiceRecordPlaybackRepository
+        playbackRepository: any VoiceRecordPlaybackRepository,
+        wasteBasketRepository: any WasteBasketRepository
     ) {
         state = State(voiceNote: voiceNote)
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.languageRepository = languageRepository
         self.playbackRepository = playbackRepository
+        self.wasteBasketRepository = wasteBasketRepository
     }
 
     deinit {
@@ -93,6 +96,8 @@ public final class VoiceNoteViewModel {
                 coordinator?.pop()
             case .moveVoiceNoteButtonTapped:
                 coordinator?.presentFolderList(with: state.voiceNote)
+            case .deleteVoiceNoteButtonTapped:
+                Task { await moveToWasteBasket() }
             }
 
         case .internal(let internalAction):
@@ -210,6 +215,17 @@ public final class VoiceNoteViewModel {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
     }
+
+    private func moveToWasteBasket() async {
+        if Task.isCancelled { return }
+        do {
+            stop()
+            try await wasteBasketRepository.moveToWasteBasket(item: .voiceNote(obj: state.voiceNote))
+            coordinator?.pop()
+        } catch {
+            send(.internal(.errorOccurred(error.localizedDescription)))
+        }
+    }
 }
 
 // MARK: - Nested Types
@@ -265,6 +281,7 @@ public extension VoiceNoteViewModel {
             case scriptTimestampTapped(TimeInterval)
             case pop
             case moveVoiceNoteButtonTapped
+            case deleteVoiceNoteButtonTapped
         }
 
         public enum Internal {

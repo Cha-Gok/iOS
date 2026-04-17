@@ -118,7 +118,8 @@ private extension VoiceNoteViewController {
                 self.viewModel.send(.view(.moveVoiceNoteButtonTapped))
             }),
             UIAction(title: "편집하기", handler: { _ in }),
-            UIAction(title: "삭제하기", attributes: .destructive, handler: { _ in
+            UIAction(title: "삭제하기", attributes: .destructive, handler: { [weak self] _ in
+                self?.viewModel.send(.view(.deleteVoiceNoteButtonTapped))
             })
         ])
         let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: menu)

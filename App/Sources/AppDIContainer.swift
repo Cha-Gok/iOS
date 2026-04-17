@@ -71,7 +71,8 @@ public final class AppDIContainer {
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
             languageRepository: languageRepository,
-            playbackRepository: voiceRecordPlaybackRepository
+            playbackRepository: voiceRecordPlaybackRepository,
+            wasteBasketRepository: wasteBasketRepository
         )
     }
 
