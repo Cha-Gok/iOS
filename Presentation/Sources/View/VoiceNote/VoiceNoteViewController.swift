@@ -14,14 +14,31 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let topBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
     private lazy var segmentedControl = UnderlineSegmentedControl(items: [Section.keyPoints, .keywords, .scripts]
         .compactMap(\.title))
-    private lazy var backButton: UIButton = {
+    private lazy var backChevronButton: UIButton = {
         let btn = UIButton(type: .system)
         let backImage = UIImage(systemName: "chevron.left")?
             .withConfiguration(UIImage.SymbolConfiguration(weight: .bold))
         btn.setImage(backImage, for: .normal)
-        btn.titleLabel?.setTypography(style: .title1)
         btn.tintColor = UIColor.gray950
+        btn.addAction(UIAction { [weak self] _ in
+            self?.viewModel.send(.view(.pop))
+        }, for: .touchUpInside)
         return btn
+    }()
+
+    private lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.title1.font
+        label.textColor = UIColor.gray950
+        return label
+    }()
+
+    private lazy var navLeftView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [backChevronButton, titleLabel])
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 4
+        return stack
     }()
 
     private lazy var collectionView: UICollectionView = {
@@ -106,15 +123,10 @@ private extension VoiceNoteViewController {
     }
 
     func setupNavigationBar() {
-        backButton.setTitle(" \(viewModel.state.title)", for: .normal)
-        backButton.addAction(
-            UIAction { [weak self] _ in
-                self?.viewModel.send(.view(.pop))
-            }, for: .touchUpInside
-        )
+        titleLabel.text = viewModel.state.title
         let menu = UIMenu(children: [
-            UIAction(title: "기록 이동하기", handler: { _ in
-                self.viewModel.send(.view(.moveVoiceNoteButtonTapped))
+            UIAction(title: "기록 이동하기", handler: { [weak self] _ in
+                self?.viewModel.send(.view(.moveVoiceNoteButtonTapped))
             }),
             UIAction(title: "편집하기", handler: { _ in }),
             UIAction(title: "삭제하기", attributes: .destructive, handler: { [weak self] _ in
@@ -128,14 +140,11 @@ private extension VoiceNoteViewController {
             target: nil,
             action: nil
         )
-        let leftItem = UIBarButtonItem(customView: backButton)
-        navigationItem.leftBarButtonItem = leftItem
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: navLeftView)
         navigationItem.rightBarButtonItems = [moreItem, searchItem]
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
-        navigationItem.rightBarButtonItems?.forEach {
-            $0.hidesSharedBackground = true
-        }
+        navigationItem.rightBarButtonItems?.forEach { $0.hidesSharedBackground = true }
     }
 
     func setupTabBar() {
@@ -205,6 +214,7 @@ private extension VoiceNoteViewController {
             }
         }
     }
+
 }
 
 // MARK: - Tab Actions
