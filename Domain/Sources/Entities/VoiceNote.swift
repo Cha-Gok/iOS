@@ -3,6 +3,7 @@ import Foundation
 public enum AnalysisState: Sendable, Hashable {
     case pending
     case analyzing
+    case transcribed
     case completed
     case failed
 }
@@ -43,6 +44,14 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
         self.transcript = transcript
         self.summary = summary
         self.deletedAt = deletedAt
-        self.analysisState = analysisState ?? (summary != nil && transcript != nil ? .completed : .pending)
+        if let analysisState {
+            self.analysisState = analysisState
+        } else if summary != nil, transcript != nil {
+            self.analysisState = .completed
+        } else if transcript != nil {
+            self.analysisState = .transcribed
+        } else {
+            self.analysisState = .pending
+        }
     }
 }
