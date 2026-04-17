@@ -218,6 +218,7 @@ public final class VoiceNoteViewModel {
 
         do {
             _ = try voiceNoteUseCase.update(updatedNote)
+            self.voiceNote = updatedNote
             isEditing = false
         } catch {
             errorMessage = "제목 수정에 실패했습니다: \(error.localizedDescription)"

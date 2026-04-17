@@ -289,6 +289,7 @@ private extension VoiceNoteViewController {
 
     func exitEditMode() {
         titleTextField.resignFirstResponder()
+        titleLabel.text = viewModel.title
         titleLabel.isHidden = false
         navigationItem.titleView = titleLabel
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
