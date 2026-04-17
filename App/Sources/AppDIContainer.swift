@@ -51,6 +51,7 @@ public final class AppDIContainer {
         OnBoardingViewModel(
             languageRepository: languageRepository,
             voiceRecordRepository: voiceRecordRepository,
+            sttRepository: sttRepository,
             checkFirstLaunchRepository: checkFirstLaunchRepository,
             folderUseCase: folderUseCase
         )
