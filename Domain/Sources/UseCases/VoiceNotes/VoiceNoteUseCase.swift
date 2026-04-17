@@ -25,6 +25,9 @@ public protocol VoiceNoteUseCase: Sendable {
     /// 오디오 파일을 분석하여 전사·키워드·요약 결과를 반환합니다.
     func summarize(audioFilePath: String, language: Language) async throws(VoiceNoteUseCaseError)
         -> AudioToSummaryResult
+
+    /// ID로 음성 메모를 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote>
 }
 
 /// 음성 메모 통합 유스케이스 구현체.
@@ -139,6 +142,16 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
 
         do {
             return try repository.update(updatedNote)
+        } catch {
+            throw VoiceNoteUseCaseError(error)
+        }
+    }
+
+    // MARK: - Observe
+
+    public func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote> {
+        do {
+            return try repository.observe(id: id)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }
