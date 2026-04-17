@@ -27,21 +27,50 @@ public final class FolderDetailViewController: UICollectionViewController {
 
     private lazy var createdAtAction = UIAction(
         title: "생성일 순"
-    ) { _ in
-        self.vm.touchCreatedAction()
+    ) { [weak self] _ in
+        self?.vm.setOrder(.createdAt)
     }
 
     private lazy var updatedAtAction = UIAction(
         title: "수정일 순"
-    ) { _ in
-        self.vm.touchUpdatedAction()
+    ) { [weak self] _ in
+        self?.vm.setOrder(.updatedAt)
     }
 
     private lazy var selectAction = UIAction(
-        title: vm.isSelectionMode ? "완료" : "선택하기",
-        image: UIImage(systemName: "checkmark.circle")
+        title: "선택하기",
+        image: nil
     ) { [weak self] _ in
-        self?.vm.toggleSelectionMode()
+        self?.vm.setSelectionMode(.single)
+    }
+    
+    private lazy var selectAllAction = UIAction(
+        title: "전체 선택하기",
+        image: nil
+    ) { [weak self] _ in
+        self?.vm.setSelectionMode(.all)
+    }
+    
+    private lazy var cancelAction = UIAction(
+        title: "취소하기",
+        image: nil
+    ) { [weak self] _ in
+        self?.vm.setSelectionMode(.none)
+    }
+    
+    private lazy var moveAction = UIAction(
+        title: "파일 이동하기",
+        image: nil
+    ) { [weak self] _ in
+        
+    }
+    
+    private lazy var deleteAction = UIAction(
+        title: "삭제하기",
+        image: nil,
+        attributes: .destructive
+    ) { [weak self] _ in
+        
     }
 
     private let vm: FolderDetailViewModel
@@ -81,32 +110,10 @@ public final class FolderDetailViewController: UICollectionViewController {
     override public func updateProperties() {
         super.updateProperties()
         // menu
-        switch vm.selectedOrder {
-        case .createdAt:
-            createdAtAction.image = UIImage(systemName: "checkmark")
-            updatedAtAction.image = nil
-        case .updatedAt:
-            createdAtAction.image = nil
-            updatedAtAction.image = UIImage(systemName: "checkmark")
-        }
-        selectAction.title = vm.isSelectionMode ? "완료" : "선택하기"
+        updateOrder(vm.order)
         // dataSource
-        collectionView.allowsMultipleSelection = vm.isSelectionMode
-        if !vm.isSelectionMode {
-            collectionView.indexPathsForSelectedItems?.forEach {
-                collectionView.deselectItem(at: $0, animated: false)
-            }
-        }
         updateDataSource(reconfigure: true)
-        updateRightBarButtonMenu()
-    }
-
-    private func updateRightBarButtonMenu() {
-        let menu = UIMenu(
-            title: "",
-            children: [createdAtAction, updatedAtAction, selectAction]
-        )
-        navigationItem.rightBarButtonItems?.first?.menu = menu
+        updateRightBarButtonMenu(vm.select)
     }
 
     private func setupNavigation() {
@@ -130,25 +137,41 @@ public final class FolderDetailViewController: UICollectionViewController {
             UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: nil),
             UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), menu: nil)
         ]
-        updateRightBarButtonMenu()
+        setupRightBarButtonMenu()
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         navigationItem.rightBarButtonItems?.forEach {
             $0.hidesSharedBackground = true
         }
     }
 
+    private func setupRightBarButtonMenu() {
+        let dateSection: UIMenu = .init(
+            title: "",
+            options: .displayInline,
+            children: [createdAtAction, updatedAtAction]
+        )
+        
+        let selectSection: UIMenu = .init(
+            title: "",
+            options: .displayInline,
+            children: [selectAction, selectAllAction]
+        )
+        let menu: UIMenu = .init(
+            title: "",
+            children: [dateSection, selectSection]
+        )
+        navigationItem.rightBarButtonItems?.first?.menu = menu
+    }
+    
     private func setupDataSource() {
-        let cellRegistration = UICollectionView.CellRegistration { [weak self] (
+        let cellRegistration = UICollectionView.CellRegistration {(
             cell: UICollectionViewListCell,
             indexPath: IndexPath,
             itemIdentifier: LibraryItem
         ) in
-            guard let self else { return }
             var backgroundConfig = UIBackgroundConfiguration.listCell()
             backgroundConfig.backgroundColor = .clear
             cell.backgroundConfiguration = backgroundConfig
-
-            cell.accessories = vm.isSelectionMode ? [.multiselect(displayed: .always)] : []
 
             switch itemIdentifier {
             case .folder(let folder):
@@ -179,7 +202,59 @@ public final class FolderDetailViewController: UICollectionViewController {
             }
         )
     }
+}
 
+// MARK: - Update Method
+
+extension FolderDetailViewController {
+    private func updateOrder(_ order: FolderDetailViewModel.Order) {
+        switch order {
+        case .createdAt:
+            createdAtAction.image = UIImage(systemName: "checkmark")
+            updatedAtAction.image = nil
+        case .updatedAt:
+            createdAtAction.image = nil
+            updatedAtAction.image = UIImage(systemName: "checkmark")
+        }
+    }
+    
+    private func updateRightBarButtonMenu(_ select: FolderDetailViewModel.Select) {
+        let dateSection: UIMenu = .init(
+            title: "",
+            options: .displayInline,
+            children: updateDateSectionChildren
+        )
+
+        let selectSection: UIMenu = .init(
+            title: "",
+            options: .displayInline,
+            children: updateSelectSectionChildren
+        )
+        let menu: UIMenu = .init(
+            title: "",
+            children: [dateSection, selectSection]
+        )
+        navigationItem.rightBarButtonItems?.first?.menu = menu
+    }
+    
+    private var updateDateSectionChildren: [UIMenuElement] {
+        switch vm.select {
+        case .none:
+            [createdAtAction, updatedAtAction]
+        case .all, .single:
+            []
+        }
+    }
+    
+    private var updateSelectSectionChildren: [UIMenuElement] {
+        switch vm.select {
+        case .none:
+            [selectAction, selectAllAction]
+        case .all, .single:
+            [cancelAction, moveAction, deleteAction]
+        }
+    }
+    
     private func updateDataSource(reconfigure: Bool = false) {
         var snapshot = SnapShot()
         snapshot.appendSections([.main])
@@ -195,18 +270,20 @@ public final class FolderDetailViewController: UICollectionViewController {
 
 public extension FolderDetailViewController {
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard vm.isSelectionMode, let item = dataSource?.itemIdentifier(for: indexPath) else { return }
-
-        if case .voiceNote(let voiceNote) = item {
-            vm.selectItem(voiceNote)
-        }
+        
     }
 
     override func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        guard vm.isSelectionMode, let item = dataSource?.itemIdentifier(for: indexPath) else { return }
-
-        if case .voiceNote(let voiceNote) = item {
-            vm.deselectItem(voiceNote)
-        }
+        
     }
 }
+
+#if DEBUG
+    #Preview("개인 폴더 상세") {
+        UINavigationController(
+            rootViewController: FolderDetailViewController(
+                vm: .preview()
+            )
+        )
+    }
+#endif
