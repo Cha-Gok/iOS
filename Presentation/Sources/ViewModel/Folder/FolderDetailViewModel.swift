@@ -6,8 +6,8 @@ import Foundation
 @Observable
 public final class FolderDetailViewModel {
     // MARK: - State
-
-    enum Select {
+    
+    enum Select: Equatable {
         case none
         case all
         case single
@@ -23,7 +23,7 @@ public final class FolderDetailViewModel {
     private(set) var items: [LibraryItem] = []
     private(set) var errorMessage: String?
     private(set) var order: Order = .createdAt
-    private(set) var select: Select = .none
+    var select: Select = .none
     private(set) var selectedItems: [VoiceNote] = []
 
     var isEmpty: Bool {
@@ -86,7 +86,7 @@ extension FolderDetailViewModel {
     }
 
     func selectItem(_ item: VoiceNote) {
-        selectedItems.insert(item, at: 0)
+        selectedItems.append(item)
     }
 
     func deselectItem(_ item: VoiceNote) {
@@ -122,7 +122,7 @@ extension FolderDetailViewModel {
 #if DEBUG
     extension FolderDetailViewModel {
         static func preview(
-            title: String = "개인 폴더",
+            title: String = "폴더 상세",
             folderID: UUID = UUID()
         ) -> FolderDetailViewModel {
             let previewData = PreviewData.make(folderID: folderID)

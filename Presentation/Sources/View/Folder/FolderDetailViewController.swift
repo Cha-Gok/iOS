@@ -2,7 +2,7 @@ import Domain
 import SwiftUI
 import UIKit
 
-public final class FolderDetailViewController: UICollectionViewController {
+public final class FolderDetailViewController: CollectionViewController {
     enum Section {
         case main
     }
@@ -13,15 +13,50 @@ public final class FolderDetailViewController: UICollectionViewController {
     private var dataSource: DataSource?
 
     private lazy var backButton: UIButton = {
-        let btn = UIButton(type: .system)
+        let btn = UIButton(type: .custom) // .system 대신 .custom을 사용하여 기본 배경 효과 제거
+        let symbolConfig = UIImage.SymbolConfiguration(weight: .bold)
         let backImage = UIImage(systemName: "chevron.left")?
-            .withConfiguration(UIImage.SymbolConfiguration(weight: .bold))
+            .withConfiguration(symbolConfig)
         btn.setImage(backImage, for: .normal)
+        btn.setImage(
+            UIImage(systemName: "xmark")?.withConfiguration(symbolConfig),
+            for: .selected
+        )
         btn.setTitle(vm.title, for: .normal)
+        btn.setTitle("", for: .selected) // nil 대신 ""을 사용하여 .normal 타이틀이 나오는 것을 방지
         btn.titleLabel?.setTypography(style: .title1)
         btn.tintColor = UIColor.gray950
         return btn
     }()
+
+    private lazy var moreAndActionButton: UIButton = {
+        let btn = UIButton(type: .custom)
+        let symbolConfig = UIImage.SymbolConfiguration(weight: .bold)
+        btn.setImage(UIImage(systemName: "ellipsis")?.withConfiguration(symbolConfig), for: .normal)
+        btn.setImage(UIImage(), for: .selected)
+        btn.setTitle(nil, for: .normal)
+        btn.setTitle("삭제", for: .selected)
+        btn.setTitleColor(UIColor.gray950, for: .normal)
+        btn.setTitleColor(UIColor.danger, for: .selected)
+        btn.titleLabel?.setTypography(style: .title1)
+        btn.tintColor = UIColor.gray950
+        return btn
+    }()
+
+    private lazy var searchAndMoveButton: UIButton = {
+        let btn = UIButton(type: .custom)
+        let symbolConfig = UIImage.SymbolConfiguration(weight: .bold)
+        btn.setImage(UIImage(systemName: "magnifyingglass")?.withConfiguration(symbolConfig), for: .normal)
+        btn.setImage(UIImage(), for: .selected)
+        btn.setTitle(nil, for: .normal)
+        btn.setTitle("이동", for: .selected)
+        btn.setTitleColor(UIColor.gray950, for: .normal)
+        btn.setTitleColor(UIColor.gray950, for: .selected)
+        btn.titleLabel?.setTypography(style: .title1)
+        btn.tintColor = UIColor.gray950
+        return btn
+    }()
+
 
     // MARK: - Component
 
@@ -81,9 +116,12 @@ public final class FolderDetailViewController: UICollectionViewController {
             var listConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
             listConfiguration.headerMode = .none
             listConfiguration.showsSeparators = false
-            listConfiguration.backgroundColor = .gray50
+            listConfiguration.backgroundColor = .clear
 
-            return NSCollectionLayoutSection.list(using: listConfiguration, layoutEnvironment: layoutEnvironment)
+            return NSCollectionLayoutSection.list(
+                using: listConfiguration,
+                layoutEnvironment: layoutEnvironment
+            )
         }
         super.init(collectionViewLayout: layout)
     }
@@ -111,9 +149,11 @@ public final class FolderDetailViewController: UICollectionViewController {
         super.updateProperties()
         // menu
         updateOrder(vm.order)
+        updateRightBarButtonMenu(vm.select)
+        // navigation Item
+        updateNavigationItems(vm.select)
         // dataSource
         updateDataSource(reconfigure: true)
-        updateRightBarButtonMenu(vm.select)
     }
 
     private func setupNavigation() {
@@ -128,15 +168,14 @@ public final class FolderDetailViewController: UICollectionViewController {
         let leftItem = UIBarButtonItem(customView: backButton)
         navigationItem.leftBarButtonItem = leftItem
 
-        backButton.addAction(
-            UIAction { [weak self] _ in
-                self?.vm.didTapBack()
-            }, for: .touchUpInside
-        )
+        backButton.addAction(backButtonAction(), for: .touchUpInside)
         navigationItem.rightBarButtonItems = [
-            UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: nil),
-            UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), menu: nil)
+            UIBarButtonItem(customView: moreAndActionButton),
+            UIBarButtonItem(customView: searchAndMoveButton)
         ]
+        moreAndActionButton.addAction(moreAndActionButtonAction(), for: .touchUpInside)
+        searchAndMoveButton.addAction(searchAndMoveButtonAction(), for: .touchUpInside)
+
         setupRightBarButtonMenu()
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         navigationItem.rightBarButtonItems?.forEach {
@@ -160,15 +199,35 @@ public final class FolderDetailViewController: UICollectionViewController {
             title: "",
             children: [dateSection, selectSection]
         )
-        navigationItem.rightBarButtonItems?.first?.menu = menu
+        moreAndActionButton.menu = menu
+    }
+
+    private func updateRightBarButtonMenu(_ select: FolderDetailViewModel.Select) {
+        let dateSection: UIMenu = .init(
+            title: "",
+            options: .displayInline,
+            children: updateDateSectionChildren
+        )
+
+        let selectSection: UIMenu = .init(
+            title: "",
+            options: .displayInline,
+            children: updateSelectSectionChildren
+        )
+        let menu: UIMenu = .init(
+            title: "",
+            children: [dateSection, selectSection]
+        )
+        moreAndActionButton.menu = menu
     }
     
     private func setupDataSource() {
-        let cellRegistration = UICollectionView.CellRegistration {(
+        let cellRegistration = UICollectionView.CellRegistration {[weak self](
             cell: UICollectionViewListCell,
             indexPath: IndexPath,
             itemIdentifier: LibraryItem
         ) in
+            guard let self else { return }
             var backgroundConfig = UIBackgroundConfiguration.listCell()
             backgroundConfig.backgroundColor = .clear
             cell.backgroundConfiguration = backgroundConfig
@@ -176,17 +235,24 @@ public final class FolderDetailViewController: UICollectionViewController {
             switch itemIdentifier {
             case .folder(let folder):
                 cell.contentConfiguration = UIHostingConfiguration {
-                    VoiceNoteCardView(
-                        title: folder.name,
-                        subTitle: folder.createdAt.description
+                    FolderCardView(
+                        name: folder.name,
+                        totalCount: folder.content.count
                     )
                 }
             case .voiceNote(let voiceNote):
                 cell.contentConfiguration = UIHostingConfiguration {
                     VoiceNoteCardView(
-                        title: voiceNote.title,
-                        subTitle: voiceNote.createdAt.description
-                    )
+                        select: vm.select,
+                        isSelected: vm.selectedItems.contains(voiceNote),
+                        voiceNote: voiceNote
+                    ) { [weak self] data, state in
+                        if state {
+                            self?.vm.selectItem(data)
+                        } else {
+                            self?.vm.deselectItem(data)
+                        }
+                    }
                 }
             }
         }
@@ -218,23 +284,14 @@ extension FolderDetailViewController {
         }
     }
     
-    private func updateRightBarButtonMenu(_ select: FolderDetailViewModel.Select) {
-        let dateSection: UIMenu = .init(
-            title: "",
-            options: .displayInline,
-            children: updateDateSectionChildren
-        )
-
-        let selectSection: UIMenu = .init(
-            title: "",
-            options: .displayInline,
-            children: updateSelectSectionChildren
-        )
-        let menu: UIMenu = .init(
-            title: "",
-            children: [dateSection, selectSection]
-        )
-        navigationItem.rightBarButtonItems?.first?.menu = menu
+    private func updateNavigationItems(_ select: FolderDetailViewModel.Select) {
+        let isEditMode = (select != .none)
+        [backButton, moreAndActionButton, searchAndMoveButton].forEach {
+            $0.isSelected = isEditMode
+            $0.invalidateIntrinsicContentSize()
+            $0.sizeToFit()
+        }
+        moreAndActionButton.showsMenuAsPrimaryAction = !isEditMode
     }
     
     private var updateDateSectionChildren: [UIMenuElement] {
@@ -266,20 +323,52 @@ extension FolderDetailViewController {
     }
 }
 
-// MARK: - Delegate
+// MARK: - Helper Method
 
-public extension FolderDetailViewController {
-    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
+extension FolderDetailViewController {
+    func backButtonAction() -> UIAction {
+        UIAction { [weak self] _ in
+            guard let self else { return }
+            switch vm.select {
+            case .none:
+                vm.didTapBack()
+            case .all, .single:
+                vm.setSelectionMode(.none)
+            }
+        }
     }
 
-    override func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        
+    func moreAndActionButtonAction() -> UIAction {
+        UIAction { [weak self] _ in
+            guard let self else { return }
+            switch vm.select {
+            case .none:
+                // TODO: 더 보기 로직 실행
+                print("더 보기 버튼 탭됨")
+            case .all, .single:
+                // TODO: 삭제 로직 실행
+                print("삭제 버튼 탭됨")
+            }
+        }
+    }
+
+    func searchAndMoveButtonAction() -> UIAction {
+        UIAction { [weak self] _ in
+            guard let self else { return }
+            switch vm.select {
+            case .none:
+                // TODO: 검색 로직 실행
+                print("검색 버튼 탭됨")
+            case .all, .single:
+                // TODO: 이동 로직 실행
+                print("이동 버튼 탭됨")
+            }
+        }
     }
 }
 
 #if DEBUG
-    #Preview("개인 폴더 상세") {
+    #Preview("폴더 상세") {
         UINavigationController(
             rootViewController: FolderDetailViewController(
                 vm: .preview()
