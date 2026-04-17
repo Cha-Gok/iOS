@@ -280,8 +280,8 @@ private extension VoiceNoteViewController {
     func enterEditMode() {
         titleTextField.text = viewModel.title
         titleTextField.frame.size.width = view.bounds.width
-        titleLabel.isHidden = true
         navigationItem.titleView = titleTextField
+        titleLabel.isHidden = true
         navigationItem.rightBarButtonItems = [doneButton]
         titleTextField.becomeFirstResponder()
         titleTextField.selectAll(nil)
@@ -289,8 +289,8 @@ private extension VoiceNoteViewController {
 
     func exitEditMode() {
         titleTextField.resignFirstResponder()
-        navigationItem.titleView = titleLabel
         titleLabel.isHidden = false
+        navigationItem.titleView = titleLabel
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
     }
