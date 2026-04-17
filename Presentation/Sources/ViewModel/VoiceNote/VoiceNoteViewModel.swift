@@ -7,7 +7,14 @@ public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {}
 @MainActor
 @Observable
 public final class VoiceNoteViewModel {
-    public private(set) var state: State
+    public private(set) var voiceNote: VoiceNote
+    public private(set) var folderName: String = ""
+    public private(set) var errorMessage: String?
+    public private(set) var isEditing: Bool = false
+    public private(set) var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
+    public private(set) var playingParagraphInfo: PlayingParagraphInfo?
+    /// State가 struct이 아니므로 let으로 선언해 참조 안정성을 보장합니다.
+    public let playbackHighlight = PlaybackHighlight()
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
@@ -35,7 +42,7 @@ public final class VoiceNoteViewModel {
         playbackRepository: any VoiceRecordPlaybackRepository,
         wasteBasketRepository: any WasteBasketRepository
     ) {
-        state = State(voiceNote: voiceNote)
+        self.voiceNote = voiceNote
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.languageRepository = languageRepository
@@ -48,7 +55,7 @@ public final class VoiceNoteViewModel {
         voiceNoteObservationTask?.cancel()
     }
 
-    // MARK: - Send
+    // MARK: - View Actions
 
     public func send(_ action: Action) {
         switch action {
@@ -138,12 +145,98 @@ public final class VoiceNoteViewModel {
         }
     }
 
+    public func onDisappear() {
+        stop()
+    }
+
+    public func playPause() {
+        if currentPlaybackState.status == .playing {
+            pause()
+        } else {
+            play()
+        }
+    }
+
+    public func rewind() {
+        seek(to: currentPlaybackState.currentTime - Policy.playbackSkipInterval)
+    }
+
+    public func forward() {
+        seek(to: currentPlaybackState.currentTime + Policy.playbackSkipInterval)
+    }
+
+    public func seekBegan() {
+        wasPlayingBeforeSeek = currentPlaybackState.status == .playing
+        if wasPlayingBeforeSeek { pause() }
+    }
+
+    public func seekEnded(_ time: TimeInterval) {
+        seek(to: time)
+        if wasPlayingBeforeSeek {
+            wasPlayingBeforeSeek = false
+            play()
+        }
+    }
+
+    public func scriptTimestampTapped(_ time: TimeInterval) {
+        seek(to: time)
+        play()
+    }
+
+    public func pop() {
+        coordinator?.pop()
+    }
+
+    public func moveVoiceNote() {
+        coordinator?.presentFolderList(with: voiceNote)
+    }
+
+    public func enterEditing() {
+        isEditing = true
+    }
+
+    public func doneEditing(title: String) {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedTitle.isEmpty, trimmedTitle != voiceNote.title else {
+            isEditing = false
+            return
+        }
+
+        let updatedNote = VoiceNote(
+            id: voiceNote.id,
+            title: trimmedTitle,
+            createdAt: voiceNote.createdAt,
+            updatedAt: .now,
+            folderID: voiceNote.folderID,
+            voiceRecord: voiceNote.voiceRecord,
+            keywords: voiceNote.keywords,
+            transcript: voiceNote.transcript,
+            summary: voiceNote.summary,
+            analysisState: voiceNote.analysisState
+        )
+
+        do {
+            _ = try voiceNoteUseCase.update(updatedNote)
+            isEditing = false
+        } catch {
+            errorMessage = "제목 수정에 실패했습니다: \(error.localizedDescription)"
+        }
+    }
+
+    public func deleteVoiceNote() {
+        moveToWasteBasket()
+    }
+
+    public func dismissError() {
+        errorMessage = nil
+    }
+
     // MARK: - Private Methods
 
     private func fetchFolderName() {
         do {
-            let folderName = try folderUseCase.fetch(by: state.voiceNote.folderID).name
-            send(.internal(.metadataLoaded(folderName: folderName)))
+            folderName = try folderUseCase.fetch(by: voiceNote.folderID).name
         } catch {
             AppLogger.error(error)
         }
@@ -152,29 +245,28 @@ public final class VoiceNoteViewModel {
     private func performTranscription() async {
         do {
             let transcript = try await voiceNoteUseCase.transcribe(
-                audioFilePath: state.voiceNote.voiceRecord.audioFilePath
+                audioFilePath: voiceNote.voiceRecord.audioFilePath
             )
             let withTranscript = VoiceNote(
-                id: state.voiceNote.id,
-                title: state.voiceNote.title,
-                createdAt: state.voiceNote.createdAt,
+                id: voiceNote.id,
+                title: voiceNote.title,
+                createdAt: voiceNote.createdAt,
                 updatedAt: .now,
-                folderID: state.voiceNote.folderID,
-                voiceRecord: state.voiceNote.voiceRecord,
+                folderID: voiceNote.folderID,
+                voiceRecord: voiceNote.voiceRecord,
                 transcript: transcript,
                 analysisState: .transcribed
             )
             _ = try voiceNoteUseCase.update(withTranscript)
-            // stream이 .transcribed 상태를 emit하면 UI 업데이트됨
-            // 이어서 AI 요약 시도
             await performSummarization()
         } catch {
-            send(.internal(.analysisFailed(error.localizedDescription)))
+            errorMessage = error.localizedDescription
+            voiceNote.analysisState = .failed
         }
     }
 
     private func performSummarization() async {
-        guard let transcript = state.voiceNote.transcript else { return }
+        guard let transcript = voiceNote.transcript else { return }
         do {
             let language = languageRepository.fetchLanguage()
             let (keywords, summary) = try await voiceNoteUseCase.summarize(
@@ -182,12 +274,12 @@ public final class VoiceNoteViewModel {
                 language: language
             )
             let completed = VoiceNote(
-                id: state.voiceNote.id,
-                title: state.voiceNote.title,
-                createdAt: state.voiceNote.createdAt,
+                id: voiceNote.id,
+                title: voiceNote.title,
+                createdAt: voiceNote.createdAt,
                 updatedAt: .now,
-                folderID: state.voiceNote.folderID,
-                voiceRecord: state.voiceNote.voiceRecord,
+                folderID: voiceNote.folderID,
+                voiceRecord: voiceNote.voiceRecord,
                 keywords: keywords,
                 transcript: transcript,
                 summary: summary,
@@ -196,24 +288,25 @@ public final class VoiceNoteViewModel {
             _ = try voiceNoteUseCase.update(completed)
         } catch {
             // STT는 성공했으므로 .failed로 덮어쓰지 않음 — 스크립트는 유지
-            send(.internal(.errorOccurred(error.localizedDescription)))
+            errorMessage = error.localizedDescription
         }
     }
 
-    private func setupPalyback() {
+    private func setupPlayback() {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
         do {
             let stream = try playbackRepository.prepare(
-                audioFilePath: state.voiceNote.voiceRecord.audioFilePath
+                audioFilePath: voiceNote.voiceRecord.audioFilePath
             )
             playbackObservationTask = Task {
                 for await playbackState in stream {
-                    send(.internal(.playbackStateChanged(playbackState)))
+                    currentPlaybackState = playbackState
+                    updatePlayingParagraph()
                 }
             }
         } catch {
-            send(.internal(.errorOccurred(error.localizedDescription)))
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -221,12 +314,14 @@ public final class VoiceNoteViewModel {
         voiceNoteObservationTask?.cancel()
         voiceNoteObservationTask = Task {
             do {
-                let stream = try voiceNoteUseCase.observe(id: state.voiceNote.id)
+                let stream = try voiceNoteUseCase.observe(id: voiceNote.id)
                 for await note in stream.dropFirst() {
-                    send(.internal(.voiceNoteObserved(note)))
+                    let folderChanged = voiceNote.folderID != note.folderID
+                    voiceNote = note
+                    if folderChanged { fetchFolderName() }
                 }
             } catch {
-                send(.internal(.errorOccurred(error.localizedDescription)))
+                errorMessage = error.localizedDescription
             }
         }
     }
@@ -239,7 +334,7 @@ public final class VoiceNoteViewModel {
         do {
             try playbackRepository.stop()
         } catch {
-            send(.internal(.errorOccurred(error.localizedDescription)))
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -247,7 +342,7 @@ public final class VoiceNoteViewModel {
         do {
             try playbackRepository.play()
         } catch {
-            send(.internal(.errorOccurred(error.localizedDescription)))
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -255,7 +350,7 @@ public final class VoiceNoteViewModel {
         do {
             try playbackRepository.pause()
         } catch {
-            send(.internal(.errorOccurred(error.localizedDescription)))
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -263,28 +358,122 @@ public final class VoiceNoteViewModel {
         do {
             try playbackRepository.seek(to: time)
         } catch {
-            send(.internal(.errorOccurred(error.localizedDescription)))
+            errorMessage = error.localizedDescription
         }
     }
 
     private func moveToWasteBasket() {
         do {
             stop()
-            try wasteBasketRepository.moveToWasteBasket(item: .voiceNote(obj: state.voiceNote))
+            try wasteBasketRepository.moveToWasteBasket(item: .voiceNote(obj: voiceNote))
             coordinator?.pop()
         } catch {
-            send(.internal(.errorOccurred(error.localizedDescription)))
+            errorMessage = error.localizedDescription
         }
+    }
+
+    private func updatePlayingParagraph() {
+        let currentTime = currentPlaybackState.currentTime
+        let sections = scriptSections
+        guard !sections.isEmpty else {
+            guard playingParagraphInfo != nil else { return }
+            playingParagraphInfo = nil
+            playbackHighlight.playingParagraphInfo = nil
+            return
+        }
+
+        var newInfo: PlayingParagraphInfo?
+        for (index, section) in sections.enumerated().reversed() {
+            if section.timestamp <= currentTime {
+                newInfo = PlayingParagraphInfo(sectionIndex: index, paragraphIndex: 0)
+                break
+            }
+        }
+        guard playingParagraphInfo != newInfo else { return }
+        playingParagraphInfo = newInfo
+        playbackHighlight.playingParagraphInfo = newInfo
+    }
+
+    private static func groupSegmentsIntoSections(_ segments: [TranscriptSegment]) -> [ScriptSection] {
+        guard let first = segments.first else { return [] }
+
+        var sections: [ScriptSection] = []
+        var currentTimestamp = first.timestamp
+        var currentWords: [String] = [first.substring]
+
+        for i in 1 ..< segments.count {
+            let prev = segments[i - 1]
+            let curr = segments[i]
+            let gap = curr.timestamp - (prev.timestamp + prev.duration)
+
+            if gap > Policy.scriptGroupingPauseThreshold {
+                let paragraph = currentWords.joined(separator: " ")
+                sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
+                currentTimestamp = curr.timestamp
+                currentWords = [curr.substring]
+            } else {
+                currentWords.append(curr.substring)
+            }
+        }
+
+        if !currentWords.isEmpty {
+            let paragraph = currentWords.joined(separator: " ")
+            sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
+        }
+
+        return sections
+    }
+}
+
+// MARK: - Computed Properties
+
+public extension VoiceNoteViewModel {
+    var title: String {
+        voiceNote.title
+    }
+
+    var metadataText1: String {
+        let created = voiceNote.createdAt.toString(format: "yyyy.MM.dd · a HH:mm")
+        guard voiceNote.createdAt != voiceNote.updatedAt else { return created }
+        let updated = voiceNote.updatedAt.toString(format: "yyyy.MM.dd")
+        return "\(created) (\(updated) 수정됨)"
+    }
+
+    var metadataText2: String {
+        voiceNote.voiceRecord.duration.koreanDurationString
+    }
+
+    var keywords: [String] {
+        voiceNote.keywords.map(\.word)
+    }
+
+    var keyPoints: [KeyPoint] {
+        guard let summary = voiceNote.summary else { return [] }
+        return summary.text
+            .components(separatedBy: "\n")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .enumerated()
+            .map { KeyPoint(number: $0.offset + 1, text: $0.element) }
+    }
+
+    var scriptSections: [ScriptSection] {
+        guard let transcript = voiceNote.transcript, !transcript.segments.isEmpty else { return [] }
+        return Self.groupSegmentsIntoSections(transcript.segments)
     }
 }
 
 // MARK: - Nested Types
 
 public extension VoiceNoteViewModel {
-    /// 재생 위치에 따른 하이라이트 상태. 셀이 직접 관찰합니다.
     @Observable
     final class PlaybackHighlight {
-        public var playingParagraphInfo: State.PlayingParagraphInfo?
+        public var playingParagraphInfo: PlayingParagraphInfo?
+    }
+
+    struct PlayingParagraphInfo: Equatable {
+        public let sectionIndex: Int
+        public let paragraphIndex: Int
     }
 
     enum Section: Int, CaseIterable, Sendable {
@@ -317,159 +506,5 @@ public extension VoiceNoteViewModel {
         case keyPoint(number: Int, text: String)
         case keywords
         case script(index: Int)
-    }
-
-    enum Action {
-        public enum View {
-            case onAppear
-            case onDisappear
-            case playPauseButtonTapped
-            case rewindButtonTapped
-            case forwardButtonTapped
-            case seekBegan
-            case seekEnded(TimeInterval)
-            case scriptTimestampTapped(TimeInterval)
-            case pop
-            case moveVoiceNoteButtonTapped
-            case editButtonTapped
-            case doneButtonTapped(String)
-            case deleteVoiceNoteButtonTapped
-        }
-
-        public enum Internal {
-            case metadataLoaded(folderName: String)
-            case voiceNoteObserved(VoiceNote)
-            case analysisFailed(String)
-            case playbackStateChanged(AudioPlaybackState)
-            case errorOccurred(String)
-            case errorDismissed
-        }
-
-        case view(View)
-        case `internal`(Internal)
-    }
-
-    struct State {
-        var voiceNote: VoiceNote
-        var isEditing: Bool = false
-        var errorMessage: String?
-        var folderName: String = ""
-        /// State가 struct이므로 let으로 선언해 참조 안정성을 보장합니다.
-        let playbackHighlight = PlaybackHighlight()
-        var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
-
-        init(voiceNote: VoiceNote) {
-            self.voiceNote = voiceNote
-        }
-
-        // MARK: - Highlight Logic
-
-        /// 현재 재생 중인 문단의 정보를 담는 구조체
-        public struct PlayingParagraphInfo: Equatable {
-            public let sectionIndex: Int
-            public let paragraphIndex: Int
-        }
-
-        /// 현재 하이라이트된 문단 정보
-        public private(set) var playingParagraphInfo: PlayingParagraphInfo?
-
-        /// 재생 시간에 따라 하이라이트 정보를 업데이트합니다.
-        /// - Note: `@Observable`은 값이 같아도 setter 호출 시 observation을 fire하므로,
-        ///   동일 값이면 early return하여 visible cell의 불필요한 `updateProperties()` 호출을 방지합니다.
-        mutating func updatePlayingParagraph() {
-            let currentTime = currentPlaybackState.currentTime
-            let sections = scriptSections
-            guard !sections.isEmpty else {
-                guard playingParagraphInfo != nil else { return }
-                playingParagraphInfo = nil
-                playbackHighlight.playingParagraphInfo = nil
-                return
-            }
-
-            var newInfo: PlayingParagraphInfo?
-            for (index, section) in sections.enumerated().reversed() {
-                if section.timestamp <= currentTime {
-                    newInfo = PlayingParagraphInfo(sectionIndex: index, paragraphIndex: 0)
-                    break
-                }
-            }
-            guard playingParagraphInfo != newInfo else {
-                return
-            }
-            playingParagraphInfo = newInfo
-            playbackHighlight.playingParagraphInfo = newInfo
-        }
-
-        // MARK: - Mapped Properties
-
-        public var title: String {
-            voiceNote.title
-        }
-
-        public var metadataText1: String {
-            let created = voiceNote.createdAt.toString(format: "yyyy.MM.dd · a HH:mm")
-            guard voiceNote.createdAt != voiceNote.updatedAt else { return created }
-            let updated = voiceNote.updatedAt.toString(format: "yyyy.MM.dd")
-            return "\(created) (\(updated) 수정됨)"
-        }
-
-        public var metadataText2: String {
-            voiceNote.voiceRecord.duration.koreanDurationString
-        }
-
-        public var keywords: [String] {
-            voiceNote.keywords.map(\.word)
-        }
-
-        public var keyPoints: [KeyPoint] {
-            guard let summary = voiceNote.summary else { return [] }
-            return summary.text
-                .components(separatedBy: "\n")
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty }
-                .enumerated()
-                .map { KeyPoint(number: $0.offset + 1, text: $0.element) }
-        }
-
-        public var scriptSections: [ScriptSection] {
-            guard let transcript = voiceNote.transcript, !transcript.segments.isEmpty else { return [] }
-            return Self.groupSegmentsIntoSections(transcript.segments)
-        }
-
-        // MARK: - Segment Grouping
-
-        /// 세그먼트를 공백 임계값 기준으로 섹션들로 그룹화
-        private static func groupSegmentsIntoSections(_ segments: [TranscriptSegment]) -> [ScriptSection] {
-            guard let first = segments.first else { return [] }
-
-            var sections: [ScriptSection] = []
-            var currentTimestamp = first.timestamp
-            var currentWords: [String] = [first.substring]
-
-            for i in 1 ..< segments.count {
-                let prev = segments[i - 1]
-                let curr = segments[i]
-                let gap = curr.timestamp - (prev.timestamp + prev.duration)
-
-                if gap > Policy.scriptGroupingPauseThreshold {
-                    // 현재까지 모은 단어들을 하나의 문단으로 완성
-                    let paragraph = currentWords.joined(separator: " ")
-                    sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
-                    // 새 섹션 시작
-                    currentTimestamp = curr.timestamp
-                    currentWords = [curr.substring]
-                } else {
-                    currentWords.append(curr.substring)
-                }
-            }
-
-            // 마지막 섹션 추가
-            if !currentWords.isEmpty {
-                let paragraph = currentWords.joined(separator: " ")
-                sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
-            }
-
-            return sections
-        }
     }
 }
