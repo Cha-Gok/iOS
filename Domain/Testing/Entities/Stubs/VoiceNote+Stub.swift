@@ -12,7 +12,8 @@ public extension VoiceNote {
         keywords: [Keyword] = [],
         transcript: Transcript? = nil,
         summary: Summary? = nil,
-        deletedAt: Date? = nil
+        deletedAt: Date? = nil,
+        analysisState: AnalysisState? = nil
     ) -> VoiceNote {
         VoiceNote(
             id: id,
@@ -24,7 +25,8 @@ public extension VoiceNote {
             keywords: keywords,
             transcript: transcript,
             summary: summary,
-            deletedAt: deletedAt
+            deletedAt: deletedAt,
+            analysisState: analysisState
         )
     }
 }
