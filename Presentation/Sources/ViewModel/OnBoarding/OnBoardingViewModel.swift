@@ -20,6 +20,7 @@ public final class OnBoardingViewModel {
 
     let languageRepository: any LanguageRepository
     let voiceRecordRepository: any VoiceRecordRepository
+    let sttRepository: any STTRepository
     let checkFirstLaunchRepository: any CheckFirstLaunchRepository
     let folderUseCase: any FolderUseCase
 
@@ -28,11 +29,13 @@ public final class OnBoardingViewModel {
     public init(
         languageRepository: any LanguageRepository,
         voiceRecordRepository: any VoiceRecordRepository,
+        sttRepository: any STTRepository,
         checkFirstLaunchRepository: any CheckFirstLaunchRepository,
         folderUseCase: any FolderUseCase
     ) {
         self.languageRepository = languageRepository
         self.voiceRecordRepository = voiceRecordRepository
+        self.sttRepository = sttRepository
         self.checkFirstLaunchRepository = checkFirstLaunchRepository
         self.folderUseCase = folderUseCase
     }
@@ -137,12 +140,24 @@ extension OnBoardingViewModel {
 extension OnBoardingViewModel {
     private func requestPermission() {
         Task {
-            let status = voiceRecordRepository.checkMicrophonePermission()
-            if status == .notDetermined {
+            // 마이크 권한 요청
+            let micStatus = voiceRecordRepository.checkMicrophonePermission()
+            if micStatus == .notDetermined {
                 do {
                     _ = try await voiceRecordRepository.requestMicrophonePermission()
                 } catch {
                     errorMessage = error.localizedDescription
+                    AppLogger.error(error)
+                }
+            }
+
+            // STT 권한 요청
+            let sttStatus = sttRepository.checkSTTPermission()
+            if sttStatus == .notDetermined {
+                do {
+                    _ = try await sttRepository.requestSTTPermission()
+                } catch {
+                    // STT 권한 에러는 마이크 권한 에러를 덮어쓰지 않도록 함 (필요시 추가 처리 가능)
                     AppLogger.error(error)
                 }
             }

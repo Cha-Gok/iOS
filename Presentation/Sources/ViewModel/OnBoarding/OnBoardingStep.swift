@@ -52,7 +52,7 @@ enum Step: Int, CaseIterable, Equatable {
         case .micPermission:
             OnBoardingItem(
                 headline: "필요한 권한만\n요청할게요.",
-                body: "녹음을 시작하려면\n마이크 권한이 필요해요.",
+                body: "녹음과 음성 변환을 위해\n마이크와 음성 인식 권한이 필요해요.",
                 image: "onboarding03"
             )
         case .finish:
