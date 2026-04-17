@@ -77,7 +77,7 @@ public final class RecordingViewController: ViewController {
         }, for: .touchUpInside)
         return button
     }()
-    
+
     private let cancelAlertButton: GlassButton = .close("아니오")
     private let primaryAlertButton: GlassButton = .primary("저장 후 종료")
     private let completeAlertOverlayView: UIView = {
@@ -174,10 +174,10 @@ public final class RecordingViewController: ViewController {
             recordButton.widthAnchor.constraint(equalToConstant: 120),
             recordButton.heightAnchor.constraint(equalToConstant: 60),
             recordButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            recordButton.topAnchor.constraint(greaterThanOrEqualTo: durationLabel.bottomAnchor, constant: 48),
+            recordButton.topAnchor.constraint(greaterThanOrEqualTo: durationLabel.bottomAnchor, constant: 48)
         ])
     }
-    
+
     private func setupCompleteAlert() {
         cancelAlertButton.addAction(UIAction { [weak self] _ in
             self?.viewModel.send(.closeAlertButtonTapped)
@@ -196,7 +196,7 @@ public final class RecordingViewController: ViewController {
             completeAlertView.centerYAnchor.constraint(equalTo: completeAlertOverlayView.centerYAnchor)
         ])
     }
-    
+
     private func updateInteractionForAlert(isPresented: Bool) {
         navigationItem.leftBarButtonItem?.isEnabled = !isPresented
         navigationItem.rightBarButtonItem?.isEnabled = !isPresented
