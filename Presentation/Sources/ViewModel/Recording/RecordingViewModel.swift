@@ -100,7 +100,7 @@ public final class RecordingViewModel {
                     waveformTask?.cancel()
                     waveformTask = nil
                     let voiceRecord = try await repository.finishRecording()
-                    let voiceNote = try await voiceNoteUseCase.create(voiceRecord)
+                    let voiceNote = try voiceNoteUseCase.create(voiceRecord)
                     coordinator?.finishRecording(voiceNote: voiceNote)
                 } catch {
                     send(.errorOccurred(error))
@@ -216,7 +216,7 @@ public final class RecordingViewModel {
         }
 
         private struct PreviewVoiceNoteUseCase: VoiceNoteUseCase {
-            func create(_ voiceRecord: VoiceRecord) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+            func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteUseCaseError) -> VoiceNote {
                 VoiceNote(
                     title: "미리보기 기록",
                     createdAt: .now,
@@ -229,23 +229,23 @@ public final class RecordingViewModel {
                 )
             }
 
-            func fetchAllFromDefaultFolder() async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+            func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote] {
                 []
             }
 
-            func fetchAll(folderID: UUID) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+            func fetchAll(folderID: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
                 []
             }
 
-            func fetch(byId id: UUID) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+            func fetch(byId id: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote {
                 throw .recordNotFound(id)
             }
 
-            func fetchRecent(limit: Int) async throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+            func fetchRecent(limit: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
                 []
             }
 
-            func update(_ voiceNote: VoiceNote) async throws(VoiceNoteUseCaseError) -> VoiceNote {
+            func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote {
                 voiceNote
             }
 
