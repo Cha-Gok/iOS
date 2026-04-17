@@ -58,9 +58,15 @@ public final class VoiceNoteViewModel {
                 setupPalyback()
                 fetchFolderName()
                 observeVoiceNote()
-                if state.voiceNote.analysisState != .completed {
+                switch state.voiceNote.analysisState {
+                case .pending, .failed:
                     state.voiceNote.analysisState = .analyzing
-                    Task { await performNewAnalysis() }
+                    Task { await performTranscription() }
+                case .transcribed:
+                    state.voiceNote.analysisState = .analyzing
+                    Task { await performSummarization() }
+                case .analyzing, .completed:
+                    break
                 }
             case .onDisappear:
                 // 재생 중단 및 리소스 해제
@@ -138,29 +144,54 @@ public final class VoiceNoteViewModel {
         }
     }
 
-    private func performNewAnalysis() async {
+    private func performTranscription() async {
         do {
-            let language = languageRepository.fetchLanguage()
-            let result = try await voiceNoteUseCase.summarize(
-                audioFilePath: state.voiceNote.voiceRecord.audioFilePath,
-                language: language
+            let transcript = try await voiceNoteUseCase.transcribe(
+                audioFilePath: state.voiceNote.voiceRecord.audioFilePath
             )
-            let updated = VoiceNote(
+            let withTranscript = VoiceNote(
                 id: state.voiceNote.id,
                 title: state.voiceNote.title,
                 createdAt: state.voiceNote.createdAt,
                 updatedAt: .now,
                 folderID: state.voiceNote.folderID,
                 voiceRecord: state.voiceNote.voiceRecord,
-                keywords: result.keywords,
-                transcript: result.transcript,
-                summary: result.summary,
-                analysisState: .completed
+                transcript: transcript,
+                analysisState: .transcribed
             )
-
-            _ = try voiceNoteUseCase.update(updated)
+            _ = try voiceNoteUseCase.update(withTranscript)
+            // stream이 .transcribed 상태를 emit하면 UI 업데이트됨
+            // 이어서 AI 요약 시도
+            await performSummarization()
         } catch {
             send(.internal(.analysisFailed(error.localizedDescription)))
+        }
+    }
+
+    private func performSummarization() async {
+        guard let transcript = state.voiceNote.transcript else { return }
+        do {
+            let language = languageRepository.fetchLanguage()
+            let (keywords, summary) = try await voiceNoteUseCase.summarize(
+                transcript: transcript,
+                language: language
+            )
+            let completed = VoiceNote(
+                id: state.voiceNote.id,
+                title: state.voiceNote.title,
+                createdAt: state.voiceNote.createdAt,
+                updatedAt: .now,
+                folderID: state.voiceNote.folderID,
+                voiceRecord: state.voiceNote.voiceRecord,
+                keywords: keywords,
+                transcript: transcript,
+                summary: summary,
+                analysisState: .completed
+            )
+            _ = try voiceNoteUseCase.update(completed)
+        } catch {
+            // STT는 성공했으므로 .failed로 덮어쓰지 않음 — 스크립트는 유지
+            send(.internal(.errorOccurred(error.localizedDescription)))
         }
     }
 
