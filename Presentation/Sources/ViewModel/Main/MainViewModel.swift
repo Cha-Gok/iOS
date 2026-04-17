@@ -182,31 +182,12 @@ extension MainViewModel {
 // MARK: - Mic Permission
 
 extension MainViewModel {
-    func handleRecordButtonTap() async {
+    func handleRecordButtonTap() {
         let status = microphoneRepository.checkMicrophonePermission()
-
-        switch status {
-        case .authorized:
-            closeAlertView()
-            presentRecodingView()
-
-        case .notDetermined:
-            do {
-                let requested = try await microphoneRepository.requestMicrophonePermission()
-                if requested == .authorized {
-                    closeAlertView()
-                    presentRecodingView()
-                } else {
-                    openAlertView()
-                }
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
-                openAlertView()
-            }
-
-        case .denied:
+        if status != .authorized {
             openAlertView()
+        } else {
+            presentRecodingView()
         }
     }
 }
@@ -354,7 +335,7 @@ extension MainViewModel {
 
         struct PreviewMicrophoneRepository: VoiceRecordRepository {
             func checkMicrophonePermission() -> PermissionStatus {
-                .authorized
+                .denied
             }
 
             func requestMicrophonePermission() async throws(Domain.VoiceRecordRepositoryError) -> Domain
