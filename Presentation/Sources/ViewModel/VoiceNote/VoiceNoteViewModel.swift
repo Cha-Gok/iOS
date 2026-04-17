@@ -15,7 +15,6 @@ public final class VoiceNoteViewModel {
     private var playbackObservationTask: Task<Void, Never>?
     @ObservationIgnored
     private var wasPlayingBeforeSeek = false
-
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
     // MARK: - UseCases
@@ -24,6 +23,7 @@ public final class VoiceNoteViewModel {
     private let folderUseCase: any FolderUseCase
     private let languageRepository: any LanguageRepository
     private let playbackRepository: any VoiceRecordPlaybackRepository
+    private let wasteBasketRepository: any WasteBasketRepository
 
     // MARK: - Init
 
@@ -32,13 +32,15 @@ public final class VoiceNoteViewModel {
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
         languageRepository: any LanguageRepository,
-        playbackRepository: any VoiceRecordPlaybackRepository
+        playbackRepository: any VoiceRecordPlaybackRepository,
+        wasteBasketRepository: any WasteBasketRepository
     ) {
         state = State(voiceNote: voiceNote)
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.languageRepository = languageRepository
         self.playbackRepository = playbackRepository
+        self.wasteBasketRepository = wasteBasketRepository
     }
 
     deinit {
@@ -55,7 +57,8 @@ public final class VoiceNoteViewModel {
                 // 재생 스트림 구독 시작 및 폴더명·AI 분석 로드
                 startPlaybackObservation()
                 Task { await fetchFolderName() }
-                if state.analysisState != .completed {
+                if state.voiceNote.analysisState != .completed {
+                    state.voiceNote.analysisState = .analyzing
                     Task { await performNewAnalysis() }
                 }
             case .onDisappear:
@@ -93,6 +96,8 @@ public final class VoiceNoteViewModel {
                 coordinator?.pop()
             case .moveVoiceNoteButtonTapped:
                 coordinator?.presentFolderList(with: state.voiceNote)
+            case .deleteVoiceNoteButtonTapped:
+                Task { await moveToWasteBasket() }
             }
 
         case .internal(let internalAction):
@@ -103,11 +108,10 @@ public final class VoiceNoteViewModel {
             case .analysisCompleted(let note):
                 // AI 분석 완료 — keywords/transcript/summary가 채워진 노트로 교체
                 state.voiceNote = note
-                state.analysisState = .completed
             case .analysisFailed(let message):
                 // AI 분석 실패 — 에러 메시지 표시
                 state.errorMessage = message
-                state.analysisState = .failed
+                state.voiceNote.analysisState = .failed
             case .playbackStateChanged(let playbackState):
                 // 재생 진행 스트림에서 수신한 최신 상태 반영
                 state.currentPlaybackState = playbackState
@@ -149,7 +153,8 @@ public final class VoiceNoteViewModel {
                 voiceRecord: state.voiceNote.voiceRecord,
                 keywords: result.keywords,
                 transcript: result.transcript,
-                summary: result.summary
+                summary: result.summary,
+                analysisState: .completed
             )
 
             // 분석 결과 반영 (폴더명은 metadataLoaded 액션이 별도로 담당)
@@ -210,6 +215,17 @@ public final class VoiceNoteViewModel {
             send(.internal(.errorOccurred(error.localizedDescription)))
         }
     }
+
+    private func moveToWasteBasket() async {
+        if Task.isCancelled { return }
+        do {
+            stop()
+            try await wasteBasketRepository.moveToWasteBasket(item: .voiceNote(obj: state.voiceNote))
+            coordinator?.pop()
+        } catch {
+            send(.internal(.errorOccurred(error.localizedDescription)))
+        }
+    }
 }
 
 // MARK: - Nested Types
@@ -219,25 +235,6 @@ public extension VoiceNoteViewModel {
     @Observable
     final class PlaybackHighlight {
         public var playingParagraphInfo: State.PlayingParagraphInfo?
-    }
-
-    /// 오디오 플레이어 재생 상태. AudioPlayerView가 직접 관찰합니다.
-    @Observable
-    final class AudioPlayerObservable {
-        public var playbackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
-    }
-
-    /// 분석 진행 상태. VoiceNoteViewController가 직접 관찰합니다.
-    /// analyzing → completed/failed 로 한 번만 바뀝니다.
-    @Observable
-    final class AnalysisObservable {
-        public var analysisState: State.AnalysisState = .analyzing
-    }
-
-    /// 에러 메시지. VoiceNoteViewController가 직접 관찰합니다.
-    @Observable
-    final class ErrorObservable {
-        public var message: String?
     }
 
     enum Section: Int, CaseIterable, Sendable {
@@ -284,6 +281,7 @@ public extension VoiceNoteViewModel {
             case scriptTimestampTapped(TimeInterval)
             case pop
             case moveVoiceNoteButtonTapped
+            case deleteVoiceNoteButtonTapped
         }
 
         public enum Internal {
@@ -300,37 +298,15 @@ public extension VoiceNoteViewModel {
     }
 
     struct State {
-        public enum AnalysisState {
-            case analyzing
-            case completed
-            case failed
-        }
-
         var voiceNote: VoiceNote
-        var analysisState: AnalysisState {
-            didSet { analysisObservable.analysisState = analysisState }
-        }
-
-        var errorMessage: String? {
-            didSet { errorObservable.message = errorMessage }
-        }
-
+        var errorMessage: String?
         var folderName: String = ""
         /// State가 struct이므로 let으로 선언해 참조 안정성을 보장합니다.
-        let analysisObservable = AnalysisObservable()
-        let errorObservable = ErrorObservable()
         let playbackHighlight = PlaybackHighlight()
-        let audioPlayerObservable = AudioPlayerObservable()
-        var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0) {
-            didSet { audioPlayerObservable.playbackState = currentPlaybackState }
-        }
+        var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
 
         init(voiceNote: VoiceNote) {
             self.voiceNote = voiceNote
-            let initialAnalysisState: AnalysisState = voiceNote.summary != nil && voiceNote
-                .transcript != nil ? .completed : .analyzing
-            analysisState = initialAnalysisState
-            analysisObservable.analysisState = initialAnalysisState
         }
 
         // MARK: - Highlight Logic

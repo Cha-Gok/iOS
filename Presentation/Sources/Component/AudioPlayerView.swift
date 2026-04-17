@@ -8,8 +8,6 @@ final class AudioPlayerView: UIView {
     var onSeekBegan: (() -> Void)?
     var onSeekEnded: ((TimeInterval) -> Void)?
 
-    var audioPlayerObservable: VoiceNoteViewModel.AudioPlayerObservable?
-
     private let currentTimeLabel: UILabel = {
         let label = UILabel()
         label.setTypography(style: .label)
@@ -86,6 +84,16 @@ final class AudioPlayerView: UIView {
         nil
     }
 
+    func apply(_ state: AudioPlaybackState) {
+        currentTimeLabel.text = state.currentTime.durationString
+        totalDurationLabel.text = state.duration.durationString
+        var config = playPauseButton.configuration
+        config?.image = state.status == .playing ? UIImage(systemName: "pause.fill") : UIImage(systemName: "play.fill")
+        playPauseButton.configuration = config
+        progressSlider.maximumValue = Float(state.duration)
+        progressSlider.value = Float(state.currentTime)
+    }
+
     private func setupUI() {
         backgroundColor = .gray0
 
@@ -135,30 +143,5 @@ final class AudioPlayerView: UIView {
             guard let self else { return }
             currentTimeLabel.text = TimeInterval(progressSlider.value).durationString
         }, for: .valueChanged)
-    }
-
-    // MARK: - UIView Update Cycle
-
-    /// @Observable AudioPlayerObservable를 자동 추적합니다.
-    /// playbackState가 변경될 때마다 UIKit이 재호출합니다.
-    override func updateProperties() {
-        super.updateProperties()
-        guard let state = audioPlayerObservable?.playbackState else { return }
-        apply(state)
-    }
-
-    // MARK: - Apply
-
-    private func apply(_ state: AudioPlaybackState) {
-        currentTimeLabel.text = state.currentTime.durationString
-        totalDurationLabel.text = state.duration.durationString
-        var config = playPauseButton.configuration
-        config?.image = state.status == .playing ? UIImage(systemName: "pause.fill") : UIImage(systemName: "play.fill")
-        playPauseButton.configuration = config
-        // 슬라이더를 드래그 중이 아닐 때만 업데이트
-        if !progressSlider.isTracking {
-            progressSlider.maximumValue = Float(state.duration)
-            progressSlider.value = Float(state.currentTime)
-        }
     }
 }

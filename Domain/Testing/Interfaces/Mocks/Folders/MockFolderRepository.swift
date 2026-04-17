@@ -1,7 +1,8 @@
 @testable import Domain
 import XCTest
 
-public actor MockFolderRepository: FolderRepository {
+@MainActor
+public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
     // Results
     private var createResult: Result<Folder, FolderRepositoryError>?
     private var fetchAllResult: Result<[Folder], FolderRepositoryError>?
@@ -133,7 +134,7 @@ public actor MockFolderRepository: FolderRepository {
 
     // MARK: - FolderRepository
 
-    public func create(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
+    public func create(_ folder: Folder) throws(FolderRepositoryError) -> Folder {
         createCallCount += 1
         actualCreatedFolder = folder
 
@@ -149,7 +150,7 @@ public actor MockFolderRepository: FolderRepository {
         }
     }
 
-    public func fetch(by id: UUID) async throws(FolderRepositoryError) -> Folder {
+    public func fetch(by id: UUID) throws(FolderRepositoryError) -> Folder {
         fetchByIDCallCount += 1
         actualFetchByID = id
 
@@ -165,7 +166,7 @@ public actor MockFolderRepository: FolderRepository {
         }
     }
 
-    public func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
+    public func fetchAll() throws(FolderRepositoryError) -> [Folder] {
         fetchAllCallCount += 1
 
         switch fetchAllResult {
@@ -180,7 +181,7 @@ public actor MockFolderRepository: FolderRepository {
         }
     }
 
-    public func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
+    public func update(_ folder: Folder) throws(FolderRepositoryError) -> Folder {
         updateCallCount += 1
         actualFolder = folder
 

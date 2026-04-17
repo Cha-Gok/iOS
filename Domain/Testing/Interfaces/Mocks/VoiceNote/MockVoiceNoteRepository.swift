@@ -2,7 +2,8 @@
 import Foundation
 import XCTest
 
-public actor MockVoiceNoteRepository: VoiceNoteRepository {
+@MainActor
+public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var createResult: Result<VoiceNote, VoiceNoteRepositoryError>?
     private var updateResult: Result<VoiceNote, VoiceNoteRepositoryError>?
     private var fetchResult: Result<VoiceNote, VoiceNoteRepositoryError>?
@@ -136,7 +137,7 @@ public actor MockVoiceNoteRepository: VoiceNoteRepository {
 
     // Repository Implementations
 
-    public func create(_ voiceRecord: VoiceRecord) async throws(VoiceNoteRepositoryError) -> VoiceNote {
+    public func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteRepositoryError) -> VoiceNote {
         createCallCount += 1
         actualVoiceRecord = voiceRecord
         switch createResult {
@@ -147,7 +148,7 @@ public actor MockVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
-    public func update(_ voiceNote: VoiceNote) async throws(VoiceNoteRepositoryError) -> VoiceNote {
+    public func update(_ voiceNote: VoiceNote) throws(VoiceNoteRepositoryError) -> VoiceNote {
         updateCallCount += 1
         actualUpdatedVoiceNote = voiceNote
         switch updateResult {
@@ -158,7 +159,7 @@ public actor MockVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
-    public func fetchAllFromDefaultFolder() async throws(VoiceNoteRepositoryError) -> [VoiceNote] {
+    public func fetchAllFromDefaultFolder() throws(VoiceNoteRepositoryError) -> [VoiceNote] {
         fetchAllFromDefaultFolderCallCount += 1
         switch fetchAllResult {
         case .success(let val): return val
@@ -168,7 +169,7 @@ public actor MockVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
-    public func fetchAll(folderID: UUID) async throws(VoiceNoteRepositoryError) -> [VoiceNote] {
+    public func fetchAll(folderID: UUID) throws(VoiceNoteRepositoryError) -> [VoiceNote] {
         fetchAllCallCount += 1
         actualFetchAllFolderID = folderID
         switch fetchAllResult {
@@ -179,7 +180,7 @@ public actor MockVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
-    public func fetch(byId id: UUID) async throws(VoiceNoteRepositoryError) -> VoiceNote {
+    public func fetch(byId id: UUID) throws(VoiceNoteRepositoryError) -> VoiceNote {
         fetchCallCount += 1
         actualFetchID = id
         switch fetchResult {
@@ -190,7 +191,7 @@ public actor MockVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
-    public func fetchRecent(limit: Int) async throws(VoiceNoteRepositoryError) -> [VoiceNote] {
+    public func fetchRecent(limit: Int) throws(VoiceNoteRepositoryError) -> [VoiceNote] {
         fetchRecentCallCount += 1
         actualFetchRecentLimit = limit
         switch fetchRecentResult {

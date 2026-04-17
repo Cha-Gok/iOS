@@ -11,44 +11,36 @@ public struct DefaultFolderRepository: FolderRepository {
         self.store = store
     }
 
-    public func create(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
-        if Task.isCancelled { throw .cancelled }
-
+    public func create(_ folder: Folder) throws(FolderRepositoryError) -> Folder {
         do {
-            return try await store.create(folder, as: FolderEntity.self)
+            return try store.create(folder, as: FolderEntity.self)
         } catch {
             AppLogger.error(error)
             throw .createFailed
         }
     }
 
-    public func fetchAll() async throws(FolderRepositoryError) -> [Folder] {
-        if Task.isCancelled { throw .cancelled }
-
+    public func fetchAll() throws(FolderRepositoryError) -> [Folder] {
         do {
-            return try await store.fetchAll(FolderEntity.self)
+            return try store.fetchAll(FolderEntity.self)
         } catch {
             AppLogger.error(error)
             throw .fetchFailed
         }
     }
 
-    public func fetch(by id: UUID) async throws(FolderRepositoryError) -> Folder {
-        if Task.isCancelled { throw .cancelled }
-
+    public func fetch(by id: UUID) throws(FolderRepositoryError) -> Folder {
         do {
-            return try await store.fetch(byID: id, as: FolderEntity.self)
+            return try store.fetch(byID: id, as: FolderEntity.self)
         } catch {
             AppLogger.error(error)
             throw .fetchFailed
         }
     }
 
-    public func update(_ folder: Folder) async throws(FolderRepositoryError) -> Folder {
-        if Task.isCancelled { throw .cancelled }
-
+    public func update(_ folder: Folder) throws(FolderRepositoryError) -> Folder {
         do {
-            return try await store.update(folder, as: FolderEntity.self)
+            return try store.update(folder, as: FolderEntity.self)
         } catch {
             AppLogger.error(error)
             throw .updateFailed

@@ -97,14 +97,12 @@ extension TrashViewModel {
 
 extension TrashViewModel {
     func fetchItems() {
-        Task {
-            do {
-                let wasteBaskets: [WasteBasketItem] = try await repository.fetchAll()
-                self.items = wasteBaskets.map(\.toLibraryItem)
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
-            }
+        do {
+            let wasteBaskets: [WasteBasketItem] = try repository.fetchAll()
+            items = wasteBaskets.map(\.toLibraryItem)
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
         }
     }
 }

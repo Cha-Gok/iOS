@@ -3,9 +3,10 @@ import Core
 import DomainTesting
 import XCTest
 
+@MainActor
 final class VoiceNoteUseCaseTest: XCTestCase {
     private struct SUT {
-        let useCase: DefaultVoiceNoteUseCase
+        let useCase: VoiceNoteUseCase
         let repository: MockVoiceNoteRepository
         let sttRepository: MockSTTRepository
         let summaryRepository: MockSummaryRepository
@@ -32,30 +33,30 @@ final class VoiceNoteUseCaseTest: XCTestCase {
 // MARK: - Create
 
 extension VoiceNoteUseCaseTest {
-    func test_create_정상호출시_리포지토리를호출하고결과를반환한다() async throws {
+    func test_create_정상호출시_리포지토리를호출하고결과를반환한다() throws {
         let sut = makeSUT()
         let voiceRecord = VoiceRecord.stub()
         let expectedNote = VoiceNote.stub(voiceRecord: voiceRecord)
 
-        await sut.repository.setCreateResult(.success(expectedNote))
-        await sut.repository.expectCreate(callCount: 1)
+        sut.repository.setCreateResult(.success(expectedNote))
+        sut.repository.expectCreate(callCount: 1)
 
-        let result = try await sut.useCase.create(voiceRecord)
+        let result = try sut.useCase.create(voiceRecord)
 
         XCTAssertEqual(result.id, expectedNote.id)
-        await sut.repository.verify()
+        sut.repository.verify()
     }
 }
 
 // MARK: - Update
 
 extension VoiceNoteUseCaseTest {
-    func test_update_제목이비어있으면_invalidTitle에러를던진다() async {
+    func test_update_제목이비어있으면_invalidTitle에러를던진다() {
         let sut = makeSUT()
         let voiceNote = VoiceNote.stub(title: "")
 
         do {
-            _ = try await sut.useCase.update(voiceNote)
+            _ = try sut.useCase.update(voiceNote)
             XCTFail("에러가 발생해야 합니다.")
         } catch {
             guard case VoiceNoteUseCaseError.invalidTitle = error else {
@@ -64,44 +65,44 @@ extension VoiceNoteUseCaseTest {
         }
     }
 
-    func test_update_정상호출시_리포지토리를호출하고결과를반환한다() async throws {
+    func test_update_정상호출시_리포지토리를호출하고결과를반환한다() throws {
         let sut = makeSUT()
         let voiceNote = VoiceNote.stub(title: "수정된 제목")
-        await sut.repository.setUpdateResult(.success(voiceNote))
-        await sut.repository.expectUpdate(callCount: 1)
+        sut.repository.setUpdateResult(.success(voiceNote))
+        sut.repository.expectUpdate(callCount: 1)
 
-        let result = try await sut.useCase.update(voiceNote)
+        let result = try sut.useCase.update(voiceNote)
 
         XCTAssertEqual(result.title, "수정된 제목")
-        await sut.repository.verify()
+        sut.repository.verify()
     }
 }
 
 // MARK: - Fetch
 
 extension VoiceNoteUseCaseTest {
-    func test_fetchAllFromDefaultFolder_호출시_리포지토리를호출한다() async throws {
+    func test_fetchAllFromDefaultFolder_호출시_리포지토리를호출한다() throws {
         let sut = makeSUT()
         let expected = [VoiceNote.stub()]
-        await sut.repository.setFetchAllResult(.success(expected))
-        await sut.repository.expectFetchAllFromDefaultFolder(callCount: 1)
+        sut.repository.setFetchAllResult(.success(expected))
+        sut.repository.expectFetchAllFromDefaultFolder(callCount: 1)
 
-        let result = try await sut.useCase.fetchAllFromDefaultFolder()
+        let result = try sut.useCase.fetchAllFromDefaultFolder()
 
         XCTAssertEqual(result.count, 1)
-        await sut.repository.verify()
+        sut.repository.verify()
     }
 
-    func test_fetchRecent_호출시_리포지토리를호출한다() async throws {
+    func test_fetchRecent_호출시_리포지토리를호출한다() throws {
         let sut = makeSUT()
         let expected = [VoiceNote.stub()]
-        await sut.repository.setFetchRecentResult(.success(expected))
-        await sut.repository.expectFetchRecent(callCount: 1)
+        sut.repository.setFetchRecentResult(.success(expected))
+        sut.repository.expectFetchRecent(callCount: 1)
 
-        let result = try await sut.useCase.fetchRecent(limit: 5)
+        let result = try sut.useCase.fetchRecent(limit: 5)
 
         XCTAssertEqual(result.count, 1)
-        await sut.repository.verify()
+        sut.repository.verify()
     }
 }
 
