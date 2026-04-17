@@ -195,7 +195,6 @@ private extension VoiceNoteViewController {
         observeAnalysisState()
         observeErrorMessage()
         observeEditingState()
-        observeTitle()
     }
 
     private func observePlaybackState() {
@@ -243,18 +242,6 @@ private extension VoiceNoteViewController {
                     }
                 }
                 self.observeErrorMessage()
-            }
-        }
-    }
-
-    private func observeTitle() {
-        withObservationTracking {
-            _ = viewModel.title
-        } onChange: { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                self.titleLabel.text = self.viewModel.title
-                self.observeTitle()
             }
         }
     }
