@@ -6,7 +6,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     typealias Item = VoiceNoteViewModel.Item
 
     private let viewModel: VoiceNoteViewModel
-    private var hasAppliedCompletedSnapshot = false
     private lazy var dataSource = makeDataSource()
 
     // MARK: - UI Components
@@ -182,10 +181,7 @@ private extension VoiceNoteViewController {
                     snapshot.reconfigureItems([.metadata])
                     self.dataSource.apply(snapshot, animatingDifferences: false)
                 case .completed:
-                    if !self.hasAppliedCompletedSnapshot {
-                        self.hasAppliedCompletedSnapshot = true
-                        self.applySnapshot()
-                    }
+                    self.applySnapshot()
                 case .failed, .pending:
                     break
                 }

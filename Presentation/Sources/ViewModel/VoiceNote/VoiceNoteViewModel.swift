@@ -12,6 +12,8 @@ public final class VoiceNoteViewModel {
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
     @ObservationIgnored
+    private var voiceNoteObservationTask: Task<Void, Never>?
+    @ObservationIgnored
     private var wasPlayingBeforeSeek = false
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
@@ -43,6 +45,7 @@ public final class VoiceNoteViewModel {
 
     deinit {
         playbackObservationTask?.cancel()
+        voiceNoteObservationTask?.cancel()
     }
 
     // MARK: - Send
@@ -52,9 +55,9 @@ public final class VoiceNoteViewModel {
         case .view(let viewAction):
             switch viewAction {
             case .onAppear:
-                // 재생 스트림 구독 시작 및 폴더명·AI 분석 로드
-                startPlaybackObservation()
-                Task { await fetchFolderName() }
+                setupPalyback()
+                fetchFolderName()
+                observeVoiceNote()
                 if state.voiceNote.analysisState != .completed {
                     state.voiceNote.analysisState = .analyzing
                     Task { await performNewAnalysis() }
@@ -95,17 +98,17 @@ public final class VoiceNoteViewModel {
             case .moveVoiceNoteButtonTapped:
                 coordinator?.presentFolderList(with: .single(state.voiceNote))
             case .deleteVoiceNoteButtonTapped:
-                Task { await moveToWasteBasket() }
+                moveToWasteBasket()
             }
 
         case .internal(let internalAction):
             switch internalAction {
             case .metadataLoaded(let folderName):
-                // 폴더명 비동기 로드 완료
                 state.folderName = folderName
-            case .analysisCompleted(let note):
-                // AI 분석 완료 — keywords/transcript/summary가 채워진 노트로 교체
+            case .voiceNoteObserved(let note):
+                let folderChanged = state.voiceNote.folderID != note.folderID
                 state.voiceNote = note
+                if folderChanged { fetchFolderName() }
             case .analysisFailed(let message):
                 // AI 분석 실패 — 에러 메시지 표시
                 state.errorMessage = message
@@ -126,9 +129,9 @@ public final class VoiceNoteViewModel {
 
     // MARK: - Private Methods
 
-    private func fetchFolderName() async {
+    private func fetchFolderName() {
         do {
-            let folderName = try await folderUseCase.fetch(by: state.voiceNote.folderID).name
+            let folderName = try folderUseCase.fetch(by: state.voiceNote.folderID).name
             send(.internal(.metadataLoaded(folderName: folderName)))
         } catch {
             AppLogger.error(error)
@@ -155,15 +158,13 @@ public final class VoiceNoteViewModel {
                 analysisState: .completed
             )
 
-            // 분석 결과 반영 (폴더명은 metadataLoaded 액션이 별도로 담당)
-            let finalNote = try await voiceNoteUseCase.update(updated)
-            send(.internal(.analysisCompleted(note: finalNote)))
+            _ = try voiceNoteUseCase.update(updated)
         } catch {
             send(.internal(.analysisFailed(error.localizedDescription)))
         }
     }
 
-    private func startPlaybackObservation() {
+    private func setupPalyback() {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
         do {
@@ -180,9 +181,25 @@ public final class VoiceNoteViewModel {
         }
     }
 
+    private func observeVoiceNote() {
+        voiceNoteObservationTask?.cancel()
+        voiceNoteObservationTask = Task {
+            do {
+                let stream = try voiceNoteUseCase.observe(id: state.voiceNote.id)
+                for await note in stream.dropFirst() {
+                    send(.internal(.voiceNoteObserved(note)))
+                }
+            } catch {
+                send(.internal(.errorOccurred(error.localizedDescription)))
+            }
+        }
+    }
+
     private func stop() {
         playbackObservationTask?.cancel()
         playbackObservationTask = nil
+        voiceNoteObservationTask?.cancel()
+        voiceNoteObservationTask = nil
         do {
             try playbackRepository.stop()
         } catch {
@@ -214,11 +231,10 @@ public final class VoiceNoteViewModel {
         }
     }
 
-    private func moveToWasteBasket() async {
-        if Task.isCancelled { return }
+    private func moveToWasteBasket() {
         do {
             stop()
-            try await wasteBasketRepository.moveToWasteBasket(item: .voiceNote(obj: state.voiceNote))
+            try wasteBasketRepository.moveToWasteBasket(item: .voiceNote(obj: state.voiceNote))
             coordinator?.pop()
         } catch {
             send(.internal(.errorOccurred(error.localizedDescription)))
@@ -284,7 +300,7 @@ public extension VoiceNoteViewModel {
 
         public enum Internal {
             case metadataLoaded(folderName: String)
-            case analysisCompleted(note: VoiceNote)
+            case voiceNoteObserved(VoiceNote)
             case analysisFailed(String)
             case playbackStateChanged(AudioPlaybackState)
             case errorOccurred(String)

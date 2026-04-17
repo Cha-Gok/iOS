@@ -410,6 +410,13 @@ extension MainViewModel {
             ) async throws(VoiceNoteUseCaseError) -> AudioToSummaryResult {
                 AudioToSummaryResult(transcript: Transcript(text: ""), keywords: [], summary: Summary(text: ""))
             }
+
+            func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote> {
+                guard let item = defaultItems.first(where: { $0.id == id }) else {
+                    throw .recordNotFound(id)
+                }
+                return AsyncStream { $0.yield(item) }
+            }
         }
 
         struct PreviewFolderUseCase: FolderUseCase {
