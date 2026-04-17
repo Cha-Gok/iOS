@@ -91,7 +91,7 @@ extension MainViewModel {
         }
     }
 
-    func getDidScroll(_ didScroll: Bool) {
+    func setDidScroll(_ didScroll: Bool) {
         self.didScroll = didScroll
     }
 

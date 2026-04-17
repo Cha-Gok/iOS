@@ -484,7 +484,7 @@ extension MainViewController: UICollectionViewDelegate {
         let didScroll = offsetY > 0
 
         guard vm.didScroll != didScroll else { return }
-        vm.getDidScroll(didScroll)
+        vm.setDidScroll(didScroll)
         guard let header = collectionView.visibleSupplementaryViews(ofKind: MainCategoryHeaderView.elementKind)
             .first as? MainCategoryHeaderView else { return }
         header.updateScrollState(didScroll)
