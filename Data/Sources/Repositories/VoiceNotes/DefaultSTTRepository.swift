@@ -83,11 +83,18 @@ public actor DefaultSTTRepository: STTRepository {
         continuation: CheckedContinuation<Transcript, any Error>
     ) throws(STTRepositoryError) {
         guard !Task.isCancelled else { throw .cancelled }
-        guard let recognizer = SFSpeechRecognizer(), recognizer.isAvailable else {
+        
+        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "ko-KR")) else {
+            AppLogger.error("SFSpeechRecognizer 초기화 실패 (ko-KR)")
             throw .transcribeFailed
         }
 
+        if !recognizer.isAvailable {
+            AppLogger.warning("SFSpeechRecognizer를 현재 사용할 수 없는 상태입니다. (isAvailable = false)")
+        }
+
         let request = SFSpeechURLRecognitionRequest(url: audioFileURL)
+        request.requiresOnDeviceRecognition = false
         currentContinuation = continuation
 
         currentTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
@@ -152,6 +159,18 @@ public actor DefaultSTTRepository: STTRepository {
             return .transcribeFailed
         }
 
+        // 추가 전사 오류 처리 (kLSRErrorDomain 300, kAFAssistantErrorDomain 1101)
+        if nsError.domain == "kLSRErrorDomain", nsError.code == 300 {
+            AppLogger.error("전사 실패: kLSRErrorDomain (300)")
+            return .transcribeFailed
+        }
+
+        if nsError.domain == "kAFAssistantErrorDomain", nsError.code == 1101 {
+            AppLogger.error("전사 실패: kAFAssistantErrorDomain (1101)")
+            return .transcribeFailed
+        }
+
+        AppLogger.error("알 수 없는 전사 오류: \(error.localizedDescription) (Domain: \(nsError.domain), Code: \(nsError.code))")
         return .unknown(error)
     }
 }
