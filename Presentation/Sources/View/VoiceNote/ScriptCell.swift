@@ -53,6 +53,8 @@ final class ScriptContentView: UIView, UIContentView {
         return stack
     }()
 
+    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(timestampTapped))
+
     /// 문단별 (배경 컨테이너, 텍스트 레이블 또는 텍스트 뷰) 쌍. 하이라이트 직접 업데이트에 사용
     private var paragraphRows: [(background: UIView, view: UIView)] = []
 
@@ -77,8 +79,7 @@ final class ScriptContentView: UIView, UIContentView {
         containerStack.addArrangedSubview(paragraphsStack)
         addSubview(containerStack)
 
-        let tap = UITapGestureRecognizer(target: self, action: #selector(timestampTapped))
-        containerStack.addGestureRecognizer(tap)
+        containerStack.addGestureRecognizer(tapGesture)
         containerStack.isUserInteractionEnabled = true
 
         NSLayoutConstraint.activate([
@@ -91,7 +92,8 @@ final class ScriptContentView: UIView, UIContentView {
 
     @objc
     private func timestampTapped() {
-        guard let config = configuration as? ScriptContentConfiguration else { return }
+        guard let config = configuration as? ScriptContentConfiguration,
+              !config.isEditing else { return } // 편집 모드일 때는 탭 동작 무시
         config.onTimestampTapped?(config.timestampSeconds)
     }
 
@@ -101,10 +103,7 @@ final class ScriptContentView: UIView, UIContentView {
     /// playingParagraphInfo가 변경될 때마다 UIKit이 재호출합니다.
     override func updateProperties() {
         super.updateProperties()
-        guard let config = configuration as? ScriptContentConfiguration else { return }
-        let info = config.highlight?.playingParagraphInfo
-        let index = info?.sectionIndex == config.sectionIndex ? info?.paragraphIndex : nil
-        applyHighlight(paragraphIndex: index)
+        updateHighlight()
     }
 
     // MARK: - Apply
@@ -112,9 +111,11 @@ final class ScriptContentView: UIView, UIContentView {
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? ScriptContentConfiguration else { return }
         timeLabel.setTypography(text: config.timestamp, style: .caption)
+        tapGesture.isEnabled = !config.isEditing // 편집 모드일 때는 탭 제스처 비활성화
 
-        // 문단 내용이 바뀔 때만 뷰 재구성
-        let needsRebuild = paragraphRows.count != config.paragraphs.count
+        // 문단 내용이 바뀌거나 편집 모드가 전환될 때만 뷰 재구성
+        let currentIsEditing = paragraphRows.first?.view is UITextView
+        let needsRebuild = paragraphRows.isEmpty || paragraphRows.count != config.paragraphs.count || currentIsEditing != config.isEditing
 
         if needsRebuild {
             paragraphsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
@@ -125,9 +126,11 @@ final class ScriptContentView: UIView, UIContentView {
                     textView.text = para
                     textView.font = Typography.body1.font
                     textView.textColor = UIColor.gray950
-                    textView.backgroundColor = .clear
+                    textView.backgroundColor = UIColor.gray100 // 편집 중임을 알기 쉽게 배경색 살짝 추가
+                    textView.layer.cornerRadius = 4
+                    textView.isEditable = true
                     textView.isScrollEnabled = false
-                    textView.textContainerInset = .zero
+                    textView.textContainerInset = UIEdgeInsets(top: 2, left: 0, bottom: 2, right: 0)
                     textView.textContainer.lineFragmentPadding = 0
                     textView.delegate = self
                     textView.tag = pIdx
@@ -161,9 +164,19 @@ final class ScriptContentView: UIView, UIContentView {
                 }
             }
         }
+        
+        // 뷰 구성 직후 현재 하이라이트 상태 즉시 적용
+        updateHighlight()
     }
 
     // MARK: - Highlight
+
+    private func updateHighlight() {
+        guard let config = configuration as? ScriptContentConfiguration else { return }
+        let info = config.highlight?.playingParagraphInfo
+        let index = info?.sectionIndex == config.sectionIndex ? info?.paragraphIndex : nil
+        applyHighlight(paragraphIndex: index)
+    }
 
     private func applyHighlight(paragraphIndex: Int?) {
         for (index, row) in paragraphRows.enumerated() {

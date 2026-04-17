@@ -409,14 +409,19 @@ private extension VoiceNoteViewController {
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections(Section.allCases)
-        snapshot.appendItems([.metadata], toSection: .metadata)
-        snapshot.appendItems(
-            viewModel.keyPoints.map { .keyPoint(number: $0.number, text: $0.text) },
-            toSection: .keyPoints
-        )
-        snapshot.appendItems([.keywords], toSection: .keywords)
-        snapshot.appendItems(viewModel.scriptSections.indices.map { .script(index: $0) }, toSection: .scripts)
-        snapshot.reconfigureItems([.metadata, .keywords])
+        
+        let metadataItems: [Item] = [.metadata]
+        let keyPointItems = viewModel.keyPoints.map { Item.keyPoint(number: $0.number, text: $0.text) }
+        let keywordItems: [Item] = [.keywords]
+        let scriptItems = viewModel.scriptSections.indices.map { Item.script(index: $0) }
+        
+        snapshot.appendItems(metadataItems, toSection: .metadata)
+        snapshot.appendItems(keyPointItems, toSection: .keyPoints)
+        snapshot.appendItems(keywordItems, toSection: .keywords)
+        snapshot.appendItems(scriptItems, toSection: .scripts)
+        
+        // 셀 내용이나 모드(isEditing)가 바뀌었을 수 있으므로 필요한 항목들을 재구성합니다.
+        snapshot.reconfigureItems(metadataItems + keywordItems + scriptItems)
         dataSource.apply(snapshot, animatingDifferences: true)
     }
 }
