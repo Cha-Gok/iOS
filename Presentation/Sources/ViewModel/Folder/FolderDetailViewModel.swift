@@ -25,6 +25,7 @@ public final class FolderDetailViewModel {
     private(set) var order: Order = .createdAt
     private(set) var select: Select = .none
     private(set) var selectedItems: [VoiceNote] = []
+    private(set) var showAlert: Bool = false
 
     public weak var coordinator: BaseCoordinatorDelegate?
 
@@ -93,6 +94,14 @@ extension FolderDetailViewModel {
     private func allClearSelected() {
         selectedItems = []
     }
+
+    func closeAlertView() {
+        self.showAlert = false
+    }
+    
+    func openAlertView() {
+        self.showAlert = true
+    }
 }
 
 // MARK: - Fetch
@@ -138,7 +147,7 @@ extension FolderDetailViewModel {
 // MARK: - Move ( delete )
 extension FolderDetailViewModel {
     func move() {
-        let items: [WasteBasketItem] = items.map(\.toWasteBasketItem)
+        let items: [WasteBasketItem] = selectedItems.map{ .voiceNote(obj: $0) }
         do {
             try wasteBasketRepository.moveAllToWasteBasket(items: items)
         } catch {

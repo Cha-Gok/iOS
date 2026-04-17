@@ -12,6 +12,8 @@ public final class FolderDetailViewController: CollectionViewController {
 
     private var dataSource: DataSource?
 
+    // MARK: - Component
+    
     private lazy var backButton: UIButton = {
         let btn = UIButton(type: .custom) // .system 대신 .custom을 사용하여 기본 배경 효과 제거
         let symbolConfig = UIImage.SymbolConfiguration(weight: .bold)
@@ -57,9 +59,6 @@ public final class FolderDetailViewController: CollectionViewController {
         return btn
     }()
 
-
-    // MARK: - Component
-
     private lazy var createdAtAction = UIAction(
         title: "생성일 순"
     ) { [weak self] _ in
@@ -86,20 +85,22 @@ public final class FolderDetailViewController: CollectionViewController {
         self?.vm.setSelectionMode(.all)
     }
     
-    private lazy var moveAction = UIAction(
-        title: "파일 이동하기",
-        image: nil
-    ) { [weak self] _ in
-        
-    }
-    
-    private lazy var deleteAction = UIAction(
-        title: "삭제하기",
-        image: nil,
-        attributes: .destructive
-    ) { [weak self] _ in
-        
-    }
+    private let cancelAlertButton: GlassButton = .close("취소")
+    private let primaryAlertButton: GlassButton = .danger("삭제")
+    private let removeAlertOverlayView: UIView = {
+        let overlay = UIView()
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        overlay.isHidden = true
+        return overlay
+    }()
+
+    private lazy var removeAlertView: AlertView = .init(
+        title: "기록을 삭제할까요?",
+        subTitle: "휴지통으로 이동되며,\n직접 비우기 전까지 보관돼요.",
+        closeButton: cancelAlertButton,
+        primaryButton: primaryAlertButton
+    )
 
     private let vm: FolderDetailViewModel
 
@@ -129,6 +130,7 @@ public final class FolderDetailViewController: CollectionViewController {
         super.viewDidLoad()
         collectionView.allowsSelection = false
         setupNavigation()
+        setupRemoveAlert()
         setupDataSource()
         updateDataSource()
     }
@@ -147,6 +149,8 @@ public final class FolderDetailViewController: CollectionViewController {
         updateNavigationItems(vm.select)
         // dataSource
         updateDataSource(reconfigure: true)
+        // Remove Alert
+        updateRemoveAlert()
     }
 
     private func setupNavigation() {
@@ -193,6 +197,30 @@ public final class FolderDetailViewController: CollectionViewController {
             children: [dateSection, selectSection]
         )
         moreAndActionButton.menu = menu
+    }
+    
+    private func setupRemoveAlert() {
+        cancelAlertButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            vm.closeAlertView()
+        }, for: .touchUpInside)
+
+        primaryAlertButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            vm.move()
+            vm.closeAlertView()
+        }, for: .touchUpInside)
+
+        view.addSubview(removeAlertOverlayView)
+        removeAlertOverlayView.addSubview(removeAlertView)
+        NSLayoutConstraint.activate([
+            removeAlertOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            removeAlertOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            removeAlertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            removeAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            removeAlertView.centerXAnchor.constraint(equalTo: removeAlertOverlayView.centerXAnchor),
+            removeAlertView.centerYAnchor.constraint(equalTo: removeAlertOverlayView.centerYAnchor)
+        ])
     }
     
     private func setupDataSource() {
@@ -314,11 +342,20 @@ extension FolderDetailViewController {
         }
         dataSource?.apply(snapshot, animatingDifferences: true)
     }
+    
+    private func updateRemoveAlert() {
+        let shouldShowAlert = vm.showAlert
+        removeAlertOverlayView.isHidden = !shouldShowAlert
+        updateInteractionForAlert(isPresented: shouldShowAlert)
+        if shouldShowAlert {
+            view.bringSubviewToFront(removeAlertOverlayView)
+        }
+    }
 }
 
 // MARK: - Helper Method
 
-extension FolderDetailViewController {
+private extension FolderDetailViewController {
     func backButtonAction() -> UIAction {
         UIAction { [weak self] _ in
             guard let self else { return }
@@ -341,7 +378,7 @@ extension FolderDetailViewController {
             case .single, .all:
                 // TODO: 삭제 로직 실행
                 print("삭제 버튼 탭됨")
-                vm.setSelectionMode(.none)
+                vm.openAlertView()
             }
         }
     }
@@ -359,6 +396,13 @@ extension FolderDetailViewController {
                 vm.setSelectionMode(.none)
             }
         }
+    }
+    
+    func updateInteractionForAlert(isPresented: Bool) {
+        collectionView.isUserInteractionEnabled = !isPresented
+        backButton.isUserInteractionEnabled = !isPresented
+        moreAndActionButton.isUserInteractionEnabled = !isPresented
+        searchAndMoveButton.isUserInteractionEnabled = !isPresented
     }
 }
 
