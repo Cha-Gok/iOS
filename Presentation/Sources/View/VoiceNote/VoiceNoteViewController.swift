@@ -30,16 +30,35 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         let label = UILabel()
         label.font = Typography.title1.font
         label.textColor = UIColor.gray950
+        label.lineBreakMode = .byTruncatingTail
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return label
     }()
 
-    private lazy var navLeftView: UIStackView = {
-        let stack = UIStackView(arrangedSubviews: [backChevronButton, titleLabel])
-        stack.axis = .horizontal
-        stack.alignment = .center
-        stack.spacing = 4
-        return stack
+    private lazy var titleTextField: UITextField = {
+        let field = UITextField()
+        field.font = Typography.title1.font
+        field.textColor = UIColor.gray950
+        field.tintColor = UIColor.gray950
+        field.returnKeyType = .done
+        return field
     }()
+
+    private lazy var doneButton: UIBarButtonItem = {
+        let item = UIBarButtonItem(title: "완료", primaryAction: UIAction { [weak self] _ in
+            self?.exitEditMode()
+        })
+        item.tintColor = UIColor.point800
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineHeightMultiple = 1.08
+        let attrs: [NSAttributedString.Key: Any] = [.paragraphStyle: paragraphStyle]
+        item.setTitleTextAttributes(attrs, for: .normal)
+        item.setTitleTextAttributes(attrs, for: .highlighted)
+        return item
+    }()
+
+    private var normalRightBarButtonItems: [UIBarButtonItem] = []
+
 
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
@@ -124,11 +143,14 @@ private extension VoiceNoteViewController {
 
     func setupNavigationBar() {
         titleLabel.text = viewModel.state.title
+        titleLabel.frame.size.width = view.bounds.width
         let menu = UIMenu(children: [
             UIAction(title: "기록 이동하기", handler: { [weak self] _ in
                 self?.viewModel.send(.view(.moveVoiceNoteButtonTapped))
             }),
-            UIAction(title: "편집하기", handler: { _ in }),
+            UIAction(title: "편집하기", handler: { [weak self] _ in
+                self?.enterEditMode()
+            }),
             UIAction(title: "삭제하기", attributes: .destructive, handler: { [weak self] _ in
                 self?.viewModel.send(.view(.deleteVoiceNoteButtonTapped))
             }),
@@ -140,8 +162,10 @@ private extension VoiceNoteViewController {
             target: nil,
             action: nil
         )
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: navLeftView)
-        navigationItem.rightBarButtonItems = [moreItem, searchItem]
+        normalRightBarButtonItems = [moreItem, searchItem]
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backChevronButton)
+        navigationItem.titleView = titleLabel
+        navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         navigationItem.rightBarButtonItems?.forEach { $0.hidesSharedBackground = true }
@@ -215,6 +239,28 @@ private extension VoiceNoteViewController {
         }
     }
 
+}
+
+// MARK: - Edit Mode
+
+private extension VoiceNoteViewController {
+    func enterEditMode() {
+        titleTextField.text = viewModel.state.title
+        titleTextField.frame.size.width = view.bounds.width
+        titleLabel.isHidden = true
+        navigationItem.titleView = titleTextField
+        navigationItem.rightBarButtonItems = [doneButton]
+        titleTextField.becomeFirstResponder()
+        titleTextField.selectAll(nil)
+    }
+
+    func exitEditMode() {
+        titleTextField.resignFirstResponder()
+        navigationItem.titleView = nil
+        titleLabel.isHidden = false
+        navigationItem.rightBarButtonItems = normalRightBarButtonItems
+        navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
+    }
 }
 
 // MARK: - Tab Actions
