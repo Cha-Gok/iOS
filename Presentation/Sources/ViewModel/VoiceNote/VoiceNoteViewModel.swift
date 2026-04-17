@@ -103,6 +103,11 @@ public final class VoiceNoteViewModel {
                 coordinator?.pop()
             case .moveVoiceNoteButtonTapped:
                 coordinator?.presentFolderList(with: .single(state.voiceNote))
+            case .editButtonTapped:
+                state.isEditing = true
+            case .doneButtonTapped:
+                state.isEditing = false
+            // TODO: 제목 저장 구현 필요
             case .deleteVoiceNoteButtonTapped:
                 moveToWasteBasket()
             }
@@ -326,6 +331,8 @@ public extension VoiceNoteViewModel {
             case scriptTimestampTapped(TimeInterval)
             case pop
             case moveVoiceNoteButtonTapped
+            case editButtonTapped
+            case doneButtonTapped(String)
             case deleteVoiceNoteButtonTapped
         }
 
@@ -344,6 +351,7 @@ public extension VoiceNoteViewModel {
 
     struct State {
         var voiceNote: VoiceNote
+        var isEditing: Bool = false
         var errorMessage: String?
         var folderName: String = ""
         /// State가 struct이므로 let으로 선언해 참조 안정성을 보장합니다.
