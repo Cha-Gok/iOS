@@ -8,26 +8,28 @@ private final class BundleInfo: Sendable {
 
 /// Core Data 기반의 범용 로컬 데이터베이스입니다.
 /// 단일 NSPersistentContainer를 관리하며, 메서드 레벨 제네릭을 통해 모든 엔티티 타입을 처리합니다.
-public final class CoreDataLocalDataBase: Sendable {
+@MainActor
+public final class CoreDataLocalDataBase {
     /// NSManagedObjectModel은 인스턴스마다 새로 생성하면 동일 Entity 클래스를 중복 소유해
     /// CoreData 경고가 발생하므로 프로세스 전체에서 단 한 번만 로드합니다.
-    private nonisolated(unsafe) static let sharedModel: NSManagedObjectModel = {
+    @MainActor
+    private static let sharedModel: NSManagedObjectModel? = {
         let bundle = Bundle(for: BundleInfo.self)
-        guard let model = NSManagedObjectModel.mergedModel(from: [bundle]) else {
-            fatalError("CoreDataLocalDataBase: NSManagedObjectModel 로드 실패 — 번들에 .momd 파일이 있는지 확인하세요.")
-        }
-        return model
+        return NSManagedObjectModel.mergedModel(from: [bundle])
     }()
 
     private let container: NSPersistentContainer
-    private let backgroundContext: NSManagedObjectContext
 
     /// Core Data 스토리지를 초기화하고 모델 파일을 로드합니다.
     /// - Parameter inMemory: 메모리 상에서만 동작할지 여부 (테스트 용도)
     public init(inMemory: Bool = false) throws(CoreDataStorageError) {
+        guard let model = CoreDataLocalDataBase.sharedModel else {
+            throw .resourceNotFound
+        }
+
         let newContainer = NSPersistentContainer(
             name: BundleInfo.modelName,
-            managedObjectModel: CoreDataLocalDataBase.sharedModel
+            managedObjectModel: model
         )
 
         if inMemory {
@@ -47,7 +49,6 @@ public final class CoreDataLocalDataBase: Sendable {
         }
 
         container = newContainer
-        backgroundContext = newContainer.newBackgroundContext()
     }
 }
 
@@ -57,13 +58,12 @@ public extension CoreDataLocalDataBase {
     func create<MO: ManagedObjectMapping>(
         _ item: MO.ModelType,
         as entity: MO.Type
-    ) async throws(CoreDataStorageError) -> MO.ModelType {
+    ) throws(CoreDataStorageError) -> MO.ModelType {
+        let context = container.viewContext
         do {
-            return try await backgroundContext.perform { [backgroundContext] in
-                let managedObject = try MO(model: item, context: backgroundContext)
-                try backgroundContext.save()
-                return managedObject.toModel()
-            }
+            let managedObject = try MO(model: item, context: context)
+            try context.save()
+            return managedObject.toModel()
         } catch {
             AppLogger.error(error)
             throw .createFailed
@@ -73,28 +73,26 @@ public extension CoreDataLocalDataBase {
     func fetch<MO: ManagedObjectMapping>(
         byID id: MO.ModelType.ID,
         as entity: MO.Type
-    ) async throws(CoreDataStorageError) -> MO.ModelType {
+    ) throws(CoreDataStorageError) -> MO.ModelType {
+        let context = container.viewContext
         do {
-            return try await backgroundContext.perform { [backgroundContext] in
-                guard let entity = try MO.find(byID: id, in: backgroundContext) else {
-                    throw CoreDataStorageError.fetchFailed
-                }
-                return entity.toModel()
+            guard let entity = try MO.find(byID: id, in: context) else {
+                throw CoreDataStorageError.fetchFailed
             }
+            return entity.toModel()
         } catch {
             AppLogger.error(error)
             throw .fetchFailed
         }
     }
 
-    func fetchAll<MO: ManagedObjectMapping>(_ entity: MO.Type) async throws(CoreDataStorageError) -> [MO.ModelType] {
+    func fetchAll<MO: ManagedObjectMapping>(_ entity: MO.Type) throws(CoreDataStorageError) -> [MO.ModelType] {
+        let context = container.viewContext
         do {
-            return try await backgroundContext.perform { [backgroundContext] in
-                let request = NSFetchRequest<MO>(entityName: MO.entityName.rawValue)
-                request.sortDescriptors = MO.sortDescriptors
-                let entities = try backgroundContext.fetch(request)
-                return entities.map { $0.toModel() }
-            }
+            let request = NSFetchRequest<MO>(entityName: MO.entityName.rawValue)
+            request.sortDescriptors = MO.sortDescriptors
+            let entities = try context.fetch(request)
+            return entities.map { $0.toModel() }
         } catch {
             AppLogger.error(error)
             throw .fetchAllFailed
@@ -104,16 +102,15 @@ public extension CoreDataLocalDataBase {
     func update<MO: ManagedObjectMapping>(
         _ item: MO.ModelType,
         as entity: MO.Type
-    ) async throws(CoreDataStorageError) -> MO.ModelType {
+    ) throws(CoreDataStorageError) -> MO.ModelType {
+        let context = container.viewContext
         do {
-            return try await backgroundContext.perform { [backgroundContext] in
-                guard let managedObject = try MO.find(for: item, in: backgroundContext) else {
-                    throw CoreDataStorageError.updateFailed
-                }
-                try managedObject.update(from: item)
-                try backgroundContext.save()
-                return managedObject.toModel()
+            guard let managedObject = try MO.find(for: item, in: context) else {
+                throw CoreDataStorageError.updateFailed
             }
+            try managedObject.update(from: item)
+            try context.save()
+            return managedObject.toModel()
         } catch {
             AppLogger.error(error)
             throw .updateFailed
@@ -123,17 +120,16 @@ public extension CoreDataLocalDataBase {
     func delete<MO: ManagedObjectMapping>(
         byID id: MO.ModelType.ID,
         as entity: MO.Type
-    ) async throws(CoreDataStorageError) -> MO.ModelType {
+    ) throws(CoreDataStorageError) -> MO.ModelType {
+        let context = container.viewContext
         do {
-            return try await backgroundContext.perform { [backgroundContext] in
-                guard let managedObject = try MO.find(byID: id, in: backgroundContext) else {
-                    throw CoreDataStorageError.deleteFailed
-                }
-                let domainModel = managedObject.toModel()
-                backgroundContext.delete(managedObject)
-                try backgroundContext.save()
-                return domainModel
+            guard let managedObject = try MO.find(byID: id, in: context) else {
+                throw CoreDataStorageError.deleteFailed
             }
+            let domainModel = managedObject.toModel()
+            context.delete(managedObject)
+            try context.save()
+            return domainModel
         } catch {
             AppLogger.error(error)
             throw .deleteFailed

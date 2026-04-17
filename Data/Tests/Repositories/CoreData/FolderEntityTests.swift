@@ -250,4 +250,3 @@ final class FolderEntityTests: XCTestCase {
         XCTAssertTrue(fetched.content.isEmpty)
     }
 }
-

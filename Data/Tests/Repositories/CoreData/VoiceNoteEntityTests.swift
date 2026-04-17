@@ -466,4 +466,3 @@ final class VoiceNoteEntityTests: XCTestCase {
         XCTAssertNil(fetched.transcript, "Transcript가 nil로 정상 삭제되어야 합니다.")
     }
 }
-
