@@ -101,7 +101,7 @@ private extension VoiceNoteViewController {
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
     }
 
@@ -119,7 +119,7 @@ private extension VoiceNoteViewController {
             UIAction(title: "편집하기", handler: { _ in }),
             UIAction(title: "삭제하기", attributes: .destructive, handler: { [weak self] _ in
                 self?.viewModel.send(.view(.deleteVoiceNoteButtonTapped))
-            })
+            }),
         ])
         let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: menu)
         let searchItem = UIBarButtonItem(
@@ -180,7 +180,7 @@ private extension VoiceNoteViewController {
                     var snapshot = self.dataSource.snapshot()
                     snapshot.reconfigureItems([.metadata])
                     self.dataSource.apply(snapshot, animatingDifferences: false)
-                case .completed:
+                case .completed, .transcribed:
                     self.applySnapshot()
                 case .failed, .pending:
                     break
@@ -259,7 +259,7 @@ private extension VoiceNoteViewController {
         }
 
         let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case .keyPoint(let number, let text) = item else { return }
+            guard case let .keyPoint(number, text) = item else { return }
             cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
         }
 
@@ -270,7 +270,7 @@ private extension VoiceNoteViewController {
         }
 
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard let self, case .script(let index) = item else { return }
+            guard let self, case let .script(index) = item else { return }
             let section = viewModel.state.scriptSections[index]
 
             cell.contentConfiguration = ScriptContentConfiguration(
