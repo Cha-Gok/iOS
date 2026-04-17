@@ -174,7 +174,7 @@ public final class RecordingViewController: ViewController {
             recordButton.widthAnchor.constraint(equalToConstant: 120),
             recordButton.heightAnchor.constraint(equalToConstant: 60),
             recordButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            recordButton.topAnchor.constraint(greaterThanOrEqualTo: durationLabel.bottomAnchor, constant: 48)
+            recordButton.topAnchor.constraint(greaterThanOrEqualTo: durationLabel.bottomAnchor, constant: 48),
         ])
     }
 
@@ -193,7 +193,7 @@ public final class RecordingViewController: ViewController {
             completeAlertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             completeAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             completeAlertView.centerXAnchor.constraint(equalTo: completeAlertOverlayView.centerXAnchor),
-            completeAlertView.centerYAnchor.constraint(equalTo: completeAlertOverlayView.centerYAnchor)
+            completeAlertView.centerYAnchor.constraint(equalTo: completeAlertOverlayView.centerYAnchor),
         ])
     }
 
@@ -214,10 +214,3 @@ public final class RecordingViewController: ViewController {
         }
     }
 }
-
-#if DEBUG
-    #Preview {
-        UINavigationController(rootViewController: RecordingViewController(viewModel: .preview())
-        )
-    }
-#endif

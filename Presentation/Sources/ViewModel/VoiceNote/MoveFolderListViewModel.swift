@@ -39,7 +39,7 @@ public final class MoveFolderListViewModel {
             case let .folderSelected(folder):
                 state.selectedFolder = folder
             case .moveButtonTapped:
-                Task { await moveVoiceNote() }
+                moveVoiceNote()
             case .closeButtonTapped:
                 coordinator?.dismiss()
             case .addFolderButtonTapped:
