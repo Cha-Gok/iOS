@@ -221,12 +221,7 @@ extension FolderViewController {
                         )
                     case .voiceNote(let data):
                         VoiceNoteCardView(
-                            title: data.title,
-                            subTitle: Date.now.voiceNoteDay(
-                                createdAt: data.createdAt,
-                                updatedAt: data.updatedAt,
-                                duration: data.voiceRecord.duration
-                            )
+                            voiceNote: data
                         )
                     }
                 }
