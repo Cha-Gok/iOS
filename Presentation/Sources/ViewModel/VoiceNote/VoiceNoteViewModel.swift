@@ -220,19 +220,6 @@ public extension VoiceNoteViewModel {
         public var playingParagraphInfo: State.PlayingParagraphInfo?
     }
 
-    /// 분석 진행 상태. VoiceNoteViewController가 직접 관찰합니다.
-    /// analyzing → completed/failed 로 한 번만 바뀝니다.
-    @Observable
-    final class AnalysisObservable {
-        public var analysisState: State.AnalysisState = .analyzing
-    }
-
-    /// 에러 메시지. VoiceNoteViewController가 직접 관찰합니다.
-    @Observable
-    final class ErrorObservable {
-        public var message: String?
-    }
-
     enum Section: Int, CaseIterable, Sendable {
         case metadata
         case keyPoints
@@ -300,27 +287,16 @@ public extension VoiceNoteViewModel {
         }
 
         var voiceNote: VoiceNote
-        var analysisState: AnalysisState {
-            didSet { analysisObservable.analysisState = analysisState }
-        }
-
-        var errorMessage: String? {
-            didSet { errorObservable.message = errorMessage }
-        }
-
+        var analysisState: AnalysisState
+        var errorMessage: String?
         var folderName: String = ""
         /// State가 struct이므로 let으로 선언해 참조 안정성을 보장합니다.
-        let analysisObservable = AnalysisObservable()
-        let errorObservable = ErrorObservable()
         let playbackHighlight = PlaybackHighlight()
         var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
 
         init(voiceNote: VoiceNote) {
             self.voiceNote = voiceNote
-            let initialAnalysisState: AnalysisState = voiceNote.summary != nil && voiceNote
-                .transcript != nil ? .completed : .analyzing
-            analysisState = initialAnalysisState
-            analysisObservable.analysisState = initialAnalysisState
+            analysisState = voiceNote.summary != nil && voiceNote.transcript != nil ? .completed : .analyzing
         }
 
         // MARK: - Highlight Logic

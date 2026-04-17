@@ -6,8 +6,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     typealias Item = VoiceNoteViewModel.Item
 
     private let viewModel: VoiceNoteViewModel
-    private let analysisObservable: VoiceNoteViewModel.AnalysisObservable
-    private let errorObservable: VoiceNoteViewModel.ErrorObservable
     private var hasAppliedCompletedSnapshot = false
     private lazy var dataSource = makeDataSource()
 
@@ -38,8 +36,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
 
     public init(viewModel: VoiceNoteViewModel) {
         self.viewModel = viewModel
-        analysisObservable = viewModel.state.analysisObservable
-        errorObservable = viewModel.state.errorObservable
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -62,27 +58,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         viewModel.send(.view(.onDisappear))
     }
 
-    override public func updateProperties() {
-        super.updateProperties()
-        switch analysisObservable.analysisState {
-        case .analyzing:
-            var snapshot = dataSource.snapshot()
-            snapshot.reconfigureItems([.metadata])
-            dataSource.apply(snapshot, animatingDifferences: false)
-        case .completed:
-            if !hasAppliedCompletedSnapshot {
-                hasAppliedCompletedSnapshot = true
-                applySnapshot()
-            }
-        case .failed:
-            break
-        }
-        if let message = errorObservable.message {
-            showAlert(title: "오류", message: message) { [weak self] in
-                self?.viewModel.send(.internal(.errorDismissed))
-            }
-        }
-    }
 }
 
 // MARK: - Setup
@@ -179,6 +154,8 @@ private extension VoiceNoteViewController {
         playerView.onSeekBegan = { [weak self] in self?.viewModel.send(.view(.seekBegan)) }
         playerView.onSeekEnded = { [weak self] time in self?.viewModel.send(.view(.seekEnded(time))) }
         observePlaybackState()
+        observeAnalysisState()
+        observeErrorMessage()
     }
 
     private func observePlaybackState() {
@@ -189,6 +166,46 @@ private extension VoiceNoteViewController {
             Task { @MainActor in
                 self.playerView.apply(self.viewModel.state.currentPlaybackState)
                 self.observePlaybackState()
+            }
+        }
+    }
+
+    private func observeAnalysisState() {
+        withObservationTracking {
+            _ = viewModel.state.analysisState
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                switch self.viewModel.state.analysisState {
+                case .analyzing:
+                    var snapshot = self.dataSource.snapshot()
+                    snapshot.reconfigureItems([.metadata])
+                    self.dataSource.apply(snapshot, animatingDifferences: false)
+                case .completed:
+                    if !self.hasAppliedCompletedSnapshot {
+                        self.hasAppliedCompletedSnapshot = true
+                        self.applySnapshot()
+                    }
+                case .failed:
+                    break
+                }
+                self.observeAnalysisState()
+            }
+        }
+    }
+
+    private func observeErrorMessage() {
+        withObservationTracking {
+            _ = viewModel.state.errorMessage
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                if let message = self.viewModel.state.errorMessage {
+                    self.showAlert(title: "오류", message: message) { [weak self] in
+                        self?.viewModel.send(.internal(.errorDismissed))
+                    }
+                }
+                self.observeErrorMessage()
             }
         }
     }
