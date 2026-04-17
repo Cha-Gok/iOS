@@ -1,6 +1,6 @@
-@testable import Presentation
 import Domain
 import DomainTesting
+@testable import Presentation
 import XCTest
 
 @MainActor
@@ -201,7 +201,7 @@ final class MainViewModelTests: XCTestCase {
         // Then
         sut.mockVoiceNoteRepo.verify()
         XCTAssertEqual(sut.viewModel.categoryData[1].items.count, 2)
-        if case .voiceNote(let note) = sut.viewModel.categoryData[1].items[0] {
+        if case let .voiceNote(note) = sut.viewModel.categoryData[1].items[0] {
             XCTAssertEqual(note.title, "노트1")
         } else {
             XCTFail("VoiceNote 타입이 아닙니다.")
@@ -222,7 +222,7 @@ final class MainViewModelTests: XCTestCase {
         // Then
         sut.mockVoiceNoteRepo.verify()
         XCTAssertEqual(sut.viewModel.categoryData[0].items.count, 2)
-        if case .voiceNote(let note) = sut.viewModel.categoryData[0].items[0] {
+        if case let .voiceNote(note) = sut.viewModel.categoryData[0].items[0] {
             XCTAssertEqual(note.title, "최신1")
         } else {
             XCTFail("VoiceNote 타입이 아닙니다.")
@@ -233,7 +233,7 @@ final class MainViewModelTests: XCTestCase {
         let sut = makeSUT()
         let expectedFolders = [
             Folder(name: "테스트 폴더 1"),
-            Folder(name: "테스트 폴더 2")
+            Folder(name: "테스트 폴더 2"),
         ]
 
         sut.mockFolderRepo.setFetchAllResult(.success(expectedFolders))
@@ -247,7 +247,7 @@ final class MainViewModelTests: XCTestCase {
         sut.mockFolderRepo.verify()
         XCTAssertEqual(sut.viewModel.categoryData[2].items.count, 2)
 
-        if case .folder(let folder) = sut.viewModel.categoryData[2].items[0] {
+        if case let .folder(folder) = sut.viewModel.categoryData[2].items[0] {
             XCTAssertEqual(folder.name, "테스트 폴더 1")
         } else {
             XCTFail("Folder 타입이 아닙니다.")
