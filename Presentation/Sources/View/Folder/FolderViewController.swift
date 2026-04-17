@@ -159,6 +159,7 @@ public final class FolderViewController: CollectionViewController {
         cancelButton.addAction(
             UIAction { [weak self] _ in
                 guard let self else { return }
+                textField.endEditing(true)
                 textField.field.text = ""
                 vm.closeTextField()
             },
@@ -177,6 +178,7 @@ public final class FolderViewController: CollectionViewController {
                 case .edit:
                     vm.update(name: name)
                 }
+                textField.endEditing(true)
                 textField.field.text = ""
             },
             for: .touchUpInside
