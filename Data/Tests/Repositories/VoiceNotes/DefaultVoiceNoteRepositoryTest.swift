@@ -3,6 +3,7 @@ import Domain
 import DomainTesting
 import XCTest
 
+@MainActor
 final class DefaultVoiceNoteRepositoryTest: XCTestCase {
     private var store: CoreDataLocalDataBase!
     private var sut: DefaultVoiceNoteRepository!
@@ -12,10 +13,10 @@ final class DefaultVoiceNoteRepositoryTest: XCTestCase {
         sut = DefaultVoiceNoteRepository(store: store)
     }
 
-    func test_create_기본폴더가있을때_정상생성() async throws {
+    func test_create_기본폴더가있을때_정상생성() throws {
         // Given
         let defaultFolder = Folder(name: "기본 폴더", isDeletable: false)
-        _ = try await store.create(defaultFolder, as: FolderEntity.self)
+        _ = try store.create(defaultFolder, as: FolderEntity.self)
 
         let createdAt = Date()
         let voiceRecord = VoiceRecord(
@@ -25,19 +26,19 @@ final class DefaultVoiceNoteRepositoryTest: XCTestCase {
         )
 
         // When
-        let result = try await sut.create(voiceRecord)
+        let result = try sut.create(voiceRecord)
 
         // Then
         XCTAssertEqual(result.folderID, defaultFolder.id)
         XCTAssertEqual(result.title, createdAt.yyyyMMddHHmmssString)
     }
 
-    func test_update_정상수정() async throws {
+    func test_update_정상수정() throws {
         // Given
         let folder = Folder(name: "폴더")
-        _ = try await store.create(folder, as: FolderEntity.self)
+        _ = try store.create(folder, as: FolderEntity.self)
         let note = VoiceNote.stub(folderID: folder.id)
-        _ = try await store.create(note, as: VoiceNoteEntity.self)
+        _ = try store.create(note, as: VoiceNoteEntity.self)
 
         let updatedNote = VoiceNote(
             id: note.id,
@@ -52,22 +53,22 @@ final class DefaultVoiceNoteRepositoryTest: XCTestCase {
         )
 
         // When
-        let result = try await sut.update(updatedNote)
+        let result = try sut.update(updatedNote)
 
         // Then
         XCTAssertEqual(result.title, "수정된 제목")
         XCTAssertEqual(result.transcript?.text, "전사")
     }
 
-    func test_fetchAllFromDefaultFolder_기본폴더메모조회() async throws {
+    func test_fetchAllFromDefaultFolder_기본폴더메모조회() throws {
         // Given
         let defaultFolder = Folder(name: "기본 폴더", isDeletable: false)
-        _ = try await store.create(defaultFolder, as: FolderEntity.self)
+        _ = try store.create(defaultFolder, as: FolderEntity.self)
         let note = VoiceNote.stub(folderID: defaultFolder.id)
-        _ = try await store.create(note, as: VoiceNoteEntity.self)
+        _ = try store.create(note, as: VoiceNoteEntity.self)
 
         // When
-        let result = try await sut.fetchAllFromDefaultFolder()
+        let result = try sut.fetchAllFromDefaultFolder()
 
         // Then
         XCTAssertEqual(result.count, 1)
