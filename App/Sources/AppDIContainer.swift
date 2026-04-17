@@ -103,7 +103,8 @@ public final class AppDIContainer {
         return FolderDetailViewModel(
             title: folder.name,
             folderID: folder.id,
-            voiceNoteUseCase: voiceNoteUseCase
+            voiceNoteUseCase: voiceNoteUseCase,
+            wasteBasketRepository: wasteBasketRepository
         )
     }
 

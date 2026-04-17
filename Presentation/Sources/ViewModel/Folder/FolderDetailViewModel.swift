@@ -23,29 +23,28 @@ public final class FolderDetailViewModel {
     private(set) var items: [LibraryItem] = []
     private(set) var errorMessage: String?
     private(set) var order: Order = .createdAt
-    var select: Select = .none
+    private(set) var select: Select = .none
     private(set) var selectedItems: [VoiceNote] = []
-
-    var isEmpty: Bool {
-        items.isEmpty
-    }
 
     public weak var coordinator: BaseCoordinatorDelegate?
 
     // MARK: - UseCase
 
     private let voiceNoteUseCase: any VoiceNoteUseCase
+    private let wasteBasketRepository: any WasteBasketRepository
 
     // MARK: - Initialize
 
     public init(
         title: String,
         folderID: UUID,
-        voiceNoteUseCase: any VoiceNoteUseCase
+        voiceNoteUseCase: any VoiceNoteUseCase,
+        wasteBasketRepository: any WasteBasketRepository
     ) {
         self.title = title
         self.folderID = folderID
         self.voiceNoteUseCase = voiceNoteUseCase
+        self.wasteBasketRepository = wasteBasketRepository
         sortItems()
     }
 }
@@ -58,6 +57,60 @@ extension FolderDetailViewModel {
         sortItems()
     }
 
+    func setSelectionMode(_ select: Select) {
+        self.select = select
+        if select == .none {
+            allClearSelected()
+        } else if select == .all {
+            allSelected()
+        }
+    }
+
+    func selectItem(_ item: VoiceNote) {
+        selectedItems.append(item)
+    }
+
+    func deselectItem(_ item: VoiceNote) {
+        selectedItems.removeAll { $0.id == item.id }
+    }
+}
+
+// MARK: Action
+
+extension FolderDetailViewModel {
+    /// 뒤로가기
+    func didTapBack() {
+        coordinator?.pop()
+    }
+    /// 전체 선택
+    private func allSelected() {
+        selectedItems = items.compactMap {
+            if case .voiceNote(let voiceNote) = $0 { return voiceNote }
+            return nil
+        }
+    }
+    /// 전체 선택 해제
+    private func allClearSelected() {
+        selectedItems = []
+    }
+}
+
+// MARK: - Fetch
+
+extension FolderDetailViewModel {
+    func fetchItems() {
+        Task {
+            do {
+                let voiceNotes: [VoiceNote] = try voiceNoteUseCase.fetchAll(folderID: folderID)
+                self.items = voiceNotes.map { .voiceNote($0) }
+                sortItems()
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+    
     private func sortItems() {
         switch order {
         case .createdAt:
@@ -80,41 +133,17 @@ extension FolderDetailViewModel {
             }
         }
     }
-
-    func setSelectionMode(_ select: Select) {
-        self.select = select
-    }
-
-    func selectItem(_ item: VoiceNote) {
-        selectedItems.append(item)
-    }
-
-    func deselectItem(_ item: VoiceNote) {
-        selectedItems.removeAll { $0.id == item.id }
-    }
 }
 
-// MARK: Action
-
+// MARK: - Move ( delete )
 extension FolderDetailViewModel {
-    func didTapBack() {
-        coordinator?.pop()
-    }
-}
-
-// MARK: - Fetch
-
-extension FolderDetailViewModel {
-    func fetchItems() {
-        Task {
-            do {
-                let voiceNotes: [VoiceNote] = try voiceNoteUseCase.fetchAll(folderID: folderID)
-                self.items = voiceNotes.map { .voiceNote($0) }
-                sortItems()
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
-            }
+    func move() {
+        let items: [WasteBasketItem] = items.map(\.toWasteBasketItem)
+        do {
+            try wasteBasketRepository.moveAllToWasteBasket(items: items)
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.errorDescription
         }
     }
 }
@@ -130,7 +159,8 @@ extension FolderDetailViewModel {
             return FolderDetailViewModel(
                 title: title,
                 folderID: folderID,
-                voiceNoteUseCase: PreviewVoiceNoteUseCase(items: previewData.items)
+                voiceNoteUseCase: PreviewVoiceNoteUseCase(items: previewData.items),
+                wasteBasketRepository: PreviewWasteBasketRepository()
             )
         }
     }
@@ -208,5 +238,17 @@ extension FolderDetailViewModel {
                 )
             }
         }
+
+        struct PreviewWasteBasketRepository: WasteBasketRepository {
+            func allClear() throws(DeleteWasteBasketRepositoryError) {}
+            func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {}
+            func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {}
+            func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {}
+            func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
+            func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] { [] }
+            func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
+            func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
+        }
     }
+
 #endif
