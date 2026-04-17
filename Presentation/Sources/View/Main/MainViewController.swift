@@ -51,7 +51,7 @@ public final class MainViewController: ViewController {
     private let permissionAlertOverlayView: UIView = {
         let overlay = UIView()
         overlay.translatesAutoresizingMaskIntoConstraints = false
-        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.25)
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
         overlay.isHidden = true
         return overlay
     }()
@@ -102,9 +102,10 @@ public final class MainViewController: ViewController {
 
     private func setup() {
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
+        appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor.gray50
         appearance.shadowColor = .clear
+        appearance.backgroundEffect = nil
 
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
@@ -215,9 +216,7 @@ public final class MainViewController: ViewController {
     private func setupfloatingButton() {
         floatingButton.addAction(UIAction { [weak self] _ in
             guard let self else { return }
-            Task {
-                await self.vm.handleRecordButtonTap()
-            }
+            vm.handleRecordButtonTap()
         }, for: .touchUpInside)
 
         NSLayoutConstraint.activate([
@@ -237,7 +236,6 @@ public final class MainViewController: ViewController {
 
     private func updateInteractionForAlert(isPresented: Bool) {
         collectionView.isUserInteractionEnabled = !isPresented
-        floatingButton.isEnabled = !isPresented
         navigationItem.leftBarButtonItem?.isEnabled = !isPresented
         navigationItem.rightBarButtonItem?.isEnabled = !isPresented
         navigationItem.rightBarButtonItems?.forEach { $0.isEnabled = !isPresented }
