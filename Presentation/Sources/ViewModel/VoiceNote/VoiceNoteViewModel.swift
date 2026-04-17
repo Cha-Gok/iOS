@@ -15,6 +15,7 @@ public final class VoiceNoteViewModel {
     public private(set) var playingParagraphInfo: PlayingParagraphInfo?
     /// State가 struct이 아니므로 let으로 선언해 참조 안정성을 보장합니다.
     public let playbackHighlight = PlaybackHighlight()
+    public private(set) var editableScriptSections: [ScriptSection] = []
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
@@ -192,7 +193,18 @@ public final class VoiceNoteViewModel {
     }
 
     public func enterEditing() {
+        editableScriptSections = scriptSections
         isEditing = true
+    }
+
+    public func updateScriptParagraph(sectionIndex: Int, paragraphIndex: Int, text: String) {
+        guard sectionIndex < editableScriptSections.count,
+              paragraphIndex < editableScriptSections[sectionIndex].paragraphs.count else { return }
+        var sections = editableScriptSections
+        var paragraphs = sections[sectionIndex].paragraphs
+        paragraphs[paragraphIndex] = text
+        sections[sectionIndex] = ScriptSection(timestamp: sections[sectionIndex].timestamp, paragraphs: paragraphs)
+        editableScriptSections = sections
     }
 
     public func doneEditing(title: String) {
@@ -211,7 +223,7 @@ public final class VoiceNoteViewModel {
             folderID: voiceNote.folderID,
             voiceRecord: voiceNote.voiceRecord,
             keywords: voiceNote.keywords,
-            transcript: voiceNote.transcript,
+            transcript: makeUpdatedTranscript(),
             summary: voiceNote.summary,
             analysisState: voiceNote.analysisState
         )
@@ -223,6 +235,23 @@ public final class VoiceNoteViewModel {
         } catch {
             errorMessage = "제목 수정에 실패했습니다: \(error.localizedDescription)"
         }
+    }
+
+    private func makeUpdatedTranscript() -> Transcript? {
+        guard let original = voiceNote.transcript else { return nil }
+        
+        let segments = editableScriptSections.flatMap { section in
+            section.paragraphs.map { pText in
+                TranscriptSegment(substring: pText, timestamp: section.timestamp, duration: 0)
+            }
+        }
+        
+        return Transcript(
+            id: original.id,
+            createdAt: original.createdAt,
+            text: segments.map(\.substring).joined(separator: "\n"),
+            segments: segments
+        )
     }
 
     public func deleteVoiceNote() {
@@ -459,6 +488,7 @@ public extension VoiceNoteViewModel {
     }
 
     var scriptSections: [ScriptSection] {
+        if isEditing { return editableScriptSections }
         guard let transcript = voiceNote.transcript, !transcript.segments.isEmpty else { return [] }
         return Self.groupSegmentsIntoSections(transcript.segments)
     }

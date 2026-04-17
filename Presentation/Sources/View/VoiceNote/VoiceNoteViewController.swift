@@ -257,6 +257,7 @@ private extension VoiceNoteViewController {
             guard let self else { return }
             Task { @MainActor in
                 self.viewModel.isEditing ? self.enterEditMode() : self.exitEditMode()
+                self.applySnapshot()
                 self.observeEditingState()
             }
         }
@@ -356,6 +357,10 @@ private extension VoiceNoteViewController {
                 timestampSeconds: section.timestamp,
                 paragraphs: section.paragraphs,
                 highlight: viewModel.playbackHighlight,
+                isEditing: viewModel.isEditing,
+                onParagraphEdited: { [weak self] sIdx, pIdx, text in
+                    self?.viewModel.updateScriptParagraph(sectionIndex: sIdx, paragraphIndex: pIdx, text: text)
+                },
                 onTimestampTapped: { [weak self] time in
                     self?.viewModel.scriptTimestampTapped(time)
                 }

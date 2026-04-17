@@ -8,6 +8,8 @@ struct ScriptContentConfiguration: UIContentConfiguration {
     var timestampSeconds: TimeInterval = 0
     var paragraphs: [String] = []
     var highlight: VoiceNoteViewModel.PlaybackHighlight?
+    var isEditing: Bool = false
+    var onParagraphEdited: ((Int, Int, String) -> Void)?
     /// 타임스탬프 탭 콜백
     var onTimestampTapped: ((TimeInterval) -> Void)?
 
@@ -51,8 +53,8 @@ final class ScriptContentView: UIView, UIContentView {
         return stack
     }()
 
-    /// 문단별 (배경 컨테이너, 텍스트 레이블) 쌍. 하이라이트 직접 업데이트에 사용
-    private var paragraphRows: [(background: UIView, label: UILabel)] = []
+    /// 문단별 (배경 컨테이너, 텍스트 레이블 또는 텍스트 뷰) 쌍. 하이라이트 직접 업데이트에 사용
+    private var paragraphRows: [(background: UIView, view: UIView)] = []
 
     // MARK: - Init
 
@@ -116,27 +118,47 @@ final class ScriptContentView: UIView, UIContentView {
 
         if needsRebuild {
             paragraphsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-            paragraphRows = config.paragraphs.map { para in
-                let label = UILabel()
-                label.setTypography(text: para, style: .body1)
-                label.numberOfLines = 0
-                label.translatesAutoresizingMaskIntoConstraints = false
+            paragraphRows = config.paragraphs.enumerated().map { pIdx, para in
+                let contentView: UIView
+                if config.isEditing {
+                    let textView = UITextView()
+                    textView.text = para
+                    textView.font = Typography.body1.font
+                    textView.textColor = UIColor.gray950
+                    textView.backgroundColor = .clear
+                    textView.isScrollEnabled = false
+                    textView.textContainerInset = .zero
+                    textView.textContainer.lineFragmentPadding = 0
+                    textView.delegate = self
+                    textView.tag = pIdx
+                    contentView = textView
+                } else {
+                    let label = UILabel()
+                    label.setTypography(text: para, style: .body1)
+                    label.numberOfLines = 0
+                    contentView = label
+                }
+                contentView.translatesAutoresizingMaskIntoConstraints = false
 
                 let background = UIView()
                 background.layer.cornerRadius = 8
-                background.addSubview(label)
+                background.addSubview(contentView)
                 NSLayoutConstraint.activate([
-                    label.topAnchor.constraint(equalTo: background.topAnchor, constant: 8),
-                    label.bottomAnchor.constraint(equalTo: background.bottomAnchor, constant: -8),
-                    label.leadingAnchor.constraint(equalTo: background.leadingAnchor, constant: 12),
-                    label.trailingAnchor.constraint(equalTo: background.trailingAnchor, constant: -12)
+                    contentView.topAnchor.constraint(equalTo: background.topAnchor, constant: 8),
+                    contentView.bottomAnchor.constraint(equalTo: background.bottomAnchor, constant: -8),
+                    contentView.leadingAnchor.constraint(equalTo: background.leadingAnchor, constant: 12),
+                    contentView.trailingAnchor.constraint(equalTo: background.trailingAnchor, constant: -12)
                 ])
                 paragraphsStack.addArrangedSubview(background)
-                return (background, label)
+                return (background, contentView)
             }
         } else {
             for (row, para) in zip(paragraphRows, config.paragraphs) {
-                row.label.setTypography(text: para, style: .body1)
+                if let label = row.view as? UILabel {
+                    label.setTypography(text: para, style: .body1)
+                } else if let textView = row.view as? UITextView {
+                    textView.text = para
+                }
             }
         }
     }
@@ -147,7 +169,41 @@ final class ScriptContentView: UIView, UIContentView {
         for (index, row) in paragraphRows.enumerated() {
             let isHighlighted = paragraphIndex == index
             row.background.backgroundColor = isHighlighted ? UIColor.point600.withAlphaComponent(0.3) : .clear
-            row.label.textColor = isHighlighted ? .white : UIColor.gray600
+            if let label = row.view as? UILabel {
+                label.textColor = isHighlighted ? .white : UIColor.gray600
+            } else if let textView = row.view as? UITextView {
+                textView.textColor = isHighlighted ? .white : UIColor.gray600
+            }
         }
+    }
+}
+
+// MARK: - UITextViewDelegate
+
+extension ScriptContentView: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        guard let config = configuration as? ScriptContentConfiguration else { return }
+        let text = textView.text ?? ""
+        config.onParagraphEdited?(config.sectionIndex, textView.tag, text)
+        
+        // UITextView 높이가 바뀔 때 CollectionView 셀 높이를 재계산하도록 유도
+        if let collectionView = self.firstAvailableViewController()?.view.subviews.first(where: { $0 is UICollectionView }) as? UICollectionView {
+            UIView.performWithoutAnimation {
+                collectionView.collectionViewLayout.invalidateLayout()
+            }
+        }
+    }
+}
+
+private extension UIView {
+    func firstAvailableViewController() -> UIViewController? {
+        var responder: UIResponder? = self
+        while responder != nil {
+            if let viewController = responder as? UIViewController {
+                return viewController
+            }
+            responder = responder?.next
+        }
+        return nil
     }
 }
