@@ -8,6 +8,8 @@ final class MockFolderDetailCoordinatorDelegate: FolderDetailCoordinatorDelegate
     var popCalled = false
     var pushedVoiceNote: VoiceNote?
 
+    var presentFolderListCalled = false
+
     func pop() {
         popCalled = true
     }
@@ -16,7 +18,9 @@ final class MockFolderDetailCoordinatorDelegate: FolderDetailCoordinatorDelegate
         pushedVoiceNote = voiceNote
     }
 
-    func presentFolderList(with receive: Receive, dismiss: (() -> Void)?) {}
+    func presentFolderList(with receive: Receive, dismiss: (() -> Void)?) {
+        presentFolderListCalled = true
+    }
 }
 
 @MainActor
@@ -77,6 +81,43 @@ final class FolderDetailViewModelTests: XCTestCase {
         sut.viewModel.didTapBack()
 
         XCTAssertTrue(sut.mockCoordinator.popCalled)
+    }
+
+    func test_pushVoiceNote_호출시_화면전환() {
+        let sut = makeSUT()
+        let note = VoiceNote.stub(title: "테스트 노트")
+
+        sut.viewModel.pushVoiceNote(voiceNote: note)
+
+        XCTAssertEqual(sut.mockCoordinator.pushedVoiceNote?.id, note.id)
+    }
+
+    func test_presentMoveFolder_버튼탭시_선택항목존재하면_시트오픈() {
+        let sut = makeSUT()
+        let note = VoiceNote.stub(title: "테스트 노트")
+        
+        sut.viewModel.selectItem(note)
+        sut.viewModel.presentMoveFolder()
+
+        XCTAssertTrue(sut.mockCoordinator.presentFolderListCalled)
+    }
+
+    func test_presentMoveFolder_버튼탭시_선택항목없으면_무시() {
+        let sut = makeSUT()
+        
+        sut.viewModel.presentMoveFolder()
+
+        XCTAssertFalse(sut.mockCoordinator.presentFolderListCalled)
+    }
+
+    func test_AlertView_상태변경() {
+        let sut = makeSUT()
+
+        sut.viewModel.openAlertView()
+        XCTAssertTrue(sut.viewModel.showAlert)
+
+        sut.viewModel.closeAlertView()
+        XCTAssertFalse(sut.viewModel.showAlert)
     }
 
     func test_fetchItems_호출시_보이스노트로드확인() async {
@@ -158,5 +199,45 @@ final class FolderDetailViewModelTests: XCTestCase {
         if case .voiceNote(let topNote) = sut.viewModel.items[0] {
             XCTAssertEqual(topNote.id, olderNote.id) // olderNote의 updatedAt이 최신
         }
+    }
+
+    func test_move_호출시_아이템제거및_선택모드해제() async {
+        let sut = makeSUT()
+        let note = VoiceNote.stub(title: "삭제할 노트")
+        
+        await sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
+        await sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
+        sut.viewModel.fetchItems()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        
+        sut.viewModel.selectItem(note)
+        
+        await sut.mockWasteBasketRepo.setMoveResult(.success(()))
+        await sut.mockWasteBasketRepo.expectMoveAllToWasteBasket(callCount: 1)
+        
+        sut.viewModel.move()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        
+        await sut.mockWasteBasketRepo.verify()
+        XCTAssertTrue(sut.viewModel.items.isEmpty)
+        XCTAssertEqual(sut.viewModel.select, .none)
+    }
+
+    func test_restore_호출시_복원후_fetch재호출() async {
+        let sut = makeSUT()
+        let note = VoiceNote.stub(title: "복원할 노트")
+        
+        await sut.mockWasteBasketRepo.setRestoreResult(.success(()))
+        await sut.mockWasteBasketRepo.expectRestore(callCount: 1)
+        
+        await sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
+        await sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
+        
+        sut.viewModel.restore(items: [note])
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        
+        await sut.mockWasteBasketRepo.verify()
+        await sut.mockVoiceNoteRepo.verify()
+        XCTAssertEqual(sut.viewModel.items.count, 1)
     }
 }
