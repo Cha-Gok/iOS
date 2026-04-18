@@ -2,6 +2,11 @@ import Core
 import Domain
 import Foundation
 
+public protocol FolderDetailCoordinatorDelegate: BaseCoordinatorDelegate {
+    /// 음성노트로 이동
+    func pushVoiceNoteView(voiceNote: VoiceNote)
+}
+
 @MainActor
 @Observable
 public final class FolderDetailViewModel {
@@ -27,7 +32,7 @@ public final class FolderDetailViewModel {
     private(set) var selectedItems: [VoiceNote] = []
     private(set) var showAlert: Bool = false
 
-    public weak var coordinator: BaseCoordinatorDelegate?
+    public weak var coordinator: FolderDetailCoordinatorDelegate?
 
     // MARK: - UseCase
 
@@ -83,6 +88,20 @@ extension FolderDetailViewModel {
     func didTapBack() {
         coordinator?.pop()
     }
+    
+    /// 음성 노트 화면 전환
+    func pushVoiceNote(voiceNote: VoiceNote) {
+        coordinator?.pushVoiceNoteView(voiceNote: voiceNote)
+    }
+    
+    /// 폴더 이동 Present
+    func presentMoveFolder() {
+        guard !selectedItems.isEmpty else { return }
+        coordinator?.presentFolderList(with: .multiple(selectedItems), dismiss: { [weak self] in
+            self?.fetchItems()
+        })
+    }
+    
     /// 전체 선택
     private func allSelected() {
         selectedItems = items.compactMap {

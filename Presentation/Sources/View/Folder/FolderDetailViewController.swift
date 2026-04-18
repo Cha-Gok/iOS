@@ -258,6 +258,8 @@ public final class FolderDetailViewController: CollectionViewController {
                         } else {
                             self?.vm.deselectItem(data)
                         }
+                    } completeAction: { [weak self] in
+                        self?.vm.pushVoiceNote(voiceNote: voiceNote)
                     }
                 }
             }
@@ -396,7 +398,7 @@ private extension FolderDetailViewController {
                 print("검색 버튼 탭됨")
             case .all, .single:
                 // TODO: 이동 로직 실행
-                
+                vm.presentMoveFolder()
                 vm.setSelectionMode(.none)
             }
         }
