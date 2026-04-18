@@ -4,19 +4,37 @@ import DomainTesting
 import XCTest
 
 @MainActor
+final class MockFolderDetailCoordinatorDelegate: FolderDetailCoordinatorDelegate {
+    var popCalled = false
+    var pushedVoiceNote: VoiceNote?
+
+    func pop() {
+        popCalled = true
+    }
+
+    func pushVoiceNoteView(voiceNote: Domain.VoiceNote) {
+        pushedVoiceNote = voiceNote
+    }
+
+    func presentFolderList(with receive: Receive, dismiss: (() -> Void)?) {}
+}
+
+@MainActor
 final class FolderDetailViewModelTests: XCTestCase {
     // MARK: - SUT
 
     private struct SUT {
         let viewModel: FolderDetailViewModel
         let mockVoiceNoteRepo: MockVoiceNoteRepository
-        let mockCoordinator: MockBaseCoordinatorDelegate
+        let mockWasteBasketRepo: MockWasteBasketRepository
+        let mockCoordinator: MockFolderDetailCoordinatorDelegate
         let testFolderID: UUID
     }
 
     private func makeSUT(title: String = "상세 폴더", folderID: UUID = UUID()) -> SUT {
         let mockVoiceNoteRepo = MockVoiceNoteRepository()
-        let mockCoordinator = MockBaseCoordinatorDelegate()
+        let mockWasteBasketRepo = MockWasteBasketRepository()
+        let mockCoordinator = MockFolderDetailCoordinatorDelegate()
 
         let viewModel = FolderDetailViewModel(
             title: title,
@@ -25,13 +43,15 @@ final class FolderDetailViewModelTests: XCTestCase {
                 repository: mockVoiceNoteRepo,
                 sttRepository: MockSTTRepository(),
                 summaryRepository: MockSummaryRepository()
-            )
+            ),
+            wasteBasketRepository: mockWasteBasketRepo
         )
         viewModel.coordinator = mockCoordinator
 
         return SUT(
             viewModel: viewModel,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
+            mockWasteBasketRepo: mockWasteBasketRepo,
             mockCoordinator: mockCoordinator,
             testFolderID: folderID
         )
@@ -46,8 +66,7 @@ final class FolderDetailViewModelTests: XCTestCase {
         XCTAssertEqual(sut.viewModel.title, "테스트 폴더")
         XCTAssertEqual(sut.viewModel.folderID, folderID)
         XCTAssertTrue(sut.viewModel.items.isEmpty)
-        XCTAssertTrue(sut.viewModel.isEmpty)
-        XCTAssertFalse(sut.viewModel.isSelectionMode)
+        XCTAssertEqual(sut.viewModel.select, .none)
     }
 
     // MARK: - UI Action Tests
@@ -75,7 +94,6 @@ final class FolderDetailViewModelTests: XCTestCase {
 
         await sut.mockVoiceNoteRepo.verify()
         XCTAssertEqual(sut.viewModel.items.count, 2)
-        XCTAssertFalse(sut.viewModel.isEmpty)
 
         // 정렬 확인 (초기 createdAt 기준 내림차순)
         if case .voiceNote(let note1) = sut.viewModel.items[0],
@@ -92,8 +110,8 @@ final class FolderDetailViewModelTests: XCTestCase {
         let voiceNote = VoiceNote.stub(title: "테스트 노트")
 
         // 선택 모드 켜기
-        sut.viewModel.toggleSelectionMode()
-        XCTAssertTrue(sut.viewModel.isSelectionMode)
+        sut.viewModel.setSelectionMode(.single)
+        XCTAssertEqual(sut.viewModel.select, .single)
 
         // 아이템 선택
         sut.viewModel.selectItem(voiceNote)
@@ -106,8 +124,8 @@ final class FolderDetailViewModelTests: XCTestCase {
 
         // 아이템 선택 후 선택 모드 종료 시 초기화 확인
         sut.viewModel.selectItem(voiceNote)
-        sut.viewModel.toggleSelectionMode()
-        XCTAssertFalse(sut.viewModel.isSelectionMode)
+        sut.viewModel.setSelectionMode(.none)
+        XCTAssertEqual(sut.viewModel.select, .none)
         XCTAssertTrue(sut.viewModel.selectedItems.isEmpty)
     }
 
@@ -136,7 +154,7 @@ final class FolderDetailViewModelTests: XCTestCase {
         }
 
         // 수정일 순으로 변경 (updatedAt 내림차순)
-        sut.viewModel.touchUpdatedAction()
+        sut.viewModel.setOrder(.updatedAt)
         if case .voiceNote(let topNote) = sut.viewModel.items[0] {
             XCTAssertEqual(topNote.id, olderNote.id) // olderNote의 updatedAt이 최신
         }
