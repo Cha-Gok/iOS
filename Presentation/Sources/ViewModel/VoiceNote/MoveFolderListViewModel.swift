@@ -13,18 +13,21 @@ public final class MoveFolderListViewModel {
     public weak var coordinator: MoveFolderListCoordinatorDelegate?
     private(set) var state: State = .init()
 
-    private let voiceNote: VoiceNote
+    private let receive: Receive
     private let folderUseCase: any FolderUseCase
     private let voiceNoteUseCase: any VoiceNoteUseCase
+    private let onDismiss: (() -> Void)?
 
     public init(
-        voiceNote: VoiceNote,
+        receive: Receive,
         folderUseCase: any FolderUseCase,
-        voiceNoteUseCase: any VoiceNoteUseCase
+        voiceNoteUseCase: any VoiceNoteUseCase,
+        onDismiss: (() -> Void)? = nil
     ) {
-        self.voiceNote = voiceNote
+        self.receive = receive
         self.folderUseCase = folderUseCase
         self.voiceNoteUseCase = voiceNoteUseCase
+        self.onDismiss = onDismiss
     }
 
     func send(_ action: Action) {
@@ -52,7 +55,14 @@ public final class MoveFolderListViewModel {
 
     private func fetchFolders() async {
         do {
-            let folders = try await folderUseCase.fetchAll()
+            var voiceNote: VoiceNote
+            switch receive {
+            case .single(let item):
+                voiceNote = item
+            case .multiple(let items):
+                voiceNote = items.first!
+            }
+            let folders = try folderUseCase.fetchAll()
             let otherFolders = folders.filter { $0.id != voiceNote.folderID }
             send(.internal(.foldersLoaded(otherFolders)))
         } catch {
@@ -63,18 +73,18 @@ public final class MoveFolderListViewModel {
     private func moveVoiceNote() async {
         guard let selectedFolder = state.selectedFolder else { return }
         do {
-            let updatedVoiceNote = VoiceNote(
-                id: voiceNote.id,
-                title: voiceNote.title,
-                createdAt: voiceNote.createdAt,
-                updatedAt: voiceNote.updatedAt,
-                folderID: selectedFolder.id,
-                voiceRecord: voiceNote.voiceRecord,
-                keywords: voiceNote.keywords,
-                transcript: voiceNote.transcript,
-                summary: voiceNote.summary
-            )
-            _ = try await voiceNoteUseCase.update(updatedVoiceNote)
+            switch receive {
+            case .single(var voiceNote):
+                voiceNote.folderID = selectedFolder.id
+                _ = try voiceNoteUseCase.update(voiceNote)
+                
+            case .multiple(let voiceNotes):
+                for var voiceNote in voiceNotes {
+                    voiceNote.folderID = selectedFolder.id
+                    _ = try voiceNoteUseCase.update(voiceNote)
+                }
+            }
+            onDismiss?()
             coordinator?.dismiss()
         } catch {
             AppLogger.error(error)
