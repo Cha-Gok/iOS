@@ -6,17 +6,19 @@ struct VoiceNoteCardView: View {
     var select: FolderDetailViewModel.Select
     let voiceNote: VoiceNote
     let action: ((VoiceNote, Bool) -> Void)?
-    
+    let completeAction: (() -> Void)?
     init(
         select: FolderDetailViewModel.Select = .none,
         isSelected: Bool = false,
         voiceNote: VoiceNote,
-        action: ((VoiceNote, Bool) -> Void)? = nil
+        action: ((VoiceNote, Bool) -> Void)? = nil,
+        completeAction: (() -> Void)? = nil
     ) {
         self.select = select
         self.isSelected = isSelected
         self.voiceNote = voiceNote
         self.action = action
+        self.completeAction = completeAction
     }
     
     var isEdit: Bool {
@@ -37,6 +39,8 @@ struct VoiceNoteCardView: View {
         .onTapGesture {
             if isEdit {
                 action?(voiceNote, !isSelected)
+            } else {
+                completeAction?()
             }
         }
     }

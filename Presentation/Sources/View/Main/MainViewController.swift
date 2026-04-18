@@ -164,11 +164,11 @@ public final class MainViewController: ViewController {
                     )
                 case .voiceNote(let data):
                     VoiceNoteCardView(
-                        voiceNote: data
+                        voiceNote: data,
+                        completeAction: { [weak self] in
+                            self?.vm.pushVoiceNoteView(voiceNote: data)
+                        }
                     )
-                    .onTapGesture { [weak self] in
-                        self?.vm.pushVoiceNoteView(voiceNote: data)
-                    }
                 }
             }
             .margins(.all, 0)
