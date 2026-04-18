@@ -260,8 +260,8 @@ final class MainViewModelTests: XCTestCase {
             WasteBasketItem.voiceNote(obj: VoiceNote.stub(title: "삭제된 노트"))
         ]
 
-        await sut.mockWasteBasketRepo.setFetchAllResult(.success(expectedTrash))
-        await sut.mockWasteBasketRepo.expectFetchAll(callCount: 1)
+        sut.mockWasteBasketRepo.setFetchAllResult(.success(expectedTrash))
+        sut.mockWasteBasketRepo.expectFetchAll(callCount: 1)
 
         sut.viewModel.updateTrashCategory()
 

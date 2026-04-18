@@ -121,8 +121,8 @@ final class OnBoardingViewModelTests: XCTestCase {
         sut.viewModel.syncPageState(nextStep: Step.finish.rawValue)
 
         sut.mockCheckFirstLaunchRepo.setReturnValue(true)
-        await sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName, isDeletable: false)))
-        await sut.mockFolderRepo.expectCreate(name: Policy.defaultFolderName, isDeletable: false, callCount: 1)
+        sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName, isDeletable: false)))
+        sut.mockFolderRepo.expectCreate(name: Policy.defaultFolderName, isDeletable: false, callCount: 1)
 
         let expectation = XCTestExpectation(description: "finishOnBoarding 호출")
         sut.mockNavDelegate.finishOnBoardingExpectation = expectation
@@ -134,15 +134,15 @@ final class OnBoardingViewModelTests: XCTestCase {
         XCTAssertTrue(sut.mockNavDelegate.finishOnBoardingCalled)
 
         // 언어 저장 확인
-        await sut.mockLanguageRepo.expectSave(language: .ko, callCount: 1)
-        await sut.mockLanguageRepo.verify()
+        sut.mockLanguageRepo.expectSave(language: .ko, callCount: 1)
+        sut.mockLanguageRepo.verify()
 
         // 첫 실행 마킹 확인
         sut.mockCheckFirstLaunchRepo.expectCheckAndMarkFirstLaunch(callCount: 1)
         sut.mockCheckFirstLaunchRepo.verify()
 
         // 기본 폴더 생성 확인
-        await sut.mockFolderRepo.verify()
+        sut.mockFolderRepo.verify()
     }
 
     func test_secondButtonAction_첫스텝에서_건너뛰기를_누르면_마이크권한화면으로_이동한다() {

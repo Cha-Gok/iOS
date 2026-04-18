@@ -127,13 +127,13 @@ final class FolderDetailViewModelTests: XCTestCase {
             VoiceNote.stub(title: "노트2")
         ]
 
-        await sut.mockVoiceNoteRepo.setFetchAllResult(.success(expectedNotes))
-        await sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
+        sut.mockVoiceNoteRepo.setFetchAllResult(.success(expectedNotes))
+        sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
 
         sut.viewModel.fetchItems()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        await sut.mockVoiceNoteRepo.verify()
+        sut.mockVoiceNoteRepo.verify()
         XCTAssertEqual(sut.viewModel.items.count, 2)
 
         // 정렬 확인 (초기 createdAt 기준 내림차순)
@@ -183,8 +183,8 @@ final class FolderDetailViewModelTests: XCTestCase {
             updatedAt: Date().addingTimeInterval(-1000) // update 기준으로는 더 이전
         )
 
-        await sut.mockVoiceNoteRepo.setFetchAllResult(.success([olderNote, newerNote]))
-        await sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
+        sut.mockVoiceNoteRepo.setFetchAllResult(.success([olderNote, newerNote]))
+        sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
 
         sut.viewModel.fetchItems()
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -205,20 +205,20 @@ final class FolderDetailViewModelTests: XCTestCase {
         let sut = makeSUT()
         let note = VoiceNote.stub(title: "삭제할 노트")
         
-        await sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
-        await sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
+        sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
+        sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
         sut.viewModel.fetchItems()
         try? await Task.sleep(nanoseconds: 300_000_000)
         
         sut.viewModel.selectItem(note)
         
-        await sut.mockWasteBasketRepo.setMoveResult(.success(()))
-        await sut.mockWasteBasketRepo.expectMoveAllToWasteBasket(callCount: 1)
+        sut.mockWasteBasketRepo.setMoveResult(.success(()))
+        sut.mockWasteBasketRepo.expectMoveAllToWasteBasket(callCount: 1)
         
         sut.viewModel.move()
         try? await Task.sleep(nanoseconds: 300_000_000)
         
-        await sut.mockWasteBasketRepo.verify()
+        sut.mockWasteBasketRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty)
         XCTAssertEqual(sut.viewModel.select, .none)
     }
@@ -227,17 +227,17 @@ final class FolderDetailViewModelTests: XCTestCase {
         let sut = makeSUT()
         let note = VoiceNote.stub(title: "복원할 노트")
         
-        await sut.mockWasteBasketRepo.setRestoreResult(.success(()))
-        await sut.mockWasteBasketRepo.expectRestore(callCount: 1)
+        sut.mockWasteBasketRepo.setRestoreResult(.success(()))
+        sut.mockWasteBasketRepo.expectRestore(callCount: 1)
         
-        await sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
-        await sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
+        sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
+        sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
         
         sut.viewModel.restore(items: [note])
         try? await Task.sleep(nanoseconds: 300_000_000)
         
-        await sut.mockWasteBasketRepo.verify()
-        await sut.mockVoiceNoteRepo.verify()
+        sut.mockWasteBasketRepo.verify()
+        sut.mockVoiceNoteRepo.verify()
         XCTAssertEqual(sut.viewModel.items.count, 1)
     }
 }

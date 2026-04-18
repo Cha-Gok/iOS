@@ -128,15 +128,15 @@ final class TrashViewModelTests: XCTestCase {
             ))
         ]
 
-        await sut.mockRepo.setFetchAllResult(.success(fetchResult))
-        await sut.mockRepo.expectFetchAll(callCount: 1)
+        sut.mockRepo.setFetchAllResult(.success(fetchResult))
+        sut.mockRepo.expectFetchAll(callCount: 1)
 
         // When
         sut.viewModel.fetchItems()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // Then
-        await sut.mockRepo.verify()
+        sut.mockRepo.verify()
         XCTAssertEqual(sut.viewModel.items.count, 2, "2개의 항목을 정상적으로 불러와야 합니다.")
     }
 
@@ -148,9 +148,9 @@ final class TrashViewModelTests: XCTestCase {
         let fetchResult: [WasteBasketItem] = [
             .folder(obj: Folder(name: "테스트 폴더"))
         ]
-        await sut.mockRepo.setFetchAllResult(.success(fetchResult))
-        await sut.mockRepo.setDeleteResult(.success(()))
-        await sut.mockRepo.expectAllClear(callCount: 1)
+        sut.mockRepo.setFetchAllResult(.success(fetchResult))
+        sut.mockRepo.setDeleteResult(.success(()))
+        sut.mockRepo.expectAllClear(callCount: 1)
 
         sut.viewModel.fetchItems()
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -161,7 +161,7 @@ final class TrashViewModelTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // Then
-        await sut.mockRepo.verify()
+        sut.mockRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty, "전체 삭제 진행 후 items 배열이 비워져야 합니다.")
     }
 
@@ -169,9 +169,9 @@ final class TrashViewModelTests: XCTestCase {
         // Given
         let sut = makeSUT()
         let item = WasteBasketItem.folder(obj: Folder(name: "삭제용 폴더"))
-        await sut.mockRepo.setFetchAllResult(.success([item]))
-        await sut.mockRepo.setDeleteResult(.success(()))
-        await sut.mockRepo.expectDelete(item: item, callCount: 1)
+        sut.mockRepo.setFetchAllResult(.success([item]))
+        sut.mockRepo.setDeleteResult(.success(()))
+        sut.mockRepo.expectDelete(item: item, callCount: 1)
 
         sut.viewModel.fetchItems()
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -181,7 +181,7 @@ final class TrashViewModelTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // Then
-        await sut.mockRepo.verify()
+        sut.mockRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty, "단일 삭제 진행 후 항목이 리스트에서 지워져야 합니다.")
     }
 
@@ -189,9 +189,9 @@ final class TrashViewModelTests: XCTestCase {
         // Given
         let sut = makeSUT()
         let item = WasteBasketItem.folder(obj: Folder(name: "복구용 폴더"))
-        await sut.mockRepo.setFetchAllResult(.success([item]))
-        await sut.mockRepo.setRestoreResult(.success(()))
-        await sut.mockRepo.expectRestore(item: item, callCount: 1)
+        sut.mockRepo.setFetchAllResult(.success([item]))
+        sut.mockRepo.setRestoreResult(.success(()))
+        sut.mockRepo.expectRestore(item: item, callCount: 1)
 
         sut.viewModel.fetchItems()
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -201,7 +201,7 @@ final class TrashViewModelTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // Then
-        await sut.mockRepo.verify()
+        sut.mockRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty, "복원 후 휴지통 목록에서 항목이 제거되어야 합니다.")
     }
 }
