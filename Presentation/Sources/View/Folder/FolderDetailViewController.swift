@@ -207,8 +207,12 @@ public final class FolderDetailViewController: CollectionViewController {
 
         primaryAlertButton.addAction(UIAction { [weak self] _ in
             guard let self else { return }
+            let restoreItems: [VoiceNote] = vm.selectedItems
             vm.move()
             vm.closeAlertView()
+            chagokBackgroundView.makeToast("휴지통으로 이동되었어요.") { [weak self] in
+                self?.vm.restore(items: restoreItems)
+            }
         }, for: .touchUpInside)
 
         view.addSubview(removeAlertOverlayView)
@@ -392,7 +396,7 @@ private extension FolderDetailViewController {
                 print("검색 버튼 탭됨")
             case .all, .single:
                 // TODO: 이동 로직 실행
-                print("이동 버튼 탭됨")
+                
                 vm.setSelectionMode(.none)
             }
         }

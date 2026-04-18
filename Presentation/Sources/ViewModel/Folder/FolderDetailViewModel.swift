@@ -147,13 +147,37 @@ extension FolderDetailViewModel {
 // MARK: - Move ( delete )
 extension FolderDetailViewModel {
     func move() {
-        let items: [WasteBasketItem] = selectedItems.map{ .voiceNote(obj: $0) }
+        guard !selectedItems.isEmpty else { return }
+        let wasteBasketItems: [WasteBasketItem] = selectedItems.map { .voiceNote(obj: $0) }
         do {
-            try wasteBasketRepository.moveAllToWasteBasket(items: items)
+            try wasteBasketRepository.moveAllToWasteBasket(items: wasteBasketItems)
+            // 성공 시, 로컬 items에서 제거하여 UI에 즉시 반영
+            let selectedIDs = Set(selectedItems.map { $0.id })
+            items.removeAll { item in
+                if case .voiceNote(let v) = item { return selectedIDs.contains(v.id) }
+                return false
+            }
+            setSelectionMode(.none)
         } catch {
             AppLogger.error(error)
             errorMessage = error.errorDescription
         }
+    }
+}
+
+// MARK: - Restore (휴지통 이동 복구)
+extension FolderDetailViewModel {
+    func restore(items: [VoiceNote]) {
+        for item in items {
+            let wasteBasket: WasteBasketItem = .voiceNote(obj: item)
+            do {
+                try wasteBasketRepository.restore(item: wasteBasket)
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.errorDescription
+            }
+        }
+        fetchItems()
     }
 }
 
@@ -248,15 +272,50 @@ extension FolderDetailViewModel {
             }
         }
 
-        struct PreviewWasteBasketRepository: WasteBasketRepository {
-            func allClear() throws(DeleteWasteBasketRepositoryError) {}
-            func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {}
-            func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {}
-            func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {}
-            func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
-            func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] { [] }
-            func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
-            func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
+        final class PreviewWasteBasketRepository: WasteBasketRepository {
+            private var wasteBasket: [WasteBasketItem] = []
+
+            func allClear() throws(DeleteWasteBasketRepositoryError) {
+                wasteBasket.removeAll()
+                print("[Preview] 휴지통 비우기 완료")
+            }
+
+            func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {
+                wasteBasket.removeAll { $0 == item }
+                print("[Preview] 영구 삭제: \(item)")
+            }
+
+            func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {
+                let itemSet = Set(items)
+                wasteBasket.removeAll { itemSet.contains($0) }
+                print("[Preview] 영구 삭제: \(items.count)개")
+            }
+
+            func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {
+                wasteBasket.append(item)
+                print("[Preview] 휴지통 이동: \(item)")
+            }
+
+            func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {
+                wasteBasket.append(contentsOf: items)
+                print("[Preview] 휴지통 이동: \(items.count)개 (현재 휴지통: \(wasteBasket.count)개)")
+            }
+
+            func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
+                print("[Preview] 휴지통 조회: \(wasteBasket.count)개")
+                return wasteBasket
+            }
+
+            func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {
+                wasteBasket.removeAll { $0 == item }
+                print("[Preview] 복원: \(item)")
+            }
+
+            func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {
+                let itemSet = Set(items)
+                wasteBasket.removeAll { itemSet.contains($0) }
+                print("[Preview] 복원: \(items.count)개")
+            }
         }
     }
 
