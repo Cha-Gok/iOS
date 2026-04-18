@@ -160,7 +160,7 @@ extension MainCoordinator: BaseCoordinatorDelegate {
     func pop() {
         presenter.popViewController(animated: true)
     }
-    
+
     // TODO: Present 폴더 이동 시트 ( 사용 화면 - 음성 노트, 개인 폴더 )
     func presentFolderList(with receive: Receive, dismiss: (() -> Void)?) {
         let viewModel = dependencyContainer.makeMoveFolderListViewModel(receive: receive, dismiss: dismiss)

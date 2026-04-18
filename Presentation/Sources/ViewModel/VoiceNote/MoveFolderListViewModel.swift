@@ -55,12 +55,11 @@ public final class MoveFolderListViewModel {
 
     private func fetchFolders() async {
         do {
-            var voiceNote: VoiceNote
-            switch receive {
+            var voiceNote: VoiceNote = switch receive {
             case .single(let item):
-                voiceNote = item
+                item
             case .multiple(let items):
-                voiceNote = items.first!
+                items.first!
             }
             let folders = try folderUseCase.fetchAll()
             let otherFolders = folders.filter { $0.id != voiceNote.folderID }
@@ -77,7 +76,7 @@ public final class MoveFolderListViewModel {
             case .single(var voiceNote):
                 voiceNote.folderID = selectedFolder.id
                 _ = try voiceNoteUseCase.update(voiceNote)
-                
+
             case .multiple(let voiceNotes):
                 for var voiceNote in voiceNotes {
                     voiceNote.folderID = selectedFolder.id

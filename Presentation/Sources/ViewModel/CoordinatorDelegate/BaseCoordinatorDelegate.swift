@@ -1,5 +1,5 @@
-import Foundation
 import Domain
+import Foundation
 
 @MainActor
 public protocol BaseCoordinatorDelegate: AnyObject {

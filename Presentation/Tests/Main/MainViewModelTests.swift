@@ -131,10 +131,10 @@ final class MainViewModelTests: XCTestCase {
 
     func test_didScroll_상태변경() {
         let sut = makeSUT()
-        
+
         sut.viewModel.setDidScroll(true)
         XCTAssertTrue(sut.viewModel.didScroll)
-        
+
         sut.viewModel.setDidScroll(false)
         XCTAssertFalse(sut.viewModel.didScroll)
     }

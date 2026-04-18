@@ -13,7 +13,7 @@ public final class FolderDetailViewController: CollectionViewController {
     private var dataSource: DataSource?
 
     // MARK: - Component
-    
+
     private lazy var backButton: UIButton = {
         let btn = UIButton(type: .custom) // .system 대신 .custom을 사용하여 기본 배경 효과 제거
         let symbolConfig = UIImage.SymbolConfiguration(weight: .bold)
@@ -77,14 +77,14 @@ public final class FolderDetailViewController: CollectionViewController {
     ) { [weak self] _ in
         self?.vm.setSelectionMode(.single)
     }
-    
+
     private lazy var selectAllAction = UIAction(
         title: "전체 선택하기",
         image: nil
     ) { [weak self] _ in
         self?.vm.setSelectionMode(.all)
     }
-    
+
     private let cancelAlertButton: GlassButton = .close("취소")
     private let primaryAlertButton: GlassButton = .danger("삭제")
     private let removeAlertOverlayView: UIView = {
@@ -186,7 +186,7 @@ public final class FolderDetailViewController: CollectionViewController {
             options: .displayInline,
             children: [createdAtAction, updatedAtAction]
         )
-        
+
         let selectSection: UIMenu = .init(
             title: "",
             options: .displayInline,
@@ -198,7 +198,7 @@ public final class FolderDetailViewController: CollectionViewController {
         )
         moreAndActionButton.menu = menu
     }
-    
+
     private func setupRemoveAlert() {
         cancelAlertButton.addAction(UIAction { [weak self] _ in
             guard let self else { return }
@@ -226,9 +226,9 @@ public final class FolderDetailViewController: CollectionViewController {
             removeAlertView.centerYAnchor.constraint(equalTo: removeAlertOverlayView.centerYAnchor)
         ])
     }
-    
+
     private func setupDataSource() {
-        let cellRegistration = UICollectionView.CellRegistration {[weak self](
+        let cellRegistration = UICollectionView.CellRegistration { [weak self] (
             cell: UICollectionViewListCell,
             indexPath: IndexPath,
             itemIdentifier: LibraryItem
@@ -291,54 +291,54 @@ extension FolderDetailViewController {
             updatedAtAction.image = UIImage(systemName: "checkmark")
         }
     }
-    
-    private func updateRightBarButtonMenu(_ select: FolderDetailViewModel.Select) {
-            let dateSection: UIMenu = .init(
-                title: "",
-                options: .displayInline,
-                children: updateDateSectionChildren
-            )
 
-            let selectSection: UIMenu = .init(
-                title: "",
-                options: .displayInline,
-                children: updateSelectSectionChildren
-            )
-            let menu: UIMenu = .init(
-                title: "",
-                children: [dateSection, selectSection]
-            )
-            moreAndActionButton.menu = menu
+    private func updateRightBarButtonMenu(_ select: FolderDetailViewModel.Select) {
+        let dateSection: UIMenu = .init(
+            title: "",
+            options: .displayInline,
+            children: updateDateSectionChildren
+        )
+
+        let selectSection: UIMenu = .init(
+            title: "",
+            options: .displayInline,
+            children: updateSelectSectionChildren
+        )
+        let menu: UIMenu = .init(
+            title: "",
+            children: [dateSection, selectSection]
+        )
+        moreAndActionButton.menu = menu
+    }
+
+    private var updateDateSectionChildren: [UIMenuElement] {
+        switch vm.select {
+        case .none:
+            [createdAtAction, updatedAtAction]
+        case .all, .single:
+            []
         }
-    
-        private var updateDateSectionChildren: [UIMenuElement] {
-            switch vm.select {
-            case .none:
-                [createdAtAction, updatedAtAction]
-            case .all, .single:
-                []
-            }
+    }
+
+    private var updateSelectSectionChildren: [UIMenuElement] {
+        switch vm.select {
+        case .none:
+            [selectAction, selectAllAction]
+        case .all, .single:
+            []
         }
-        
-        private var updateSelectSectionChildren: [UIMenuElement] {
-            switch vm.select {
-            case .none:
-                [selectAction, selectAllAction]
-            case .all, .single:
-                []
-            }
-        }
-    
+    }
+
     private func updateNavigationItems(_ select: FolderDetailViewModel.Select) {
         let isEditMode = (select != .none)
-        [backButton, moreAndActionButton, searchAndMoveButton].forEach {
-            $0.isSelected = isEditMode
-            $0.invalidateIntrinsicContentSize()
-            $0.sizeToFit()
+        for item in [backButton, moreAndActionButton, searchAndMoveButton] {
+            item.isSelected = isEditMode
+            item.invalidateIntrinsicContentSize()
+            item.sizeToFit()
         }
         moreAndActionButton.showsMenuAsPrimaryAction = !isEditMode
     }
-    
+
     private func updateDataSource(reconfigure: Bool = false) {
         var snapshot = SnapShot()
         snapshot.appendSections([.main])
@@ -348,7 +348,7 @@ extension FolderDetailViewController {
         }
         dataSource?.apply(snapshot, animatingDifferences: true)
     }
-    
+
     private func updateRemoveAlert() {
         let shouldShowAlert = vm.showAlert
         removeAlertOverlayView.isHidden = !shouldShowAlert
@@ -403,7 +403,7 @@ private extension FolderDetailViewController {
             }
         }
     }
-    
+
     func updateInteractionForAlert(isPresented: Bool) {
         collectionView.isUserInteractionEnabled = !isPresented
         backButton.isUserInteractionEnabled = !isPresented

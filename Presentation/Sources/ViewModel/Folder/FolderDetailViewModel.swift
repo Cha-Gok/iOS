@@ -11,13 +11,13 @@ public protocol FolderDetailCoordinatorDelegate: BaseCoordinatorDelegate {
 @Observable
 public final class FolderDetailViewModel {
     // MARK: - State
-    
+
     enum Select: Equatable {
         case none
         case all
         case single
     }
-    
+
     enum Order {
         case createdAt
         case updatedAt
@@ -88,12 +88,12 @@ extension FolderDetailViewModel {
     func didTapBack() {
         coordinator?.pop()
     }
-    
+
     /// 음성 노트 화면 전환
     func pushVoiceNote(voiceNote: VoiceNote) {
         coordinator?.pushVoiceNoteView(voiceNote: voiceNote)
     }
-    
+
     /// 폴더 이동 Present
     func presentMoveFolder() {
         guard !selectedItems.isEmpty else { return }
@@ -101,7 +101,7 @@ extension FolderDetailViewModel {
             self?.fetchItems()
         })
     }
-    
+
     /// 전체 선택
     private func allSelected() {
         selectedItems = items.compactMap {
@@ -109,17 +109,18 @@ extension FolderDetailViewModel {
             return nil
         }
     }
+
     /// 전체 선택 해제
     private func allClearSelected() {
         selectedItems = []
     }
 
     func closeAlertView() {
-        self.showAlert = false
+        showAlert = false
     }
-    
+
     func openAlertView() {
-        self.showAlert = true
+        showAlert = true
     }
 }
 
@@ -138,7 +139,7 @@ extension FolderDetailViewModel {
             }
         }
     }
-    
+
     private func sortItems() {
         switch order {
         case .createdAt:
@@ -164,6 +165,7 @@ extension FolderDetailViewModel {
 }
 
 // MARK: - Move ( delete )
+
 extension FolderDetailViewModel {
     func move() {
         guard !selectedItems.isEmpty else { return }
@@ -171,7 +173,7 @@ extension FolderDetailViewModel {
         do {
             try wasteBasketRepository.moveAllToWasteBasket(items: wasteBasketItems)
             // 성공 시, 로컬 items에서 제거하여 UI에 즉시 반영
-            let selectedIDs = Set(selectedItems.map { $0.id })
+            let selectedIDs = Set(selectedItems.map(\.id))
             items.removeAll { item in
                 if case .voiceNote(let v) = item { return selectedIDs.contains(v.id) }
                 return false
@@ -185,6 +187,7 @@ extension FolderDetailViewModel {
 }
 
 // MARK: - Restore (휴지통 이동 복구)
+
 extension FolderDetailViewModel {
     func restore(items: [VoiceNote]) {
         for item in items {

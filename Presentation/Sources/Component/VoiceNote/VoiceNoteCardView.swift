@@ -1,5 +1,5 @@
-import SwiftUI
 import Domain
+import SwiftUI
 
 struct VoiceNoteCardView: View {
     let isSelected: Bool
@@ -20,11 +20,11 @@ struct VoiceNoteCardView: View {
         self.action = action
         self.completeAction = completeAction
     }
-    
+
     var isEdit: Bool {
         select != .none
     }
-    
+
     var body: some View {
         HStack(spacing: 0) {
             if isEdit {
@@ -33,7 +33,6 @@ struct VoiceNoteCardView: View {
             VStack(alignment: .leading, spacing: 6) {
                 cardContent
             }
-
         }
         .editCardStyle(isSelected: isSelected)
         .onTapGesture {
@@ -44,8 +43,7 @@ struct VoiceNoteCardView: View {
             }
         }
     }
-    
-    @ViewBuilder
+
     private var checkIcon: some View {
         VStack(alignment: .center, spacing: 0) {
             Image(systemName: "checkmark.circle.fill")
@@ -59,7 +57,7 @@ struct VoiceNoteCardView: View {
         }
         .padding(.trailing)
     }
-    
+
     @ViewBuilder
     private var cardContent: some View {
         let time: String = Date.now.voiceNoteDay(
@@ -96,8 +94,7 @@ struct VoiceNoteCardView: View {
 
 extension View {
     func editCardStyle(isSelected: Bool) -> some View {
-        self
-        .modifier(
+        modifier(
             EditVoiceNoteCardModifier(
                 isSelected: isSelected
             )
@@ -107,7 +104,7 @@ extension View {
 
 struct EditVoiceNoteCardModifier: ViewModifier {
     let isSelected: Bool
-    
+
     func body(content: Content) -> some View {
         content
             .frame(minHeight: 118)
@@ -124,8 +121,7 @@ struct EditVoiceNoteCardModifier: ViewModifier {
     }
 }
 
-
-//#Preview {
+// #Preview {
 //    VoiceNoteCardView(
 //        select: .none,
 //        voiceNote: .
@@ -133,4 +129,4 @@ struct EditVoiceNoteCardModifier: ViewModifier {
 //    )
 //    .padding()
 //    .background(.gray50)
-//}
+// }

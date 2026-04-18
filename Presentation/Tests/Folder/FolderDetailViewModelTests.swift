@@ -95,7 +95,7 @@ final class FolderDetailViewModelTests: XCTestCase {
     func test_presentMoveFolder_버튼탭시_선택항목존재하면_시트오픈() {
         let sut = makeSUT()
         let note = VoiceNote.stub(title: "테스트 노트")
-        
+
         sut.viewModel.selectItem(note)
         sut.viewModel.presentMoveFolder()
 
@@ -104,7 +104,7 @@ final class FolderDetailViewModelTests: XCTestCase {
 
     func test_presentMoveFolder_버튼탭시_선택항목없으면_무시() {
         let sut = makeSUT()
-        
+
         sut.viewModel.presentMoveFolder()
 
         XCTAssertFalse(sut.mockCoordinator.presentFolderListCalled)
@@ -204,20 +204,20 @@ final class FolderDetailViewModelTests: XCTestCase {
     func test_move_호출시_아이템제거및_선택모드해제() async {
         let sut = makeSUT()
         let note = VoiceNote.stub(title: "삭제할 노트")
-        
+
         sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
         sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
         sut.viewModel.fetchItems()
         try? await Task.sleep(nanoseconds: 300_000_000)
-        
+
         sut.viewModel.selectItem(note)
-        
+
         sut.mockWasteBasketRepo.setMoveResult(.success(()))
         sut.mockWasteBasketRepo.expectMoveAllToWasteBasket(callCount: 1)
-        
+
         sut.viewModel.move()
         try? await Task.sleep(nanoseconds: 300_000_000)
-        
+
         sut.mockWasteBasketRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty)
         XCTAssertEqual(sut.viewModel.select, .none)
@@ -226,16 +226,16 @@ final class FolderDetailViewModelTests: XCTestCase {
     func test_restore_호출시_복원후_fetch재호출() async {
         let sut = makeSUT()
         let note = VoiceNote.stub(title: "복원할 노트")
-        
+
         sut.mockWasteBasketRepo.setRestoreResult(.success(()))
         sut.mockWasteBasketRepo.expectRestore(callCount: 1)
-        
+
         sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
         sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
-        
+
         sut.viewModel.restore(items: [note])
         try? await Task.sleep(nanoseconds: 300_000_000)
-        
+
         sut.mockWasteBasketRepo.verify()
         sut.mockVoiceNoteRepo.verify()
         XCTAssertEqual(sut.viewModel.items.count, 1)
