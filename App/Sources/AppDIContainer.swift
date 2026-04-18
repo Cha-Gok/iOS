@@ -103,15 +103,17 @@ public final class AppDIContainer {
         return FolderDetailViewModel(
             title: folder.name,
             folderID: folder.id,
-            voiceNoteUseCase: voiceNoteUseCase
+            voiceNoteUseCase: voiceNoteUseCase,
+            wasteBasketRepository: wasteBasketRepository
         )
     }
 
-    public func makeMoveFolderListViewModel(voiceNote: VoiceNote) -> MoveFolderListViewModel {
+    public func makeMoveFolderListViewModel(receive: Receive, dismiss: (() -> Void)? = nil) -> MoveFolderListViewModel {
         return MoveFolderListViewModel(
-            voiceNote: voiceNote,
+            receive: receive,
             folderUseCase: folderUseCase,
-            voiceNoteUseCase: voiceNoteUseCase
+            voiceNoteUseCase: voiceNoteUseCase,
+            onDismiss: dismiss
         )
     }
 

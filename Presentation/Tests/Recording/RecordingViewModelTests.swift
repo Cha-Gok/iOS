@@ -254,7 +254,7 @@ extension RecordingViewModelTests {
         let voiceRecordStub = VoiceRecord.stub()
         let voiceNoteStub = VoiceNote.stub(voiceRecord: voiceRecordStub)
         await sut.repository.setFinishResult(.success(voiceRecordStub))
-        await sut.voiceNoteRepository.setCreateResult(.success(voiceNoteStub))
+        sut.voiceNoteRepository.setCreateResult(.success(voiceNoteStub))
 
         // When
         sut.viewModel.send(.finishButtonTapped)
@@ -283,7 +283,7 @@ extension RecordingViewModelTests {
         // Given
         let sut = makeSUT()
         await sut.repository.setFinishResult(.success(.stub()))
-        await sut.voiceNoteRepository.setCreateResult(.failure(.createFailed))
+        sut.voiceNoteRepository.setCreateResult(.failure(.createFailed))
 
         // When
         sut.viewModel.send(.finishButtonTapped)

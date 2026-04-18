@@ -158,22 +158,17 @@ public final class MainViewController: ViewController {
             cell.contentConfiguration = UIHostingConfiguration {
                 switch item {
                 case .folder(let data):
-                    VoiceNoteCardView(
-                        title: data.name,
-                        subTitle: data.createdAt.description
+                    FolderCardView(
+                        name: data.name,
+                        totalCount: data.content.count
                     )
                 case .voiceNote(let data):
                     VoiceNoteCardView(
-                        title: data.title,
-                        subTitle: Date.now.voiceNoteDay(
-                            createdAt: data.createdAt,
-                            updatedAt: data.updatedAt,
-                            duration: data.voiceRecord.duration
-                        )
+                        voiceNote: data,
+                        completeAction: { [weak self] in
+                            self?.vm.pushVoiceNoteView(voiceNote: data)
+                        }
                     )
-                    .onTapGesture { [weak self] in
-                        self?.vm.pushVoiceNoteView(voiceNote: data)
-                    }
                 }
             }
             .margins(.all, 0)

@@ -46,6 +46,7 @@ final class MainViewModelTests: XCTestCase {
         let mockVoiceRecordRepo: MockVoiceRecordRepository
         let mockFolderRepo: MockFolderRepository
         let mockVoiceNoteRepo: MockVoiceNoteRepository
+        let mockWasteBasketRepo: MockWasteBasketRepository
         let mockCoordinator: MockMainCoordinatorDelegate
     }
 
@@ -73,6 +74,7 @@ final class MainViewModelTests: XCTestCase {
             mockVoiceRecordRepo: mockVoiceRecordRepo,
             mockFolderRepo: mockFolderRepo,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
+            mockWasteBasketRepo: mockWasteBasketRepo,
             mockCoordinator: mockCoordinator
         )
     }
@@ -115,6 +117,36 @@ final class MainViewModelTests: XCTestCase {
         sut.viewModel.presentRecodingView()
 
         XCTAssertTrue(sut.mockCoordinator.presentRecodingViewCalled)
+    }
+
+    func test_pushVoiceNoteView_호출시_화면전환() {
+        let sut = makeSUT()
+        let note = VoiceNote.stub(title: "테스트 노트")
+
+        sut.viewModel.pushVoiceNoteView(voiceNote: note)
+
+        XCTAssertTrue(sut.mockCoordinator.pushVoiceNoteViewCalled)
+        XCTAssertEqual(sut.mockCoordinator.pushedVoiceNote?.id, note.id)
+    }
+
+    func test_didScroll_상태변경() {
+        let sut = makeSUT()
+
+        sut.viewModel.setDidScroll(true)
+        XCTAssertTrue(sut.viewModel.didScroll)
+
+        sut.viewModel.setDidScroll(false)
+        XCTAssertFalse(sut.viewModel.didScroll)
+    }
+
+    func test_AlertView_상태변경() {
+        let sut = makeSUT()
+
+        sut.viewModel.openAlertView()
+        XCTAssertTrue(sut.viewModel.showAlert)
+
+        sut.viewModel.closeAlertView()
+        XCTAssertFalse(sut.viewModel.showAlert)
     }
 
     func test_handleRecordButtonTap_권한허용_바로녹음화면이동() async {
@@ -219,6 +251,28 @@ final class MainViewModelTests: XCTestCase {
             XCTAssertEqual(folder.name, "테스트 폴더 1")
         } else {
             XCTFail("Folder 타입이 아닙니다.")
+        }
+    }
+
+    func test_updateTrashCategory_호출시_데이터로드확인() async {
+        let sut = makeSUT()
+        let expectedTrash = [
+            WasteBasketItem.voiceNote(obj: VoiceNote.stub(title: "삭제된 노트"))
+        ]
+
+        sut.mockWasteBasketRepo.setFetchAllResult(.success(expectedTrash))
+        sut.mockWasteBasketRepo.expectFetchAll(callCount: 1)
+
+        sut.viewModel.updateTrashCategory()
+
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        // Mock은 이미 verify되었음을 가정하거나 직접 체크
+        XCTAssertEqual(sut.viewModel.categoryData[3].items.count, 1)
+        if case .voiceNote(let note) = sut.viewModel.categoryData[3].items[0] {
+            XCTAssertEqual(note.title, "삭제된 노트")
+        } else {
+            XCTFail("VoiceNote 타입이 아닙니다.")
         }
     }
 }

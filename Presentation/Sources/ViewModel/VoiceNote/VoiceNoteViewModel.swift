@@ -2,9 +2,7 @@ import Core
 import Domain
 import Foundation
 
-public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {
-    func presentFolderList(with: VoiceNote)
-}
+public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {}
 
 @MainActor
 @Observable
@@ -95,7 +93,7 @@ public final class VoiceNoteViewModel {
             case .pop:
                 coordinator?.pop()
             case .moveVoiceNoteButtonTapped:
-                coordinator?.presentFolderList(with: state.voiceNote)
+                coordinator?.presentFolderList(with: .single(state.voiceNote))
             case .deleteVoiceNoteButtonTapped:
                 Task { await moveToWasteBasket() }
             }

@@ -92,24 +92,13 @@ extension MainCoordinator: FolderCoordinatorDelegate {
     }
 }
 
+// MARK: DetailFolderCoordinating
+
+extension MainCoordinator: FolderDetailCoordinatorDelegate {}
+
 // MARK: VoiceNoteCoordinating
 
-extension MainCoordinator: VoiceNoteCoordinatorDelegate {
-    func presentFolderList(with voiceNote: VoiceNote) {
-        let viewModel = dependencyContainer.makeMoveFolderListViewModel(voiceNote: voiceNote)
-        viewModel.coordinator = self
-        let viewController = MoveFolderListViewController(viewModel: viewModel)
-        let nav = UINavigationController(rootViewController: viewController)
-        nav.isNavigationBarHidden = true
-
-        if let sheet = nav.sheetPresentationController {
-            sheet.detents = [.medium()]
-            sheet.prefersGrabberVisible = true
-        }
-
-        presenter.present(nav, animated: true)
-    }
-}
+extension MainCoordinator: VoiceNoteCoordinatorDelegate {}
 
 // MARK: - NewFolderCoordinatorDelegate
 
@@ -170,5 +159,21 @@ extension MainCoordinator: BaseCoordinatorDelegate {
 
     func pop() {
         presenter.popViewController(animated: true)
+    }
+
+    // TODO: Present 폴더 이동 시트 ( 사용 화면 - 음성 노트, 개인 폴더 )
+    func presentFolderList(with receive: Receive, dismiss: (() -> Void)?) {
+        let viewModel = dependencyContainer.makeMoveFolderListViewModel(receive: receive, dismiss: dismiss)
+        viewModel.coordinator = self
+        let viewController = MoveFolderListViewController(viewModel: viewModel)
+        let nav = UINavigationController(rootViewController: viewController)
+        nav.isNavigationBarHidden = true
+
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        presenter.present(nav, animated: true)
     }
 }

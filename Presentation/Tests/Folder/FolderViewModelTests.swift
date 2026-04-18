@@ -15,6 +15,8 @@ final class MockFolderCoordinatorDelegate: FolderCoordinatorDelegate {
     func pushMyFolderDetailView(_ folder: Folder) {
         pushedFolder = folder
     }
+
+    func presentFolderList(with receive: Receive, dismiss: (() -> Void)?) {}
 }
 
 @MainActor
@@ -74,6 +76,15 @@ final class FolderViewModelTests: XCTestCase {
         XCTAssertTrue(sut.mockCoordinator.popCalled)
     }
 
+    func test_pushDetail_호출시_화면전환() {
+        let sut = makeSUT()
+        let folder = Folder(name: "테스트")
+
+        sut.viewModel.pushDetail(folder)
+
+        XCTAssertEqual(sut.mockCoordinator.pushedFolder?.id, folder.id)
+    }
+
     func test_openTextFieldView_호출시_상태변경() {
         let sut = makeSUT()
         let folder = Folder(name: "수정 폴더")
@@ -101,32 +112,51 @@ final class FolderViewModelTests: XCTestCase {
         let folderName = "신규 폴더"
         let createdFolder = Folder(name: folderName)
 
-        await sut.mockFolderRepo.setCreateResult(.success(createdFolder))
-        await sut.mockFolderRepo.expectCreate(name: folderName, callCount: 1)
+        sut.mockFolderRepo.setCreateResult(.success(createdFolder))
+        sut.mockFolderRepo.expectCreate(name: folderName, callCount: 1)
 
         sut.viewModel.create(name: folderName)
 
         // Task 대기
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        await sut.mockFolderRepo.verify()
+        sut.mockFolderRepo.verify()
         XCTAssertEqual(sut.viewModel.category.items.count, 1)
         XCTAssertFalse(sut.viewModel.showTextField)
+    }
+
+    func test_fetchAll_정상로드() async {
+        let sut = makeSUT()
+        let expectedFolders = [
+            Folder(name: "새 폴더 1", isDeletable: true),
+            Folder(name: "기본 폴더", isDeletable: false), // isDeletable = false는 제외되어야 함
+            Folder(name: "새 폴더 2", isDeletable: true)
+        ]
+
+        sut.mockFolderRepo.setFetchAllResult(.success(expectedFolders))
+        sut.mockFolderRepo.expectFetchAll(callCount: 1)
+
+        sut.viewModel.fetchAll()
+
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.mockFolderRepo.verify()
+        XCTAssertEqual(sut.viewModel.category.items.count, 2)
     }
 
     func test_move_성공시_리스트에서제거() async {
         let folder = Folder(name: "이동 폴더")
         let sut = makeSUT(initialItems: [.folder(folder)])
 
-        await sut.mockWasteBasketRepo.setMoveResult(.success(()))
-        await sut.mockWasteBasketRepo.expectMoveToWasteBasket(
+        sut.mockWasteBasketRepo.setMoveResult(.success(()))
+        sut.mockWasteBasketRepo.expectMoveToWasteBasket(
             item: .folder(obj: folder), callCount: 1
         )
 
         sut.viewModel.move(folder: folder)
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        await sut.mockWasteBasketRepo.verify()
+        sut.mockWasteBasketRepo.verify()
         XCTAssertTrue(sut.viewModel.category.items.isEmpty)
     }
 
@@ -144,8 +174,8 @@ final class FolderViewModelTests: XCTestCase {
             deletedAt: initialFolder.deletedAt
         )
 
-        await sut.mockFolderRepo.setUpdateResult(.success(updatedFolder))
-        await sut.mockFolderRepo.expectUpdate(folderID: initialFolder.id, callCount: 1)
+        sut.mockFolderRepo.setUpdateResult(.success(updatedFolder))
+        sut.mockFolderRepo.expectUpdate(folderID: initialFolder.id, callCount: 1)
 
         // 수정 모드 진입
         sut.viewModel.openTextField(for: initialFolder)
@@ -155,7 +185,7 @@ final class FolderViewModelTests: XCTestCase {
         // Task 대기
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        await sut.mockFolderRepo.verify()
+        sut.mockFolderRepo.verify()
 
         if case .folder(let folder) = sut.viewModel.category.items[0] {
             XCTAssertEqual(folder.name, newName)
