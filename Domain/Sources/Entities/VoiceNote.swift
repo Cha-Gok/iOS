@@ -12,7 +12,7 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
     public let title: String
     public let createdAt: Date
     public let updatedAt: Date
-    public let folderID: UUID
+    public var folderID: UUID
     public let voiceRecord: VoiceRecord
     public let keywords: [Keyword]
     public var transcript: Transcript?
