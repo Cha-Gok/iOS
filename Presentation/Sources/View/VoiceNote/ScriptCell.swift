@@ -54,13 +54,10 @@ final class ScriptContentView: UIView, UIContentView {
 
     private lazy var textView: UITextView = {
         let textView = UITextView()
-        textView.font = Typography.body1.font
-        textView.textColor = UIColor.gray950
         textView.backgroundColor = .clear
-        textView.layer.cornerRadius = 4
         textView.isEditable = true
         textView.isScrollEnabled = false
-        textView.textContainerInset = UIEdgeInsets(top: 2, left: 0, bottom: 2, right: 0)
+        textView.textContainerInset = .zero
         textView.textContainer.lineFragmentPadding = 0
         textView.delegate = self
         textView.translatesAutoresizingMaskIntoConstraints = false
@@ -126,12 +123,25 @@ final class ScriptContentView: UIView, UIContentView {
         installContentView(isEditing: config.isEditing)
 
         if config.isEditing {
-            if textView.text != config.text { textView.text = config.text }
+            if textView.text != config.text {
+                applyTextViewTypography(text: config.text, color: textViewColor(isHighlighted: config.isHighlighted))
+            }
         } else {
             textLabel.setTypography(text: config.text, style: .body1)
         }
 
         applyHighlight(isHighlighted: config.isHighlighted, isEditing: config.isEditing)
+    }
+
+    private func applyTextViewTypography(text: String, color: UIColor) {
+        var attributes = Typography.body1.textAttributes
+        attributes[.foregroundColor] = color
+        textView.attributedText = NSAttributedString(string: text, attributes: attributes)
+        textView.typingAttributes = attributes
+    }
+
+    private func textViewColor(isHighlighted: Bool) -> UIColor {
+        isHighlighted ? .white : UIColor.gray600
     }
 
     private func installContentView(isEditing: Bool) {
@@ -152,11 +162,10 @@ final class ScriptContentView: UIView, UIContentView {
 
     private func applyHighlight(isHighlighted: Bool, isEditing: Bool) {
         textBackground.backgroundColor = isHighlighted ? UIColor.point600.withAlphaComponent(0.3) : .clear
-        let textColor: UIColor = isHighlighted ? .white : UIColor.gray600
         if isEditing {
-            textView.textColor = textColor
+            applyTextViewTypography(text: textView.text ?? "", color: textViewColor(isHighlighted: isHighlighted))
         } else {
-            textLabel.textColor = textColor
+            textLabel.textColor = isHighlighted ? .white : UIColor.gray600
         }
     }
 }
