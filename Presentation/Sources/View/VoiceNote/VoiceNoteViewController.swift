@@ -211,7 +211,7 @@ private extension VoiceNoteViewController {
 
     private func observePlayingParagraph() {
         withObservationTracking {
-            _ = viewModel.playingParagraphInfo
+            _ = viewModel.playingSectionIndex
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
@@ -402,18 +402,17 @@ private extension VoiceNoteViewController {
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
             guard let self, case .script(let index) = item else { return }
             let section = viewModel.scriptSections[index]
-            let info = viewModel.playingParagraphInfo
-            let highlightedParagraphIndex = info?.sectionIndex == index ? info?.paragraphIndex : nil
+            let isHighlighted = viewModel.playingSectionIndex == index
 
             cell.contentConfiguration = ScriptContentConfiguration(
                 sectionIndex: index,
                 timestamp: section.formattedTimestamp,
                 timestampSeconds: section.timestamp,
-                paragraphs: section.paragraphs,
-                highlightedParagraphIndex: highlightedParagraphIndex,
+                text: section.text,
+                isHighlighted: isHighlighted,
                 isEditing: viewModel.editingMode == .script,
-                onParagraphEdited: { [weak self] sIdx, pIdx, text in
-                    self?.viewModel.updateScriptParagraph(sectionIndex: sIdx, paragraphIndex: pIdx, text: text)
+                onTextEdited: { [weak self] sIdx, text in
+                    self?.viewModel.updateScriptSection(sectionIndex: sIdx, text: text)
                 },
                 onTimestampTapped: { [weak self] time in
                     self?.viewModel.scriptTimestampTapped(time)

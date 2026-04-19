@@ -49,7 +49,7 @@ final class DefaultVoiceNoteRepositoryTest: XCTestCase {
             folderID: folder.id,
             voiceRecord: note.voiceRecord,
             keywords: [],
-            transcript: Transcript(text: "전사"),
+            transcript: Transcript(sections: [TranscriptSection(timestamp: 0, text: "전사")]),
             summary: Summary(text: "요약"),
             analysisState: .completed
         )
@@ -59,7 +59,7 @@ final class DefaultVoiceNoteRepositoryTest: XCTestCase {
 
         // Then
         XCTAssertEqual(result.title, "수정된 제목")
-        XCTAssertEqual(result.transcript?.text, "전사")
+        XCTAssertEqual(result.transcript?.sections.first?.text, "전사")
     }
 
     func test_fetchAllFromDefaultFolder_기본폴더메모조회() throws {

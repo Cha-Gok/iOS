@@ -36,7 +36,10 @@ extension DefaultSummaryRepositoryTest {
         let task = Task { [sut] in
             try? await Task.sleep(nanoseconds: 10_000_000)
             withUnsafeCurrentTask { $0?.cancel() }
-            return try await sut?.summarize(transcript: Domain.Transcript(id: UUID(), text: "텍스트"), language: .ko)
+            return try await sut?.summarize(
+                transcript: Domain.Transcript(id: UUID(), sections: [TranscriptSection(timestamp: 0, text: "텍스트")]),
+                language: .ko
+            )
         }
 
         // When & Then

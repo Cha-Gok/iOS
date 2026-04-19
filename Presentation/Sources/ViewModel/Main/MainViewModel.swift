@@ -327,7 +327,9 @@ extension MainViewModel {
                     updatedAt: updatedAt,
                     folderID: folderID,
                     voiceRecord: record,
-                    transcript: summarized ? Transcript(text: "\(title) 전사본") : nil,
+                    transcript: summarized
+                        ? Transcript(sections: [TranscriptSection(timestamp: 0, text: "\(title) 전사본")])
+                        : nil,
                     summary: summarized ? Summary(text: "\(title) 요약") : nil
                 )
             }
@@ -405,7 +407,7 @@ extension MainViewModel {
             }
 
             func transcribe(audioFilePath: String) async throws(VoiceNoteUseCaseError) -> Transcript {
-                Transcript(text: "")
+                Transcript()
             }
 
             func summarize(

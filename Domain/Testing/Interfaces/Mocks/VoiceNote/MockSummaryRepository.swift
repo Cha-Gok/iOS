@@ -29,8 +29,9 @@ public actor MockSummaryRepository: SummaryRepository {
             XCTAssertEqual(actualCallCount, expected, "요약 호출 횟수가 일치하지 않습니다.", file: file, line: line)
         }
         if let expectedText = expectedTranscriptText {
+            let actualText = actualTranscript?.sections.map(\.text).joined(separator: "\n")
             XCTAssertEqual(
-                actualTranscript?.text, expectedText, "요약 텍스트 내용이 일치하지 않습니다.", file: file,
+                actualText, expectedText, "요약 텍스트 내용이 일치하지 않습니다.", file: file,
                 line: line
             )
         }

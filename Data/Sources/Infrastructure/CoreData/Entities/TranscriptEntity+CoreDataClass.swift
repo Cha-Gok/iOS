@@ -7,13 +7,10 @@ public final class TranscriptEntity: NSManagedObject {
     public var id: UUID
 
     @NSManaged
-    public var text: String
-
-    @NSManaged
     public var createdAt: Date
 
     @NSManaged
-    public var segmentsData: Data?
+    public var sectionsData: Data?
 
     @NSManaged
     public var voiceNote: VoiceNoteEntity
@@ -28,20 +25,18 @@ extension TranscriptEntity: ManagedObjectMapping {
     }
 
     public func toModel() -> ModelType {
-        let segments = (segmentsData.flatMap { try? JSONDecoder().decode([TranscriptSegment].self, from: $0) }) ?? []
+        let sections = (sectionsData.flatMap { try? JSONDecoder().decode([TranscriptSection].self, from: $0) }) ?? []
         return Transcript(
             id: id,
             createdAt: createdAt,
-            text: text,
-            segments: segments
+            sections: sections
         )
     }
 
     public func insert(from model: ModelType) throws {
         id = model.id
-        text = model.text
         createdAt = model.createdAt
-        segmentsData = try? JSONEncoder().encode(model.segments)
+        sectionsData = try? JSONEncoder().encode(model.sections)
     }
 
     public static var entityName: CoreDataEntityName {

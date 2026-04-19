@@ -281,7 +281,7 @@ extension FolderDetailViewModel {
             }
 
             func transcribe(audioFilePath: String) async throws(VoiceNoteUseCaseError) -> Transcript {
-                Transcript(text: "")
+                Transcript()
             }
 
             func summarize(
