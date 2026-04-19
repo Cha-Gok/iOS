@@ -425,36 +425,4 @@ public extension VoiceNoteViewModel {
         public let sectionIndex: Int
         public let paragraphIndex: Int
     }
-
-    enum Section: Int, CaseIterable, Sendable {
-        case metadata
-        case keyPoints
-        case keywords
-        case scripts
-
-        public var title: String? {
-            switch self {
-            case .keyPoints: return "AI 요약"
-            case .keywords: return "키워드"
-            case .scripts: return "스크립트"
-            default: return nil
-            }
-        }
-
-        public var headerTitle: String? {
-            switch self {
-            case .keyPoints: return "핵심 포인트"
-            case .keywords: return "키워드"
-            case .scripts: return "스크립트"
-            default: return nil
-            }
-        }
-    }
-
-    enum Item: Hashable, Sendable {
-        case metadata
-        case keyPoint(number: Int, text: String)
-        case keywords
-        case script(index: Int)
-    }
 }
