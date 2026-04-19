@@ -85,6 +85,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
+        collectionView.keyboardDismissMode = .interactive
         return collectionView
     }()
 
@@ -106,6 +107,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         super.viewDidLoad()
         setupUI()
         applySnapshot()
+        registerKeyboardObservers()
         viewModel.onAppear()
     }
 
@@ -365,6 +367,69 @@ private extension VoiceNoteViewController {
         guard !scriptItems.isEmpty else { return }
         snapshot.reconfigureItems(scriptItems)
         dataSource.apply(snapshot, animatingDifferences: false)
+    }
+}
+
+// MARK: - Keyboard
+
+private extension VoiceNoteViewController {
+    func registerKeyboardObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillChangeFrame(_:)),
+            name: UIResponder.keyboardWillChangeFrameNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide(_:)),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+}
+
+extension VoiceNoteViewController {
+    @objc
+    fileprivate func keyboardWillChangeFrame(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let frameValue = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        let keyboardFrame = view.convert(frameValue.cgRectValue, from: nil)
+        let overlap = max(0, collectionView.frame.maxY - keyboardFrame.minY)
+        applyKeyboardInset(overlap, userInfo: userInfo)
+        scrollActiveResponderVisible()
+    }
+
+    @objc
+    fileprivate func keyboardWillHide(_ notification: Notification) {
+        applyKeyboardInset(0, userInfo: notification.userInfo)
+    }
+
+    private func applyKeyboardInset(_ bottom: CGFloat, userInfo: [AnyHashable: Any]?) {
+        let duration = (userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval) ?? 0.25
+        let curveRaw = (userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt)
+            ?? UInt(UIView.AnimationCurve.easeInOut.rawValue)
+        let options = UIView.AnimationOptions(rawValue: curveRaw << 16)
+        UIView.animate(withDuration: duration, delay: 0, options: options) {
+            self.collectionView.contentInset.bottom = bottom
+            self.collectionView.verticalScrollIndicatorInsets.bottom = bottom
+        }
+    }
+
+    private func scrollActiveResponderVisible() {
+        guard let responder = collectionView.activeFirstResponder() else { return }
+        let frameInCollection = responder.convert(responder.bounds, to: collectionView)
+        collectionView.scrollRectToVisible(frameInCollection.insetBy(dx: 0, dy: -16), animated: true)
+    }
+}
+
+private extension UIView {
+    func activeFirstResponder() -> UIView? {
+        if isFirstResponder { return self }
+        for subview in subviews {
+            if let found = subview.activeFirstResponder() { return found }
+        }
+        return nil
     }
 }
 
