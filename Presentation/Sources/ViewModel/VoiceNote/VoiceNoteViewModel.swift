@@ -123,6 +123,7 @@ public final class VoiceNoteViewModel {
     }
 
     public func enterScriptEditing() {
+        if currentPlaybackState.status == .playing { pause() }
         editableScriptSections = scriptSections
         editingMode = .script
     }
@@ -202,10 +203,14 @@ public final class VoiceNoteViewModel {
     private func makeUpdatedTranscript() -> Transcript? {
         guard let original = voiceNote.transcript else { return nil }
 
+        let sections = editableScriptSections.filter {
+            !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+
         return Transcript(
             id: original.id,
             createdAt: original.createdAt,
-            sections: editableScriptSections
+            sections: sections
         )
     }
 
