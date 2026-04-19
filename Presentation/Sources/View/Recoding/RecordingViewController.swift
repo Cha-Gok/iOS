@@ -214,10 +214,3 @@ public final class RecordingViewController: ViewController {
         }
     }
 }
-
-#if DEBUG
-    #Preview {
-        UINavigationController(rootViewController: RecordingViewController(viewModel: .preview())
-        )
-    }
-#endif

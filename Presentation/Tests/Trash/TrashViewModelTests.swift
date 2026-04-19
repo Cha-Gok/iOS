@@ -53,6 +53,7 @@ final class TrashViewModelTests: XCTestCase {
         let dummyItem = WasteBasketItem.folder(
             obj: Folder(name: "테스트 폴더", createdAt: Date().addingTimeInterval(-86400 * 5))
         )
+        sut.mockRepo.setDeleteResult(.success(()))
         sut.viewModel.toggleSelectionMode() // isSelectionMode = true
         XCTAssertTrue(sut.viewModel.isSelectionMode, "토글 후 true가 되어야 합니다.")
 

@@ -26,7 +26,7 @@ public final class NewFolderViewModel {
             case .cancelButtonTapped:
                 coordinator?.cancel()
             case .createButtonTapped(let name):
-                Task { await createFolder(name: name) }
+                createFolder(name: name)
             }
         }
     }
@@ -35,9 +35,9 @@ public final class NewFolderViewModel {
         state.errorMessage = nil
     }
 
-    private func createFolder(name: String) async {
+    private func createFolder(name: String) {
         do {
-            _ = try await folderUseCase.create(name: name)
+            _ = try folderUseCase.create(name: name)
             coordinator?.folderCreated()
         } catch {
             AppLogger.error(error)

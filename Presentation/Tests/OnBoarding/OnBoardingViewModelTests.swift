@@ -22,6 +22,7 @@ final class OnBoardingViewModelTests: XCTestCase {
         let viewModel: OnBoardingViewModel
         let mockLanguageRepo: MockLanguageRepository
         let mockVoiceRecordRepo: MockVoiceRecordRepository
+        let mockSTTRepo: MockSTTRepository
         let mockCheckFirstLaunchRepo: MockCheckFirstLaunchRepository
         let mockFolderRepo: MockFolderRepository
         let mockNavDelegate: MockNavigationDelegate
@@ -30,6 +31,7 @@ final class OnBoardingViewModelTests: XCTestCase {
     private func makeSUT() -> SUT {
         let mockLanguageRepo = MockLanguageRepository()
         let mockVoiceRecordRepo = MockVoiceRecordRepository()
+        let mockSTTRepo = MockSTTRepository()
         let mockCheckFirstLaunchRepo = MockCheckFirstLaunchRepository()
         let mockFolderRepo = MockFolderRepository()
         let mockNavDelegate = MockNavigationDelegate()
@@ -37,6 +39,7 @@ final class OnBoardingViewModelTests: XCTestCase {
         let viewModel = OnBoardingViewModel(
             languageRepository: mockLanguageRepo,
             voiceRecordRepository: mockVoiceRecordRepo,
+            sttRepository: mockSTTRepo,
             checkFirstLaunchRepository: mockCheckFirstLaunchRepo,
             folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo)
         )
@@ -46,6 +49,7 @@ final class OnBoardingViewModelTests: XCTestCase {
             viewModel: viewModel,
             mockLanguageRepo: mockLanguageRepo,
             mockVoiceRecordRepo: mockVoiceRecordRepo,
+            mockSTTRepo: mockSTTRepo,
             mockCheckFirstLaunchRepo: mockCheckFirstLaunchRepo,
             mockFolderRepo: mockFolderRepo,
             mockNavDelegate: mockNavDelegate
@@ -91,17 +95,27 @@ final class OnBoardingViewModelTests: XCTestCase {
     func test_syncPageState호출시_마이크권한스텝이면_권한을_요청한다() async {
         let sut = makeSUT()
 
+        // Mic
         await sut.mockVoiceRecordRepo.setCheckPermissionResult(.notDetermined)
         await sut.mockVoiceRecordRepo.setRequestPermissionResult(.success(.authorized))
+        // STT
+        await sut.mockSTTRepo.setCheckResult(.notDetermined)
+        await sut.mockSTTRepo.setRequestResult(.success(.authorized))
 
         sut.viewModel.syncPageState(nextStep: Step.micPermission.rawValue)
 
         // Task 내부 비동기 호출 대기 (안전하게 0.3초 대기)
         try? await Task.sleep(nanoseconds: 300_000_000)
 
+        // Mic 검증
         await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
         await sut.mockVoiceRecordRepo.expectRequestPermission(callCount: 1)
         await sut.mockVoiceRecordRepo.verify()
+
+        // STT 검증
+        await sut.mockSTTRepo.expectCheckSTTPermission(callCount: 1)
+        await sut.mockSTTRepo.expectRequestSTTPermission(callCount: 1)
+        await sut.mockSTTRepo.verify()
     }
 
     func test_primaryButtonAction_첫스텝에서_다음스텝으로_이동한다() {
@@ -160,8 +174,12 @@ final class OnBoardingViewModelTests: XCTestCase {
         let sut = makeSUT()
 
         // Background Task가 실행되므로 미리 모의 객체(Mock) 응답을 세팅해 두어야 에러(미설정)가 나지 않습니다.
+        // Mic
         await sut.mockVoiceRecordRepo.setCheckPermissionResult(.notDetermined)
         await sut.mockVoiceRecordRepo.setRequestPermissionResult(.success(.authorized))
+        // STT
+        await sut.mockSTTRepo.setCheckResult(.notDetermined)
+        await sut.mockSTTRepo.setRequestResult(.success(.authorized))
 
         sut.viewModel.syncPageState(nextStep: Step.micPermission.rawValue)
 

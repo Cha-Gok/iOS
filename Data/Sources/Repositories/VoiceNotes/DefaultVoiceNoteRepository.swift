@@ -85,6 +85,15 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
+    public func observe(id: UUID) throws(VoiceNoteRepositoryError) -> AsyncStream<VoiceNote> {
+        do {
+            return try store.observe(byID: id, as: VoiceNoteEntity.self)
+        } catch {
+            AppLogger.error(error)
+            throw .fetchFailed(id: id)
+        }
+    }
+
     private func fetchDefaultFolder() throws(VoiceNoteRepositoryError) -> Folder {
         do {
             let folders = try store.fetchAll(FolderEntity.self)

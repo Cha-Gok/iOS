@@ -111,39 +111,33 @@ extension TrashViewModel {
 
 extension TrashViewModel {
     func deleteAll() {
-        Task {
-            do {
-                try await repository.allClear()
-                items.removeAll()
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
-            }
+        do {
+            try repository.allClear()
+            items.removeAll()
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
         }
     }
 
     func delete(item: WasteBasketItem) {
-        Task {
-            do {
-                try await repository.delete(item: item)
-                items.removeAll { $0.id == item.id }
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
-            }
+        do {
+            try repository.delete(item: item)
+            items.removeAll { $0.id == item.id }
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
         }
     }
 
     private func delete(items deleteItems: [WasteBasketItem]) {
-        Task {
-            do {
-                try await repository.deleteAll(items: deleteItems)
-                let deleteIDs = Set(deleteItems.map(\.id))
-                items.removeAll { deleteIDs.contains($0.id) }
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
-            }
+        do {
+            try repository.deleteAll(items: deleteItems)
+            let deleteIDs = Set(deleteItems.map(\.id))
+            items.removeAll { deleteIDs.contains($0.id) }
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
         }
     }
 }
@@ -152,27 +146,23 @@ extension TrashViewModel {
 
 extension TrashViewModel {
     func restore(item: WasteBasketItem) {
-        Task {
-            do {
-                try await repository.restore(item: item)
-                items.removeAll { $0.id == item.id }
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
-            }
+        do {
+            try repository.restore(item: item)
+            items.removeAll { $0.id == item.id }
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
         }
     }
 
     func restore(items restoreItems: [WasteBasketItem]) {
-        Task {
-            do {
-                try await repository.restoreAll(items: restoreItems)
-                let restoreIDs = Set(restoreItems.map(\.id))
-                items.removeAll { restoreIDs.contains($0.id) }
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
-            }
+        do {
+            try repository.restoreAll(items: restoreItems)
+            let restoreIDs = Set(restoreItems.map(\.id))
+            items.removeAll { restoreIDs.contains($0.id) }
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
         }
     }
 }

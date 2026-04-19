@@ -2,11 +2,7 @@ import Domain
 import UIKit
 
 public final class VoiceNoteViewController: UIViewController, Alertable {
-    typealias Section = VoiceNoteViewModel.Section
-    typealias Item = VoiceNoteViewModel.Item
-
     private let viewModel: VoiceNoteViewModel
-    private var hasAppliedCompletedSnapshot = false
     private lazy var dataSource = makeDataSource()
 
     // MARK: - UI Components
@@ -15,15 +11,67 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let topBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
     private lazy var segmentedControl = UnderlineSegmentedControl(items: [Section.keyPoints, .keywords, .scripts]
         .compactMap(\.title))
-    private lazy var backButton: UIButton = {
+    private lazy var backChevronButton: UIButton = {
         let btn = UIButton(type: .system)
         let backImage = UIImage(systemName: "chevron.left")?
             .withConfiguration(UIImage.SymbolConfiguration(weight: .bold))
         btn.setImage(backImage, for: .normal)
-        btn.titleLabel?.setTypography(style: .title1)
         btn.tintColor = UIColor.gray950
+        btn.addAction(UIAction { [weak self] _ in
+            self?.viewModel.pop()
+        }, for: .touchUpInside)
         return btn
     }()
+
+    private lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = Typography.title1.font
+        label.textColor = UIColor.gray950
+        label.lineBreakMode = .byTruncatingTail
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.isUserInteractionEnabled = true
+        let tap = UITapGestureRecognizer(target: self, action: #selector(titleLabelTapped))
+        label.addGestureRecognizer(tap)
+        return label
+    }()
+
+    @objc
+    private func titleLabelTapped() {
+        viewModel.enterTitleEditing()
+    }
+
+    private lazy var titleTextField: UITextField = {
+        let field = UITextField()
+        field.font = Typography.title1.font
+        field.textColor = UIColor.gray950
+        field.tintColor = UIColor.gray950
+        field.returnKeyType = .done
+        field.delegate = self
+        return field
+    }()
+
+    private lazy var doneButton: UIBarButtonItem = {
+        let item = UIBarButtonItem(title: "완료", primaryAction: UIAction { [weak self] _ in
+            guard let self else { return }
+            switch viewModel.editingMode {
+            case .title:
+                viewModel.doneTitleEditing(title: titleTextField.text ?? "")
+            case .script:
+                viewModel.doneScriptEditing()
+            case nil:
+                break
+            }
+        })
+        item.tintColor = UIColor.point800
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineHeightMultiple = 1.08
+        let attrs: [NSAttributedString.Key: Any] = [.paragraphStyle: paragraphStyle]
+        item.setTitleTextAttributes(attrs, for: .normal)
+        item.setTitleTextAttributes(attrs, for: .highlighted)
+        return item
+    }()
+
+    private var normalRightBarButtonItems: [UIBarButtonItem] = []
 
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
@@ -50,12 +98,12 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         super.viewDidLoad()
         setupUI()
         applySnapshot()
-        viewModel.send(.view(.onAppear))
+        viewModel.onAppear()
     }
 
     override public func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        viewModel.send(.view(.onDisappear))
+        viewModel.onDisappear()
     }
 }
 
@@ -74,9 +122,7 @@ private extension VoiceNoteViewController {
         setupNavigationBar()
         setupTabBar()
         setupPlayerView()
-        observePlaybackState()
-        observeAnalysisState()
-        observeErrorMessage()
+        setupBindings()
     }
 
     func setupConstraints() {
@@ -107,19 +153,17 @@ private extension VoiceNoteViewController {
     }
 
     func setupNavigationBar() {
-        backButton.setTitle(" \(viewModel.state.title)", for: .normal)
-        backButton.addAction(
-            UIAction { [weak self] _ in
-                self?.viewModel.send(.view(.pop))
-            }, for: .touchUpInside
-        )
+        titleLabel.text = viewModel.title
+        titleLabel.frame.size.width = view.bounds.width
         let menu = UIMenu(children: [
-            UIAction(title: "기록 이동하기", handler: { _ in
-                self.viewModel.send(.view(.moveVoiceNoteButtonTapped))
+            UIAction(title: "기록 이동하기", handler: { [weak self] _ in
+                self?.viewModel.moveVoiceNote()
             }),
-            UIAction(title: "편집하기", handler: { _ in }),
+            UIAction(title: "편집하기", handler: { [weak self] _ in
+                self?.viewModel.enterScriptEditing()
+            }),
             UIAction(title: "삭제하기", attributes: .destructive, handler: { [weak self] _ in
-                self?.viewModel.send(.view(.deleteVoiceNoteButtonTapped))
+                self?.viewModel.deleteVoiceNote()
             })
         ])
         let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: menu)
@@ -129,14 +173,13 @@ private extension VoiceNoteViewController {
             target: nil,
             action: nil
         )
-        let leftItem = UIBarButtonItem(customView: backButton)
-        navigationItem.leftBarButtonItem = leftItem
-        navigationItem.rightBarButtonItems = [moreItem, searchItem]
+        normalRightBarButtonItems = [moreItem, searchItem]
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backChevronButton)
+        navigationItem.titleView = titleLabel
+        navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
-        navigationItem.rightBarButtonItems?.forEach {
-            $0.hidesSharedBackground = true
-        }
+        navigationItem.rightBarButtonItems?.forEach { $0.hidesSharedBackground = true }
     }
 
     func setupTabBar() {
@@ -151,20 +194,45 @@ private extension VoiceNoteViewController {
     }
 
     func setupPlayerView() {
-        playerView.onPlayPause = { [weak self] in self?.viewModel.send(.view(.playPauseButtonTapped)) }
-        playerView.onRewind = { [weak self] in self?.viewModel.send(.view(.rewindButtonTapped)) }
-        playerView.onForward = { [weak self] in self?.viewModel.send(.view(.forwardButtonTapped)) }
-        playerView.onSeekBegan = { [weak self] in self?.viewModel.send(.view(.seekBegan)) }
-        playerView.onSeekEnded = { [weak self] time in self?.viewModel.send(.view(.seekEnded(time))) }
+        playerView.onPlayPause = { [weak self] in self?.viewModel.playPause() }
+        playerView.onRewind = { [weak self] in self?.viewModel.rewind() }
+        playerView.onForward = { [weak self] in self?.viewModel.forward() }
+        playerView.onSeekBegan = { [weak self] in self?.viewModel.seekBegan() }
+        playerView.onSeekEnded = { [weak self] time in self?.viewModel.seekEnded(time) }
+    }
+
+    func setupBindings() {
+        observePlaybackState()
+        observeAnalysisState()
+        observeErrorMessage()
+        observeEditingState()
+        observePlayingParagraph()
+    }
+
+    private func observePlayingParagraph() {
+        withObservationTracking {
+            _ = viewModel.playingParagraphInfo
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                let scriptItems = self.dataSource.snapshot().itemIdentifiers(inSection: .scripts)
+                if !scriptItems.isEmpty {
+                    var snapshot = self.dataSource.snapshot()
+                    snapshot.reconfigureItems(scriptItems)
+                    self.dataSource.apply(snapshot, animatingDifferences: false)
+                }
+                self.observePlayingParagraph()
+            }
+        }
     }
 
     private func observePlaybackState() {
         withObservationTracking {
-            _ = viewModel.state.currentPlaybackState
+            _ = viewModel.currentPlaybackState
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                self.playerView.apply(self.viewModel.state.currentPlaybackState)
+                self.playerView.apply(self.viewModel.currentPlaybackState)
                 self.observePlaybackState()
             }
         }
@@ -172,20 +240,17 @@ private extension VoiceNoteViewController {
 
     private func observeAnalysisState() {
         withObservationTracking {
-            _ = viewModel.state.voiceNote.analysisState
+            _ = viewModel.voiceNote.analysisState
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                switch self.viewModel.state.voiceNote.analysisState {
+                switch self.viewModel.voiceNote.analysisState {
                 case .analyzing:
                     var snapshot = self.dataSource.snapshot()
                     snapshot.reconfigureItems([.metadata])
                     self.dataSource.apply(snapshot, animatingDifferences: false)
-                case .completed:
-                    if !self.hasAppliedCompletedSnapshot {
-                        self.hasAppliedCompletedSnapshot = true
-                        self.applySnapshot()
-                    }
+                case .completed, .transcribed:
+                    self.applySnapshot()
                 case .failed, .pending:
                     break
                 }
@@ -196,18 +261,79 @@ private extension VoiceNoteViewController {
 
     private func observeErrorMessage() {
         withObservationTracking {
-            _ = viewModel.state.errorMessage
+            _ = viewModel.errorMessage
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                if let message = self.viewModel.state.errorMessage {
+                if let message = self.viewModel.errorMessage {
                     self.showAlert(title: "오류", message: message) { [weak self] in
-                        self?.viewModel.send(.internal(.errorDismissed))
+                        self?.viewModel.dismissError()
                     }
                 }
                 self.observeErrorMessage()
             }
         }
+    }
+}
+
+// MARK: - Edit Mode
+
+private extension VoiceNoteViewController {
+    func observeEditingState() {
+        withObservationTracking {
+            _ = viewModel.editingMode
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.applyEditingMode(self.viewModel.editingMode)
+                self.observeEditingState()
+            }
+        }
+    }
+}
+
+private extension VoiceNoteViewController {
+    func applyEditingMode(_ mode: VoiceNoteViewModel.EditingMode?) {
+        switch mode {
+        case .title:
+            enterTitleEditMode()
+        case .script:
+            enterScriptEditMode()
+        case nil:
+            exitEditMode()
+        }
+    }
+
+    func enterTitleEditMode() {
+        titleTextField.text = viewModel.title
+        titleTextField.frame.size.width = view.bounds.width
+        navigationItem.titleView = titleTextField
+        titleLabel.isHidden = true
+        navigationItem.rightBarButtonItems = [doneButton]
+        titleTextField.becomeFirstResponder()
+        titleTextField.selectAll(nil)
+    }
+
+    func enterScriptEditMode() {
+        reconfigureScriptsOnly()
+    }
+
+    func exitEditMode() {
+        titleTextField.resignFirstResponder()
+        titleLabel.text = viewModel.title
+        titleLabel.isHidden = false
+        navigationItem.titleView = titleLabel
+        navigationItem.rightBarButtonItems = normalRightBarButtonItems
+        navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
+        reconfigureScriptsOnly()
+    }
+
+    func reconfigureScriptsOnly() {
+        var snapshot = dataSource.snapshot()
+        let scriptItems = snapshot.itemIdentifiers(inSection: .scripts)
+        guard !scriptItems.isEmpty else { return }
+        snapshot.reconfigureItems(scriptItems)
+        dataSource.apply(snapshot, animatingDifferences: false)
     }
 }
 
@@ -256,9 +382,9 @@ private extension VoiceNoteViewController {
     func makeDataSource() -> UICollectionViewDiffableDataSource<Section, Item> {
         let metadataCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
             cell.contentConfiguration = MetadataContentConfiguration(
-                folderName: self?.viewModel.state.folderName ?? "",
-                date: self?.viewModel.state.metadataText1 ?? "",
-                duration: self?.viewModel.state.metadataText2 ?? ""
+                folderName: self?.viewModel.folderName ?? "",
+                date: self?.viewModel.metadataText1 ?? "",
+                duration: self?.viewModel.metadataText2 ?? ""
             )
         }
 
@@ -269,22 +395,28 @@ private extension VoiceNoteViewController {
 
         let keywordsCellReg = UICollectionView.CellRegistration<KeywordsCell, Item> { [weak self] cell, _, _ in
             cell.contentConfiguration = KeywordsContentConfiguration(
-                keywords: self?.viewModel.state.keywords ?? []
+                keywords: self?.viewModel.keywords ?? []
             )
         }
 
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
             guard let self, case .script(let index) = item else { return }
-            let section = viewModel.state.scriptSections[index]
+            let section = viewModel.scriptSections[index]
+            let info = viewModel.playingParagraphInfo
+            let highlightedParagraphIndex = info?.sectionIndex == index ? info?.paragraphIndex : nil
 
             cell.contentConfiguration = ScriptContentConfiguration(
                 sectionIndex: index,
                 timestamp: section.formattedTimestamp,
                 timestampSeconds: section.timestamp,
                 paragraphs: section.paragraphs,
-                highlight: viewModel.state.playbackHighlight,
+                highlightedParagraphIndex: highlightedParagraphIndex,
+                isEditing: viewModel.editingMode == .script,
+                onParagraphEdited: { [weak self] sIdx, pIdx, text in
+                    self?.viewModel.updateScriptParagraph(sectionIndex: sIdx, paragraphIndex: pIdx, text: text)
+                },
                 onTimestampTapped: { [weak self] time in
-                    self?.viewModel.send(.view(.scriptTimestampTapped(time)))
+                    self?.viewModel.scriptTimestampTapped(time)
                 }
             )
         }
@@ -331,14 +463,69 @@ private extension VoiceNoteViewController {
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections(Section.allCases)
-        snapshot.appendItems([.metadata], toSection: .metadata)
-        snapshot.appendItems(
-            viewModel.state.keyPoints.map { .keyPoint(number: $0.number, text: $0.text) },
-            toSection: .keyPoints
-        )
-        snapshot.appendItems([.keywords], toSection: .keywords)
-        snapshot.appendItems(viewModel.state.scriptSections.indices.map { .script(index: $0) }, toSection: .scripts)
-        snapshot.reconfigureItems([.metadata, .keywords])
+
+        let metadataItems: [Item] = [.metadata]
+        let keyPointItems = viewModel.keyPoints.map { Item.keyPoint(number: $0.number, text: $0.text) }
+        let keywordItems: [Item] = [.keywords]
+        let scriptItems = viewModel.scriptSections.indices.map { Item.script(index: $0) }
+
+        snapshot.appendItems(metadataItems, toSection: .metadata)
+        snapshot.appendItems(keyPointItems, toSection: .keyPoints)
+        snapshot.appendItems(keywordItems, toSection: .keywords)
+        snapshot.appendItems(scriptItems, toSection: .scripts)
+
+        // 셀 내용이나 모드(isEditing)가 바뀌었을 수 있으므로 필요한 항목들을 재구성합니다.
+        snapshot.reconfigureItems(metadataItems + keywordItems + scriptItems)
         dataSource.apply(snapshot, animatingDifferences: true)
+    }
+}
+
+// MARK: - UITextFieldDelegate
+
+extension VoiceNoteViewController: UITextFieldDelegate {
+    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        viewModel.doneTitleEditing(title: textField.text ?? "")
+        return true
+    }
+
+    public func textFieldDidEndEditing(_ textField: UITextField) {
+        guard viewModel.editingMode == .title else { return }
+        viewModel.doneTitleEditing(title: textField.text ?? "")
+    }
+}
+
+// MARK: - Section / Item
+
+extension VoiceNoteViewController {
+    enum Section: Int, CaseIterable {
+        case metadata
+        case keyPoints
+        case keywords
+        case scripts
+
+        var title: String? {
+            switch self {
+            case .keyPoints: return "AI 요약"
+            case .keywords: return "키워드"
+            case .scripts: return "스크립트"
+            default: return nil
+            }
+        }
+
+        var headerTitle: String? {
+            switch self {
+            case .keyPoints: return "핵심 포인트"
+            case .keywords: return "키워드"
+            case .scripts: return "스크립트"
+            default: return nil
+            }
+        }
+    }
+
+    enum Item: Hashable {
+        case metadata
+        case keyPoint(number: Int, text: String)
+        case keywords
+        case script(index: Int)
     }
 }

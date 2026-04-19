@@ -17,8 +17,6 @@ public final class AppDIContainer {
     /// Repository
     private lazy var languageRepository = DefaultLanguageRepository(store: store)
     private lazy var voiceRecordRepository = DefaultVoiceRecordRepository(storageService: storageService)
-    private lazy var voiceRecordPlaybackRepository =
-        DefaultVoiceRecordPlaybackRepository(storageService: storageService)
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
     private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(store: localDataBase)
@@ -53,6 +51,7 @@ public final class AppDIContainer {
         OnBoardingViewModel(
             languageRepository: languageRepository,
             voiceRecordRepository: voiceRecordRepository,
+            sttRepository: sttRepository,
             checkFirstLaunchRepository: checkFirstLaunchRepository,
             folderUseCase: folderUseCase
         )
@@ -71,7 +70,7 @@ public final class AppDIContainer {
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
             languageRepository: languageRepository,
-            playbackRepository: voiceRecordPlaybackRepository,
+            playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService),
             wasteBasketRepository: wasteBasketRepository
         )
     }

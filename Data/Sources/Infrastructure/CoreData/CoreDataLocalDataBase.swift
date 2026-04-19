@@ -135,4 +135,42 @@ public extension CoreDataLocalDataBase {
             throw .deleteFailed
         }
     }
+
+    func observe<MO: ManagedObjectMapping>(
+        byID id: MO.ModelType.ID,
+        as entity: MO.Type
+    ) throws(CoreDataStorageError) -> AsyncStream<MO.ModelType> {
+        let context = container.viewContext
+        guard let initialEntity = try? MO.find(byID: id, in: context) else {
+            throw .fetchFailed
+        }
+        let initial = initialEntity.toModel()
+
+        return AsyncStream { continuation in
+            continuation.yield(initial)
+
+            let task = Task { @MainActor in
+                let notifications = NotificationCenter.default.notifications(
+                    named: NSManagedObjectContext.didSaveObjectsNotification,
+                    object: context
+                )
+                for await notification in notifications {
+                    let changed: Set<NSManagedObject> = [NSUpdatedObjectsKey, NSInsertedObjectsKey]
+                        .compactMap { notification.userInfo?[$0] as? Set<NSManagedObject> }
+                        .reduce(into: []) { $0.formUnion($1) }
+
+                    guard changed.contains(where: { ($0 as? MO)?.toModel().id == id }) else { continue }
+
+                    if let refreshed = try? MO.find(byID: id, in: context) {
+                        continuation.yield(refreshed.toModel())
+                    } else {
+                        continuation.finish()
+                        break
+                    }
+                }
+            }
+
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
 }

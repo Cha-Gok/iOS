@@ -9,6 +9,7 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var fetchResult: Result<VoiceNote, VoiceNoteRepositoryError>?
     private var fetchAllResult: Result<[VoiceNote], VoiceNoteRepositoryError>?
     private var fetchRecentResult: Result<[VoiceNote], VoiceNoteRepositoryError>?
+    private var observeResult: Result<AsyncStream<VoiceNote>, VoiceNoteRepositoryError>?
 
     public init() {}
 
@@ -19,6 +20,7 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var fetchAllFromDefaultFolderCallCount = 0
     private var fetchAllCallCount = 0
     private var fetchRecentCallCount = 0
+    private var observeCallCount = 0
 
     // Actual Inputs
     private var actualVoiceRecord: VoiceRecord?
@@ -35,6 +37,7 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var expectedFetchAllCallCount: Int?
     private var expectedFetchAllFolderID: UUID?
     private var expectedFetchRecentCallCount: Int?
+    private var expectedObserveCallCount: Int?
 
     /// Set Results
     public func setCreateResult(_ result: Result<VoiceNote, VoiceNoteRepositoryError>) {
@@ -55,6 +58,10 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
 
     public func setFetchRecentResult(_ result: Result<[VoiceNote], VoiceNoteRepositoryError>) {
         fetchRecentResult = result
+    }
+
+    public func setObserveResult(_ result: Result<AsyncStream<VoiceNote>, VoiceNoteRepositoryError>) {
+        observeResult = result
     }
 
     /// Expect Methods
@@ -81,6 +88,10 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
 
     public func expectFetchRecent(callCount: Int) {
         expectedFetchRecentCallCount = callCount
+    }
+
+    public func expectObserve(callCount: Int) {
+        expectedObserveCallCount = callCount
     }
 
     public func verify(file: StaticString = #filePath, line: UInt = #line) {
@@ -130,6 +141,13 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
             fetchRecentCallCount,
             exp,
             "fetchRecent 호출 횟수 불일치",
+            file: file,
+            line: line
+        ) }
+        if let exp = expectedObserveCallCount { XCTAssertEqual(
+            observeCallCount,
+            exp,
+            "observe 호출 횟수 불일치",
             file: file,
             line: line
         ) }
@@ -198,6 +216,16 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
         case .success(let val): return val
         case .failure(let err): throw err
         case .none: XCTFail("fetchRecentResult 미설정")
+            throw .unknown(NSError(domain: "Mock", code: -1))
+        }
+    }
+
+    public func observe(id: UUID) throws(VoiceNoteRepositoryError) -> AsyncStream<VoiceNote> {
+        observeCallCount += 1
+        switch observeResult {
+        case .success(let stream): return stream
+        case .failure(let err): throw err
+        case .none: XCTFail("observeResult 미설정")
             throw .unknown(NSError(domain: "Mock", code: -1))
         }
     }

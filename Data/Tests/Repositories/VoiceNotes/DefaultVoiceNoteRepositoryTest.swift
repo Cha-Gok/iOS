@@ -8,7 +8,8 @@ final class DefaultVoiceNoteRepositoryTest: XCTestCase {
     private var store: CoreDataLocalDataBase!
     private var sut: DefaultVoiceNoteRepository!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         store = try CoreDataLocalDataBase(inMemory: true)
         sut = DefaultVoiceNoteRepository(store: store)
     }
@@ -49,7 +50,8 @@ final class DefaultVoiceNoteRepositoryTest: XCTestCase {
             voiceRecord: note.voiceRecord,
             keywords: [],
             transcript: Transcript(text: "전사"),
-            summary: Summary(text: "요약")
+            summary: Summary(text: "요약"),
+            analysisState: .completed
         )
 
         // When

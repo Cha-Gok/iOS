@@ -20,4 +20,7 @@ public protocol VoiceNoteRepository: Sendable {
 
     /// 최근 생성된 음성 메모를 조회합니다.
     func fetchRecent(limit: Int) throws(VoiceNoteRepositoryError) -> [VoiceNote]
+
+    /// ID로 음성 메모를 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observe(id: UUID) throws(VoiceNoteRepositoryError) -> AsyncStream<VoiceNote>
 }

@@ -7,7 +7,9 @@ struct ScriptContentConfiguration: UIContentConfiguration {
     var timestamp: String = ""
     var timestampSeconds: TimeInterval = 0
     var paragraphs: [String] = []
-    var highlight: VoiceNoteViewModel.PlaybackHighlight?
+    var highlightedParagraphIndex: Int?
+    var isEditing: Bool = false
+    var onParagraphEdited: ((Int, Int, String) -> Void)?
     /// 타임스탬프 탭 콜백
     var onTimestampTapped: ((TimeInterval) -> Void)?
 
@@ -51,8 +53,10 @@ final class ScriptContentView: UIView, UIContentView {
         return stack
     }()
 
-    /// 문단별 (배경 컨테이너, 텍스트 레이블) 쌍. 하이라이트 직접 업데이트에 사용
-    private var paragraphRows: [(background: UIView, label: UILabel)] = []
+    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(timestampTapped))
+
+    /// 문단별 (배경 컨테이너, 텍스트 레이블 또는 텍스트 뷰) 쌍. 하이라이트 직접 업데이트에 사용
+    private var paragraphRows: [(background: UIView, view: UIView)] = []
 
     // MARK: - Init
 
@@ -75,8 +79,7 @@ final class ScriptContentView: UIView, UIContentView {
         containerStack.addArrangedSubview(paragraphsStack)
         addSubview(containerStack)
 
-        let tap = UITapGestureRecognizer(target: self, action: #selector(timestampTapped))
-        containerStack.addGestureRecognizer(tap)
+        containerStack.addGestureRecognizer(tapGesture)
         containerStack.isUserInteractionEnabled = true
 
         NSLayoutConstraint.activate([
@@ -89,20 +92,9 @@ final class ScriptContentView: UIView, UIContentView {
 
     @objc
     private func timestampTapped() {
-        guard let config = configuration as? ScriptContentConfiguration else { return }
+        guard let config = configuration as? ScriptContentConfiguration,
+              !config.isEditing else { return } // 편집 모드일 때는 탭 동작 무시
         config.onTimestampTapped?(config.timestampSeconds)
-    }
-
-    // MARK: - UIView Update Cycle
-
-    /// @Observable PlaybackHighlight를 자동 추적합니다.
-    /// playingParagraphInfo가 변경될 때마다 UIKit이 재호출합니다.
-    override func updateProperties() {
-        super.updateProperties()
-        guard let config = configuration as? ScriptContentConfiguration else { return }
-        let info = config.highlight?.playingParagraphInfo
-        let index = info?.sectionIndex == config.sectionIndex ? info?.paragraphIndex : nil
-        applyHighlight(paragraphIndex: index)
     }
 
     // MARK: - Apply
@@ -110,35 +102,62 @@ final class ScriptContentView: UIView, UIContentView {
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? ScriptContentConfiguration else { return }
         timeLabel.setTypography(text: config.timestamp, style: .caption)
+        tapGesture.isEnabled = !config.isEditing // 편집 모드일 때는 탭 제스처 비활성화
 
-        // 문단 내용이 바뀔 때만 뷰 재구성
-        let needsRebuild = paragraphRows.count != config.paragraphs.count
+        // 문단 내용이 바뀌거나 편집 모드가 전환될 때만 뷰 재구성
+        let currentIsEditing = paragraphRows.first?.view is UITextView
+        let needsRebuild = paragraphRows.isEmpty || paragraphRows.count != config.paragraphs
+            .count || currentIsEditing != config.isEditing
 
         if needsRebuild {
             paragraphsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-            paragraphRows = config.paragraphs.map { para in
-                let label = UILabel()
-                label.setTypography(text: para, style: .body1)
-                label.numberOfLines = 0
-                label.translatesAutoresizingMaskIntoConstraints = false
+            paragraphRows = config.paragraphs.enumerated().map { pIdx, para in
+                let contentView: UIView
+                if config.isEditing {
+                    let textView = UITextView()
+                    textView.text = para
+                    textView.font = Typography.body1.font
+                    textView.textColor = UIColor.gray950
+                    textView.backgroundColor = .clear
+                    textView.layer.cornerRadius = 4
+                    textView.isEditable = true
+                    textView.isScrollEnabled = false
+                    textView.textContainerInset = UIEdgeInsets(top: 2, left: 0, bottom: 2, right: 0)
+                    textView.textContainer.lineFragmentPadding = 0
+                    textView.delegate = self
+                    textView.tag = pIdx
+                    contentView = textView
+                } else {
+                    let label = UILabel()
+                    label.setTypography(text: para, style: .body1)
+                    label.numberOfLines = 0
+                    contentView = label
+                }
+                contentView.translatesAutoresizingMaskIntoConstraints = false
 
                 let background = UIView()
                 background.layer.cornerRadius = 8
-                background.addSubview(label)
+                background.addSubview(contentView)
                 NSLayoutConstraint.activate([
-                    label.topAnchor.constraint(equalTo: background.topAnchor, constant: 8),
-                    label.bottomAnchor.constraint(equalTo: background.bottomAnchor, constant: -8),
-                    label.leadingAnchor.constraint(equalTo: background.leadingAnchor, constant: 12),
-                    label.trailingAnchor.constraint(equalTo: background.trailingAnchor, constant: -12)
+                    contentView.topAnchor.constraint(equalTo: background.topAnchor, constant: 8),
+                    contentView.bottomAnchor.constraint(equalTo: background.bottomAnchor, constant: -8),
+                    contentView.leadingAnchor.constraint(equalTo: background.leadingAnchor, constant: 12),
+                    contentView.trailingAnchor.constraint(equalTo: background.trailingAnchor, constant: -12)
                 ])
                 paragraphsStack.addArrangedSubview(background)
-                return (background, label)
+                return (background, contentView)
             }
         } else {
             for (row, para) in zip(paragraphRows, config.paragraphs) {
-                row.label.setTypography(text: para, style: .body1)
+                if let label = row.view as? UILabel {
+                    label.setTypography(text: para, style: .body1)
+                } else if let textView = row.view as? UITextView {
+                    textView.text = para
+                }
             }
         }
+
+        applyHighlight(paragraphIndex: config.highlightedParagraphIndex)
     }
 
     // MARK: - Highlight
@@ -147,7 +166,43 @@ final class ScriptContentView: UIView, UIContentView {
         for (index, row) in paragraphRows.enumerated() {
             let isHighlighted = paragraphIndex == index
             row.background.backgroundColor = isHighlighted ? UIColor.point600.withAlphaComponent(0.3) : .clear
-            row.label.textColor = isHighlighted ? .white : UIColor.gray600
+            if let label = row.view as? UILabel {
+                label.textColor = isHighlighted ? .white : UIColor.gray600
+            } else if let textView = row.view as? UITextView {
+                textView.textColor = isHighlighted ? .white : UIColor.gray600
+            }
         }
+    }
+}
+
+// MARK: - UITextViewDelegate
+
+extension ScriptContentView: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        guard let config = configuration as? ScriptContentConfiguration else { return }
+        let text = textView.text ?? ""
+        config.onParagraphEdited?(config.sectionIndex, textView.tag, text)
+
+        // UITextView 높이가 바뀔 때 CollectionView 셀 높이를 재계산하도록 유도
+        if let collectionView = firstAvailableViewController()?.view.subviews
+            .first(where: { $0 is UICollectionView }) as? UICollectionView
+        {
+            UIView.performWithoutAnimation {
+                collectionView.collectionViewLayout.invalidateLayout()
+            }
+        }
+    }
+}
+
+private extension UIView {
+    func firstAvailableViewController() -> UIViewController? {
+        var responder: UIResponder? = self
+        while responder != nil {
+            if let viewController = responder as? UIViewController {
+                return viewController
+            }
+            responder = responder?.next
+        }
+        return nil
     }
 }

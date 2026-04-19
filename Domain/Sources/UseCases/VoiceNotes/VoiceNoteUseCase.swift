@@ -22,9 +22,15 @@ public protocol VoiceNoteUseCase: Sendable {
     /// 음성 메모 정보를 업데이트합니다.
     func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote
 
-    /// 오디오 파일을 분석하여 전사·키워드·요약 결과를 반환합니다.
-    func summarize(audioFilePath: String, language: Language) async throws(VoiceNoteUseCaseError)
-        -> AudioToSummaryResult
+    /// 오디오 파일을 전사하여 Transcript를 반환합니다.
+    func transcribe(audioFilePath: String) async throws(VoiceNoteUseCaseError) -> Transcript
+
+    /// Transcript를 분석하여 키워드와 요약을 반환합니다.
+    func summarize(transcript: Transcript, language: Language) async throws(VoiceNoteUseCaseError)
+        -> (keywords: [Keyword], summary: Summary)
+
+    /// ID로 음성 메모를 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote>
 }
 
 /// 음성 메모 통합 유스케이스 구현체.
@@ -134,7 +140,8 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
             keywords: voiceNote.keywords,
             transcript: voiceNote.transcript,
             summary: voiceNote.summary,
-            deletedAt: voiceNote.deletedAt
+            deletedAt: voiceNote.deletedAt,
+            analysisState: voiceNote.analysisState
         )
 
         do {
@@ -144,27 +151,38 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         }
     }
 
-    // MARK: - Analysis (Summarize)
+    // MARK: - Observe
 
-    public func summarize(audioFilePath: String, language: Language) async throws(VoiceNoteUseCaseError)
-        -> AudioToSummaryResult
-    {
+    public func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote> {
+        do {
+            return try repository.observe(id: id)
+        } catch {
+            throw VoiceNoteUseCaseError(error)
+        }
+    }
+
+    // MARK: - Transcribe
+
+    public func transcribe(audioFilePath: String) async throws(VoiceNoteUseCaseError) -> Transcript {
         do {
             try Task.checkCancellation()
+            return try await sttRepository.transcribe(audioFilePath: audioFilePath)
+        } catch {
+            if Task.isCancelled { throw .cancelled }
+            AppLogger.error(error)
+            throw VoiceNoteUseCaseError.analysisFailed(error)
+        }
+    }
 
-            let transcript = try await sttRepository.transcribe(audioFilePath: audioFilePath)
+    // MARK: - Summarize
 
+    public func summarize(
+        transcript: Transcript,
+        language: Language
+    ) async throws(VoiceNoteUseCaseError) -> (keywords: [Keyword], summary: Summary) {
+        do {
             try Task.checkCancellation()
-
-            let (keywords, summary) = try await summaryRepository.summarize(transcript: transcript, language: language)
-
-            try Task.checkCancellation()
-
-            return AudioToSummaryResult(
-                transcript: transcript,
-                keywords: keywords,
-                summary: summary
-            )
+            return try await summaryRepository.summarize(transcript: transcript, language: language)
         } catch {
             if Task.isCancelled { throw .cancelled }
             AppLogger.error(error)

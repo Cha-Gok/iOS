@@ -106,37 +106,64 @@ extension VoiceNoteUseCaseTest {
     }
 }
 
-// MARK: - Summarize
+// MARK: - Transcribe
 
 extension VoiceNoteUseCaseTest {
-    func test_summarize_정상호출시_STT및요약을순차적으로수행한다() async throws {
+    func test_transcribe_정상호출시_전사본을반환한다() async throws {
         let sut = makeSUT()
         let audioPath = "test.m4a"
         let transcript = Transcript.stub(text: "전사본")
-        let summary = Summary.stub(text: "요약본")
-        let keywords = [Keyword.stub(word: "키워드")]
 
         await sut.sttRepository.setResult(.success(transcript))
         await sut.sttRepository.expectTranscribe(callCount: 1, audioFilePath: audioPath)
 
-        await sut.summaryRepository.setResult(.success((keywords, summary)))
-        await sut.summaryRepository.expectSummarize(callCount: 1, transcriptText: transcript.text)
+        let result = try await sut.useCase.transcribe(audioFilePath: audioPath)
 
-        let result = try await sut.useCase.summarize(audioFilePath: audioPath, language: .ko)
-
-        XCTAssertEqual(result.transcript.text, "전사본")
-        XCTAssertEqual(result.summary.text, "요약본")
-        XCTAssertEqual(result.keywords.first?.word, "키워드")
+        XCTAssertEqual(result.text, "전사본")
         await sut.sttRepository.verify()
-        await sut.summaryRepository.verify()
     }
 
-    func test_summarize_STT실패시_analysisFailed에러를던진다() async {
+    func test_transcribe_STT실패시_analysisFailed에러를던진다() async {
         let sut = makeSUT()
         await sut.sttRepository.setResult(.failure(.transcribeFailed))
 
         do {
-            _ = try await sut.useCase.summarize(audioFilePath: "test.m4a", language: .ko)
+            _ = try await sut.useCase.transcribe(audioFilePath: "test.m4a")
+            XCTFail("에러가 발생해야 합니다.")
+        } catch {
+            guard case VoiceNoteUseCaseError.analysisFailed = error else {
+                return XCTFail("잘못된 에러 타입: \(error)")
+            }
+        }
+    }
+}
+
+// MARK: - Summarize
+
+extension VoiceNoteUseCaseTest {
+    func test_summarize_정상호출시_키워드와요약을반환한다() async throws {
+        let sut = makeSUT()
+        let transcript = Transcript.stub(text: "전사본")
+        let summary = Summary.stub(text: "요약본")
+        let keywords = [Keyword.stub(word: "키워드")]
+
+        await sut.summaryRepository.setResult(.success((keywords, summary)))
+        await sut.summaryRepository.expectSummarize(callCount: 1, transcriptText: transcript.text)
+
+        let result = try await sut.useCase.summarize(transcript: transcript, language: .ko)
+
+        XCTAssertEqual(result.summary.text, "요약본")
+        XCTAssertEqual(result.keywords.first?.word, "키워드")
+        await sut.summaryRepository.verify()
+    }
+
+    func test_summarize_요약실패시_analysisFailed에러를던진다() async {
+        let sut = makeSUT()
+        let transcript = Transcript.stub(text: "전사본")
+        await sut.summaryRepository.setResult(.failure(.summarizeFailed))
+
+        do {
+            _ = try await sut.useCase.summarize(transcript: transcript, language: .ko)
             XCTFail("에러가 발생해야 합니다.")
         } catch {
             guard case VoiceNoteUseCaseError.analysisFailed = error else {

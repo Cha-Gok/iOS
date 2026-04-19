@@ -35,11 +35,11 @@ public final class MoveFolderListViewModel {
         case .view(let viewAction):
             switch viewAction {
             case .onAppear:
-                Task { await fetchFolders() }
+                fetchFolders()
             case .folderSelected(let folder):
                 state.selectedFolder = folder
             case .moveButtonTapped:
-                Task { await moveVoiceNote() }
+                moveVoiceNote()
             case .closeButtonTapped:
                 coordinator?.dismiss()
             case .addFolderButtonTapped:
@@ -53,9 +53,9 @@ public final class MoveFolderListViewModel {
         }
     }
 
-    private func fetchFolders() async {
+    private func fetchFolders() {
         do {
-            var voiceNote: VoiceNote = switch receive {
+            let voiceNote: VoiceNote = switch receive {
             case .single(let item):
                 item
             case .multiple(let items):
@@ -69,7 +69,7 @@ public final class MoveFolderListViewModel {
         }
     }
 
-    private func moveVoiceNote() async {
+    private func moveVoiceNote() {
         guard let selectedFolder = state.selectedFolder else { return }
         do {
             switch receive {
