@@ -45,17 +45,11 @@ final class ScriptContentView: UIView, UIContentView {
         return view
     }()
 
-    private let textLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
     private lazy var textView: UITextView = {
         let textView = UITextView()
         textView.backgroundColor = .clear
-        textView.isEditable = true
+        textView.isEditable = false
+        textView.isSelectable = false
         textView.isScrollEnabled = false
         textView.textContainerInset = .zero
         textView.textContainer.lineFragmentPadding = 0
@@ -86,6 +80,7 @@ final class ScriptContentView: UIView, UIContentView {
     private func setupUI() {
         addSubview(timeLabel)
         addSubview(textBackground)
+        textBackground.addSubview(textView)
 
         addGestureRecognizer(tapGesture)
 
@@ -97,7 +92,12 @@ final class ScriptContentView: UIView, UIContentView {
             textBackground.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: 8),
             textBackground.leadingAnchor.constraint(equalTo: leadingAnchor),
             textBackground.trailingAnchor.constraint(equalTo: trailingAnchor),
-            textBackground.bottomAnchor.constraint(equalTo: bottomAnchor)
+            textBackground.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+            textView.topAnchor.constraint(equalTo: textBackground.topAnchor, constant: 8),
+            textView.bottomAnchor.constraint(equalTo: textBackground.bottomAnchor, constant: -8),
+            textView.leadingAnchor.constraint(equalTo: textBackground.leadingAnchor, constant: 8),
+            textView.trailingAnchor.constraint(equalTo: textBackground.trailingAnchor, constant: -8)
         ])
     }
 
@@ -115,53 +115,30 @@ final class ScriptContentView: UIView, UIContentView {
         timeLabel.setTypography(text: config.timestamp, style: .caption)
         tapGesture.isEnabled = !config.isEditing
 
-        installContentView(isEditing: config.isEditing)
+        textView.isEditable = config.isEditing
+        textView.isSelectable = config.isEditing
 
-        if config.isEditing {
-            if textView.text != config.text {
-                applyTextViewTypography(text: config.text, color: textViewColor(isHighlighted: config.isHighlighted))
-            }
+        let color = textColor(isHighlighted: config.isHighlighted)
+        if textView.text != config.text {
+            applyTypography(text: config.text, color: color)
         } else {
-            textLabel.setTypography(text: config.text, style: .body1)
+            textView.textColor = color
+            textView.typingAttributes[.foregroundColor] = color
         }
-
-        applyHighlight(isHighlighted: config.isHighlighted, isEditing: config.isEditing)
+        textBackground.backgroundColor = config.isHighlighted
+            ? UIColor.point600.withAlphaComponent(0.3)
+            : .clear
     }
 
-    private func applyTextViewTypography(text: String, color: UIColor) {
+    private func applyTypography(text: String, color: UIColor) {
         var attributes = Typography.body1.textAttributes
         attributes[.foregroundColor] = color
         textView.attributedText = NSAttributedString(string: text, attributes: attributes)
         textView.typingAttributes = attributes
     }
 
-    private func textViewColor(isHighlighted: Bool) -> UIColor {
+    private func textColor(isHighlighted: Bool) -> UIColor {
         isHighlighted ? .white : UIColor.gray600
-    }
-
-    private func installContentView(isEditing: Bool) {
-        let contentView: UIView = isEditing ? textView : textLabel
-        guard contentView.superview !== textBackground else { return }
-
-        textBackground.subviews.forEach { $0.removeFromSuperview() }
-        textBackground.addSubview(contentView)
-        NSLayoutConstraint.activate([
-            contentView.topAnchor.constraint(equalTo: textBackground.topAnchor, constant: 8),
-            contentView.bottomAnchor.constraint(equalTo: textBackground.bottomAnchor, constant: -8),
-            contentView.leadingAnchor.constraint(equalTo: textBackground.leadingAnchor, constant: 8),
-            contentView.trailingAnchor.constraint(equalTo: textBackground.trailingAnchor, constant: -8)
-        ])
-    }
-
-    // MARK: - Highlight
-
-    private func applyHighlight(isHighlighted: Bool, isEditing: Bool) {
-        textBackground.backgroundColor = isHighlighted ? UIColor.point600.withAlphaComponent(0.3) : .clear
-        if isEditing {
-            applyTextViewTypography(text: textView.text ?? "", color: textViewColor(isHighlighted: isHighlighted))
-        } else {
-            textLabel.textColor = isHighlighted ? .white : UIColor.gray600
-        }
     }
 }
 
