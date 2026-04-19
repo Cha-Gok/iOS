@@ -35,6 +35,7 @@ final class ScriptContentView: UIView, UIContentView {
         let label = UILabel()
         label.textColor = UIColor.gray600
         label.isUserInteractionEnabled = true
+        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
@@ -64,15 +65,7 @@ final class ScriptContentView: UIView, UIContentView {
         return textView
     }()
 
-    private let containerStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 8
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
-    }()
-
-    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(timestampTapped))
+    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(cellTapped))
 
     // MARK: - Init
 
@@ -91,23 +84,25 @@ final class ScriptContentView: UIView, UIContentView {
     // MARK: - Setup
 
     private func setupUI() {
-        containerStack.addArrangedSubview(timeLabel)
-        containerStack.addArrangedSubview(textBackground)
-        addSubview(containerStack)
+        addSubview(timeLabel)
+        addSubview(textBackground)
 
-        containerStack.addGestureRecognizer(tapGesture)
-        containerStack.isUserInteractionEnabled = true
+        addGestureRecognizer(tapGesture)
 
         NSLayoutConstraint.activate([
-            containerStack.topAnchor.constraint(equalTo: topAnchor),
-            containerStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
-            containerStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
-            containerStack.bottomAnchor.constraint(equalTo: bottomAnchor)
+            timeLabel.topAnchor.constraint(equalTo: topAnchor),
+            timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
+            timeLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
+
+            textBackground.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: 8),
+            textBackground.leadingAnchor.constraint(equalTo: leadingAnchor),
+            textBackground.trailingAnchor.constraint(equalTo: trailingAnchor),
+            textBackground.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 
     @objc
-    private func timestampTapped() {
+    private func cellTapped() {
         guard let config = configuration as? ScriptContentConfiguration,
               !config.isEditing else { return }
         config.onTimestampTapped?(config.timestampSeconds)
@@ -153,8 +148,8 @@ final class ScriptContentView: UIView, UIContentView {
         NSLayoutConstraint.activate([
             contentView.topAnchor.constraint(equalTo: textBackground.topAnchor, constant: 8),
             contentView.bottomAnchor.constraint(equalTo: textBackground.bottomAnchor, constant: -8),
-            contentView.leadingAnchor.constraint(equalTo: textBackground.leadingAnchor, constant: 12),
-            contentView.trailingAnchor.constraint(equalTo: textBackground.trailingAnchor, constant: -12)
+            contentView.leadingAnchor.constraint(equalTo: textBackground.leadingAnchor, constant: 8),
+            contentView.trailingAnchor.constraint(equalTo: textBackground.trailingAnchor, constant: -8)
         ])
     }
 
