@@ -60,6 +60,7 @@ final class ScriptContentView: UIView, UIContentView {
         textView.isScrollEnabled = false
         textView.textContainerInset = .zero
         textView.textContainer.lineFragmentPadding = 0
+        textView.layoutManager.usesFontLeading = false
         textView.delegate = self
         textView.translatesAutoresizingMaskIntoConstraints = false
         return textView
