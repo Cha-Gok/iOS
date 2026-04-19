@@ -122,4 +122,13 @@ public final class AppDIContainer {
     public func makeNewFolderViewModel() -> NewFolderViewModel {
         return NewFolderViewModel(folderUseCase: folderUseCase)
     }
+
+    #if DEBUG
+        public func seedDebugDataIfNeeded() {
+            DebugSeeder(
+                folderRepository: folderRepository,
+                voiceNoteRepository: voiceNoteRepository
+            ).seedIfNeeded()
+        }
+    #endif
 }
