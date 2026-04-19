@@ -13,7 +13,11 @@ extension VoiceNoteViewController {
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
             let topInset: CGFloat = Section(rawValue: sectionIndex) == .metadata ? 24 : 12
             section.contentInsets = NSDirectionalEdgeInsets(top: topInset, leading: 20, bottom: 32, trailing: 20)
-            if Section(rawValue: sectionIndex) == .scripts { section.interGroupSpacing = 16 }
+            switch Section(rawValue: sectionIndex) {
+            case .keyPoints: section.interGroupSpacing = 6
+            case .scripts: section.interGroupSpacing = 16
+            default: break
+            }
             section.boundarySupplementaryItems.forEach { $0.pinToVisibleBounds = false }
             return section
         }
