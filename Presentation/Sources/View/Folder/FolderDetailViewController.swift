@@ -383,7 +383,6 @@ private extension FolderDetailViewController {
                 print("더 보기 버튼 탭됨")
             case .single, .all:
                 // TODO: 삭제 로직 실행
-                print("삭제 버튼 탭됨")
                 vm.openAlertView()
             }
         }
@@ -398,7 +397,13 @@ private extension FolderDetailViewController {
                 print("검색 버튼 탭됨")
             case .all, .single:
                 // TODO: 이동 로직 실행
-                vm.presentMoveFolder()
+                vm.presentMoveFolder() { [weak self] name in
+                    self?.vm.fetchItems()
+                    self?.chagokBackgroundView.makeToast(
+                        type: .normal,
+                        "`\(name)` 폴더로 이동됐어요."
+                    )
+                }
                 vm.setSelectionMode(.none)
             }
         }
