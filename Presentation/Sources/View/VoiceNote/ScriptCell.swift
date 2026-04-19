@@ -1,11 +1,11 @@
+import Core
 import UIKit
 
 // MARK: - ScriptContentConfiguration
 
 struct ScriptContentConfiguration: UIContentConfiguration {
     var sectionIndex: Int = 0
-    var timestamp: String = ""
-    var timestampSeconds: TimeInterval = 0
+    var timestamp: TimeInterval = 0
     var text: String = ""
     var isHighlighted: Bool = false
     var isEditing: Bool = false
@@ -34,7 +34,6 @@ final class ScriptContentView: UIView, UIContentView {
     private let timeLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor.gray600
-        label.isUserInteractionEnabled = true
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -106,14 +105,14 @@ final class ScriptContentView: UIView, UIContentView {
     private func cellTapped() {
         guard let config = configuration as? ScriptContentConfiguration,
               !config.isEditing else { return }
-        config.onTap?(config.timestampSeconds)
+        config.onTap?(config.timestamp)
     }
 
     // MARK: - Apply
 
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? ScriptContentConfiguration else { return }
-        timeLabel.setTypography(text: config.timestamp, style: .caption)
+        timeLabel.setTypography(text: config.timestamp.durationString, style: .caption)
         tapGesture.isEnabled = !config.isEditing
 
         textView.isEditable = config.isEditing
@@ -152,4 +151,52 @@ extension ScriptContentView: UITextViewDelegate {
         config.onTextEdited?(config.sectionIndex, text)
         config.onTextHeightChanged?()
     }
+}
+
+// MARK: - Preview
+
+@MainActor
+private func makeScriptCellPreview() -> UIView {
+    let normalConfig = ScriptContentConfiguration(
+        sectionIndex: 0,
+        timestamp: 0,
+        text: "일반 상태의 스크립트 텍스트입니다."
+    )
+    let highlightedConfig = ScriptContentConfiguration(
+        sectionIndex: 1,
+        timestamp: 12,
+        text: "현재 재생 중인 하이라이트 상태의 스크립트입니다.",
+        isHighlighted: true
+    )
+    let editingConfig = ScriptContentConfiguration(
+        sectionIndex: 2,
+        timestamp: 24,
+        text: "편집 모드의 스크립트 — 탭하여 수정할 수 있습니다.",
+        isEditing: true
+    )
+
+    let normalCell = ScriptContentView(configuration: normalConfig)
+    let highlightedCell = ScriptContentView(configuration: highlightedConfig)
+    let editingCell = ScriptContentView(configuration: editingConfig)
+
+    let stack = UIStackView(arrangedSubviews: [normalCell, highlightedCell, editingCell])
+    stack.axis = .vertical
+    stack.spacing = 16
+    stack.translatesAutoresizingMaskIntoConstraints = false
+
+    let container = UIView()
+    container.backgroundColor = .gray100
+    container.addSubview(stack)
+
+    NSLayoutConstraint.activate([
+        stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+        stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+    ])
+
+    return container
+}
+
+#Preview {
+    makeScriptCellPreview()
 }

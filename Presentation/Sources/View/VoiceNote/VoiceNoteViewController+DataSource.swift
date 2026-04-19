@@ -50,8 +50,7 @@ extension VoiceNoteViewController {
 
             cell.contentConfiguration = ScriptContentConfiguration(
                 sectionIndex: index,
-                timestamp: section.formattedTimestamp,
-                timestampSeconds: section.timestamp,
+                timestamp: section.timestamp,
                 text: section.text,
                 isHighlighted: isHighlighted,
                 isEditing: viewModel.editingMode == .script,
