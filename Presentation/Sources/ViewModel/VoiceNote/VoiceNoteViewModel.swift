@@ -13,8 +13,6 @@ public final class VoiceNoteViewModel {
     public private(set) var isEditing: Bool = false
     public private(set) var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
     public private(set) var playingParagraphInfo: PlayingParagraphInfo?
-    /// State가 struct이 아니므로 let으로 선언해 참조 안정성을 보장합니다.
-    public let playbackHighlight = PlaybackHighlight()
     public private(set) var editableScriptSections: [ScriptSection] = []
 
     @ObservationIgnored
@@ -336,7 +334,6 @@ public final class VoiceNoteViewModel {
         guard !sections.isEmpty else {
             guard playingParagraphInfo != nil else { return }
             playingParagraphInfo = nil
-            playbackHighlight.playingParagraphInfo = nil
             return
         }
 
@@ -349,7 +346,6 @@ public final class VoiceNoteViewModel {
         }
         guard playingParagraphInfo != newInfo else { return }
         playingParagraphInfo = newInfo
-        playbackHighlight.playingParagraphInfo = newInfo
     }
 
     private static func groupSegmentsIntoSections(_ segments: [TranscriptSegment]) -> [ScriptSection] {
@@ -425,11 +421,6 @@ public extension VoiceNoteViewModel {
 // MARK: - Nested Types
 
 public extension VoiceNoteViewModel {
-    @Observable
-    final class PlaybackHighlight {
-        public var playingParagraphInfo: PlayingParagraphInfo?
-    }
-
     struct PlayingParagraphInfo: Equatable {
         public let sectionIndex: Int
         public let paragraphIndex: Int

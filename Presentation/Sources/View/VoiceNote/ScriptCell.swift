@@ -7,7 +7,7 @@ struct ScriptContentConfiguration: UIContentConfiguration {
     var timestamp: String = ""
     var timestampSeconds: TimeInterval = 0
     var paragraphs: [String] = []
-    var highlight: VoiceNoteViewModel.PlaybackHighlight?
+    var highlightedParagraphIndex: Int?
     var isEditing: Bool = false
     var onParagraphEdited: ((Int, Int, String) -> Void)?
     /// 타임스탬프 탭 콜백
@@ -97,15 +97,6 @@ final class ScriptContentView: UIView, UIContentView {
         config.onTimestampTapped?(config.timestampSeconds)
     }
 
-    // MARK: - UIView Update Cycle
-
-    /// @Observable PlaybackHighlight를 자동 추적합니다.
-    /// playingParagraphInfo가 변경될 때마다 UIKit이 재호출합니다.
-    override func updateProperties() {
-        super.updateProperties()
-        updateHighlight()
-    }
-
     // MARK: - Apply
 
     private func apply(configuration: UIContentConfiguration) {
@@ -165,18 +156,10 @@ final class ScriptContentView: UIView, UIContentView {
             }
         }
         
-        // 뷰 구성 직후 현재 하이라이트 상태 즉시 적용
-        updateHighlight()
+        applyHighlight(paragraphIndex: config.highlightedParagraphIndex)
     }
 
     // MARK: - Highlight
-
-    private func updateHighlight() {
-        guard let config = configuration as? ScriptContentConfiguration else { return }
-        let info = config.highlight?.playingParagraphInfo
-        let index = info?.sectionIndex == config.sectionIndex ? info?.paragraphIndex : nil
-        applyHighlight(paragraphIndex: index)
-    }
 
     private func applyHighlight(paragraphIndex: Int?) {
         for (index, row) in paragraphRows.enumerated() {

@@ -195,6 +195,24 @@ private extension VoiceNoteViewController {
         observeAnalysisState()
         observeErrorMessage()
         observeEditingState()
+        observePlayingParagraph()
+    }
+
+    private func observePlayingParagraph() {
+        withObservationTracking {
+            _ = viewModel.playingParagraphInfo
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                let scriptItems = self.dataSource.snapshot().itemIdentifiers(inSection: .scripts)
+                if !scriptItems.isEmpty {
+                    var snapshot = self.dataSource.snapshot()
+                    snapshot.reconfigureItems(scriptItems)
+                    self.dataSource.apply(snapshot, animatingDifferences: false)
+                }
+                self.observePlayingParagraph()
+            }
+        }
     }
 
     private func observePlaybackState() {
@@ -350,13 +368,15 @@ private extension VoiceNoteViewController {
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
             guard let self, case .script(let index) = item else { return }
             let section = viewModel.scriptSections[index]
+            let info = viewModel.playingParagraphInfo
+            let highlightedParagraphIndex = info?.sectionIndex == index ? info?.paragraphIndex : nil
 
             cell.contentConfiguration = ScriptContentConfiguration(
                 sectionIndex: index,
                 timestamp: section.formattedTimestamp,
                 timestampSeconds: section.timestamp,
                 paragraphs: section.paragraphs,
-                highlight: viewModel.playbackHighlight,
+                highlightedParagraphIndex: highlightedParagraphIndex,
                 isEditing: viewModel.isEditing,
                 onParagraphEdited: { [weak self] sIdx, pIdx, text in
                     self?.viewModel.updateScriptParagraph(sectionIndex: sIdx, paragraphIndex: pIdx, text: text)
