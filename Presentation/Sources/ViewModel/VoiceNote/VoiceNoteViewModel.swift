@@ -395,7 +395,7 @@ public extension VoiceNoteViewModel {
     }
 
     var keywords: [String] {
-        voiceNote.keywords.map(\.word)
+        voiceNote.keywords.map(\.word).sorted()
     }
 
     var keyPoints: [KeyPoint] {
