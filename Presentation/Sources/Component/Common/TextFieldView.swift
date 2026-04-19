@@ -4,11 +4,7 @@ final class TextFieldView: UIView {
     // MARK: - Properties
 
     var field: Field
-
-    // 키보드 상태 변화를 알리기 위한 콜백
-    var onEditingDidBegin: (() -> Void)?
-    var onEditingDidEnd: (() -> Void)?
-
+    
     // MARK: - Componenet
 
     private let container: UIStackView = {
@@ -43,9 +39,6 @@ final class TextFieldView: UIView {
         tf.layer.cornerRadius = 8
         tf.textColor = .gray950
         tf.font = Typography.body1.font
-        // UITextField는 한 줄 입력 요소이므로 줄간격(paragraphStyle)이나
-        // baselineOffset이 들어가면 자체 수직 정렬(Center Y) 계산과 충돌해 텍스트가 살짝 아래로 처집니다.
-        // 따라서 폰트, 글자색상, 자간(kern)만 명시적으로 넣어줍니다.
         tf.defaultTextAttributes = [
             .font: Typography.body1.font,
             .foregroundColor: UIColor.gray950,
@@ -67,6 +60,16 @@ final class TextFieldView: UIView {
         label.textColor = .gray600
         label.numberOfLines = 0
         return label
+    }()
+    
+    private lazy var textCount: UILabel = {
+        let text = UILabel()
+        text.translatesAutoresizingMaskIntoConstraints = false
+        text.setTypography(text: field.textCountLabel, style: .label)
+        text.textColor = UIColor.gray750
+        text.numberOfLines = 0
+        text.setContentCompressionResistancePriority(.required, for: .vertical)
+        return text
     }()
 
     private let bottomContainer: UIStackView = {
@@ -132,6 +135,8 @@ final class TextFieldView: UIView {
         }
         primaryButton.isEnabled = field.isSubmitEnabled
         updatePlaceholderVisibility()
+        // error Message
+        updateErrorMessageLabel()
     }
 
     // MARK: - Setup
@@ -152,7 +157,9 @@ final class TextFieldView: UIView {
         container.addArrangedSubview(titleLabel)
         container.addArrangedSubview(subTitleLabel)
         container.addArrangedSubview(textField)
-        container.setCustomSpacing(24, after: textField)
+        container.setCustomSpacing(8, after: textField)
+        container.addArrangedSubview(textCount)
+        container.setCustomSpacing(24, after: textCount)
         container.addArrangedSubview(bottomContainer)
         addSubview(container)
         textField.addSubview(placeholderLabel)
@@ -178,15 +185,31 @@ final class TextFieldView: UIView {
         primaryButton.setCapsuleCornerRadius()
         updatePlaceholderVisibility()
     }
-
-    private func updatePlaceholderVisibility() {
-        placeholderLabel.isHidden = !field.text.isEmpty
-    }
-
+    
     @objc
     private func textFieldDidChange() {
         field.text = textField.text ?? ""
+        field.errorMessage = nil
+        textCount.setTypography(text: field.textCountLabel, style: .label)
+        textCount.textColor = field.text.count >= 50 ? .danger : .gray750
         updatePlaceholderVisibility()
+    }
+}
+
+// MARK: - Update Method
+extension TextFieldView {
+    private func updatePlaceholderVisibility() {
+        placeholderLabel.isHidden = !field.text.isEmpty
+    }
+    
+    private func updateErrorMessageLabel() {
+        if let errorMessage = field.errorMessage {
+            textCount.setTypography(text: errorMessage, style: .label)
+            textCount.textColor = .danger
+        } else {
+            textCount.setTypography(text: field.textCountLabel, style: .label)
+            textCount.textColor = field.text.count >= 50 ? .danger : .gray750
+        }
     }
 }
 
@@ -200,21 +223,27 @@ extension TextFieldView {
         var subTitle: String
         var placeHolder: String
         var text: String
-
-        var trimmedText: String {
-            text.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
+        var errorMessage: String?
 
         var isSubmitEnabled: Bool {
-            !trimmedText.isEmpty
+            !text.isEmpty
+        }
+        
+        var textCountLabel: String {
+            "\(text.count)/\(50)"
+        }
+        
+        var textCountOverCheck: Bool {
+            text.count > 50
         }
 
-        init(mode: Mode, title: String, subTitle: String, placeHolder: String, text: String = "") {
+        init(mode: Mode, title: String, subTitle: String, placeHolder: String, text: String = "", errorMessage: String?) {
             self.mode = mode
             self.title = title
             self.subTitle = subTitle
             self.placeHolder = placeHolder
             self.text = text
+            self.errorMessage = errorMessage
         }
     }
 
@@ -232,11 +261,9 @@ extension TextFieldView: UITextFieldDelegate {
         return true
     }
 
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        onEditingDidBegin?()
-    }
-
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        onEditingDidEnd?()
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        guard let currentText = textField.text as NSString? else { return true }
+        let updatedText = currentText.replacingCharacters(in: range, with: string)
+        return updatedText.count <= 50
     }
 }
