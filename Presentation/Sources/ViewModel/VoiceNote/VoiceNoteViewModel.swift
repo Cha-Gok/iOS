@@ -58,91 +58,19 @@ public final class VoiceNoteViewModel {
 
     // MARK: - View Actions
 
-    public func send(_ action: Action) {
-        switch action {
-        case .view(let viewAction):
-            switch viewAction {
-            case .onAppear:
-                setupPalyback()
-                fetchFolderName()
-                observeVoiceNote()
-                switch state.voiceNote.analysisState {
-                case .pending, .failed:
-                    state.voiceNote.analysisState = .analyzing
-                    Task { await performTranscription() }
-                case .transcribed:
-                    state.voiceNote.analysisState = .analyzing
-                    Task { await performSummarization() }
-                case .analyzing, .completed:
-                    break
-                }
-            case .onDisappear:
-                // 재생 중단 및 리소스 해제
-                stop()
-            case .playPauseButtonTapped:
-                // 현재 재생 중이면 일시정지, 아니면 재생
-                if state.currentPlaybackState.status == .playing {
-                    pause()
-                } else {
-                    play()
-                }
-            case .rewindButtonTapped:
-                // 현재 위치에서 skipInterval만큼 뒤로 이동
-                seek(to: state.currentPlaybackState.currentTime - Policy.playbackSkipInterval)
-            case .forwardButtonTapped:
-                // 현재 위치에서 skipInterval만큼 앞으로 이동
-                seek(to: state.currentPlaybackState.currentTime + Policy.playbackSkipInterval)
-            case .seekBegan:
-                // 슬라이더 드래그 시작 — 재생 중이었으면 일시정지하고 상태 보존
-                wasPlayingBeforeSeek = state.currentPlaybackState.status == .playing
-                if wasPlayingBeforeSeek { pause() }
-            case .seekEnded(let time):
-                // 슬라이더 드래그 종료 — 목표 위치로 이동 후 드래그 전 재생 상태 복원
-                seek(to: time)
-                if wasPlayingBeforeSeek {
-                    wasPlayingBeforeSeek = false
-                    play()
-                }
-            case .scriptTimestampTapped(let time):
-                // 스크립트 타임스탬프 탭 — 해당 시간으로 이동 후 재생
-                seek(to: time)
-                play()
-            case .pop:
-                coordinator?.pop()
-            case .moveVoiceNoteButtonTapped:
-                coordinator?.presentFolderList(with: .single(state.voiceNote))
-            case .editButtonTapped:
-                state.isEditing = true
-            case .doneButtonTapped:
-                state.isEditing = false
-            // TODO: 제목 저장 구현 필요
-            case .deleteVoiceNoteButtonTapped:
-                moveToWasteBasket()
-            }
-
-        case .internal(let internalAction):
-            switch internalAction {
-            case .metadataLoaded(let folderName):
-                state.folderName = folderName
-            case .voiceNoteObserved(let note):
-                let folderChanged = state.voiceNote.folderID != note.folderID
-                state.voiceNote = note
-                if folderChanged { fetchFolderName() }
-            case .analysisFailed(let message):
-                // AI 분석 실패 — 에러 메시지 표시
-                state.errorMessage = message
-                state.voiceNote.analysisState = .failed
-            case .playbackStateChanged(let playbackState):
-                // 재생 진행 스트림에서 수신한 최신 상태 반영
-                state.currentPlaybackState = playbackState
-                state.updatePlayingParagraph()
-            case .errorOccurred(let message):
-                // 재생 제어 중 에러 발생 — 알럿 표시
-                state.errorMessage = message
-            case .errorDismissed:
-                // 에러 알럿 닫기
-                state.errorMessage = nil
-            }
+    public func onAppear() {
+        setupPlayback()
+        fetchFolderName()
+        observeVoiceNote()
+        switch voiceNote.analysisState {
+        case .pending, .failed:
+            voiceNote.analysisState = .analyzing
+            Task { await performTranscription() }
+        case .transcribed:
+            voiceNote.analysisState = .analyzing
+            Task { await performSummarization() }
+        case .analyzing, .completed:
+            break
         }
     }
 
@@ -189,7 +117,7 @@ public final class VoiceNoteViewModel {
     }
 
     public func moveVoiceNote() {
-        coordinator?.presentFolderList(with: voiceNote)
+        coordinator?.presentFolderList(with: .single(voiceNote))
     }
 
     public func enterEditing() {
