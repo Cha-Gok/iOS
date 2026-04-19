@@ -219,6 +219,19 @@ private extension VoiceNoteViewController {
         observeEditingState()
         observePlayingParagraph()
         observeScriptEdits()
+        observeTranscriptSections()
+    }
+
+    private func observeTranscriptSections() {
+        withObservationTracking {
+            _ = viewModel.voiceNote.transcript?.sections
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.applySnapshot()
+                self.observeTranscriptSections()
+            }
+        }
     }
 
     private func observeScriptEdits() {
@@ -351,7 +364,7 @@ private extension VoiceNoteViewController {
     }
 
     func exitEditMode() {
-        titleTextField.resignFirstResponder()
+        view.endEditing(true)
         titleLabel.text = viewModel.title
         titleLabel.isHidden = false
         navigationItem.titleView = titleLabel
