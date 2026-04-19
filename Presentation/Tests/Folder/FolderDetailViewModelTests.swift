@@ -18,7 +18,7 @@ final class MockFolderDetailCoordinatorDelegate: FolderDetailCoordinatorDelegate
         pushedVoiceNote = voiceNote
     }
 
-    func presentFolderList(with receive: Receive, dismiss: (() -> Void)?) {
+    func presentFolderList(with receive: Receive, dismiss: ((String) -> Void)?) {
         presentFolderListCalled = true
     }
 }
@@ -97,7 +97,7 @@ final class FolderDetailViewModelTests: XCTestCase {
         let note = VoiceNote.stub(title: "테스트 노트")
 
         sut.viewModel.selectItem(note)
-        sut.viewModel.presentMoveFolder()
+        sut.viewModel.presentMoveFolder { _ in }
 
         XCTAssertTrue(sut.mockCoordinator.presentFolderListCalled)
     }
@@ -105,7 +105,7 @@ final class FolderDetailViewModelTests: XCTestCase {
     func test_presentMoveFolder_버튼탭시_선택항목없으면_무시() {
         let sut = makeSUT()
 
-        sut.viewModel.presentMoveFolder()
+        sut.viewModel.presentMoveFolder { _ in }
 
         XCTAssertFalse(sut.mockCoordinator.presentFolderListCalled)
     }

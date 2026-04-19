@@ -17,7 +17,7 @@ public final class FolderViewModel {
     private(set) var showTextField: Bool = false
     private(set) var editFolder: Folder?
     private(set) var mode: TextFieldView.Mode = .create
-    private(set) var errorMessage: String? = nil
+    private(set) var errorMessage: String?
     public weak var coordinator: FolderCoordinatorDelegate?
 
     // MARK: - Dependencies

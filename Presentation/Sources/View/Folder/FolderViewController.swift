@@ -192,16 +192,15 @@ public final class FolderViewController: CollectionViewController {
             for: .touchUpInside
         )
     }
-
-    
 }
 
 // MARK: - Update Method
+
 extension FolderViewController {
     private func updateErrorMessage() {
         textField.field.errorMessage = vm.errorMessage
     }
-    
+
     private func syncTextFieldField() {
         textField.field.mode = vm.mode
 

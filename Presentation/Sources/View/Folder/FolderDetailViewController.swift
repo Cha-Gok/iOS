@@ -397,7 +397,7 @@ private extension FolderDetailViewController {
                 print("검색 버튼 탭됨")
             case .all, .single:
                 // TODO: 이동 로직 실행
-                vm.presentMoveFolder() { [weak self] name in
+                vm.presentMoveFolder { [weak self] name in
                     self?.vm.fetchItems()
                     self?.chagokBackgroundView.makeToast(
                         type: .normal,
