@@ -55,7 +55,7 @@ public final class MoveFolderListViewModel {
 
     private func fetchFolders() {
         do {
-            var voiceNote: VoiceNote = switch receive {
+           let voiceNote: VoiceNote = switch receive {
             case .single(let item):
                 item
             case .multiple(let items):
