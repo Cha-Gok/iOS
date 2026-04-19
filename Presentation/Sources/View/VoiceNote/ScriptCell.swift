@@ -117,7 +117,7 @@ final class ScriptContentView: UIView, UIContentView {
                     textView.text = para
                     textView.font = Typography.body1.font
                     textView.textColor = UIColor.gray950
-                    textView.backgroundColor = UIColor.gray100 // 편집 중임을 알기 쉽게 배경색 살짝 추가
+                    textView.backgroundColor = .clear
                     textView.layer.cornerRadius = 4
                     textView.isEditable = true
                     textView.isScrollEnabled = false
