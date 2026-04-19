@@ -58,7 +58,7 @@ extension VoiceNoteViewController {
                 onTextEdited: { [weak self] sIdx, text in
                     self?.viewModel.updateScriptSection(sectionIndex: sIdx, text: text)
                 },
-                onTimestampTapped: { [weak self] time in
+                onTap: { [weak self] time in
                     self?.viewModel.scriptTimestampTapped(time)
                 }
             )

@@ -23,12 +23,12 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         return btn
     }()
 
-    private lazy var editCancelButton: UIBarButtonItem = {
-        let item = UIBarButtonItem(image: .cornerUpLeft, primaryAction: UIAction { [weak self] _ in
+    private lazy var editCancelButton: UIBarButtonItem = UIBarButtonItem(
+        image: .cornerUpLeft,
+        primaryAction: UIAction { [weak self] _ in
             self?.viewModel.cancelEditing()
-        })
-        return item
-    }()
+        }
+    )
 
     private lazy var titleLabel: UILabel = {
         let label = UILabel()

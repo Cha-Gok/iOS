@@ -10,8 +10,7 @@ struct ScriptContentConfiguration: UIContentConfiguration {
     var isHighlighted: Bool = false
     var isEditing: Bool = false
     var onTextEdited: ((Int, String) -> Void)?
-    /// 타임스탬프 탭 콜백
-    var onTimestampTapped: ((TimeInterval) -> Void)?
+    var onTap: ((TimeInterval) -> Void)?
 
     func makeContentView() -> UIView & UIContentView {
         ScriptContentView(configuration: self)
@@ -106,7 +105,7 @@ final class ScriptContentView: UIView, UIContentView {
     private func cellTapped() {
         guard let config = configuration as? ScriptContentConfiguration,
               !config.isEditing else { return }
-        config.onTimestampTapped?(config.timestampSeconds)
+        config.onTap?(config.timestampSeconds)
     }
 
     // MARK: - Apply
