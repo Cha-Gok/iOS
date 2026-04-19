@@ -23,6 +23,13 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         return btn
     }()
 
+    private lazy var editCancelButton: UIBarButtonItem = {
+        let item = UIBarButtonItem(image: .cornerUpLeft, primaryAction: UIAction { [weak self] _ in
+            self?.viewModel.cancelEditing()
+        })
+        return item
+    }()
+
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = Typography.title1.font
@@ -71,6 +78,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         return item
     }()
 
+    private var normalLeftBarButtonItem: UIBarButtonItem?
     private var normalRightBarButtonItems: [UIBarButtonItem] = []
 
     lazy var collectionView: UICollectionView = {
@@ -174,7 +182,8 @@ private extension VoiceNoteViewController {
             action: nil
         )
         normalRightBarButtonItems = [moreItem, searchItem]
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backChevronButton)
+        normalLeftBarButtonItem = UIBarButtonItem(customView: backChevronButton)
+        navigationItem.leftBarButtonItem = normalLeftBarButtonItem
         navigationItem.titleView = titleLabel
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
@@ -207,6 +216,23 @@ private extension VoiceNoteViewController {
         observeErrorMessage()
         observeEditingState()
         observePlayingParagraph()
+        observeScriptEdits()
+    }
+
+    private func observeScriptEdits() {
+        withObservationTracking {
+            _ = viewModel.hasScriptEdits
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.updateEditCancelButtonTint()
+                self.observeScriptEdits()
+            }
+        }
+    }
+
+    private func updateEditCancelButtonTint() {
+        editCancelButton.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
     }
 
     private func observePlayingParagraph() {
@@ -315,6 +341,10 @@ private extension VoiceNoteViewController {
     }
 
     func enterScriptEditMode() {
+        navigationItem.titleView = nil
+        navigationItem.leftBarButtonItem = editCancelButton
+        navigationItem.rightBarButtonItems = [doneButton]
+        updateEditCancelButtonTint()
         reconfigureScriptsOnly()
     }
 
@@ -323,6 +353,7 @@ private extension VoiceNoteViewController {
         titleLabel.text = viewModel.title
         titleLabel.isHidden = false
         navigationItem.titleView = titleLabel
+        navigationItem.leftBarButtonItem = normalLeftBarButtonItem
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
         reconfigureScriptsOnly()

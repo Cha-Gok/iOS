@@ -412,6 +412,10 @@ public extension VoiceNoteViewModel {
         if editingMode == .script { return editableScriptSections }
         return voiceNote.transcript?.sections ?? []
     }
+
+    var hasScriptEdits: Bool {
+        editableScriptSections != (voiceNote.transcript?.sections ?? [])
+    }
 }
 
 // MARK: - Nested Types
