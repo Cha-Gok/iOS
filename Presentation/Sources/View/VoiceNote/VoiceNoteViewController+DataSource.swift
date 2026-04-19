@@ -58,6 +58,12 @@ extension VoiceNoteViewController {
                 onTextEdited: { [weak self] sIdx, text in
                     self?.viewModel.updateScriptSection(sectionIndex: sIdx, text: text)
                 },
+                onTextHeightChanged: { [weak self] in
+                    guard let self else { return }
+                    UIView.performWithoutAnimation {
+                        self.collectionView.collectionViewLayout.invalidateLayout()
+                    }
+                },
                 onTap: { [weak self] time in
                     self?.viewModel.scriptTimestampTapped(time)
                 }

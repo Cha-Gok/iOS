@@ -10,6 +10,7 @@ struct ScriptContentConfiguration: UIContentConfiguration {
     var isHighlighted: Bool = false
     var isEditing: Bool = false
     var onTextEdited: ((Int, String) -> Void)?
+    var onTextHeightChanged: (() -> Void)?
     var onTap: ((TimeInterval) -> Void)?
 
     func makeContentView() -> UIView & UIContentView {
@@ -149,26 +150,6 @@ extension ScriptContentView: UITextViewDelegate {
         guard let config = configuration as? ScriptContentConfiguration else { return }
         let text = textView.text ?? ""
         config.onTextEdited?(config.sectionIndex, text)
-
-        if let collectionView = firstAvailableViewController()?.view.subviews
-            .first(where: { $0 is UICollectionView }) as? UICollectionView
-        {
-            UIView.performWithoutAnimation {
-                collectionView.collectionViewLayout.invalidateLayout()
-            }
-        }
-    }
-}
-
-private extension UIView {
-    func firstAvailableViewController() -> UIViewController? {
-        var responder: UIResponder? = self
-        while responder != nil {
-            if let viewController = responder as? UIViewController {
-                return viewController
-            }
-            responder = responder?.next
-        }
-        return nil
+        config.onTextHeightChanged?()
     }
 }
