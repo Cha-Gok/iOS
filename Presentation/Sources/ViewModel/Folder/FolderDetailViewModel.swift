@@ -282,15 +282,25 @@ extension FolderDetailViewModel {
                 voiceNote
             }
 
+            func transcribe(audioFilePath: String) async throws(VoiceNoteUseCaseError) -> Transcript {
+                Transcript(text: "")
+            }
+
             func summarize(
-                audioFilePath: String,
+                transcript: Transcript,
                 language: Language
-            ) async throws(VoiceNoteUseCaseError) -> AudioToSummaryResult {
-                AudioToSummaryResult(
-                    transcript: Transcript(text: ""),
-                    keywords: [],
-                    summary: Summary(text: "")
-                )
+            ) async throws(VoiceNoteUseCaseError) -> (keywords: [Keyword], summary: Summary) {
+                (keywords: [], summary: Summary(text: ""))
+            }
+
+            func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote> {
+                guard let item = items.first(where: { $0.id == id }) else {
+                    throw .recordNotFound(id)
+                }
+                return AsyncStream { continuation in
+                    continuation.yield(item)
+                    continuation.finish()
+                }
             }
         }
 
