@@ -44,7 +44,8 @@ public final class FolderViewController: CollectionViewController {
             mode: .create,
             title: "새 폴더",
             subTitle: "새로 만들 폴더의 이름을\n입력해주세요.",
-            placeHolder: "폴더 이름을 적어주세요"
+            placeHolder: "폴더 이름을 적어주세요",
+            errorMessage: vm.errorMessage
         ),
         cancelButton: cancelButton,
         primaryButton: primaryButton
@@ -88,8 +89,15 @@ public final class FolderViewController: CollectionViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        syncTextFieldField()
+        // textField
         textField.isHidden = !vm.showTextField
+        if vm.showTextField {
+            view.bringSubviewToFront(textField)
+        }
+        syncTextFieldField()
+        // error Message
+        updateErrorMessage()
+        // DataSource
         updateDataSource()
     }
 
@@ -107,9 +115,10 @@ public final class FolderViewController: CollectionViewController {
             containerGuide.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             containerGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
             textField.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-            textField.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.35),
+            textField.centerYAnchor.constraint(equalTo: containerGuide.centerYAnchor),
             textField.centerXAnchor.constraint(equalTo: containerGuide.centerXAnchor),
-            textField.centerYAnchor.constraint(equalTo: containerGuide.centerYAnchor)
+            textField.topAnchor.constraint(greaterThanOrEqualTo: containerGuide.topAnchor, constant: 20),
+            textField.bottomAnchor.constraint(lessThanOrEqualTo: containerGuide.bottomAnchor, constant: -20)
         ])
     }
 
@@ -169,8 +178,7 @@ public final class FolderViewController: CollectionViewController {
         primaryButton.addAction(
             UIAction { [weak self] _ in
                 guard let self else { return }
-                let name = textField.field.trimmedText
-                guard !name.isEmpty else { return }
+                let name = textField.field.text
 
                 switch vm.mode {
                 case .create:
@@ -184,6 +192,14 @@ public final class FolderViewController: CollectionViewController {
             for: .touchUpInside
         )
     }
+}
+
+// MARK: - Update Method
+
+extension FolderViewController {
+    private func updateErrorMessage() {
+        textField.field.errorMessage = vm.errorMessage
+    }
 
     private func syncTextFieldField() {
         textField.field.mode = vm.mode
@@ -193,6 +209,7 @@ public final class FolderViewController: CollectionViewController {
             textField.field.title = "새 폴더"
             textField.field.subTitle = "새로 만들 폴더의 이름을\n입력해주세요."
             textField.field.placeHolder = "폴더 이름을 적어주세요"
+            textField.field.errorMessage = vm.errorMessage
             if !vm.showTextField {
                 textField.field.text = ""
             }
@@ -200,6 +217,7 @@ public final class FolderViewController: CollectionViewController {
             textField.field.title = "폴더 이름 수정"
             textField.field.subTitle = "수정할 폴더의 이름을\n입력해주세요."
             textField.field.placeHolder = "폴더 이름을 적어주세요"
+            textField.field.errorMessage = vm.errorMessage
             textField.field.text = vm.editFolder?.name ?? ""
         }
     }

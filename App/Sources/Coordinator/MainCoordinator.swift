@@ -162,7 +162,7 @@ extension MainCoordinator: BaseCoordinatorDelegate {
     }
 
     // TODO: Present 폴더 이동 시트 ( 사용 화면 - 음성 노트, 개인 폴더 )
-    func presentFolderList(with receive: Receive, dismiss: (() -> Void)?) {
+    func presentFolderList(with receive: Receive, dismiss: ((String) -> Void)?) {
         let viewModel = dependencyContainer.makeMoveFolderListViewModel(receive: receive, dismiss: dismiss)
         viewModel.coordinator = self
         let viewController = MoveFolderListViewController(viewModel: viewModel)

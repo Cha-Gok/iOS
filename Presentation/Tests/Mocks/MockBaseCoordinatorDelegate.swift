@@ -6,7 +6,7 @@ final class MockBaseCoordinatorDelegate: BaseCoordinatorDelegate {
     var popCalled = false
     var presentFolderListCalled = false
 
-    func presentFolderList(with: Presentation.Receive, dismiss: (() -> Void)?) {
+    func presentFolderList(with: Presentation.Receive, dismiss: ((String) -> Void)?) {
         presentFolderListCalled = true
     }
 

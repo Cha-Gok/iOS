@@ -107,7 +107,10 @@ public final class AppDIContainer {
         )
     }
 
-    public func makeMoveFolderListViewModel(receive: Receive, dismiss: (() -> Void)? = nil) -> MoveFolderListViewModel {
+    public func makeMoveFolderListViewModel(
+        receive: Receive,
+        dismiss: ((String) -> Void)? = nil
+    ) -> MoveFolderListViewModel {
         return MoveFolderListViewModel(
             receive: receive,
             folderUseCase: folderUseCase,

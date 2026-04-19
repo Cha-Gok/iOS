@@ -16,7 +16,7 @@ final class MockFolderCoordinatorDelegate: FolderCoordinatorDelegate {
         pushedFolder = folder
     }
 
-    func presentFolderList(with receive: Receive, dismiss: (() -> Void)?) {}
+    func presentFolderList(with receive: Receive, dismiss: ((String) -> Void)?) {}
 }
 
 @MainActor

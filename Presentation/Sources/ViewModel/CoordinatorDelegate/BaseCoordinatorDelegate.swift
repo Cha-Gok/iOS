@@ -6,7 +6,7 @@ public protocol BaseCoordinatorDelegate: AnyObject {
     /// 뒤로가기
     func pop()
     /// 폴더 Sheet 열기
-    func presentFolderList(with: Receive, dismiss: (() -> Void)?)
+    func presentFolderList(with: Receive, dismiss: ((String) -> Void)?)
 }
 
 public enum Receive: Hashable {

@@ -16,13 +16,13 @@ public final class MoveFolderListViewModel {
     private let receive: Receive
     private let folderUseCase: any FolderUseCase
     private let voiceNoteUseCase: any VoiceNoteUseCase
-    private let onDismiss: (() -> Void)?
+    private let onDismiss: ((String) -> Void)?
 
     public init(
         receive: Receive,
         folderUseCase: any FolderUseCase,
         voiceNoteUseCase: any VoiceNoteUseCase,
-        onDismiss: (() -> Void)? = nil
+        onDismiss: ((String) -> Void)? = nil
     ) {
         self.receive = receive
         self.folderUseCase = folderUseCase
@@ -83,7 +83,7 @@ public final class MoveFolderListViewModel {
                     _ = try voiceNoteUseCase.update(voiceNote)
                 }
             }
-            onDismiss?()
+            onDismiss?(selectedFolder.name)
             coordinator?.dismiss()
         } catch {
             AppLogger.error(error)

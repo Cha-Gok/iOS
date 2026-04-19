@@ -95,11 +95,9 @@ extension FolderDetailViewModel {
     }
 
     /// 폴더 이동 Present
-    func presentMoveFolder() {
+    func presentMoveFolder(dismiss: @escaping (String) -> Void) {
         guard !selectedItems.isEmpty else { return }
-        coordinator?.presentFolderList(with: .multiple(selectedItems), dismiss: { [weak self] in
-            self?.fetchItems()
-        })
+        coordinator?.presentFolderList(with: .multiple(selectedItems), dismiss: dismiss)
     }
 
     /// 전체 선택
