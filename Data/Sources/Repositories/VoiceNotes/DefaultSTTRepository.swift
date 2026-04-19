@@ -108,15 +108,9 @@ public actor DefaultSTTRepository: STTRepository {
             guard let result, result.isFinal else { return }
 
             let transcription = result.bestTranscription
-            let segments = transcription.segments.map {
-                TranscriptSegment(
-                    substring: $0.substring,
-                    timestamp: $0.timestamp,
-                    duration: $0.duration
-                )
-            }
-            let transcript = Transcript(text: transcription.formattedString, segments: segments)
-            AppLogger.info("음성 전사가 완료되었습니다. 글자 수: \(transcript.text.count)")
+            let sections = Self.groupIntoSections(transcription.segments)
+            let transcript = Transcript(sections: sections)
+            AppLogger.info("음성 전사가 완료되었습니다. 섹션 수: \(sections.count)")
             Task { await self.finishTask(transcript) }
         }
     }
@@ -142,6 +136,36 @@ public actor DefaultSTTRepository: STTRepository {
         currentTask = nil
         AppLogger.info("음성 전사가 취소되었습니다.")
         continuation?.resume(throwing: STTRepositoryError.cancelled)
+    }
+
+    private static func groupIntoSections(_ segments: [SFTranscriptionSegment]) -> [TranscriptSection] {
+        guard let first = segments.first else { return [] }
+
+        var sections: [TranscriptSection] = []
+        var currentTimestamp = first.timestamp
+        var currentWords: [String] = [first.substring]
+
+        for i in 1 ..< segments.count {
+            let prev = segments[i - 1]
+            let curr = segments[i]
+            let gap = curr.timestamp - (prev.timestamp + prev.duration)
+
+            if gap > Policy.scriptGroupingPauseThreshold {
+                let text = currentWords.joined(separator: " ")
+                sections.append(TranscriptSection(timestamp: currentTimestamp, text: text))
+                currentTimestamp = curr.timestamp
+                currentWords = [curr.substring]
+            } else {
+                currentWords.append(curr.substring)
+            }
+        }
+
+        if !currentWords.isEmpty {
+            let text = currentWords.joined(separator: " ")
+            sections.append(TranscriptSection(timestamp: currentTimestamp, text: text))
+        }
+
+        return sections
     }
 
     private func mapToRepositoryError(from error: Error) -> STTRepositoryError {

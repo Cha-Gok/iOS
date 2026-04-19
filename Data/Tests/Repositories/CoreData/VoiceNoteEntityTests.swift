@@ -55,7 +55,7 @@ final class VoiceNoteEntityTests: XCTestCase {
             Keyword(noteID: UUID(), word: "Swift"),
             Keyword(noteID: UUID(), word: "CoreData")
         ]
-        let transcript = Transcript(text: "안녕하세요, 테스트입니다.")
+        let transcript = Transcript(sections: [TranscriptSection(timestamp: 0, text: "안녕하세요, 테스트입니다.")])
         let summary = Summary(text: "테스트 요약")
 
         let voiceNote = makeVoiceNote(
@@ -93,7 +93,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         XCTAssertTrue(fetchedWords.contains("CoreData"))
 
         // Then — 중첩 관계: Transcript & Summary
-        XCTAssertEqual(fetched.transcript?.text, "안녕하세요, 테스트입니다.")
+        XCTAssertEqual(fetched.transcript?.sections.first?.text, "안녕하세요, 테스트입니다.")
         XCTAssertEqual(fetched.summary?.text, "테스트 요약")
     }
 
@@ -144,7 +144,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         _ = try store.create(voiceNote, as: VoiceNoteEntity.self)
 
         // When — Transcript를 추가하여 update
-        let transcript = Transcript(text: "전사 완료된 텍스트")
+        let transcript = Transcript(sections: [TranscriptSection(timestamp: 0, text: "전사 완료된 텍스트")])
         let updatedNote = VoiceNote(
             id: voiceNote.id,
             title: voiceNote.title,
@@ -162,7 +162,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         // Then
         let fetched = try store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
         XCTAssertNotNil(fetched.transcript)
-        XCTAssertEqual(fetched.transcript?.text, "전사 완료된 텍스트")
+        XCTAssertEqual(fetched.transcript?.sections.first?.text, "전사 완료된 텍스트")
     }
 
     // MARK: - Update: Transcript 생성 후 Summary + Keywords 추가
@@ -173,7 +173,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         let folder = Folder(name: "폴더")
         _ = try store.create(folder, as: FolderEntity.self)
 
-        let transcript = Transcript(text: "전사된 텍스트")
+        let transcript = Transcript(sections: [TranscriptSection(timestamp: 0, text: "전사된 텍스트")])
         let voiceNote = makeVoiceNote(
             title: "비즈니스 시나리오",
             folderID: folder.id,
@@ -203,7 +203,7 @@ final class VoiceNoteEntityTests: XCTestCase {
 
         // Then
         let fetched = try store.fetch(byID: voiceNote.id, as: VoiceNoteEntity.self)
-        XCTAssertEqual(fetched.transcript?.text, "전사된 텍스트")
+        XCTAssertEqual(fetched.transcript?.sections.first?.text, "전사된 텍스트")
         XCTAssertEqual(fetched.summary?.text, "요약 텍스트")
         XCTAssertEqual(fetched.keywords.count, 2)
         let words = Set(fetched.keywords.map(\.word))
@@ -438,7 +438,7 @@ final class VoiceNoteEntityTests: XCTestCase {
         let folder = Folder(name: "폴더")
         _ = try store.create(folder, as: FolderEntity.self)
 
-        let transcript = Transcript(text: "삭제될 전사본")
+        let transcript = Transcript(sections: [TranscriptSection(timestamp: 0, text: "삭제될 전사본")])
         let voiceNote = makeVoiceNote(
             title: "전사본 삭제",
             folderID: folder.id,

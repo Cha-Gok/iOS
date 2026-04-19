@@ -2,8 +2,8 @@ import Domain
 import UIKit
 
 public final class VoiceNoteViewController: UIViewController, Alertable {
-    private let viewModel: VoiceNoteViewModel
-    private lazy var dataSource = makeDataSource()
+    let viewModel: VoiceNoteViewModel
+    lazy var dataSource = makeDataSource()
 
     // MARK: - UI Components
 
@@ -22,6 +22,13 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         }, for: .touchUpInside)
         return btn
     }()
+
+    private lazy var editCancelButton: UIBarButtonItem = UIBarButtonItem(
+        image: .cornerUpLeft,
+        primaryAction: UIAction { [weak self] _ in
+            self?.viewModel.cancelEditing()
+        }
+    )
 
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -71,12 +78,14 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         return item
     }()
 
+    private var normalLeftBarButtonItem: UIBarButtonItem?
     private var normalRightBarButtonItems: [UIBarButtonItem] = []
 
-    private lazy var collectionView: UICollectionView = {
+    lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
+        collectionView.keyboardDismissMode = .interactive
         return collectionView
     }()
 
@@ -98,6 +107,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         super.viewDidLoad()
         setupUI()
         applySnapshot()
+        registerKeyboardObservers()
         viewModel.onAppear()
     }
 
@@ -174,7 +184,8 @@ private extension VoiceNoteViewController {
             action: nil
         )
         normalRightBarButtonItems = [moreItem, searchItem]
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backChevronButton)
+        normalLeftBarButtonItem = UIBarButtonItem(customView: backChevronButton)
+        navigationItem.leftBarButtonItem = normalLeftBarButtonItem
         navigationItem.titleView = titleLabel
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
@@ -207,11 +218,41 @@ private extension VoiceNoteViewController {
         observeErrorMessage()
         observeEditingState()
         observePlayingParagraph()
+        observeScriptEdits()
+        observeTranscriptSections()
+    }
+
+    private func observeTranscriptSections() {
+        withObservationTracking {
+            _ = viewModel.voiceNote.transcript?.sections
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.applySnapshot()
+                self.observeTranscriptSections()
+            }
+        }
+    }
+
+    private func observeScriptEdits() {
+        withObservationTracking {
+            _ = viewModel.hasScriptEdits
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.updateEditCancelButtonTint()
+                self.observeScriptEdits()
+            }
+        }
+    }
+
+    private func updateEditCancelButtonTint() {
+        editCancelButton.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
     }
 
     private func observePlayingParagraph() {
         withObservationTracking {
-            _ = viewModel.playingParagraphInfo
+            _ = viewModel.playingSectionIndex
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
@@ -315,14 +356,19 @@ private extension VoiceNoteViewController {
     }
 
     func enterScriptEditMode() {
+        navigationItem.titleView = nil
+        navigationItem.leftBarButtonItem = editCancelButton
+        navigationItem.rightBarButtonItems = [doneButton]
+        updateEditCancelButtonTint()
         reconfigureScriptsOnly()
     }
 
     func exitEditMode() {
-        titleTextField.resignFirstResponder()
+        view.endEditing(true)
         titleLabel.text = viewModel.title
         titleLabel.isHidden = false
         navigationItem.titleView = titleLabel
+        navigationItem.leftBarButtonItem = normalLeftBarButtonItem
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
         reconfigureScriptsOnly()
@@ -334,6 +380,69 @@ private extension VoiceNoteViewController {
         guard !scriptItems.isEmpty else { return }
         snapshot.reconfigureItems(scriptItems)
         dataSource.apply(snapshot, animatingDifferences: false)
+    }
+}
+
+// MARK: - Keyboard
+
+private extension VoiceNoteViewController {
+    func registerKeyboardObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillChangeFrame(_:)),
+            name: UIResponder.keyboardWillChangeFrameNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide(_:)),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+}
+
+extension VoiceNoteViewController {
+    @objc
+    fileprivate func keyboardWillChangeFrame(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let frameValue = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        let keyboardFrame = view.convert(frameValue.cgRectValue, from: nil)
+        let overlap = max(0, collectionView.frame.maxY - keyboardFrame.minY)
+        applyKeyboardInset(overlap, userInfo: userInfo)
+        scrollActiveResponderVisible()
+    }
+
+    @objc
+    fileprivate func keyboardWillHide(_ notification: Notification) {
+        applyKeyboardInset(0, userInfo: notification.userInfo)
+    }
+
+    private func applyKeyboardInset(_ bottom: CGFloat, userInfo: [AnyHashable: Any]?) {
+        let duration = (userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval) ?? 0.25
+        let curveRaw = (userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt)
+            ?? UInt(UIView.AnimationCurve.easeInOut.rawValue)
+        let options = UIView.AnimationOptions(rawValue: curveRaw << 16)
+        UIView.animate(withDuration: duration, delay: 0, options: options) {
+            self.collectionView.contentInset.bottom = bottom
+            self.collectionView.verticalScrollIndicatorInsets.bottom = bottom
+        }
+    }
+
+    private func scrollActiveResponderVisible() {
+        guard let responder = collectionView.activeFirstResponder() else { return }
+        let frameInCollection = responder.convert(responder.bounds, to: collectionView)
+        collectionView.scrollRectToVisible(frameInCollection.insetBy(dx: 0, dy: -16), animated: true)
+    }
+}
+
+private extension UIView {
+    func activeFirstResponder() -> UIView? {
+        if isFirstResponder { return self }
+        for subview in subviews {
+            if let found = subview.activeFirstResponder() { return found }
+        }
+        return nil
     }
 }
 
@@ -360,126 +469,6 @@ private extension VoiceNoteViewController {
     }
 }
 
-// MARK: - CollectionView Layout & DataSource
-
-private extension VoiceNoteViewController {
-    func makeLayout() -> UICollectionViewLayout {
-        UICollectionViewCompositionalLayout { sectionIndex, environment in
-            var config = UICollectionLayoutListConfiguration(appearance: .plain)
-            config.backgroundColor = .clear
-            config.showsSeparators = false
-            config.headerMode = Section(rawValue: sectionIndex) == .metadata ? .none : .supplementary
-
-            let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
-            let topInset: CGFloat = Section(rawValue: sectionIndex) == .metadata ? 24 : 12
-            section.contentInsets = NSDirectionalEdgeInsets(top: topInset, leading: 20, bottom: 32, trailing: 20)
-            if Section(rawValue: sectionIndex) == .scripts { section.interGroupSpacing = 16 }
-            section.boundarySupplementaryItems.forEach { $0.pinToVisibleBounds = false }
-            return section
-        }
-    }
-
-    func makeDataSource() -> UICollectionViewDiffableDataSource<Section, Item> {
-        let metadataCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
-            cell.contentConfiguration = MetadataContentConfiguration(
-                folderName: self?.viewModel.folderName ?? "",
-                date: self?.viewModel.metadataText1 ?? "",
-                duration: self?.viewModel.metadataText2 ?? ""
-            )
-        }
-
-        let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case .keyPoint(let number, let text) = item else { return }
-            cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
-        }
-
-        let keywordsCellReg = UICollectionView.CellRegistration<KeywordsCell, Item> { [weak self] cell, _, _ in
-            cell.contentConfiguration = KeywordsContentConfiguration(
-                keywords: self?.viewModel.keywords ?? []
-            )
-        }
-
-        let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard let self, case .script(let index) = item else { return }
-            let section = viewModel.scriptSections[index]
-            let info = viewModel.playingParagraphInfo
-            let highlightedParagraphIndex = info?.sectionIndex == index ? info?.paragraphIndex : nil
-
-            cell.contentConfiguration = ScriptContentConfiguration(
-                sectionIndex: index,
-                timestamp: section.formattedTimestamp,
-                timestampSeconds: section.timestamp,
-                paragraphs: section.paragraphs,
-                highlightedParagraphIndex: highlightedParagraphIndex,
-                isEditing: viewModel.editingMode == .script,
-                onParagraphEdited: { [weak self] sIdx, pIdx, text in
-                    self?.viewModel.updateScriptParagraph(sectionIndex: sIdx, paragraphIndex: pIdx, text: text)
-                },
-                onTimestampTapped: { [weak self] time in
-                    self?.viewModel.scriptTimestampTapped(time)
-                }
-            )
-        }
-
-        let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
-            collectionView: collectionView
-        ) { col, indexPath, item in
-            switch item {
-            case .metadata:
-                return col.dequeueConfiguredReusableCell(using: metadataCellReg, for: indexPath, item: item)
-            case .keyPoint:
-                return col.dequeueConfiguredReusableCell(using: keyPointCellReg, for: indexPath, item: item)
-            case .keywords:
-                return col.dequeueConfiguredReusableCell(using: keywordsCellReg, for: indexPath, item: item)
-            case .script:
-                return col.dequeueConfiguredReusableCell(using: scriptCellReg, for: indexPath, item: item)
-            }
-        }
-
-        let headerReg = makeHeaderRegistration()
-        dataSource.supplementaryViewProvider = { col, _, indexPath in
-            col.dequeueConfiguredReusableSupplementary(using: headerReg, for: indexPath)
-        }
-
-        return dataSource
-    }
-
-    func makeHeaderRegistration() -> UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView> {
-        UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView>(
-            elementKind: UICollectionView.elementKindSectionHeader
-        ) { header, _, indexPath in
-            guard let section = Section(rawValue: indexPath.section),
-                  let title = section.headerTitle else { return }
-
-            if section == .keyPoints {
-                let chip = ChipView(icon: UIImage(systemName: "arrow.clockwise"), text: "재생성")
-                header.configure(title: title, trailingView: chip)
-            } else {
-                header.configure(title: title)
-            }
-        }
-    }
-
-    func applySnapshot() {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        snapshot.appendSections(Section.allCases)
-
-        let metadataItems: [Item] = [.metadata]
-        let keyPointItems = viewModel.keyPoints.map { Item.keyPoint(number: $0.number, text: $0.text) }
-        let keywordItems: [Item] = [.keywords]
-        let scriptItems = viewModel.scriptSections.indices.map { Item.script(index: $0) }
-
-        snapshot.appendItems(metadataItems, toSection: .metadata)
-        snapshot.appendItems(keyPointItems, toSection: .keyPoints)
-        snapshot.appendItems(keywordItems, toSection: .keywords)
-        snapshot.appendItems(scriptItems, toSection: .scripts)
-
-        // 셀 내용이나 모드(isEditing)가 바뀌었을 수 있으므로 필요한 항목들을 재구성합니다.
-        snapshot.reconfigureItems(metadataItems + keywordItems + scriptItems)
-        dataSource.apply(snapshot, animatingDifferences: true)
-    }
-}
-
 // MARK: - UITextFieldDelegate
 
 extension VoiceNoteViewController: UITextFieldDelegate {
@@ -491,41 +480,5 @@ extension VoiceNoteViewController: UITextFieldDelegate {
     public func textFieldDidEndEditing(_ textField: UITextField) {
         guard viewModel.editingMode == .title else { return }
         viewModel.doneTitleEditing(title: textField.text ?? "")
-    }
-}
-
-// MARK: - Section / Item
-
-extension VoiceNoteViewController {
-    enum Section: Int, CaseIterable {
-        case metadata
-        case keyPoints
-        case keywords
-        case scripts
-
-        var title: String? {
-            switch self {
-            case .keyPoints: return "AI 요약"
-            case .keywords: return "키워드"
-            case .scripts: return "스크립트"
-            default: return nil
-            }
-        }
-
-        var headerTitle: String? {
-            switch self {
-            case .keyPoints: return "핵심 포인트"
-            case .keywords: return "키워드"
-            case .scripts: return "스크립트"
-            default: return nil
-            }
-        }
-    }
-
-    enum Item: Hashable {
-        case metadata
-        case keyPoint(number: Int, text: String)
-        case keywords
-        case script(index: Int)
     }
 }

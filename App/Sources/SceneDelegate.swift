@@ -17,6 +17,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         do {
             let dependencyContainer = try AppDIContainer()
+            #if DEBUG
+                dependencyContainer.seedDebugDataIfNeeded()
+            #endif
             appCoordinator = .init(
                 window: window,
                 dependencyContainer: dependencyContainer

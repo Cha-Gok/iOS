@@ -119,7 +119,7 @@ extension VoiceNoteUseCaseTest {
 
         let result = try await sut.useCase.transcribe(audioFilePath: audioPath)
 
-        XCTAssertEqual(result.text, "전사본")
+        XCTAssertEqual(result.sections.first?.text, "전사본")
         await sut.sttRepository.verify()
     }
 
@@ -148,7 +148,10 @@ extension VoiceNoteUseCaseTest {
         let keywords = [Keyword.stub(word: "키워드")]
 
         await sut.summaryRepository.setResult(.success((keywords, summary)))
-        await sut.summaryRepository.expectSummarize(callCount: 1, transcriptText: transcript.text)
+        await sut.summaryRepository.expectSummarize(
+            callCount: 1,
+            transcriptText: transcript.sections.map(\.text).joined(separator: "\n")
+        )
 
         let result = try await sut.useCase.summarize(transcript: transcript, language: .ko)
 

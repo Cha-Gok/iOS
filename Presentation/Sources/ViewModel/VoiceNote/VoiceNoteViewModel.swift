@@ -12,8 +12,8 @@ public final class VoiceNoteViewModel {
     public private(set) var errorMessage: String?
     public private(set) var editingMode: EditingMode?
     public private(set) var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
-    public private(set) var playingParagraphInfo: PlayingParagraphInfo?
-    public private(set) var editableScriptSections: [ScriptSection] = []
+    public private(set) var playingSectionIndex: Int?
+    public private(set) var editableScriptSections: [TranscriptSection] = []
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
@@ -123,6 +123,7 @@ public final class VoiceNoteViewModel {
     }
 
     public func enterScriptEditing() {
+        if currentPlaybackState.status == .playing { pause() }
         editableScriptSections = scriptSections
         editingMode = .script
     }
@@ -131,13 +132,13 @@ public final class VoiceNoteViewModel {
         editingMode = nil
     }
 
-    public func updateScriptParagraph(sectionIndex: Int, paragraphIndex: Int, text: String) {
-        guard sectionIndex < editableScriptSections.count,
-              paragraphIndex < editableScriptSections[sectionIndex].paragraphs.count else { return }
+    public func updateScriptSection(sectionIndex: Int, text: String) {
+        guard sectionIndex < editableScriptSections.count else { return }
         var sections = editableScriptSections
-        var paragraphs = sections[sectionIndex].paragraphs
-        paragraphs[paragraphIndex] = text
-        sections[sectionIndex] = ScriptSection(timestamp: sections[sectionIndex].timestamp, paragraphs: paragraphs)
+        sections[sectionIndex] = TranscriptSection(
+            timestamp: sections[sectionIndex].timestamp,
+            text: text
+        )
         editableScriptSections = sections
     }
 
@@ -202,17 +203,14 @@ public final class VoiceNoteViewModel {
     private func makeUpdatedTranscript() -> Transcript? {
         guard let original = voiceNote.transcript else { return nil }
 
-        let segments = editableScriptSections.flatMap { section in
-            section.paragraphs.map { pText in
-                TranscriptSegment(substring: pText, timestamp: section.timestamp, duration: 0)
-            }
+        let sections = editableScriptSections.filter {
+            !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
 
         return Transcript(
             id: original.id,
             createdAt: original.createdAt,
-            text: segments.map(\.substring).joined(separator: "\n"),
-            segments: segments
+            sections: sections
         )
     }
 
@@ -368,50 +366,18 @@ public final class VoiceNoteViewModel {
         let currentTime = currentPlaybackState.currentTime
         let sections = scriptSections
         guard !sections.isEmpty else {
-            guard playingParagraphInfo != nil else { return }
-            playingParagraphInfo = nil
+            guard playingSectionIndex != nil else { return }
+            playingSectionIndex = nil
             return
         }
 
-        var newInfo: PlayingParagraphInfo?
-        for (index, section) in sections.enumerated().reversed() {
-            if section.timestamp <= currentTime {
-                newInfo = PlayingParagraphInfo(sectionIndex: index, paragraphIndex: 0)
-                break
-            }
+        var newIndex: Int?
+        for (index, section) in sections.enumerated().reversed() where section.timestamp <= currentTime {
+            newIndex = index
+            break
         }
-        guard playingParagraphInfo != newInfo else { return }
-        playingParagraphInfo = newInfo
-    }
-
-    private static func groupSegmentsIntoSections(_ segments: [TranscriptSegment]) -> [ScriptSection] {
-        guard let first = segments.first else { return [] }
-
-        var sections: [ScriptSection] = []
-        var currentTimestamp = first.timestamp
-        var currentWords: [String] = [first.substring]
-
-        for i in 1 ..< segments.count {
-            let prev = segments[i - 1]
-            let curr = segments[i]
-            let gap = curr.timestamp - (prev.timestamp + prev.duration)
-
-            if gap > Policy.scriptGroupingPauseThreshold {
-                let paragraph = currentWords.joined(separator: " ")
-                sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
-                currentTimestamp = curr.timestamp
-                currentWords = [curr.substring]
-            } else {
-                currentWords.append(curr.substring)
-            }
-        }
-
-        if !currentWords.isEmpty {
-            let paragraph = currentWords.joined(separator: " ")
-            sections.append(ScriptSection(timestamp: currentTimestamp, paragraphs: [paragraph]))
-        }
-
-        return sections
+        guard playingSectionIndex != newIndex else { return }
+        playingSectionIndex = newIndex
     }
 }
 
@@ -434,7 +400,7 @@ public extension VoiceNoteViewModel {
     }
 
     var keywords: [String] {
-        voiceNote.keywords.map(\.word)
+        voiceNote.keywords.map(\.word).sorted()
     }
 
     var keyPoints: [KeyPoint] {
@@ -447,21 +413,19 @@ public extension VoiceNoteViewModel {
             .map { KeyPoint(number: $0.offset + 1, text: $0.element) }
     }
 
-    var scriptSections: [ScriptSection] {
+    var scriptSections: [TranscriptSection] {
         if editingMode == .script { return editableScriptSections }
-        guard let transcript = voiceNote.transcript, !transcript.segments.isEmpty else { return [] }
-        return Self.groupSegmentsIntoSections(transcript.segments)
+        return voiceNote.transcript?.sections ?? []
+    }
+
+    var hasScriptEdits: Bool {
+        editableScriptSections != (voiceNote.transcript?.sections ?? [])
     }
 }
 
 // MARK: - Nested Types
 
 public extension VoiceNoteViewModel {
-    struct PlayingParagraphInfo: Equatable {
-        public let sectionIndex: Int
-        public let paragraphIndex: Int
-    }
-
     enum EditingMode: Sendable {
         case title
         case script

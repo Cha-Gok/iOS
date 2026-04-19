@@ -34,7 +34,7 @@ public struct DefaultSummaryRepository: SummaryRepository {
                     Read the following transcript and generate keywords and a summary.
 
                     Transcript:
-                    \(transcript.text)
+                    \(transcript.sections.map(\.text).joined(separator: "\n"))
                     """,
                     generating: SummaryGenerationResult.self
                 )
