@@ -110,7 +110,7 @@ public final class RecordingViewModel {
             state.showAlert = false
         case .openAlertButtonTapped:
             state.showAlert = true
-        case let .errorOccurred(error):
+        case .errorOccurred(let error):
             state.errorMessage = error.localizedDescription
         }
     }

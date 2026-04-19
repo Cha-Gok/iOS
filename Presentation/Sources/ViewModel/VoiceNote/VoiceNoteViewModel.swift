@@ -10,7 +10,7 @@ public final class VoiceNoteViewModel {
     public private(set) var voiceNote: VoiceNote
     public private(set) var folderName: String = ""
     public private(set) var errorMessage: String?
-    public private(set) var isEditing: Bool = false
+    public private(set) var editingMode: EditingMode?
     public private(set) var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
     public private(set) var playingParagraphInfo: PlayingParagraphInfo?
     public private(set) var editableScriptSections: [ScriptSection] = []
@@ -118,9 +118,17 @@ public final class VoiceNoteViewModel {
         coordinator?.presentFolderList(with: .single(voiceNote))
     }
 
-    public func enterEditing() {
+    public func enterTitleEditing() {
+        editingMode = .title
+    }
+
+    public func enterScriptEditing() {
         editableScriptSections = scriptSections
-        isEditing = true
+        editingMode = .script
+    }
+
+    public func cancelEditing() {
+        editingMode = nil
     }
 
     public func updateScriptParagraph(sectionIndex: Int, paragraphIndex: Int, text: String) {
@@ -133,11 +141,11 @@ public final class VoiceNoteViewModel {
         editableScriptSections = sections
     }
 
-    public func doneEditing(title: String) {
+    public func doneTitleEditing(title: String) {
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedTitle.isEmpty, trimmedTitle != voiceNote.title else {
-            isEditing = false
+            editingMode = nil
             return
         }
 
@@ -149,29 +157,57 @@ public final class VoiceNoteViewModel {
             folderID: voiceNote.folderID,
             voiceRecord: voiceNote.voiceRecord,
             keywords: voiceNote.keywords,
-            transcript: makeUpdatedTranscript(),
+            transcript: voiceNote.transcript,
             summary: voiceNote.summary,
             analysisState: voiceNote.analysisState
         )
 
         do {
             _ = try voiceNoteUseCase.update(updatedNote)
-            self.voiceNote = updatedNote
-            isEditing = false
+            voiceNote = updatedNote
+            editingMode = nil
         } catch {
             errorMessage = "제목 수정에 실패했습니다: \(error.localizedDescription)"
         }
     }
 
+    public func doneScriptEditing() {
+        guard let updatedTranscript = makeUpdatedTranscript() else {
+            editingMode = nil
+            return
+        }
+
+        let updatedNote = VoiceNote(
+            id: voiceNote.id,
+            title: voiceNote.title,
+            createdAt: voiceNote.createdAt,
+            updatedAt: .now,
+            folderID: voiceNote.folderID,
+            voiceRecord: voiceNote.voiceRecord,
+            keywords: voiceNote.keywords,
+            transcript: updatedTranscript,
+            summary: voiceNote.summary,
+            analysisState: voiceNote.analysisState
+        )
+
+        do {
+            _ = try voiceNoteUseCase.update(updatedNote)
+            voiceNote = updatedNote
+            editingMode = nil
+        } catch {
+            errorMessage = "스크립트 수정에 실패했습니다: \(error.localizedDescription)"
+        }
+    }
+
     private func makeUpdatedTranscript() -> Transcript? {
         guard let original = voiceNote.transcript else { return nil }
-        
+
         let segments = editableScriptSections.flatMap { section in
             section.paragraphs.map { pText in
                 TranscriptSegment(substring: pText, timestamp: section.timestamp, duration: 0)
             }
         }
-        
+
         return Transcript(
             id: original.id,
             createdAt: original.createdAt,
@@ -412,7 +448,7 @@ public extension VoiceNoteViewModel {
     }
 
     var scriptSections: [ScriptSection] {
-        if isEditing { return editableScriptSections }
+        if editingMode == .script { return editableScriptSections }
         guard let transcript = voiceNote.transcript, !transcript.segments.isEmpty else { return [] }
         return Self.groupSegmentsIntoSections(transcript.segments)
     }
@@ -424,5 +460,10 @@ public extension VoiceNoteViewModel {
     struct PlayingParagraphInfo: Equatable {
         public let sectionIndex: Int
         public let paragraphIndex: Int
+    }
+
+    enum EditingMode: Sendable {
+        case title
+        case script
     }
 }

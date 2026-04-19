@@ -29,8 +29,16 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         label.textColor = UIColor.gray950
         label.lineBreakMode = .byTruncatingTail
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.isUserInteractionEnabled = true
+        let tap = UITapGestureRecognizer(target: self, action: #selector(titleLabelTapped))
+        label.addGestureRecognizer(tap)
         return label
     }()
+
+    @objc
+    private func titleLabelTapped() {
+        viewModel.enterTitleEditing()
+    }
 
     private lazy var titleTextField: UITextField = {
         let field = UITextField()
@@ -45,8 +53,14 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private lazy var doneButton: UIBarButtonItem = {
         let item = UIBarButtonItem(title: "완료", primaryAction: UIAction { [weak self] _ in
             guard let self else { return }
-            let title = titleTextField.text ?? ""
-            viewModel.doneEditing(title: title)
+            switch viewModel.editingMode {
+            case .title:
+                viewModel.doneTitleEditing(title: titleTextField.text ?? "")
+            case .script:
+                viewModel.doneScriptEditing()
+            case nil:
+                break
+            }
         })
         item.tintColor = UIColor.point800
         let paragraphStyle = NSMutableParagraphStyle()
@@ -146,7 +160,7 @@ private extension VoiceNoteViewController {
                 self?.viewModel.moveVoiceNote()
             }),
             UIAction(title: "편집하기", handler: { [weak self] _ in
-                self?.viewModel.enterEditing()
+                self?.viewModel.enterScriptEditing()
             }),
             UIAction(title: "삭제하기", attributes: .destructive, handler: { [weak self] _ in
                 self?.viewModel.deleteVoiceNote()
@@ -267,12 +281,11 @@ private extension VoiceNoteViewController {
 private extension VoiceNoteViewController {
     func observeEditingState() {
         withObservationTracking {
-            _ = viewModel.isEditing
+            _ = viewModel.editingMode
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                self.viewModel.isEditing ? self.enterEditMode() : self.exitEditMode()
-                self.applySnapshot()
+                self.applyEditingMode(self.viewModel.editingMode)
                 self.observeEditingState()
             }
         }
@@ -280,7 +293,18 @@ private extension VoiceNoteViewController {
 }
 
 private extension VoiceNoteViewController {
-    func enterEditMode() {
+    func applyEditingMode(_ mode: VoiceNoteViewModel.EditingMode?) {
+        switch mode {
+        case .title:
+            enterTitleEditMode()
+        case .script:
+            enterScriptEditMode()
+        case nil:
+            exitEditMode()
+        }
+    }
+
+    func enterTitleEditMode() {
         titleTextField.text = viewModel.title
         titleTextField.frame.size.width = view.bounds.width
         navigationItem.titleView = titleTextField
@@ -290,6 +314,10 @@ private extension VoiceNoteViewController {
         titleTextField.selectAll(nil)
     }
 
+    func enterScriptEditMode() {
+        reconfigureScriptsOnly()
+    }
+
     func exitEditMode() {
         titleTextField.resignFirstResponder()
         titleLabel.text = viewModel.title
@@ -297,6 +325,15 @@ private extension VoiceNoteViewController {
         navigationItem.titleView = titleLabel
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
+        reconfigureScriptsOnly()
+    }
+
+    func reconfigureScriptsOnly() {
+        var snapshot = dataSource.snapshot()
+        let scriptItems = snapshot.itemIdentifiers(inSection: .scripts)
+        guard !scriptItems.isEmpty else { return }
+        snapshot.reconfigureItems(scriptItems)
+        dataSource.apply(snapshot, animatingDifferences: false)
     }
 }
 
@@ -374,7 +411,7 @@ private extension VoiceNoteViewController {
                 timestampSeconds: section.timestamp,
                 paragraphs: section.paragraphs,
                 highlightedParagraphIndex: highlightedParagraphIndex,
-                isEditing: viewModel.isEditing,
+                isEditing: viewModel.editingMode == .script,
                 onParagraphEdited: { [weak self] sIdx, pIdx, text in
                     self?.viewModel.updateScriptParagraph(sectionIndex: sIdx, paragraphIndex: pIdx, text: text)
                 },
@@ -426,17 +463,17 @@ private extension VoiceNoteViewController {
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections(Section.allCases)
-        
+
         let metadataItems: [Item] = [.metadata]
         let keyPointItems = viewModel.keyPoints.map { Item.keyPoint(number: $0.number, text: $0.text) }
         let keywordItems: [Item] = [.keywords]
         let scriptItems = viewModel.scriptSections.indices.map { Item.script(index: $0) }
-        
+
         snapshot.appendItems(metadataItems, toSection: .metadata)
         snapshot.appendItems(keyPointItems, toSection: .keyPoints)
         snapshot.appendItems(keywordItems, toSection: .keywords)
         snapshot.appendItems(scriptItems, toSection: .scripts)
-        
+
         // 셀 내용이나 모드(isEditing)가 바뀌었을 수 있으므로 필요한 항목들을 재구성합니다.
         snapshot.reconfigureItems(metadataItems + keywordItems + scriptItems)
         dataSource.apply(snapshot, animatingDifferences: true)
@@ -447,16 +484,20 @@ private extension VoiceNoteViewController {
 
 extension VoiceNoteViewController: UITextFieldDelegate {
     public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        let title = textField.text ?? ""
-        viewModel.doneEditing(title: title)
+        viewModel.doneTitleEditing(title: textField.text ?? "")
         return true
+    }
+
+    public func textFieldDidEndEditing(_ textField: UITextField) {
+        guard viewModel.editingMode == .title else { return }
+        viewModel.doneTitleEditing(title: textField.text ?? "")
     }
 }
 
 // MARK: - Section / Item
 
 extension VoiceNoteViewController {
-    enum Section: Int, CaseIterable, Sendable {
+    enum Section: Int, CaseIterable {
         case metadata
         case keyPoints
         case keywords
@@ -481,7 +522,7 @@ extension VoiceNoteViewController {
         }
     }
 
-    enum Item: Hashable, Sendable {
+    enum Item: Hashable {
         case metadata
         case keyPoint(number: Int, text: String)
         case keywords

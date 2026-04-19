@@ -168,7 +168,7 @@ extension OnBoardingViewModel {
         Task {
             do {
                 languageRepository.saveLanguage(language)
-                _ = try  folderUseCase.createDefault()
+                _ = try folderUseCase.createDefault()
                 _ = checkFirstLaunchRepository.checkAndMarkFirstLaunch()
                 onBoardingCoordinator?.finishOnBoarding()
             } catch {

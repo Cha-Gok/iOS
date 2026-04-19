@@ -106,7 +106,8 @@ final class ScriptContentView: UIView, UIContentView {
 
         // 문단 내용이 바뀌거나 편집 모드가 전환될 때만 뷰 재구성
         let currentIsEditing = paragraphRows.first?.view is UITextView
-        let needsRebuild = paragraphRows.isEmpty || paragraphRows.count != config.paragraphs.count || currentIsEditing != config.isEditing
+        let needsRebuild = paragraphRows.isEmpty || paragraphRows.count != config.paragraphs
+            .count || currentIsEditing != config.isEditing
 
         if needsRebuild {
             paragraphsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
@@ -155,7 +156,7 @@ final class ScriptContentView: UIView, UIContentView {
                 }
             }
         }
-        
+
         applyHighlight(paragraphIndex: config.highlightedParagraphIndex)
     }
 
@@ -181,9 +182,11 @@ extension ScriptContentView: UITextViewDelegate {
         guard let config = configuration as? ScriptContentConfiguration else { return }
         let text = textView.text ?? ""
         config.onParagraphEdited?(config.sectionIndex, textView.tag, text)
-        
+
         // UITextView 높이가 바뀔 때 CollectionView 셀 높이를 재계산하도록 유도
-        if let collectionView = self.firstAvailableViewController()?.view.subviews.first(where: { $0 is UICollectionView }) as? UICollectionView {
+        if let collectionView = firstAvailableViewController()?.view.subviews
+            .first(where: { $0 is UICollectionView }) as? UICollectionView
+        {
             UIView.performWithoutAnimation {
                 collectionView.collectionViewLayout.invalidateLayout()
             }

@@ -32,11 +32,11 @@ public final class MoveFolderListViewModel {
 
     func send(_ action: Action) {
         switch action {
-        case let .view(viewAction):
+        case .view(let viewAction):
             switch viewAction {
             case .onAppear:
                 fetchFolders()
-            case let .folderSelected(folder):
+            case .folderSelected(let folder):
                 state.selectedFolder = folder
             case .moveButtonTapped:
                 moveVoiceNote()
@@ -45,9 +45,9 @@ public final class MoveFolderListViewModel {
             case .addFolderButtonTapped:
                 coordinator?.pushNewFolder()
             }
-        case let .internal(internalAction):
+        case .internal(let internalAction):
             switch internalAction {
-            case let .foldersLoaded(folders):
+            case .foldersLoaded(let folders):
                 state.folders = folders
             }
         }
@@ -55,7 +55,7 @@ public final class MoveFolderListViewModel {
 
     private func fetchFolders() {
         do {
-           let voiceNote: VoiceNote = switch receive {
+            let voiceNote: VoiceNote = switch receive {
             case .single(let item):
                 item
             case .multiple(let items):

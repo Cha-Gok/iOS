@@ -83,7 +83,7 @@ public actor DefaultSTTRepository: STTRepository {
         continuation: CheckedContinuation<Transcript, any Error>
     ) throws(STTRepositoryError) {
         guard !Task.isCancelled else { throw .cancelled }
-        
+
         guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "ko-KR")) else {
             AppLogger.error("SFSpeechRecognizer 초기화 실패 (ko-KR)")
             throw .transcribeFailed
@@ -170,7 +170,8 @@ public actor DefaultSTTRepository: STTRepository {
             return .transcribeFailed
         }
 
-        AppLogger.error("알 수 없는 전사 오류: \(error.localizedDescription) (Domain: \(nsError.domain), Code: \(nsError.code))")
+        AppLogger
+            .error("알 수 없는 전사 오류: \(error.localizedDescription) (Domain: \(nsError.domain), Code: \(nsError.code))")
         return .unknown(error)
     }
 }

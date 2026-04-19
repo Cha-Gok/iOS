@@ -1,5 +1,5 @@
-import Core
 @testable import Domain
+import Core
 import DomainTesting
 import XCTest
 
@@ -165,7 +165,7 @@ extension FolderUseCaseTest {
             _ = try sut.create(name: "Unknown Test")
             XCTFail("FolderUseCaseError.unknown 에러를 throw 해야 합니다.")
         } catch {
-            guard case let .unknown(wrappedError) = error else {
+            guard case .unknown(let wrappedError) = error else {
                 XCTFail(
                     "예상한 에러는 FolderUseCaseError.unknown 이지만, 실제 받은 에러는 \(error) 입니다."
                 )
@@ -190,7 +190,7 @@ extension FolderUseCaseTest {
             Folder.stub(name: "기본 폴더", isDeletable: false),
             Folder.stub(name: "휴지통에 있는 폴더", deletedAt: Date()),
             Folder.stub(name: "Folder 1", isDeletable: true),
-            Folder.stub(name: "Folder 2", isDeletable: true),
+            Folder.stub(name: "Folder 2", isDeletable: true)
         ]
         repository.setFetchAllResult(.success(expectedFolders))
         repository.expectFetchAll(callCount: 1)
@@ -215,7 +215,7 @@ extension FolderUseCaseTest {
             Folder.stub(name: "기본 폴더", isDeletable: false),
             Folder.stub(name: "휴지통에 있는 폴더", deletedAt: Date()),
             Folder.stub(name: "Folder 1", isDeletable: true),
-            Folder.stub(name: "Folder 2", isDeletable: true),
+            Folder.stub(name: "Folder 2", isDeletable: true)
         ]
         repository.setFetchAllResult(.success(expectedFolders))
         repository.expectFetchAll(callCount: 1)
