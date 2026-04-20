@@ -1,4 +1,5 @@
 import Domain
+import SwiftUI
 import UIKit
 
 public final class VoiceNoteViewController: UIViewController, Alertable {
@@ -14,6 +15,9 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         label.textColor = UIColor.gray950
         label.lineBreakMode = .byTruncatingTail
         label.numberOfLines = 1
+        label.isUserInteractionEnabled = true
+        let tap = UITapGestureRecognizer(target: self, action: #selector(titleLabelTapped))
+        label.addGestureRecognizer(tap)
         return label
     }()
 
@@ -27,19 +31,14 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         return field
     }()
 
-    private lazy var titleContainer: TitleContainerView = {
-        let container = TitleContainerView(label: titleLabel, textField: titleField)
-        let tap = UITapGestureRecognizer(target: self, action: #selector(titleContainerTapped))
-        container.addGestureRecognizer(tap)
-        return container
-    }()
+    private let titleContainerView = ExpandingTitleView()
 
     @objc
-    private func titleContainerTapped() {
+    private func titleLabelTapped() {
         viewModel.enterTitleEditing()
     }
 
-    private lazy var backBarButton: UIBarButtonItem = UIBarButtonItem(
+    private lazy var backBarButton: UIBarButtonItem = .init(
         image: UIImage(systemName: "chevron.left")?
             .withConfiguration(UIImage.SymbolConfiguration(weight: .bold)),
         primaryAction: UIAction { [weak self] _ in
@@ -47,12 +46,16 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         }
     )
 
-    private lazy var editCancelButton: UIBarButtonItem = UIBarButtonItem(
-        image: .cornerUpLeft,
-        primaryAction: UIAction { [weak self] _ in
-            self?.viewModel.cancelEditing()
-        }
-    )
+    private lazy var editCancelButton: UIBarButtonItem = {
+        let item = UIBarButtonItem(
+            image: .cornerUpLeft,
+            primaryAction: UIAction { [weak self] _ in
+                self?.viewModel.cancelEditing()
+            }
+        )
+        item.hidesSharedBackground = true
+        return item
+    }()
 
     private lazy var doneButton: UIBarButtonItem = {
         let item = UIBarButtonItem(title: "완료", primaryAction: UIAction { [weak self] _ in
@@ -67,6 +70,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
             }
         })
         item.tintColor = UIColor.point800
+        item.hidesSharedBackground = true
         return item
     }()
 
@@ -161,12 +165,33 @@ private extension VoiceNoteViewController {
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
+    }
+
+    func setupTitleContainerView() {
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleField.translatesAutoresizingMaskIntoConstraints = false
+
+        titleContainerView.addSubview(titleLabel)
+        titleContainerView.addSubview(titleField)
+
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: titleContainerView.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: titleContainerView.trailingAnchor),
+            titleLabel.topAnchor.constraint(equalTo: titleContainerView.topAnchor),
+            titleLabel.bottomAnchor.constraint(equalTo: titleContainerView.bottomAnchor),
+
+            titleField.leadingAnchor.constraint(equalTo: titleContainerView.leadingAnchor),
+            titleField.trailingAnchor.constraint(equalTo: titleContainerView.trailingAnchor),
+            titleField.topAnchor.constraint(equalTo: titleContainerView.topAnchor),
+            titleField.bottomAnchor.constraint(equalTo: titleContainerView.bottomAnchor),
         ])
     }
 
     func setupNavigationBar() {
         backBarButton.tintColor = UIColor.gray950
+        setupTitleContainerView()
         titleLabel.text = viewModel.title
         titleField.text = viewModel.title
         let menu = UIMenu(children: [
@@ -178,7 +203,7 @@ private extension VoiceNoteViewController {
             }),
             UIAction(title: "삭제하기", attributes: .destructive, handler: { [weak self] _ in
                 self?.viewModel.deleteVoiceNote()
-            })
+            }),
         ])
         let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: menu)
         let searchItem = UIBarButtonItem(
@@ -190,7 +215,7 @@ private extension VoiceNoteViewController {
         normalRightBarButtonItems = [moreItem, searchItem]
         normalLeftBarButtonItem = backBarButton
         navigationItem.leftBarButtonItem = normalLeftBarButtonItem
-        navigationItem.titleView = titleContainer
+        navigationItem.titleView = titleContainerView
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
@@ -334,13 +359,13 @@ private extension VoiceNoteViewController {
     func applyEditingMode(_ mode: VoiceNoteViewModel.EditingMode?) {
         switch mode {
         case .title:
+            titleField.text = viewModel.title
             titleLabel.isHidden = true
             titleField.isHidden = false
-            titleField.text = viewModel.title
             navigationItem.rightBarButtonItems = [doneButton]
             titleField.becomeFirstResponder()
         case .script:
-            navigationItem.titleView = nil
+            titleContainerView.isHidden = true
             navigationItem.leftBarButtonItem = editCancelButton
             navigationItem.rightBarButtonItems = [doneButton]
             editCancelButton.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
@@ -349,9 +374,9 @@ private extension VoiceNoteViewController {
         case nil:
             titleField.resignFirstResponder()
             titleLabel.text = viewModel.title
-            titleField.isHidden = true
             titleLabel.isHidden = false
-            navigationItem.titleView = titleContainer
+            titleField.isHidden = true
+            titleContainerView.isHidden = false
             navigationItem.leftBarButtonItem = normalLeftBarButtonItem
             navigationItem.rightBarButtonItems = normalRightBarButtonItems
             navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
@@ -396,36 +421,22 @@ private extension VoiceNoteViewController {
     }
 }
 
-// MARK: - TitleContainerView
+// MARK: - ExpandingTitleView
 
-private final class TitleContainerView: UIView {
-    let label: TypographyLabel
-    let textField: TypographyTextField
-
-    init(label: TypographyLabel, textField: TypographyTextField) {
-        self.label = label
-        self.textField = textField
-        super.init(frame: .zero)
-        addSubview(label)
-        addSubview(textField)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: leadingAnchor),
-            label.trailingAnchor.constraint(equalTo: trailingAnchor),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor),
-            textField.leadingAnchor.constraint(equalTo: leadingAnchor),
-            textField.trailingAnchor.constraint(equalTo: trailingAnchor),
-            textField.firstBaselineAnchor.constraint(equalTo: label.firstBaselineAnchor)
-        ])
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
-
+/// intrinsicContentSize의 width를 최대로 반환하여
+/// 네비게이션 바에서 좌측~우측 아이템 사이 전체를 채우는 컨테이너 뷰.
+private final class ExpandingTitleView: UIView {
     override var intrinsicContentSize: CGSize {
-        CGSize(width: 10000, height: UIView.noIntrinsicMetric)
+        let height = subviews.first(where: { !$0.isHidden })?.intrinsicContentSize.height
+            ?? super.intrinsicContentSize.height
+        return CGSize(width: UIView.layoutFittingExpandedSize.width, height: height)
     }
 }
+
+#if DEBUG
+    #Preview("보이스 노트") {
+        UINavigationController(
+            rootViewController: VoiceNoteViewController(viewModel: .preview())
+        )
+    }
+#endif
