@@ -37,7 +37,7 @@ extension VoiceNoteViewController {
             cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
         }
 
-        let keywordsCellReg = UICollectionView.CellRegistration<KeywordsCell, Item> { [weak self] cell, _, _ in
+        let keywordsCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
             cell.contentConfiguration = KeywordsContentConfiguration(
                 keywords: self?.viewModel.keywords ?? []
             )

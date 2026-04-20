@@ -81,22 +81,3 @@ final class KeywordsContentView: UIView, UIContentView {
         return yOffset + rowHeight
     }
 }
-
-final class KeywordsCell: UICollectionViewCell {
-    override func preferredLayoutAttributesFitting(_ layoutAttributes: UICollectionViewLayoutAttributes)
-        -> UICollectionViewLayoutAttributes
-    {
-        let attributes = super.preferredLayoutAttributesFitting(layoutAttributes)
-        let targetSize = CGSize(
-            width: layoutAttributes.frame.width,
-            height: UIView.layoutFittingCompressedSize.height
-        )
-        let size = contentView.systemLayoutSizeFitting(
-            targetSize,
-            withHorizontalFittingPriority: .required,
-            verticalFittingPriority: .fittingSizeLevel
-        )
-        attributes.frame.size.height = size.height
-        return attributes
-    }
-}
