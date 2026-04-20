@@ -52,6 +52,8 @@ final class KeyPointContentView: UIView, UIContentView {
         stack.axis = .horizontal
         stack.alignment = .center
         stack.spacing = 8
+        stack.isLayoutMarginsRelativeArrangement = true
+        stack.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
         return stack
     }()
 
@@ -86,10 +88,10 @@ final class KeyPointContentView: UIView, UIContentView {
             badgeView.widthAnchor.constraint(equalToConstant: 24),
             badgeView.heightAnchor.constraint(equalToConstant: 24),
 
-            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            contentStack.topAnchor.constraint(equalTo: topAnchor, constant: 8),
-            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
+            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            contentStack.topAnchor.constraint(equalTo: topAnchor),
+            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 
