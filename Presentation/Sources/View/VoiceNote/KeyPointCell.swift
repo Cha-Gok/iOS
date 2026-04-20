@@ -101,3 +101,36 @@ final class KeyPointContentView: UIView, UIContentView {
         textLabel.setTypography(text: config.text, style: .body1)
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    let firstConfig = KeyPointContentConfiguration(
+        number: 1,
+        text: "한 줄짜리 핵심 포인트 예시입니다."
+    )
+    let secondConfig = KeyPointContentConfiguration(
+        number: 2,
+        text: "여러 줄로 길게 이어지는 핵심 포인트 예시입니다. 텍스트가 길어져도 뱃지는 수직 중앙에 정렬되어 유지됩니다."
+    )
+
+    let firstCell = KeyPointContentView(configuration: firstConfig)
+    let secondCell = KeyPointContentView(configuration: secondConfig)
+
+    let stack = UIStackView(arrangedSubviews: [firstCell, secondCell])
+    stack.axis = .vertical
+    stack.spacing = 6
+    stack.translatesAutoresizingMaskIntoConstraints = false
+
+    let container = UIView()
+    container.backgroundColor = .gray100
+    container.addSubview(stack)
+
+    NSLayoutConstraint.activate([
+        stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+        stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+    ])
+
+    return container
+}
