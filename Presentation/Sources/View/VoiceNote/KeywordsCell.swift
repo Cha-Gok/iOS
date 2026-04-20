@@ -74,3 +74,22 @@ final class KeywordsContentView: UIView, UIContentView {
         return yOffset + rowHeight
     }
 }
+#Preview {
+    let viewController = UIViewController()
+    viewController.view.backgroundColor = .systemBackground
+
+    let contentView = KeywordsContentConfiguration(
+        keywords: ["Swift", "UIKit", "프리뷰", "키워드", "자동 사이징", "SwiftUI", "Xcode"]
+    ).makeContentView()
+    contentView.translatesAutoresizingMaskIntoConstraints = false
+    viewController.view.addSubview(contentView)
+
+    NSLayoutConstraint.activate([
+        contentView.leadingAnchor.constraint(equalTo: viewController.view.leadingAnchor, constant: 20),
+        contentView.trailingAnchor.constraint(equalTo: viewController.view.trailingAnchor, constant: -20),
+        contentView.centerYAnchor.constraint(equalTo: viewController.view.centerYAnchor),
+    ])
+
+    return viewController
+}
+
