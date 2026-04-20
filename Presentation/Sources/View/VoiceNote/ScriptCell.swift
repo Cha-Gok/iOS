@@ -104,6 +104,7 @@ final class ScriptContentView: UIView, UIContentView {
 
         textView.isEditable = config.isEditing
         textView.isSelectable = config.isEditing
+        textView.isUserInteractionEnabled = config.isEditing
 
         if textView.text != config.text {
             textView.text = config.text
