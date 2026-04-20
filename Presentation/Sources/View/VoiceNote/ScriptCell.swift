@@ -39,13 +39,13 @@ final class ScriptContentView: UIView, UIContentView {
 
     private lazy var textView: UITextView = {
         let spacing = Constant.scriptCellSpacing
-        let textView = UITextView()
+        let textView = TypographyTextView(typography: .body1)
+        textView.textColor = UIColor.gray950
         textView.isEditable = false
         textView.isSelectable = false
         textView.isScrollEnabled = false
         textView.textContainerInset = UIEdgeInsets(top: spacing, left: spacing, bottom: spacing, right: spacing)
         textView.textContainer.lineFragmentPadding = 0
-        textView.layoutManager.usesFontLeading = false
         textView.layer.cornerRadius = spacing
         textView.delegate = self
         return textView
