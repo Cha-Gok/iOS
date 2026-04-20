@@ -78,6 +78,11 @@ final class LanguagePicker: UIStackView {
 
     // MARK: - Update Properties
 
+    func setLanguage(_ language: Language) {
+        selectedLanguage = language
+        updateSelectionState()
+    }
+
     private func updateSelectionState() {
         itemViews.forEach { $0.setSelected($0.language == selectedLanguage, showAlert: showAlert) }
     }

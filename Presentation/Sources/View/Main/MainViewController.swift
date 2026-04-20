@@ -141,6 +141,7 @@ public final class MainViewController: ViewController {
             view.bringSubviewToFront(permissionAlertOverlayView)
         }
         if shouldshowLanguageAlert {
+            languagePicker.setLanguage(vm.checkLanguage())
             view.bringSubviewToFront(languageAlertOverlayView)
         }
         updateDataSource()
@@ -185,9 +186,7 @@ public final class MainViewController: ViewController {
 
         primaryLanguageAlertButton.addAction(UIAction { [weak self] _ in
             guard let self else { return }
-            languagePicker.onLanguageChanged = { [weak self] lang in
-                self?.vm.saveLanguage(lang)
-            }
+            vm.saveLanguage(languagePicker.selectedLanguage)
             vm.closeLanguageAlert()
         }, for: .touchUpInside)
 
