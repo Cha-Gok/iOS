@@ -34,7 +34,7 @@ struct VoiceNoteCardView: View {
                 cardContent
             }
         }
-        .editCardStyle(isSelected: isSelected)
+        .editVoiceNoteCardStyle(isSelected: isSelected)
         .onTapGesture {
             if isEdit {
                 action?(voiceNote, !isSelected)
@@ -93,7 +93,7 @@ struct VoiceNoteCardView: View {
 }
 
 extension View {
-    func editCardStyle(isSelected: Bool) -> some View {
+    func editVoiceNoteCardStyle(isSelected: Bool) -> some View {
         modifier(
             EditVoiceNoteCardModifier(
                 isSelected: isSelected

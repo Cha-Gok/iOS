@@ -211,10 +211,7 @@ public final class FolderDetailViewController: CollectionViewController {
             switch itemIdentifier {
             case .folder(let folder):
                 cell.contentConfiguration = UIHostingConfiguration {
-                    FolderCardView(
-                        name: folder.name,
-                        totalCount: folder.content.count
-                    )
+                    FolderCardView(folder: folder)
                 }
                 .margins(.all, 0)
             case .voiceNote(let voiceNote):

@@ -164,11 +164,23 @@ public final class TrashViewController: CollectionViewController {
             var backgroundConfig = UIBackgroundConfiguration.listCell()
             backgroundConfig.backgroundColor = .clear
             cell.backgroundConfiguration = backgroundConfig
-
+            
             switch itemIdentifier {
             case .folder(let folder):
                 cell.contentConfiguration = UIHostingConfiguration {
-                    FolderCardView(name: folder.name, totalCount: folder.content.count)
+                    FolderCardView(
+                        select: vm.select,
+                        isSelected: vm.selectedItems.contains(.folder(obj: folder)),
+                        folder: folder
+                    ) { [weak self] data, state in
+                        if state {
+                            self?.vm.selectItem(.folder(obj: data))
+                        } else {
+                            self?.vm.deselectItem(.folder(obj: data))
+                        }
+                    } completeAction: { [weak self] in
+                        self?.vm.pushDetailFolder(folder)
+                    }
                 }
                 .margins(.all, 0)
             case .voiceNote(let voiceNote):
