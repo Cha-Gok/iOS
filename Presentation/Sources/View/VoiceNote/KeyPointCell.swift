@@ -47,9 +47,14 @@ final class KeyPointContentView: UIView, UIContentView {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.alignment = .center
-        stack.spacing = 8
+        stack.spacing = Constant.keyPointContentSpacing
         stack.isLayoutMarginsRelativeArrangement = true
-        stack.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+        stack.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: Constant.keyPointCardVerticalPadding,
+            leading: Constant.keyPointCardHorizontalPadding,
+            bottom: Constant.keyPointCardVerticalPadding,
+            trailing: Constant.keyPointCardHorizontalPadding
+        )
         stack.backgroundColor = UIColor.gray100
         stack.layer.cornerRadius = Constant.cornerRadius
         return stack

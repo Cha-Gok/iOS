@@ -193,6 +193,15 @@ public extension Constant {
 public extension Constant {
     /// KeyPointCell 번호 뱃지 크기 (24) — 원형 뱃지의 width·height 기준값. cornerRadius는 이 값의 1/2로 파생
     static let keyPointBadgeSize: CGFloat = 24
+
+    /// KeyPointCell 뱃지와 본문 텍스트 사이 간격 (8)
+    static let keyPointContentSpacing: CGFloat = 8
+
+    /// KeyPointCell 카드 좌우 패딩 (12)
+    static let keyPointCardHorizontalPadding: CGFloat = 12
+
+    /// KeyPointCell 카드 상하 패딩 (8)
+    static let keyPointCardVerticalPadding: CGFloat = 8
 }
 
 // MARK: - BackgroundView Constants
