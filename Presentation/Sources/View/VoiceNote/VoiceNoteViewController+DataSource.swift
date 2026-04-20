@@ -18,7 +18,10 @@ extension VoiceNoteViewController {
             case .scripts: section.interGroupSpacing = 16
             default: break
             }
-            section.boundarySupplementaryItems.forEach { $0.pinToVisibleBounds = false }
+            section.boundarySupplementaryItems.forEach {
+                $0.pinToVisibleBounds = false
+                $0.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
+            }
             return section
         }
     }
