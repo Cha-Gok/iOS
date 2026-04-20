@@ -1,17 +1,14 @@
 import UIKit
 
 public final class KeywordChipView: UIView {
-    private let label: UILabel = {
-        let label = UILabel()
+    private let label: TypographyLabel = {
+        let label = TypographyLabel(typography: .label)
         label.textColor = UIColor.gray950
-        label.setTypography(style: .label)
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
     public init(text: String) {
         super.init(frame: .zero)
-        translatesAutoresizingMaskIntoConstraints = false
         setupUI()
         label.text = text
     }
@@ -31,6 +28,10 @@ public final class KeywordChipView: UIView {
         clipsToBounds = true
 
         addSubview(label)
+
+        translatesAutoresizingMaskIntoConstraints = false
+        label.translatesAutoresizingMaskIntoConstraints = false
+
         NSLayoutConstraint.activate([
             label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Constant.keywordChipHorizontalPadding),
             label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Constant.keywordChipHorizontalPadding),
