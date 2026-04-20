@@ -8,26 +8,40 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
     private let titleLabel: TypographyLabel = {
         let label = TypographyLabel(typography: .title2)
         label.textColor = .white
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
-    private var trailingView: UIView?
+    private let contentStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        return stack
+    }()
 
     // MARK: - Init
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        addSubview(titleLabel)
-        NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
-            titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
-        ])
+        setupUI()
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         nil
+    }
+
+    // MARK: - Setup
+
+    private func setupUI() {
+        contentStack.addArrangedSubview(titleLabel)
+        addSubview(contentStack)
+
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            contentStack.centerYAnchor.constraint(equalTo: centerYAnchor)
+        ])
     }
 
     // MARK: - Configure
@@ -40,16 +54,15 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
     // MARK: - Private
 
     private func setTrailingView(_ view: UIView?) {
-        trailingView?.removeFromSuperview()
-        trailingView = view
+        contentStack.arrangedSubviews
+            .filter { $0 !== titleLabel }
+            .forEach { $0.removeFromSuperview() }
 
         guard let view else { return }
-        view.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(view)
-        NSLayoutConstraint.activate([
-            view.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
-            view.centerYAnchor.constraint(equalTo: centerYAnchor)
-        ])
+        let spacer = UIView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        contentStack.addArrangedSubview(spacer)
+        contentStack.addArrangedSubview(view)
     }
 }
 
