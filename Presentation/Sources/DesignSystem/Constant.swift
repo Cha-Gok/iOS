@@ -175,13 +175,6 @@ public extension Constant {
     static let scriptCellCornerRadius: CGFloat = 8
 }
 
-// MARK: - VoiceNoteSectionHeader Constants
-
-public extension Constant {
-    /// VoiceNoteSectionHeaderView 좌우 패딩 (20) — 섹션 contentInsets와 정렬
-    static let voiceNoteSectionHeaderHorizontalPadding: CGFloat = 20
-}
-
 // MARK: - MetadataCell Constants
 
 public extension Constant {

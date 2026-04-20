@@ -37,10 +37,9 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
         addSubview(contentStack)
 
         contentStack.translatesAutoresizingMaskIntoConstraints = false
-        let horizontalPadding = Constant.voiceNoteSectionHeaderHorizontalPadding
         NSLayoutConstraint.activate([
-            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: horizontalPadding),
-            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -horizontalPadding),
+            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor),
             contentStack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
     }
