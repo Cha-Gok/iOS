@@ -144,6 +144,9 @@ public final class MainViewController: ViewController {
             languagePicker.setLanguage(vm.checkLanguage())
             view.bringSubviewToFront(languageAlertOverlayView)
         }
+        updateNavigationBarAppearance(
+            isTransparent: shouldshowLanguageAlert || shouldshowPermissionAlert
+        )
         updateDataSource()
     }
 
@@ -153,7 +156,8 @@ public final class MainViewController: ViewController {
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: navTitle)
         navigationItem.rightBarButtonItems = [settingItem, searchItem]
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
-        navigationItem.rightBarButtonItem?.hidesSharedBackground = true
+        navigationItem.rightBarButtonItems?.forEach { $0.hidesSharedBackground = true
+        }
     }
 
     private func setupPermissionAlert() {

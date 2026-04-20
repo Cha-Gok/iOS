@@ -16,25 +16,17 @@ public final class FolderViewController: CollectionViewController {
 
     // MARK: - Component
 
-    private lazy var backButton: UIButton = {
-        let btn = UIButton(type: .system)
-        let backImage = UIImage(systemName: "chevron.left")?
-            .withConfiguration(UIImage.SymbolConfiguration(weight: .bold))
-        btn.setImage(backImage, for: .normal)
-        btn.setTitle(" \(vm.category.title)", for: .normal)
-        btn.titleLabel?.setTypography(style: .title1)
-        btn.tintColor = UIColor.gray950
-        return btn
-    }()
+    private lazy var backButton: NavigationItemButton = .init(
+        normalItem: .init(title: " \(vm.category.title)", imageName: "chevron.left"),
+        selectedItem: .init(title: " \(vm.category.title)", imageName: "chevron.left"),
+        attributedString: Typography.title1.textAttributes
+    )
 
-    private lazy var addButton: UIButton = {
-        let btn = UIButton(type: .system)
-        let addImage = UIImage(systemName: "folder.badge.plus")?
-            .withConfiguration(UIImage.SymbolConfiguration(weight: .bold))
-        btn.setImage(addImage, for: .normal)
-        btn.tintColor = UIColor.gray950
-        return btn
-    }()
+    private lazy var addButton: NavigationItemButton = .init(
+        normalItem: .init(imageName: "folder.badge.plus"),
+        selectedItem: .init(imageName: "folder.badge.plus"),
+        attributedString: Typography.title1.textAttributes
+    )
 
     private var cancelButton: GlassButton = .close("취소")
     private var primaryButton: GlassButton = .primary("만들기")
@@ -89,6 +81,8 @@ public final class FolderViewController: CollectionViewController {
 
     override public func updateProperties() {
         super.updateProperties()
+        // Navigation
+        updateNavigationBarAppearance(isTransparent: vm.showTextField)
         // textField
         textField.isHidden = !vm.showTextField
         if vm.showTextField {
