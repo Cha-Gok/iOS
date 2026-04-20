@@ -12,7 +12,6 @@ public final class KeywordChipLabel: TypographyLabel {
         super.init(typography: .label)
         textColor = UIColor.gray950
         backgroundColor = UIColor.gray100
-        layer.cornerRadius = Constant.capsuleCornerRadius
         clipsToBounds = true
         self.text = text
     }
@@ -22,16 +21,24 @@ public final class KeywordChipLabel: TypographyLabel {
         nil
     }
 
-    public override func drawText(in rect: CGRect) {
-        super.drawText(in: rect.inset(by: insets))
+    override public func layoutSubviews() {
+        super.layoutSubviews()
+        layer.cornerRadius = bounds.height / 2
     }
 
-    public override var intrinsicContentSize: CGSize {
-        let size = super.intrinsicContentSize
-        return CGSize(
-            width: size.width + insets.left + insets.right,
-            height: size.height + insets.top + insets.bottom
+    override public func textRect(forBounds bounds: CGRect, limitedToNumberOfLines numberOfLines: Int) -> CGRect {
+        let insetBounds = bounds.inset(by: insets)
+        let textRect = super.textRect(forBounds: insetBounds, limitedToNumberOfLines: numberOfLines)
+        let invertedInsets = UIEdgeInsets(
+            top: -insets.top, left: -insets.left,
+            bottom: -insets.bottom, right: -insets.right
         )
+
+        return textRect.inset(by: invertedInsets)
+    }
+
+    override public func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: insets))
     }
 }
 
