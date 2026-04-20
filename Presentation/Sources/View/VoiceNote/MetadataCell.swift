@@ -35,26 +35,26 @@ final class MetadataContentView: UIView, UIContentView {
 
     private let folderIcon: UIImageView = {
         let imageView = UIImageView(image: UIImage(systemName: "folder"))
-        imageView.tintColor = UIColor.gray750
+        imageView.tintColor = .metadataLabel
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
 
     private let folderLabel: UILabel = {
         let label = UILabel()
-        label.textColor = UIColor.gray750
+        label.textColor = .metadataLabel
         return label
     }()
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.textColor = UIColor.gray750
+        label.textColor = .metadataLabel
         return label
     }()
 
     private let durationLabel: UILabel = {
         let label = UILabel()
-        label.textColor = UIColor.gray750
+        label.textColor = .metadataLabel
         return label
     }()
 
