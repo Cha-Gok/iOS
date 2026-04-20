@@ -27,8 +27,7 @@ final class KeyPointContentView: UIView, UIContentView {
     private let badgeView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.point600
-        view.layer.cornerRadius = 12
-        view.translatesAutoresizingMaskIntoConstraints = false
+        view.layer.cornerRadius = 20
         return view
     }()
 
@@ -37,7 +36,6 @@ final class KeyPointContentView: UIView, UIContentView {
         label.textColor = .white
         label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
         label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
@@ -45,7 +43,6 @@ final class KeyPointContentView: UIView, UIContentView {
         let label = UILabel()
         label.textColor = UIColor.gray800
         label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
@@ -72,6 +69,10 @@ final class KeyPointContentView: UIView, UIContentView {
         badgeView.addSubview(badgeLabel)
         addSubview(badgeView)
         addSubview(textLabel)
+
+        for subview in [badgeView, badgeLabel, textLabel] {
+            subview.translatesAutoresizingMaskIntoConstraints = false
+        }
 
         NSLayoutConstraint.activate([
             badgeView.widthAnchor.constraint(equalToConstant: 24),
