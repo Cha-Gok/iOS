@@ -116,3 +116,27 @@ final class MetadataContentView: UIView, UIContentView {
         durationLabel.text = config.duration
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    let config = MetadataContentConfiguration(
+        folderName: "회의 노트",
+        date: "2026년 4월 20일 오후 2:30",
+        duration: "재생시간 12:34"
+    )
+    let cell = MetadataContentView(configuration: config)
+    cell.translatesAutoresizingMaskIntoConstraints = false
+
+    let container = UIView()
+    container.backgroundColor = .gray100
+    container.addSubview(cell)
+
+    NSLayoutConstraint.activate([
+        cell.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+        cell.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+        cell.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+    ])
+
+    return container
+}
