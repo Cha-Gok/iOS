@@ -7,7 +7,7 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
 
     private let titleLabel: TypographyLabel = {
         let label = TypographyLabel(typography: .title2)
-        label.textColor = .white
+        label.textColor = .gray950
         return label
     }()
 
