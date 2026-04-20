@@ -24,20 +24,17 @@ final class KeyPointContentView: UIView, UIContentView {
 
     // MARK: - UI Components
 
-    private let badgeLabel: UILabel = {
-        let label = UILabel()
+    private let badgeLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .title3, alignment: .center)
         label.textColor = .white
-        label.font = Typography.title3.font
-        label.textAlignment = .center
         label.backgroundColor = UIColor.point600
         label.layer.cornerRadius = Constant.keyPointBadgeSize / 2
         label.clipsToBounds = true
         return label
     }()
 
-    private let textLabel: UILabel = {
-        let label = UILabel()
-        label.setTypography(style: .body1)
+    private let textLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .body1)
         label.textColor = UIColor.gray800
         label.numberOfLines = 0
         return label
