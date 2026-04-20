@@ -5,8 +5,8 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
 
     // MARK: - UI Components
 
-    private let titleLabel: UILabel = {
-        let label = UILabel()
+    private let titleLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .title2)
         label.textColor = .white
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -33,7 +33,7 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
     // MARK: - Configure
 
     func configure(title: String, trailingView: UIView? = nil) {
-        titleLabel.setTypography(text: title, style: .title2)
+        titleLabel.text = title
         setTrailingView(trailingView)
     }
 
