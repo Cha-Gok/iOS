@@ -38,9 +38,10 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
 
         contentStack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
+            contentStack.topAnchor.constraint(equalTo: topAnchor),
+            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor),
             contentStack.leadingAnchor.constraint(equalTo: leadingAnchor),
-            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor),
-            contentStack.centerYAnchor.constraint(equalTo: centerYAnchor)
+            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor)
         ])
     }
 
