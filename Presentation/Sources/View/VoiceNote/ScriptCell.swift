@@ -30,9 +30,8 @@ final class ScriptContentView: UIView, UIContentView {
 
     // MARK: - UI Components
 
-    private let timeLabel: UILabel = {
-        let label = UILabel()
-        label.setTypography(style: .caption)
+    private let timeLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .caption)
         label.textColor = UIColor.gray600
         return label
     }()
