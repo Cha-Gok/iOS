@@ -38,23 +38,20 @@ final class MetadataContentView: UIView, UIContentView {
         return imageView
     }()
 
-    private let folderLabel: UILabel = {
-        let label = UILabel()
-        label.setTypography(style: .body1)
+    private let folderLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .body1)
         label.textColor = .metadataLabel
         return label
     }()
 
-    private let dateLabel: UILabel = {
-        let label = UILabel()
-        label.setTypography(style: .body1)
+    private let dateLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .body1)
         label.textColor = .metadataLabel
         return label
     }()
 
-    private let durationLabel: UILabel = {
-        let label = UILabel()
-        label.setTypography(style: .body1)
+    private let durationLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .body1)
         label.textColor = .metadataLabel
         return label
     }()
