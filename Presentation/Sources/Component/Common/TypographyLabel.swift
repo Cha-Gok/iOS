@@ -2,7 +2,7 @@ import UIKit
 
 /// Typography를 생성자로 받아 텍스트 변경 시에도 타이포그래피 속성을 유지하는 UILabel 서브클래스.
 /// UILabel의 `text` 세터가 `attributedText`를 덮어쓰면서 속성이 초기화되는 문제를 해결합니다.
-public final class TypographyLabel: UILabel {
+public class TypographyLabel: UILabel {
     public var typography: Typography {
         didSet { applyTypography() }
     }
