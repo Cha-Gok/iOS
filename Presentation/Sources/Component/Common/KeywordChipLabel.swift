@@ -10,7 +10,7 @@ public final class KeywordChipLabel: TypographyLabel {
 
     public init(text: String) {
         super.init(typography: .label)
-        textColor = UIColor.gray950
+        textColor = UIColor.gray750
         backgroundColor = UIColor.gray100
         clipsToBounds = true
         self.text = text
