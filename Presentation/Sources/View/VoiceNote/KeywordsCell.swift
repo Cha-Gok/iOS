@@ -17,9 +17,6 @@ final class KeywordsContentView: UIView, UIContentView {
         didSet { apply(configuration: configuration) }
     }
 
-    private let interItemSpacing: CGFloat = Constant.keywordChipInterItemSpacing
-    private let lineSpacing: CGFloat = Constant.keywordChipLineSpacing
-
     private var chipLabels: [KeywordChipLabel] = []
     private var contentHeight: CGFloat = 0
 
@@ -50,10 +47,6 @@ final class KeywordsContentView: UIView, UIContentView {
         chipLabels.forEach { $0.removeFromSuperview() }
         chipLabels = config.keywords.map(KeywordChipLabel.init(text:))
         chipLabels.forEach(addSubview)
-
-        contentHeight = 0
-        invalidateIntrinsicContentSize()
-        setNeedsLayout()
     }
 
     private func layoutChips(for availableWidth: CGFloat) -> CGFloat {
@@ -68,13 +61,13 @@ final class KeywordsContentView: UIView, UIContentView {
 
             if xOffset > 0, xOffset + chipSize.width > availableWidth {
                 xOffset = 0
-                yOffset += rowHeight + lineSpacing
+                yOffset += rowHeight + Constant.keywordChipLineSpacing
                 rowHeight = 0
             }
 
             chipLabel.frame = CGRect(origin: CGPoint(x: xOffset, y: yOffset), size: chipSize)
 
-            xOffset += chipSize.width + interItemSpacing
+            xOffset += chipSize.width + Constant.keywordChipInterItemSpacing
             rowHeight = max(rowHeight, chipSize.height)
         }
 
