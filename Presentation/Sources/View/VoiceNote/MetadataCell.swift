@@ -100,7 +100,7 @@ final class MetadataContentView: UIView, UIContentView {
             stackView.topAnchor.constraint(equalTo: topAnchor),
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
             stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            stackView.bottomAnchor.constraint(equalTo: bottomAnchor)
+            stackView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
     }
 
@@ -122,18 +122,5 @@ final class MetadataContentView: UIView, UIContentView {
         date: "2026년 4월 20일 오후 2:30",
         duration: "재생시간 12:34"
     )
-    let cell = MetadataContentView(configuration: config)
-    cell.translatesAutoresizingMaskIntoConstraints = false
-
-    let container = UIView()
-    container.backgroundColor = .gray100
-    container.addSubview(cell)
-
-    NSLayoutConstraint.activate([
-        cell.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
-        cell.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
-        cell.centerYAnchor.constraint(equalTo: container.centerYAnchor)
-    ])
-
-    return container
+    MetadataContentView(configuration: config)
 }
