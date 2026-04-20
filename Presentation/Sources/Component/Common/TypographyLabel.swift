@@ -40,3 +40,26 @@ public class TypographyLabel: UILabel {
         super.attributedText = NSAttributedString(string: text ?? "", attributes: attributes)
     }
 }
+#Preview {
+    let stack = UIStackView()
+    stack.axis = .vertical
+    stack.spacing = 8
+    stack.alignment = .leading
+
+    let styles: [(Typography, String)] = [
+        (.header1, "Header1"), (.header2, "Header2"),
+        (.title1, "Title1"), (.title2, "Title2"), (.title3, "Title3"),
+        (.subtitle1, "Subtitle1"), (.subtitle2, "Subtitle2"),
+        (.body1, "Body1"), (.body2, "Body2"), (.body3, "Body3"),
+        (.label, "Label"), (.caption, "Caption"),
+    ]
+
+    for (style, name) in styles {
+        let label = TypographyLabel(typography: style)
+        label.text = "\(name) - 타이포그래피 미리보기"
+        stack.addArrangedSubview(label)
+    }
+
+    return stack
+}
+
