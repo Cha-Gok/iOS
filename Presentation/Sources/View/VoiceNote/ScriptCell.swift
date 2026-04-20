@@ -39,7 +39,7 @@ final class ScriptContentView: UIView, UIContentView {
 
     private let textBackground: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 8
+        view.layer.cornerRadius = Constant.scriptCellSpacing
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -79,20 +79,21 @@ final class ScriptContentView: UIView, UIContentView {
         addSubview(textBackground)
         textBackground.addSubview(textView)
 
+        let spacing = Constant.scriptCellSpacing
         NSLayoutConstraint.activate([
             timeLabel.topAnchor.constraint(equalTo: topAnchor),
-            timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
+            timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: spacing),
             timeLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
 
-            textBackground.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: 8),
+            textBackground.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: spacing),
             textBackground.leadingAnchor.constraint(equalTo: leadingAnchor),
             textBackground.trailingAnchor.constraint(equalTo: trailingAnchor),
             textBackground.bottomAnchor.constraint(equalTo: bottomAnchor),
 
-            textView.topAnchor.constraint(equalTo: textBackground.topAnchor, constant: 8),
-            textView.bottomAnchor.constraint(equalTo: textBackground.bottomAnchor, constant: -8),
-            textView.leadingAnchor.constraint(equalTo: textBackground.leadingAnchor, constant: 8),
-            textView.trailingAnchor.constraint(equalTo: textBackground.trailingAnchor, constant: -8)
+            textView.topAnchor.constraint(equalTo: textBackground.topAnchor, constant: spacing),
+            textView.bottomAnchor.constraint(equalTo: textBackground.bottomAnchor, constant: -spacing),
+            textView.leadingAnchor.constraint(equalTo: textBackground.leadingAnchor, constant: spacing),
+            textView.trailingAnchor.constraint(equalTo: textBackground.trailingAnchor, constant: -spacing)
         ])
     }
 
@@ -109,9 +110,7 @@ final class ScriptContentView: UIView, UIContentView {
         if textView.text != config.text {
             textView.text = config.text
         }
-        textBackground.backgroundColor = config.isHighlighted
-            ? UIColor.point600.withAlphaComponent(0.3)
-            : .clear
+        textBackground.backgroundColor = config.isHighlighted ? .scriptCellHighlight : .clear
     }
 }
 

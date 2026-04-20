@@ -165,6 +165,13 @@ public extension Constant {
     static let languagePickerTitleSpacing: CGFloat = 6
 }
 
+// MARK: - ScriptCell Constants
+
+public extension Constant {
+    /// ScriptCell 기본 간격 (8) — 버블 모서리·타임스탬프 여백·내부 패딩 공통
+    static let scriptCellSpacing: CGFloat = 8
+}
+
 // MARK: - BackgroundView Constants
 
 public extension Constant {
