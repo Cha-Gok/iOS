@@ -168,8 +168,11 @@ public extension Constant {
 // MARK: - ScriptCell Constants
 
 public extension Constant {
-    /// ScriptCell 기본 간격 (8) — 버블 모서리·타임스탬프 여백·내부 패딩 공통
+    /// ScriptCell 기본 간격 (8) — 타임스탬프 여백·본문 내부 패딩 공통
     static let scriptCellSpacing: CGFloat = 8
+
+    /// ScriptCell 본문 버블 모서리 반경 (8)
+    static let scriptCellCornerRadius: CGFloat = 8
 }
 
 // MARK: - MetadataCell Constants

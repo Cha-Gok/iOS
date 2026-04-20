@@ -46,7 +46,7 @@ final class ScriptContentView: UIView, UIContentView {
         textView.isScrollEnabled = false
         textView.textContainerInset = UIEdgeInsets(top: spacing, left: spacing, bottom: spacing, right: spacing)
         textView.textContainer.lineFragmentPadding = 0
-        textView.layer.cornerRadius = spacing
+        textView.layer.cornerRadius = Constant.scriptCellCornerRadius
         textView.delegate = self
         return textView
     }()
