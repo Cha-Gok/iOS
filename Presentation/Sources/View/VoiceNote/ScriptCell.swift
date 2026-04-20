@@ -32,29 +32,22 @@ final class ScriptContentView: UIView, UIContentView {
 
     private let timeLabel: UILabel = {
         let label = UILabel()
+        label.setTypography(style: .caption)
         label.textColor = UIColor.gray600
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
-    private let textBackground: UIView = {
-        let view = UIView()
-        view.layer.cornerRadius = Constant.scriptCellSpacing
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
     private lazy var textView: UITextView = {
+        let spacing = Constant.scriptCellSpacing
         let textView = UITextView()
-        textView.backgroundColor = .clear
         textView.isEditable = false
         textView.isSelectable = false
         textView.isScrollEnabled = false
-        textView.textContainerInset = .zero
+        textView.textContainerInset = UIEdgeInsets(top: spacing, left: spacing, bottom: spacing, right: spacing)
         textView.textContainer.lineFragmentPadding = 0
         textView.layoutManager.usesFontLeading = false
+        textView.layer.cornerRadius = spacing
         textView.delegate = self
-        textView.translatesAutoresizingMaskIntoConstraints = false
         return textView
     }()
 
@@ -76,8 +69,11 @@ final class ScriptContentView: UIView, UIContentView {
 
     private func setupUI() {
         addSubview(timeLabel)
-        addSubview(textBackground)
-        textBackground.addSubview(textView)
+        addSubview(textView)
+
+        for subview in [timeLabel, textView] {
+            subview.translatesAutoresizingMaskIntoConstraints = false
+        }
 
         let spacing = Constant.scriptCellSpacing
         NSLayoutConstraint.activate([
@@ -85,15 +81,10 @@ final class ScriptContentView: UIView, UIContentView {
             timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: spacing),
             timeLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
 
-            textBackground.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: spacing),
-            textBackground.leadingAnchor.constraint(equalTo: leadingAnchor),
-            textBackground.trailingAnchor.constraint(equalTo: trailingAnchor),
-            textBackground.bottomAnchor.constraint(equalTo: bottomAnchor),
-
-            textView.topAnchor.constraint(equalTo: textBackground.topAnchor, constant: spacing),
-            textView.bottomAnchor.constraint(equalTo: textBackground.bottomAnchor, constant: -spacing),
-            textView.leadingAnchor.constraint(equalTo: textBackground.leadingAnchor, constant: spacing),
-            textView.trailingAnchor.constraint(equalTo: textBackground.trailingAnchor, constant: -spacing)
+            textView.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: spacing),
+            textView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            textView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 
@@ -101,16 +92,13 @@ final class ScriptContentView: UIView, UIContentView {
 
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? ScriptContentConfiguration else { return }
-        timeLabel.setTypography(text: config.timestamp.durationString, style: .caption)
+        timeLabel.text = config.timestamp.durationString
 
         textView.isEditable = config.isEditing
         textView.isSelectable = config.isEditing
         textView.isUserInteractionEnabled = config.isEditing
-
-        if textView.text != config.text {
-            textView.text = config.text
-        }
-        textBackground.backgroundColor = config.isHighlighted ? .scriptCellHighlight : .clear
+        textView.text = config.text
+        textView.backgroundColor = config.isHighlighted ? .scriptCellHighlight : .clear
     }
 }
 
@@ -127,8 +115,7 @@ extension ScriptContentView: UITextViewDelegate {
 
 // MARK: - Preview
 
-@MainActor
-private func makeScriptCellPreview() -> UIView {
+#Preview {
     let normalConfig = ScriptContentConfiguration(
         sectionIndex: 0,
         timestamp: 0,
@@ -167,8 +154,4 @@ private func makeScriptCellPreview() -> UIView {
     ])
 
     return container
-}
-
-#Preview {
-    makeScriptCellPreview()
 }
