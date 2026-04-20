@@ -80,7 +80,7 @@ public final class MainViewController: ViewController {
         showAlert: true
     )
 
-    private lazy var languageAlertView: LanguagePickertAlert = .init(
+    private lazy var languageAlertView: LanguagePickerAlert = .init(
         title: "언어 선택",
         languagePicker: languagePicker,
         closeButton: cancelLanguageAlertButton,

@@ -1,6 +1,6 @@
 import UIKit
 
-final class LanguagePickertAlert: UIView {
+final class LanguagePickerAlert: UIView {
     let closeButton: GlassButton
     let primaryButton: GlassButton
     private let title: String
@@ -61,7 +61,7 @@ final class LanguagePickertAlert: UIView {
 
 // MARK: - LifeCycle
 
-extension LanguagePickertAlert {
+extension LanguagePickerAlert {
     override func didMoveToSuperview() {
         super.didMoveToSuperview()
         guard let superview else {
@@ -93,7 +93,7 @@ extension LanguagePickertAlert {
 
 // MARK: - setUp
 
-extension LanguagePickertAlert {
+extension LanguagePickerAlert {
     /// LanguagePickertAlert의 전체 배경색, 테두리(border), 모서리 등 가장 기초적인 View 스타일을 설정합니다.
     private func setup() {
         translatesAutoresizingMaskIntoConstraints = false
