@@ -28,7 +28,7 @@ final class KeyPointContentView: UIView, UIContentView {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.backgroundColor = UIColor.point600
-        stack.layer.cornerRadius = 20
+        stack.layer.cornerRadius = 12
         return stack
     }()
 
