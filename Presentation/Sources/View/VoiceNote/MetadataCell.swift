@@ -62,7 +62,7 @@ final class MetadataContentView: UIView, UIContentView {
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 2
+        stack.spacing = Constant.metadataCellLineSpacing
         return stack
     }()
 
@@ -89,7 +89,7 @@ final class MetadataContentView: UIView, UIContentView {
         stackView.addArrangedSubview(folderRow)
         stackView.addArrangedSubview(dateLabel)
         stackView.addArrangedSubview(durationLabel)
-        stackView.setCustomSpacing(15, after: folderRow)
+        stackView.setCustomSpacing(Constant.metadataCellSectionSpacing, after: folderRow)
 
         addSubview(stackView)
 
@@ -97,8 +97,8 @@ final class MetadataContentView: UIView, UIContentView {
         folderIcon.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            folderIcon.widthAnchor.constraint(equalToConstant: 20),
-            folderIcon.heightAnchor.constraint(equalToConstant: 20),
+            folderIcon.widthAnchor.constraint(equalToConstant: Constant.metadataCellIconSize),
+            folderIcon.heightAnchor.constraint(equalToConstant: Constant.metadataCellIconSize),
 
             stackView.topAnchor.constraint(equalTo: topAnchor),
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor),

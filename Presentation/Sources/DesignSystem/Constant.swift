@@ -177,6 +177,15 @@ public extension Constant {
 public extension Constant {
     /// MetadataCell 폴더 아이콘과 라벨 사이 간격 (5)
     static let metadataCellIconSpacing: CGFloat = 5
+
+    /// MetadataCell 날짜·재생시간 라벨 사이 간격 (2)
+    static let metadataCellLineSpacing: CGFloat = 2
+
+    /// MetadataCell 폴더 행과 날짜 그룹 사이 간격 (11)
+    static let metadataCellSectionSpacing: CGFloat = 11
+
+    /// MetadataCell 폴더 아이콘 크기 (20)
+    static let metadataCellIconSize: CGFloat = 20
 }
 
 // MARK: - BackgroundView Constants
