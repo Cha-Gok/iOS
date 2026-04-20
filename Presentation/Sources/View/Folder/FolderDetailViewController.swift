@@ -111,12 +111,15 @@ public final class FolderDetailViewController: CollectionViewController {
             listConfiguration.headerMode = .none
             listConfiguration.showsSeparators = false
             listConfiguration.backgroundColor = .clear
-
-            return NSCollectionLayoutSection.list(
+            let section = NSCollectionLayoutSection.list(
                 using: listConfiguration,
                 layoutEnvironment: layoutEnvironment
             )
+            section.contentInsets = .init(top: 12, leading: 20, bottom: 20, trailing: 20)
+            section.interGroupSpacing = 8
+            return section
         }
+
         super.init(collectionViewLayout: layout)
     }
 
@@ -238,6 +241,7 @@ public final class FolderDetailViewController: CollectionViewController {
                         totalCount: folder.content.count
                     )
                 }
+                .margins(.all, 0)
             case .voiceNote(let voiceNote):
                 cell.contentConfiguration = UIHostingConfiguration {
                     VoiceNoteCardView(
@@ -254,6 +258,7 @@ public final class FolderDetailViewController: CollectionViewController {
                         self?.vm.pushVoiceNote(voiceNote: voiceNote)
                     }
                 }
+                .margins(.all, 0)
             }
         }
 

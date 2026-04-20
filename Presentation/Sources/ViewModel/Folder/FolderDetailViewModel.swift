@@ -118,6 +118,10 @@ extension FolderDetailViewModel {
     }
 
     func openAlertView() {
+        guard !selectedItems.isEmpty else {
+            setSelectionMode(.none)
+            return
+        }
         showAlert = true
     }
 }
