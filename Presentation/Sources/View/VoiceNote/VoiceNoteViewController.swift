@@ -7,26 +7,15 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     // MARK: - UI Components
 
     private let playerView = AudioPlayerView()
-    private let topBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
     private lazy var segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
-    private lazy var backChevronButton: UIButton = {
-        let btn = UIButton(type: .system)
-        let backImage = UIImage(systemName: "chevron.left")?
-            .withConfiguration(UIImage.SymbolConfiguration(weight: .bold))
-        btn.setImage(backImage, for: .normal)
-        btn.tintColor = UIColor.gray950
-        btn.addAction(UIAction { [weak self] _ in
-            self?.viewModel.pop()
-        }, for: .touchUpInside)
-        return btn
-    }()
 
-    private lazy var editCancelButton: UIBarButtonItem = UIBarButtonItem(
-        image: .cornerUpLeft,
-        primaryAction: UIAction { [weak self] _ in
-            self?.viewModel.cancelEditing()
-        }
-    )
+    private lazy var titleLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .title1)
+        label.textColor = UIColor.gray950
+        label.lineBreakMode = .byTruncatingTail
+        label.numberOfLines = 1
+        return label
+    }()
 
     private lazy var titleField: TypographyTextField = {
         let field = TypographyTextField(typography: .title1)
@@ -34,16 +23,36 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         field.tintColor = UIColor.gray950
         field.returnKeyType = .done
         field.delegate = self
-        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        let tap = UITapGestureRecognizer(target: self, action: #selector(titleFieldTapped))
-        field.addGestureRecognizer(tap)
+        field.isHidden = true
         return field
     }()
 
+    private lazy var titleContainer: TitleContainerView = {
+        let container = TitleContainerView(label: titleLabel, textField: titleField)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(titleContainerTapped))
+        container.addGestureRecognizer(tap)
+        return container
+    }()
+
     @objc
-    private func titleFieldTapped() {
+    private func titleContainerTapped() {
         viewModel.enterTitleEditing()
     }
+
+    private lazy var backBarButton: UIBarButtonItem = UIBarButtonItem(
+        image: UIImage(systemName: "chevron.left")?
+            .withConfiguration(UIImage.SymbolConfiguration(weight: .bold)),
+        primaryAction: UIAction { [weak self] _ in
+            self?.viewModel.pop()
+        }
+    )
+
+    private lazy var editCancelButton: UIBarButtonItem = UIBarButtonItem(
+        image: .cornerUpLeft,
+        primaryAction: UIAction { [weak self] _ in
+            self?.viewModel.cancelEditing()
+        }
+    )
 
     private lazy var doneButton: UIBarButtonItem = {
         let item = UIBarButtonItem(title: "완료", primaryAction: UIAction { [weak self] _ in
@@ -58,11 +67,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
             }
         })
         item.tintColor = UIColor.point800
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineHeightMultiple = 1.08
-        let attrs: [NSAttributedString.Key: Any] = [.paragraphStyle: paragraphStyle]
-        item.setTitleTextAttributes(attrs, for: .normal)
-        item.setTitleTextAttributes(attrs, for: .highlighted)
         return item
     }()
 
@@ -119,7 +123,6 @@ private extension VoiceNoteViewController {
 
         addPageViewController()
         view.addSubview(playerView)
-        view.addSubview(topBlurView)
         view.addSubview(segmentedControl)
 
         setupConstraints()
@@ -141,7 +144,7 @@ private extension VoiceNoteViewController {
     }
 
     func setupConstraints() {
-        for subview in [pageViewController.view!, playerView, topBlurView, segmentedControl] {
+        for subview in [pageViewController.view!, playerView, segmentedControl] {
             subview.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -150,11 +153,6 @@ private extension VoiceNoteViewController {
             pageViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             pageViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             pageViewController.view.bottomAnchor.constraint(equalTo: playerView.topAnchor),
-
-            topBlurView.topAnchor.constraint(equalTo: view.topAnchor),
-            topBlurView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            topBlurView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            topBlurView.bottomAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
 
             segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -168,8 +166,9 @@ private extension VoiceNoteViewController {
     }
 
     func setupNavigationBar() {
+        backBarButton.tintColor = UIColor.gray950
+        titleLabel.text = viewModel.title
         titleField.text = viewModel.title
-        titleField.frame.size.width = view.bounds.width
         let menu = UIMenu(children: [
             UIAction(title: "기록 이동하기", handler: { [weak self] _ in
                 self?.viewModel.moveVoiceNote()
@@ -189,9 +188,9 @@ private extension VoiceNoteViewController {
             action: nil
         )
         normalRightBarButtonItems = [moreItem, searchItem]
-        normalLeftBarButtonItem = UIBarButtonItem(customView: backChevronButton)
+        normalLeftBarButtonItem = backBarButton
         navigationItem.leftBarButtonItem = normalLeftBarButtonItem
-        navigationItem.titleView = titleField
+        navigationItem.titleView = titleContainer
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
@@ -227,14 +226,10 @@ private extension VoiceNoteViewController {
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                self.updateEditCancelButtonTint()
+                self.applyEditingMode(self.viewModel.editingMode)
                 self.observeScriptEdits()
             }
         }
-    }
-
-    func updateEditCancelButtonTint() {
-        editCancelButton.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
     }
 
     func observePlaybackState() {
@@ -339,36 +334,28 @@ private extension VoiceNoteViewController {
     func applyEditingMode(_ mode: VoiceNoteViewModel.EditingMode?) {
         switch mode {
         case .title:
-            enterTitleEditMode()
+            titleLabel.isHidden = true
+            titleField.isHidden = false
+            titleField.text = viewModel.title
+            navigationItem.rightBarButtonItems = [doneButton]
+            titleField.becomeFirstResponder()
         case .script:
-            enterScriptEditMode()
+            navigationItem.titleView = nil
+            navigationItem.leftBarButtonItem = editCancelButton
+            navigationItem.rightBarButtonItems = [doneButton]
+            editCancelButton.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
+            switchToPage(at: Page.script.rawValue, animated: true)
+            syncSegmentedControl(to: Page.script.rawValue)
         case nil:
-            exitEditMode()
+            titleField.resignFirstResponder()
+            titleLabel.text = viewModel.title
+            titleField.isHidden = true
+            titleLabel.isHidden = false
+            navigationItem.titleView = titleContainer
+            navigationItem.leftBarButtonItem = normalLeftBarButtonItem
+            navigationItem.rightBarButtonItems = normalRightBarButtonItems
+            navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
         }
-    }
-
-    func enterTitleEditMode() {
-        navigationItem.rightBarButtonItems = [doneButton]
-        titleField.becomeFirstResponder()
-        titleField.selectAll(nil as Any?)
-    }
-
-    func enterScriptEditMode() {
-        navigationItem.titleView = nil
-        navigationItem.leftBarButtonItem = editCancelButton
-        navigationItem.rightBarButtonItems = [doneButton]
-        updateEditCancelButtonTint()
-        switchToPage(at: Page.script.rawValue, animated: true)
-        syncSegmentedControl(to: Page.script.rawValue)
-    }
-
-    func exitEditMode() {
-        view.endEditing(true)
-        titleField.text = viewModel.title
-        navigationItem.titleView = titleField
-        navigationItem.leftBarButtonItem = normalLeftBarButtonItem
-        navigationItem.rightBarButtonItems = normalRightBarButtonItems
-        navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
     }
 }
 
@@ -376,7 +363,10 @@ private extension VoiceNoteViewController {
 
 extension VoiceNoteViewController: UITextFieldDelegate {
     public func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
-        viewModel.editingMode == .title
+        if viewModel.editingMode == nil {
+            viewModel.enterTitleEditing()
+        }
+        return true
     }
 
     public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -403,5 +393,39 @@ private extension VoiceNoteViewController {
             case .script: return "스크립트"
             }
         }
+    }
+}
+
+// MARK: - TitleContainerView
+
+private final class TitleContainerView: UIView {
+    let label: TypographyLabel
+    let textField: TypographyTextField
+
+    init(label: TypographyLabel, textField: TypographyTextField) {
+        self.label = label
+        self.textField = textField
+        super.init(frame: .zero)
+        addSubview(label)
+        addSubview(textField)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: leadingAnchor),
+            label.trailingAnchor.constraint(equalTo: trailingAnchor),
+            label.centerYAnchor.constraint(equalTo: centerYAnchor),
+            textField.leadingAnchor.constraint(equalTo: leadingAnchor),
+            textField.trailingAnchor.constraint(equalTo: trailingAnchor),
+            textField.firstBaselineAnchor.constraint(equalTo: label.firstBaselineAnchor)
+        ])
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    override var intrinsicContentSize: CGSize {
+        CGSize(width: 10000, height: UIView.noIntrinsicMetric)
     }
 }
