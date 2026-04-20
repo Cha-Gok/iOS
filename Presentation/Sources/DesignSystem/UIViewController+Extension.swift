@@ -10,6 +10,22 @@ public class ViewController: UIViewController {
     }
 }
 
+public extension UIViewController {
+    func updateNavigationBarAppearance(isTransparent: Bool) {
+        let appearance = UINavigationBarAppearance()
+        if isTransparent {
+            appearance.configureWithTransparentBackground()
+        } else {
+            appearance.configureWithDefaultBackground()
+            appearance.backgroundColor = UIColor.gray50
+        }
+
+        navigationItem.standardAppearance = appearance
+        navigationItem.compactAppearance = appearance
+        navigationItem.scrollEdgeAppearance = appearance
+    }
+}
+
 // MARK: UICollectionViewController
 
 public class CollectionViewController: UICollectionViewController {

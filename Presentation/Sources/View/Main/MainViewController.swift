@@ -46,8 +46,49 @@ public final class MainViewController: ViewController {
         return c
     }()
 
-    private let cancelAlertButton: GlassButton = .close("나중에")
-    private let primaryAlertButton: GlassButton = .primary("설정으로 이동")
+    private lazy var langAction: UIAction = UIAction(title: "녹음 언어 선택") { [weak self] _ in
+        self?.vm.openLanguageAlert()
+    }
+
+    private lazy var termsofServiceAction: UIAction = UIAction(title: "약관 보기") { [weak self] _ in
+    }
+
+    private let searchItem: UIBarButtonItem = .init(
+        image: UIImage(systemName: "magnifyingglass"),
+        menu: nil
+    )
+
+    private lazy var settingItem: UIBarButtonItem = .init(
+        image: UIImage(systemName: "gearshape"),
+        menu: UIMenu(title: "", children: [langAction, termsofServiceAction])
+    )
+
+    // TODO: Language Picker Alert
+    private let cancelLanguageAlertButton: GlassButton = .close("취소")
+    private let primaryLanguageAlertButton: GlassButton = .primary("저장하기")
+    private let languageAlertOverlayView: UIView = {
+        let overlay = UIView()
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        overlay.isHidden = true
+        return overlay
+    }()
+
+    private lazy var languagePicker: LanguagePicker = .init(
+        selected: vm.checkLanguage(),
+        axis: .horizontal,
+        showAlert: true
+    )
+
+    private lazy var languageAlertView: LanguagePickerAlert = .init(
+        title: "언어 선택",
+        languagePicker: languagePicker,
+        closeButton: cancelLanguageAlertButton,
+        primaryButton: primaryLanguageAlertButton
+    )
+    // TODO: Permission Alert
+    private let cancelPermissionAlertButton: GlassButton = .close("나중에")
+    private let primaryPermissionAlertButton: GlassButton = .primary("설정으로 이동")
     private let permissionAlertOverlayView: UIView = {
         let overlay = UIView()
         overlay.translatesAutoresizingMaskIntoConstraints = false
@@ -59,8 +100,8 @@ public final class MainViewController: ViewController {
     private lazy var permissionAlertView: AlertView = .init(
         title: "마이크 권한이 필요해요",
         subTitle: "설정에서 마이크 권한을 \n허용해주세요.",
-        closeButton: cancelAlertButton,
-        primaryButton: primaryAlertButton
+        closeButton: cancelPermissionAlertButton,
+        primaryButton: primaryPermissionAlertButton
     )
 
     private let floatingButton: GlassButton = .floating(
@@ -77,6 +118,7 @@ public final class MainViewController: ViewController {
         setupCollectionView()
         setupfloatingButton()
         setupPermissionAlert()
+        setupLanguageAlert()
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -89,12 +131,21 @@ public final class MainViewController: ViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        let shouldShowAlert = vm.showAlert
-        permissionAlertOverlayView.isHidden = !shouldShowAlert
-        updateInteractionForAlert(isPresented: shouldShowAlert)
-        if shouldShowAlert {
+        let shouldshowLanguageAlert = vm.showLanguageAlert
+        let shouldshowPermissionAlert = vm.showPermissionAlert
+        languageAlertOverlayView.isHidden = !shouldshowLanguageAlert
+        permissionAlertOverlayView.isHidden = !shouldshowPermissionAlert
+        updateInteractionForAlert(isPresented: shouldshowPermissionAlert || shouldshowLanguageAlert)
+        if shouldshowPermissionAlert {
             view.bringSubviewToFront(permissionAlertOverlayView)
         }
+        if shouldshowLanguageAlert {
+            languagePicker.setLanguage(vm.checkLanguage())
+            view.bringSubviewToFront(languageAlertOverlayView)
+        }
+        updateNavigationBarAppearance(
+            isTransparent: shouldshowLanguageAlert || shouldshowPermissionAlert
+        )
         updateDataSource()
     }
 
@@ -102,22 +153,20 @@ public final class MainViewController: ViewController {
 
     private func setup() {
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: navTitle)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "magnifyingglass"),
-            menu: nil
-        )
+        navigationItem.rightBarButtonItems = [settingItem, searchItem]
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
-        navigationItem.rightBarButtonItem?.hidesSharedBackground = true
+        navigationItem.rightBarButtonItems?.forEach { $0.hidesSharedBackground = true
+        }
     }
 
     private func setupPermissionAlert() {
-        cancelAlertButton.addAction(UIAction { [weak self] _ in
-            self?.vm.closeAlertView()
+        cancelPermissionAlertButton.addAction(UIAction { [weak self] _ in
+            self?.vm.closePermissionAlert()
         }, for: .touchUpInside)
 
-        primaryAlertButton.addAction(UIAction { [weak self] _ in
+        primaryPermissionAlertButton.addAction(UIAction { [weak self] _ in
             guard let self else { return }
-            vm.closeAlertView()
+            vm.closePermissionAlert()
             openAppSettings()
         }, for: .touchUpInside)
 
@@ -130,6 +179,29 @@ public final class MainViewController: ViewController {
             permissionAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             permissionAlertView.centerXAnchor.constraint(equalTo: permissionAlertOverlayView.centerXAnchor),
             permissionAlertView.centerYAnchor.constraint(equalTo: permissionAlertOverlayView.centerYAnchor)
+        ])
+    }
+
+    private func setupLanguageAlert() {
+        cancelLanguageAlertButton.addAction(UIAction { [weak self] _ in
+            self?.vm.closeLanguageAlert()
+        }, for: .touchUpInside)
+
+        primaryLanguageAlertButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            vm.saveLanguage(languagePicker.selectedLanguage)
+            vm.closeLanguageAlert()
+        }, for: .touchUpInside)
+
+        view.addSubview(languageAlertOverlayView)
+        languageAlertOverlayView.addSubview(languageAlertView)
+        NSLayoutConstraint.activate([
+            languageAlertOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            languageAlertOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            languageAlertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            languageAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            languageAlertView.centerXAnchor.constraint(equalTo: languageAlertOverlayView.centerXAnchor),
+            languageAlertView.centerYAnchor.constraint(equalTo: languageAlertOverlayView.centerYAnchor)
         ])
     }
 

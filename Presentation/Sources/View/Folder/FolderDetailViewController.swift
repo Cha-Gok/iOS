@@ -14,50 +14,24 @@ public final class FolderDetailViewController: CollectionViewController {
 
     // MARK: - Component
 
-    private lazy var backButton: UIButton = {
-        let btn = UIButton(type: .custom) // .system 대신 .custom을 사용하여 기본 배경 효과 제거
-        let symbolConfig = UIImage.SymbolConfiguration(weight: .bold)
-        let backImage = UIImage(systemName: "chevron.left")?
-            .withConfiguration(symbolConfig)
-        btn.setImage(backImage, for: .normal)
-        btn.setImage(
-            UIImage(systemName: "xmark")?.withConfiguration(symbolConfig),
-            for: .selected
-        )
-        btn.setTitle(vm.title, for: .normal)
-        btn.setTitle("", for: .selected) // nil 대신 ""을 사용하여 .normal 타이틀이 나오는 것을 방지
-        btn.titleLabel?.setTypography(style: .title1)
-        btn.tintColor = UIColor.gray950
-        return btn
-    }()
+    private lazy var backButton: NavigationItemButton = .init(
+        normalItem: .init(title: vm.title, imageName: "chevron.left"),
+        selectedItem: .init(title: "", imageName: "xmark"),
+        attributedString: Typography.title1.textAttributes
+    )
 
-    private lazy var moreAndActionButton: UIButton = {
-        let btn = UIButton(type: .custom)
-        let symbolConfig = UIImage.SymbolConfiguration(weight: .bold)
-        btn.setImage(UIImage(systemName: "ellipsis")?.withConfiguration(symbolConfig), for: .normal)
-        btn.setImage(UIImage(), for: .selected)
-        btn.setTitle(nil, for: .normal)
-        btn.setTitle("삭제", for: .selected)
-        btn.setTitleColor(UIColor.gray950, for: .normal)
-        btn.setTitleColor(UIColor.danger, for: .selected)
-        btn.titleLabel?.setTypography(style: .title1)
-        btn.tintColor = UIColor.gray950
-        return btn
-    }()
+    private lazy var moreAndActionButton: NavigationItemButton = .init(
+        normalItem: .init(imageName: "ellipsis"),
+        selectedItem: .init(title: "삭제"),
+        attributedString: Typography.title1.textAttributes,
+        selectedForegroundColor: .danger
+    )
 
-    private lazy var searchAndMoveButton: UIButton = {
-        let btn = UIButton(type: .custom)
-        let symbolConfig = UIImage.SymbolConfiguration(weight: .bold)
-        btn.setImage(UIImage(systemName: "magnifyingglass")?.withConfiguration(symbolConfig), for: .normal)
-        btn.setImage(UIImage(), for: .selected)
-        btn.setTitle(nil, for: .normal)
-        btn.setTitle("이동", for: .selected)
-        btn.setTitleColor(UIColor.gray950, for: .normal)
-        btn.setTitleColor(UIColor.gray950, for: .selected)
-        btn.titleLabel?.setTypography(style: .title1)
-        btn.tintColor = UIColor.gray950
-        return btn
-    }()
+    private lazy var searchAndMoveButton: NavigationItemButton = .init(
+        normalItem: .init(imageName: "magnifyingglass"),
+        selectedItem: .init(title: "이동"),
+        attributedString: Typography.title1.textAttributes
+    )
 
     private lazy var createdAtAction = UIAction(
         title: "생성일 순"
@@ -111,12 +85,15 @@ public final class FolderDetailViewController: CollectionViewController {
             listConfiguration.headerMode = .none
             listConfiguration.showsSeparators = false
             listConfiguration.backgroundColor = .clear
-
-            return NSCollectionLayoutSection.list(
+            let section = NSCollectionLayoutSection.list(
                 using: listConfiguration,
                 layoutEnvironment: layoutEnvironment
             )
+            section.contentInsets = .init(top: 12, leading: 20, bottom: 20, trailing: 20)
+            section.interGroupSpacing = 8
+            return section
         }
+
         super.init(collectionViewLayout: layout)
     }
 
@@ -133,6 +110,7 @@ public final class FolderDetailViewController: CollectionViewController {
         setupRemoveAlert()
         setupDataSource()
         updateDataSource()
+        updateNavigationBarAppearance(isTransparent: vm.showAlert)
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -238,6 +216,7 @@ public final class FolderDetailViewController: CollectionViewController {
                         totalCount: folder.content.count
                     )
                 }
+                .margins(.all, 0)
             case .voiceNote(let voiceNote):
                 cell.contentConfiguration = UIHostingConfiguration {
                     VoiceNoteCardView(
@@ -254,6 +233,7 @@ public final class FolderDetailViewController: CollectionViewController {
                         self?.vm.pushVoiceNote(voiceNote: voiceNote)
                     }
                 }
+                .margins(.all, 0)
             }
         }
 
@@ -325,7 +305,6 @@ extension FolderDetailViewController {
         let isEditMode = (select != .none)
         for item in [backButton, moreAndActionButton, searchAndMoveButton] {
             item.isSelected = isEditMode
-            item.invalidateIntrinsicContentSize()
             item.sizeToFit()
         }
         moreAndActionButton.showsMenuAsPrimaryAction = !isEditMode
@@ -348,6 +327,7 @@ extension FolderDetailViewController {
         if shouldShowAlert {
             view.bringSubviewToFront(removeAlertOverlayView)
         }
+        updateNavigationBarAppearance(isTransparent: shouldShowAlert)
     }
 }
 

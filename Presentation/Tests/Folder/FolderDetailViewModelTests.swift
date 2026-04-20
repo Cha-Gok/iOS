@@ -112,12 +112,30 @@ final class FolderDetailViewModelTests: XCTestCase {
 
     func test_AlertView_상태변경() {
         let sut = makeSUT()
+        let note = VoiceNote.stub(title: "테스트 노트")
 
+        // 아이템이 선택된 상태여야 얼럿이 열림
+        sut.viewModel.selectItem(note)
         sut.viewModel.openAlertView()
         XCTAssertTrue(sut.viewModel.showAlert)
 
         sut.viewModel.closeAlertView()
         XCTAssertFalse(sut.viewModel.showAlert)
+    }
+
+    func test_openAlertView_아이템선택없을시_상태원복() {
+        let sut = makeSUT()
+
+        // 선택 모드이지만 아이템은 없는 상태
+        sut.viewModel.setSelectionMode(.single)
+        XCTAssertEqual(sut.viewModel.select, .single)
+
+        // 아이템 없이 얼럿 오픈 시도
+        sut.viewModel.openAlertView()
+
+        // 얼럿은 열리지 않고 선택 모드도 해제되어야 함
+        XCTAssertFalse(sut.viewModel.showAlert)
+        XCTAssertEqual(sut.viewModel.select, .none)
     }
 
     func test_fetchItems_호출시_보이스노트로드확인() async {
@@ -216,11 +234,11 @@ final class FolderDetailViewModelTests: XCTestCase {
         sut.mockWasteBasketRepo.expectMoveAllToWasteBasket(callCount: 1)
 
         sut.viewModel.move()
-        try? await Task.sleep(nanoseconds: 300_000_000)
 
         sut.mockWasteBasketRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty)
         XCTAssertEqual(sut.viewModel.select, .none)
+        XCTAssertTrue(sut.viewModel.selectedItems.isEmpty)
     }
 
     func test_restore_호출시_복원후_fetch재호출() async {

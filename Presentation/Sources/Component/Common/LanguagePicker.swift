@@ -8,15 +8,17 @@ final class LanguagePicker: UIStackView {
 
     private(set) var selectedLanguage: Language
     var onLanguageChanged: ((Language) -> Void)?
+    var showAlert: Bool
 
     private var itemViews: [LanguageItemView] = []
 
     // MARK: - LifeCycle
 
-    init(selected: Language) {
+    init(selected: Language, axis: NSLayoutConstraint.Axis = .vertical, showAlert: Bool = false) {
         selectedLanguage = selected
+        self.showAlert = showAlert
         super.init(frame: .zero)
-        setup()
+        setup(axis: axis)
         createItems()
     }
 
@@ -27,9 +29,9 @@ final class LanguagePicker: UIStackView {
 
     // MARK: - Set up
 
-    private func setup() {
-        axis = .vertical
-        spacing = Constant.languagePickerSpacing
+    private func setup(axis: NSLayoutConstraint.Axis) {
+        self.axis = axis
+        spacing = axis == .horizontal ? 12 : Constant.languagePickerSpacing
         alignment = .fill
         distribution = .fill
         translatesAutoresizingMaskIntoConstraints = false
@@ -38,13 +40,31 @@ final class LanguagePicker: UIStackView {
     // MARK: - Helper
 
     private func createItems() {
+        let leftSpacer = UIView()
+        let rightSpacer = UIView()
+
+        if axis == .horizontal {
+            leftSpacer.translatesAutoresizingMaskIntoConstraints = false
+            rightSpacer.translatesAutoresizingMaskIntoConstraints = false
+            addArrangedSubview(leftSpacer)
+        }
+
         for language in Language.allCases {
-            let itemView = LanguageItemView(language: language, isSelected: language == selectedLanguage)
+            let itemView = LanguageItemView(
+                language: language,
+                isSelected: language == selectedLanguage,
+                showAlert: showAlert
+            )
             itemView.addGestureRecognizer(
                 UITapGestureRecognizer(target: self, action: #selector(itemTapped(_:)))
             )
             addArrangedSubview(itemView)
             itemViews.append(itemView)
+        }
+
+        if axis == .horizontal {
+            addArrangedSubview(rightSpacer)
+            leftSpacer.widthAnchor.constraint(equalTo: rightSpacer.widthAnchor).isActive = true
         }
     }
 
@@ -62,8 +82,13 @@ final class LanguagePicker: UIStackView {
 
     // MARK: - Update Properties
 
+    func setLanguage(_ language: Language) {
+        selectedLanguage = language
+        updateSelectionState()
+    }
+
     private func updateSelectionState() {
-        itemViews.forEach { $0.setSelected($0.language == selectedLanguage) }
+        itemViews.forEach { $0.setSelected($0.language == selectedLanguage, showAlert: showAlert) }
     }
 }
 
@@ -102,18 +127,18 @@ private final class LanguageItemView: UIView {
 
     // MARK: - LifeCycle
 
-    init(language: Language, isSelected: Bool) {
+    init(language: Language, isSelected: Bool, showAlert: Bool) {
         self.language = language
         self.isSelected = isSelected
         super.init(frame: .zero)
         setUp()
         setupConstraints()
-        setSelected(isSelected)
+        setSelected(isSelected, showAlert: showAlert)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
 
     // MARK: - Constraints
@@ -148,19 +173,19 @@ private final class LanguageItemView: UIView {
 
     // MARK: - Update Properties
 
-    private func languageText() -> String {
+    private func languageText(showAlert: Bool = false) -> String {
         switch language {
         case .ko:
-            return "한국어 (기본설정)"
+            return "한국어\(showAlert ? "" : " (기본설정)")"
         case .en:
             return "영어"
         }
     }
 
-    func setSelected(_ selected: Bool) {
+    func setSelected(_ selected: Bool, showAlert: Bool) {
         isSelected = selected
         innerIndicatorView.backgroundColor = selected ? .point600 : .gray900
         titleLabel.textColor = selected ? .gray900 : .gray750
-        titleLabel.setTypography(text: languageText(), style: .subtitle1)
+        titleLabel.setTypography(text: languageText(showAlert: showAlert), style: .subtitle1)
     }
 }

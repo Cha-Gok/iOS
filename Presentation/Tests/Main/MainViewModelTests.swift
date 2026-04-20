@@ -48,6 +48,7 @@ final class MainViewModelTests: XCTestCase {
         let mockVoiceNoteRepo: MockVoiceNoteRepository
         let mockWasteBasketRepo: MockWasteBasketRepository
         let mockCoordinator: MockMainCoordinatorDelegate
+        let mockLanguageRepo: MockLanguageRepository
     }
 
     private func makeSUT() -> SUT {
@@ -56,6 +57,7 @@ final class MainViewModelTests: XCTestCase {
         let mockVoiceNoteRepo = MockVoiceNoteRepository()
         let mockWasteBasketRepo = MockWasteBasketRepository()
         let mockCoordinator = MockMainCoordinatorDelegate()
+        let mockLanguageRepo = MockLanguageRepository()
 
         let viewModel = MainViewModel(
             microphoneRepository: mockVoiceRecordRepo,
@@ -65,7 +67,8 @@ final class MainViewModelTests: XCTestCase {
                 summaryRepository: MockSummaryRepository()
             ),
             folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
-            wasteBasketRepository: mockWasteBasketRepo
+            wasteBasketRepository: mockWasteBasketRepo,
+            languageRepository: mockLanguageRepo
         )
         viewModel.mainCoordinator = mockCoordinator
 
@@ -75,7 +78,8 @@ final class MainViewModelTests: XCTestCase {
             mockFolderRepo: mockFolderRepo,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
             mockWasteBasketRepo: mockWasteBasketRepo,
-            mockCoordinator: mockCoordinator
+            mockCoordinator: mockCoordinator,
+            mockLanguageRepo: mockLanguageRepo
         )
     }
 
@@ -142,11 +146,17 @@ final class MainViewModelTests: XCTestCase {
     func test_AlertView_상태변경() {
         let sut = makeSUT()
 
-        sut.viewModel.openAlertView()
-        XCTAssertTrue(sut.viewModel.showAlert)
+        sut.viewModel.openPermissionAlert()
+        XCTAssertTrue(sut.viewModel.showPermissionAlert)
 
-        sut.viewModel.closeAlertView()
-        XCTAssertFalse(sut.viewModel.showAlert)
+        sut.viewModel.closePermissionAlert()
+        XCTAssertFalse(sut.viewModel.showPermissionAlert)
+
+        sut.viewModel.openLanguageAlert()
+        XCTAssertTrue(sut.viewModel.showLanguageAlert)
+
+        sut.viewModel.closeLanguageAlert()
+        XCTAssertFalse(sut.viewModel.showLanguageAlert)
     }
 
     func test_handleRecordButtonTap_권한허용_바로녹음화면이동() async {
@@ -158,7 +168,7 @@ final class MainViewModelTests: XCTestCase {
 
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertTrue(sut.mockCoordinator.presentRecodingViewCalled)
-        XCTAssertFalse(sut.viewModel.showAlert)
+        XCTAssertFalse(sut.viewModel.showPermissionAlert)
     }
 
     func test_handleRecordButtonTap_권한거부_알럿노출() async {
@@ -170,7 +180,7 @@ final class MainViewModelTests: XCTestCase {
 
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
-        XCTAssertTrue(sut.viewModel.showAlert)
+        XCTAssertTrue(sut.viewModel.showPermissionAlert)
     }
 
     func test_handleRecordButtonTap_권한미결정_알럿노출() async {
@@ -182,7 +192,29 @@ final class MainViewModelTests: XCTestCase {
 
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
-        XCTAssertTrue(sut.viewModel.showAlert)
+        XCTAssertTrue(sut.viewModel.showPermissionAlert)
+    }
+
+    // MARK: - Language Tests
+
+    func test_checkLanguage_언어데이터로드확인() {
+        let sut = makeSUT()
+        sut.mockLanguageRepo.setFetchResult(.en)
+        sut.mockLanguageRepo.expectFetch(callCount: 1)
+
+        let language = sut.viewModel.checkLanguage()
+
+        XCTAssertEqual(language, .en)
+        sut.mockLanguageRepo.verify()
+    }
+
+    func test_saveLanguage_언어설정값저장확인() {
+        let sut = makeSUT()
+
+        sut.viewModel.saveLanguage(.en)
+
+        sut.mockLanguageRepo.expectSave(language: .en, callCount: 1)
+        sut.mockLanguageRepo.verify()
     }
 
     // MARK: - Update Tests
