@@ -86,15 +86,17 @@ final class KeywordsCell: UICollectionViewCell {
     override func preferredLayoutAttributesFitting(_ layoutAttributes: UICollectionViewLayoutAttributes)
         -> UICollectionViewLayoutAttributes
     {
-        setNeedsLayout()
-        layoutIfNeeded()
-
+        let attributes = super.preferredLayoutAttributesFitting(layoutAttributes)
+        let targetSize = CGSize(
+            width: layoutAttributes.frame.width,
+            height: UIView.layoutFittingCompressedSize.height
+        )
         let size = contentView.systemLayoutSizeFitting(
-            CGSize(width: layoutAttributes.frame.width, height: UIView.layoutFittingCompressedSize.height),
+            targetSize,
             withHorizontalFittingPriority: .required,
             verticalFittingPriority: .fittingSizeLevel
         )
-        layoutAttributes.frame.size.height = size.height
-        return layoutAttributes
+        attributes.frame.size.height = size.height
+        return attributes
     }
 }
