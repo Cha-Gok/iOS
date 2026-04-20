@@ -143,10 +143,10 @@ final class MainViewModelTests: XCTestCase {
         let sut = makeSUT()
 
         sut.viewModel.openAlertView()
-        XCTAssertTrue(sut.viewModel.showAlert)
+        XCTAssertTrue(sut.viewModel.showPermissionAlert)
 
         sut.viewModel.closeAlertView()
-        XCTAssertFalse(sut.viewModel.showAlert)
+        XCTAssertFalse(sut.viewModel.showPermissionAlert)
     }
 
     func test_handleRecordButtonTap_권한허용_바로녹음화면이동() async {
@@ -158,7 +158,7 @@ final class MainViewModelTests: XCTestCase {
 
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertTrue(sut.mockCoordinator.presentRecodingViewCalled)
-        XCTAssertFalse(sut.viewModel.showAlert)
+        XCTAssertFalse(sut.viewModel.showPermissionAlert)
     }
 
     func test_handleRecordButtonTap_권한거부_알럿노출() async {
@@ -170,7 +170,7 @@ final class MainViewModelTests: XCTestCase {
 
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
-        XCTAssertTrue(sut.viewModel.showAlert)
+        XCTAssertTrue(sut.viewModel.showPermissionAlert)
     }
 
     func test_handleRecordButtonTap_권한미결정_알럿노출() async {
@@ -182,7 +182,7 @@ final class MainViewModelTests: XCTestCase {
 
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
-        XCTAssertTrue(sut.viewModel.showAlert)
+        XCTAssertTrue(sut.viewModel.showPermissionAlert)
     }
 
     // MARK: - Update Tests

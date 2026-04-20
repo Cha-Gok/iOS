@@ -44,7 +44,7 @@ public final class MainViewModel {
         categoryData[selectedCategoryIndex].items.isEmpty
     }
 
-    private(set) var showAlert: Bool = false
+    private(set) var showPermissionAlert: Bool = false
 
     private(set) var errorMessage: String?
 
@@ -96,11 +96,11 @@ extension MainViewModel {
     }
 
     func closeAlertView() {
-        showAlert = false
+        showPermissionAlert = false
     }
 
     func openAlertView() {
-        showAlert = true
+        showPermissionAlert = true
     }
 }
 
