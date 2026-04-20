@@ -11,13 +11,17 @@ public class TypographyLabel: UILabel {
         didSet { applyTypography() }
     }
 
-    public override var text: String? {
+    override public var text: String? {
+        didSet { applyTypography() }
+    }
+
+    override public var lineBreakMode: NSLineBreakMode {
         didSet { applyTypography() }
     }
 
     public init(typography: Typography, alignment: NSTextAlignment = .left) {
         self.typography = typography
-        self.typographyAlignment = alignment
+        typographyAlignment = alignment
         super.init(frame: .zero)
         applyTypography()
     }
@@ -34,12 +38,14 @@ public class TypographyLabel: UILabel {
             .mutableCopy() as? NSMutableParagraphStyle
         {
             paragraphStyle.alignment = typographyAlignment
+            paragraphStyle.lineBreakMode = lineBreakMode
             attributes[.paragraphStyle] = paragraphStyle
         }
 
         super.attributedText = NSAttributedString(string: text ?? "", attributes: attributes)
     }
 }
+
 #Preview {
     let stack = UIStackView()
     stack.axis = .vertical
@@ -51,7 +57,7 @@ public class TypographyLabel: UILabel {
         (.title1, "Title1"), (.title2, "Title2"), (.title3, "Title3"),
         (.subtitle1, "Subtitle1"), (.subtitle2, "Subtitle2"),
         (.body1, "Body1"), (.body2, "Body2"), (.body3, "Body3"),
-        (.label, "Label"), (.caption, "Caption"),
+        (.label, "Label"), (.caption, "Caption")
     ]
 
     for (style, name) in styles {
@@ -62,4 +68,3 @@ public class TypographyLabel: UILabel {
 
     return stack
 }
-
