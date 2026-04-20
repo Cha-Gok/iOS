@@ -24,11 +24,12 @@ final class KeyPointContentView: UIView, UIContentView {
 
     // MARK: - UI Components
 
-    private let badgeView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.point600
-        view.layer.cornerRadius = 20
-        return view
+    private let badgeView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.backgroundColor = UIColor.point600
+        stack.layer.cornerRadius = 20
+        return stack
     }()
 
     private let badgeLabel: UILabel = {
@@ -66,11 +67,11 @@ final class KeyPointContentView: UIView, UIContentView {
         backgroundColor = UIColor.gray100
         layer.cornerRadius = Constant.cornerRadius
 
-        badgeView.addSubview(badgeLabel)
+        badgeView.addArrangedSubview(badgeLabel)
         addSubview(badgeView)
         addSubview(textLabel)
 
-        for subview in [badgeView, badgeLabel, textLabel] {
+        for subview in [badgeView, textLabel] {
             subview.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -79,9 +80,6 @@ final class KeyPointContentView: UIView, UIContentView {
             badgeView.heightAnchor.constraint(equalToConstant: 24),
             badgeView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
             badgeView.centerYAnchor.constraint(equalTo: centerYAnchor),
-
-            badgeLabel.centerXAnchor.constraint(equalTo: badgeView.centerXAnchor),
-            badgeLabel.centerYAnchor.constraint(equalTo: badgeView.centerYAnchor),
 
             textLabel.leadingAnchor.constraint(equalTo: badgeView.trailingAnchor, constant: 8),
             textLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
