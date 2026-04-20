@@ -114,13 +114,13 @@ public extension Constant {
     static let onBoardingPaginationTopMargin: CGFloat = 52
 }
 
-// MARK: - KeywordChipView Constants
+// MARK: - KeywordChipLabel Constants
 
 public extension Constant {
-    /// KeywordChipView 수평 패딩 (12)
+    /// KeywordChipLabel 수평 패딩 (12)
     static let keywordChipHorizontalPadding: CGFloat = 12
 
-    /// KeywordChipView 수직 패딩 (8)
+    /// KeywordChipLabel 수직 패딩 (8)
     static let keywordChipVerticalPadding: CGFloat = 8
 
     /// 키워드 칩 가로 간격 (10)
