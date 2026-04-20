@@ -3,12 +3,12 @@ import SwiftUI
 
 struct VoiceNoteCardView: View {
     let isSelected: Bool
-    var select: FolderDetailViewModel.Select
+    var select: SelectionMode
     let voiceNote: VoiceNote
     let action: ((VoiceNote, Bool) -> Void)?
     let completeAction: (() -> Void)?
     init(
-        select: FolderDetailViewModel.Select = .none,
+        select: SelectionMode = .none,
         isSelected: Bool = false,
         voiceNote: VoiceNote,
         action: ((VoiceNote, Bool) -> Void)? = nil,

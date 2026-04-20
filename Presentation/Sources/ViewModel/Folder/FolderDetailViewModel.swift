@@ -12,12 +12,6 @@ public protocol FolderDetailCoordinatorDelegate: BaseCoordinatorDelegate {
 public final class FolderDetailViewModel {
     // MARK: - State
 
-    enum Select: Equatable {
-        case none
-        case all
-        case single
-    }
-
     enum Order {
         case createdAt
         case updatedAt
@@ -28,7 +22,7 @@ public final class FolderDetailViewModel {
     private(set) var items: [LibraryItem] = []
     private(set) var errorMessage: String?
     private(set) var order: Order = .createdAt
-    private(set) var select: Select = .none
+    private(set) var select: SelectionMode = .none
     private(set) var selectedItems: [VoiceNote] = []
     private(set) var showAlert: Bool = false
 
@@ -63,7 +57,7 @@ extension FolderDetailViewModel {
         sortItems()
     }
 
-    func setSelectionMode(_ select: Select) {
+    func setSelectionMode(_ select: SelectionMode) {
         self.select = select
         if select == .none {
             allClearSelected()
@@ -73,6 +67,7 @@ extension FolderDetailViewModel {
     }
 
     func selectItem(_ item: VoiceNote) {
+        if select == .none { setSelectionMode(.multiple) }
         selectedItems.append(item)
     }
 

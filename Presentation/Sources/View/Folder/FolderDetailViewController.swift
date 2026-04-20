@@ -49,7 +49,7 @@ public final class FolderDetailViewController: CollectionViewController {
         title: "선택하기",
         image: nil
     ) { [weak self] _ in
-        self?.vm.setSelectionMode(.single)
+        self?.vm.setSelectionMode(.multiple)
     }
 
     private lazy var selectAllAction = UIAction(
@@ -264,7 +264,7 @@ extension FolderDetailViewController {
         }
     }
 
-    private func updateRightBarButtonMenu(_ select: FolderDetailViewModel.Select) {
+    private func updateRightBarButtonMenu(_ select: SelectionMode) {
         let dateSection: UIMenu = .init(
             title: "",
             options: .displayInline,
@@ -287,7 +287,7 @@ extension FolderDetailViewController {
         switch vm.select {
         case .none:
             [createdAtAction, updatedAtAction]
-        case .all, .single:
+        case .all, .multiple:
             []
         }
     }
@@ -296,12 +296,12 @@ extension FolderDetailViewController {
         switch vm.select {
         case .none:
             [selectAction, selectAllAction]
-        case .all, .single:
+        case .all, .multiple:
             []
         }
     }
 
-    private func updateNavigationItems(_ select: FolderDetailViewModel.Select) {
+    private func updateNavigationItems(_ select: SelectionMode) {
         let isEditMode = (select != .none)
         for item in [backButton, moreAndActionButton, searchAndMoveButton] {
             item.isSelected = isEditMode
@@ -340,7 +340,7 @@ private extension FolderDetailViewController {
             switch vm.select {
             case .none:
                 vm.didTapBack()
-            case .all, .single:
+            case .all, .multiple:
                 vm.setSelectionMode(.none)
             }
         }
@@ -353,7 +353,7 @@ private extension FolderDetailViewController {
             case .none:
                 // TODO: 더 보기 로직 실행 ( 실행 X )
                 print("더 보기 버튼 탭됨")
-            case .single, .all:
+            case .multiple, .all:
                 // TODO: 삭제 로직 실행
                 vm.openAlertView()
             }
@@ -367,7 +367,7 @@ private extension FolderDetailViewController {
             case .none:
                 // TODO: 검색 로직 실행
                 print("검색 버튼 탭됨")
-            case .all, .single:
+            case .all, .multiple:
                 // TODO: 이동 로직 실행
                 vm.presentMoveFolder { [weak self] name in
                     self?.vm.fetchItems()
