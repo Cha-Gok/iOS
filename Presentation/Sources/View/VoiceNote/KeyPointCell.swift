@@ -37,6 +37,7 @@ final class KeyPointContentView: UIView, UIContentView {
 
     private let textLabel: UILabel = {
         let label = UILabel()
+        label.setTypography(style: .body1)
         label.textColor = UIColor.gray800
         label.numberOfLines = 0
         return label
@@ -93,7 +94,7 @@ final class KeyPointContentView: UIView, UIContentView {
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? KeyPointContentConfiguration else { return }
         badgeLabel.text = "\(config.number)"
-        textLabel.setTypography(text: config.text, style: .body1)
+        textLabel.text = config.text
     }
 }
 
