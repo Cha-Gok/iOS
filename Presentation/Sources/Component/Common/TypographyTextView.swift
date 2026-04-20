@@ -15,6 +15,10 @@ public class TypographyTextView: UITextView {
         didSet { applyTypography() }
     }
 
+    public override var textColor: UIColor? {
+        didSet { applyTypography() }
+    }
+
     public init(typography: Typography, alignment: NSTextAlignment = .left) {
         self.typography = typography
         self.typographyAlignment = alignment
@@ -35,6 +39,10 @@ public class TypographyTextView: UITextView {
         {
             paragraphStyle.alignment = typographyAlignment
             attributes[.paragraphStyle] = paragraphStyle
+        }
+
+        if let textColor {
+            attributes[.foregroundColor] = textColor
         }
 
         super.attributedText = NSAttributedString(string: text ?? "", attributes: attributes)
