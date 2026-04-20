@@ -29,31 +29,32 @@ final class MetadataContentView: UIView, UIContentView {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.spacing = 5
-        stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
 
     private let folderIcon: UIImageView = {
         let imageView = UIImageView(image: UIImage(systemName: "folder"))
         imageView.tintColor = .metadataLabel
-        imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
 
     private let folderLabel: UILabel = {
         let label = UILabel()
+        label.setTypography(style: .body1)
         label.textColor = .metadataLabel
         return label
     }()
 
     private let dateLabel: UILabel = {
         let label = UILabel()
+        label.setTypography(style: .body1)
         label.textColor = .metadataLabel
         return label
     }()
 
     private let durationLabel: UILabel = {
         let label = UILabel()
+        label.setTypography(style: .body1)
         label.textColor = .metadataLabel
         return label
     }()
@@ -62,7 +63,6 @@ final class MetadataContentView: UIView, UIContentView {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 2
-        stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
 
@@ -92,6 +92,10 @@ final class MetadataContentView: UIView, UIContentView {
         stackView.setCustomSpacing(15, after: folderRow)
 
         addSubview(stackView)
+
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        folderIcon.translatesAutoresizingMaskIntoConstraints = false
+
         NSLayoutConstraint.activate([
             folderIcon.widthAnchor.constraint(equalToConstant: 20),
             folderIcon.heightAnchor.constraint(equalToConstant: 20),
@@ -107,8 +111,8 @@ final class MetadataContentView: UIView, UIContentView {
 
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? MetadataContentConfiguration else { return }
-        folderLabel.setTypography(text: config.folderName, style: .body1)
-        dateLabel.setTypography(text: config.date, style: .body1)
-        durationLabel.setTypography(text: config.duration, style: .body1)
+        folderLabel.text = config.folderName
+        dateLabel.text = config.date
+        durationLabel.text = config.duration
     }
 }
