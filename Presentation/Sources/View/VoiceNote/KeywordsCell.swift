@@ -36,7 +36,7 @@ final class KeywordsContentView: UIView, UIContentView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        contentHeight = layoutChips(for: bounds.width, shouldApplyFrames: true)
+        contentHeight = layoutChips(for: bounds.width)
         invalidateIntrinsicContentSize()
     }
 
@@ -56,7 +56,7 @@ final class KeywordsContentView: UIView, UIContentView {
         setNeedsLayout()
     }
 
-    private func layoutChips(for availableWidth: CGFloat, shouldApplyFrames: Bool) -> CGFloat {
+    private func layoutChips(for availableWidth: CGFloat) -> CGFloat {
         guard availableWidth > 0, chipViews.isEmpty == false else { return 0 }
 
         var xOffset: CGFloat = 0
@@ -72,9 +72,7 @@ final class KeywordsContentView: UIView, UIContentView {
                 rowHeight = 0
             }
 
-            if shouldApplyFrames {
-                chipView.frame = CGRect(origin: CGPoint(x: xOffset, y: yOffset), size: chipSize)
-            }
+            chipView.frame = CGRect(origin: CGPoint(x: xOffset, y: yOffset), size: chipSize)
 
             xOffset += chipSize.width + interItemSpacing
             rowHeight = max(rowHeight, chipSize.height)
