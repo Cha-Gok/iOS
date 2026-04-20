@@ -118,27 +118,12 @@ final class ScriptContentView: UIView, UIContentView {
         textView.isEditable = config.isEditing
         textView.isSelectable = config.isEditing
 
-        let color = textColor(isHighlighted: config.isHighlighted)
         if textView.text != config.text {
-            applyTypography(text: config.text, color: color)
-        } else {
-            textView.textColor = color
-            textView.typingAttributes[.foregroundColor] = color
+            textView.text = config.text
         }
         textBackground.backgroundColor = config.isHighlighted
             ? UIColor.point600.withAlphaComponent(0.3)
             : .clear
-    }
-
-    private func applyTypography(text: String, color: UIColor) {
-        var attributes = Typography.body1.textAttributes
-        attributes[.foregroundColor] = color
-        textView.attributedText = NSAttributedString(string: text, attributes: attributes)
-        textView.typingAttributes = attributes
-    }
-
-    private func textColor(isHighlighted: Bool) -> UIColor {
-        isHighlighted ? .white : UIColor.gray600
     }
 }
 
