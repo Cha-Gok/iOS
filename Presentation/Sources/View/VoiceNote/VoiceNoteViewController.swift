@@ -3,14 +3,12 @@ import UIKit
 
 public final class VoiceNoteViewController: UIViewController, Alertable {
     let viewModel: VoiceNoteViewModel
-    lazy var dataSource = makeDataSource()
 
     // MARK: - UI Components
 
     private let playerView = AudioPlayerView()
     private let topBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-    private lazy var segmentedControl = UnderlineSegmentedControl(items: [Section.keyPoints, .keywords, .scripts]
-        .compactMap(\.title))
+    private lazy var segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
     private lazy var backChevronButton: UIButton = {
         let btn = UIButton(type: .system)
         let backImage = UIImage(systemName: "chevron.left")?
@@ -81,14 +79,21 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private var normalLeftBarButtonItem: UIBarButtonItem?
     private var normalRightBarButtonItems: [UIBarButtonItem] = []
 
-    lazy var collectionView: UICollectionView = {
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
-        collectionView.backgroundColor = .clear
-        collectionView.showsVerticalScrollIndicator = false
-        collectionView.keyboardDismissMode = .interactive
-        collectionView.delegate = self
-        return collectionView
+    private lazy var pageViewController: UIPageViewController = {
+        let pvc = UIPageViewController(
+            transitionStyle: .scroll,
+            navigationOrientation: .horizontal,
+            options: nil
+        )
+        pvc.dataSource = self
+        pvc.delegate = self
+        return pvc
     }()
+
+    private lazy var summaryViewController = VoiceNoteSummaryViewController(viewModel: viewModel)
+    private lazy var scriptViewController = VoiceNoteScriptViewController(viewModel: viewModel)
+    private lazy var pages: [UIViewController] = [summaryViewController, scriptViewController]
+    private var currentPageIndex: Int = 0
 
     // MARK: - Init
 
@@ -107,8 +112,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     override public func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        applySnapshot()
-        registerKeyboardObservers()
         viewModel.onAppear()
     }
 
@@ -124,7 +127,7 @@ private extension VoiceNoteViewController {
     func setupUI() {
         view.backgroundColor = UIColor.gray0
 
-        view.addSubview(collectionView)
+        addPageViewController()
         view.addSubview(playerView)
         view.addSubview(topBlurView)
         view.addSubview(segmentedControl)
@@ -136,16 +139,27 @@ private extension VoiceNoteViewController {
         setupBindings()
     }
 
+    func addPageViewController() {
+        addChild(pageViewController)
+        view.addSubview(pageViewController.view)
+        pageViewController.didMove(toParent: self)
+        pageViewController.setViewControllers(
+            [pages[0]],
+            direction: .forward,
+            animated: false
+        )
+    }
+
     func setupConstraints() {
-        for subview in [collectionView, playerView, topBlurView, segmentedControl] {
+        for subview in [pageViewController.view!, playerView, topBlurView, segmentedControl] {
             subview.translatesAutoresizingMaskIntoConstraints = false
         }
 
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: playerView.topAnchor),
+            pageViewController.view.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
+            pageViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            pageViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            pageViewController.view.bottomAnchor.constraint(equalTo: playerView.topAnchor),
 
             topBlurView.topAnchor.constraint(equalTo: view.topAnchor),
             topBlurView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -197,11 +211,8 @@ private extension VoiceNoteViewController {
     func setupTabBar() {
         segmentedControl.addAction(UIAction { [weak self] action in
             guard let self, let sender = action.sender as? UnderlineSegmentedControl else { return }
-            let sections: [Section] = [.keyPoints, .keywords, .scripts]
             let index = sender.selectedSegmentIndex
-            guard index < sections.count else { return }
-            let section = sections[index]
-            scrollToSection(section: section)
+            switchToPage(at: index, animated: true)
         }, for: .valueChanged)
     }
 
@@ -215,27 +226,12 @@ private extension VoiceNoteViewController {
 
     func setupBindings() {
         observePlaybackState()
-        observeAnalysisState()
         observeErrorMessage()
         observeEditingState()
-        observePlayingParagraph()
         observeScriptEdits()
-        observeTranscriptSections()
     }
 
-    private func observeTranscriptSections() {
-        withObservationTracking {
-            _ = viewModel.voiceNote.transcript?.sections
-        } onChange: { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                self.applySnapshot()
-                self.observeTranscriptSections()
-            }
-        }
-    }
-
-    private func observeScriptEdits() {
+    func observeScriptEdits() {
         withObservationTracking {
             _ = viewModel.hasScriptEdits
         } onChange: { [weak self] in
@@ -247,28 +243,11 @@ private extension VoiceNoteViewController {
         }
     }
 
-    private func updateEditCancelButtonTint() {
+    func updateEditCancelButtonTint() {
         editCancelButton.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
     }
 
-    private func observePlayingParagraph() {
-        withObservationTracking {
-            _ = viewModel.playingSectionIndex
-        } onChange: { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                let scriptItems = self.dataSource.snapshot().itemIdentifiers(inSection: .scripts)
-                if !scriptItems.isEmpty {
-                    var snapshot = self.dataSource.snapshot()
-                    snapshot.reconfigureItems(scriptItems)
-                    self.dataSource.apply(snapshot, animatingDifferences: false)
-                }
-                self.observePlayingParagraph()
-            }
-        }
-    }
-
-    private func observePlaybackState() {
+    func observePlaybackState() {
         withObservationTracking {
             _ = viewModel.currentPlaybackState
         } onChange: { [weak self] in
@@ -280,28 +259,7 @@ private extension VoiceNoteViewController {
         }
     }
 
-    private func observeAnalysisState() {
-        withObservationTracking {
-            _ = viewModel.voiceNote.analysisState
-        } onChange: { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                switch self.viewModel.voiceNote.analysisState {
-                case .analyzing:
-                    var snapshot = self.dataSource.snapshot()
-                    snapshot.reconfigureItems([.metadata])
-                    self.dataSource.apply(snapshot, animatingDifferences: false)
-                case .completed, .transcribed:
-                    self.applySnapshot()
-                case .failed, .pending:
-                    break
-                }
-                self.observeAnalysisState()
-            }
-        }
-    }
-
-    private func observeErrorMessage() {
+    func observeErrorMessage() {
         withObservationTracking {
             _ = viewModel.errorMessage
         } onChange: { [weak self] in
@@ -315,6 +273,59 @@ private extension VoiceNoteViewController {
                 self.observeErrorMessage()
             }
         }
+    }
+}
+
+// MARK: - Page Switching
+
+private extension VoiceNoteViewController {
+    func switchToPage(at index: Int, animated: Bool) {
+        guard pages.indices.contains(index), index != currentPageIndex else { return }
+        let direction: UIPageViewController.NavigationDirection = index > currentPageIndex ? .forward : .reverse
+        pageViewController.setViewControllers(
+            [pages[index]],
+            direction: direction,
+            animated: animated
+        )
+        currentPageIndex = index
+    }
+
+    func syncSegmentedControl(to index: Int) {
+        guard segmentedControl.selectedSegmentIndex != index else { return }
+        segmentedControl.selectSegment(index: index)
+    }
+}
+
+// MARK: - UIPageViewControllerDataSource / Delegate
+
+extension VoiceNoteViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+    public func pageViewController(
+        _ pageViewController: UIPageViewController,
+        viewControllerBefore viewController: UIViewController
+    ) -> UIViewController? {
+        guard let idx = pages.firstIndex(of: viewController), idx > 0 else { return nil }
+        return pages[idx - 1]
+    }
+
+    public func pageViewController(
+        _ pageViewController: UIPageViewController,
+        viewControllerAfter viewController: UIViewController
+    ) -> UIViewController? {
+        guard let idx = pages.firstIndex(of: viewController), idx < pages.count - 1 else { return nil }
+        return pages[idx + 1]
+    }
+
+    public func pageViewController(
+        _ pageViewController: UIPageViewController,
+        didFinishAnimating finished: Bool,
+        previousViewControllers: [UIViewController],
+        transitionCompleted completed: Bool
+    ) {
+        guard completed,
+              let current = pageViewController.viewControllers?.first,
+              let idx = pages.firstIndex(of: current) else { return }
+        currentPageIndex = idx
+        syncSegmentedControl(to: idx)
     }
 }
 
@@ -361,7 +372,8 @@ private extension VoiceNoteViewController {
         navigationItem.leftBarButtonItem = editCancelButton
         navigationItem.rightBarButtonItems = [doneButton]
         updateEditCancelButtonTint()
-        reconfigureScriptsOnly()
+        switchToPage(at: Page.script.rawValue, animated: true)
+        syncSegmentedControl(to: Page.script.rawValue)
     }
 
     func exitEditMode() {
@@ -372,117 +384,6 @@ private extension VoiceNoteViewController {
         navigationItem.leftBarButtonItem = normalLeftBarButtonItem
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
-        reconfigureScriptsOnly()
-    }
-
-    func reconfigureScriptsOnly() {
-        var snapshot = dataSource.snapshot()
-        let scriptItems = snapshot.itemIdentifiers(inSection: .scripts)
-        guard !scriptItems.isEmpty else { return }
-        snapshot.reconfigureItems(scriptItems)
-        dataSource.apply(snapshot, animatingDifferences: false)
-    }
-}
-
-// MARK: - Keyboard
-
-private extension VoiceNoteViewController {
-    func registerKeyboardObservers() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(keyboardWillChangeFrame(_:)),
-            name: UIResponder.keyboardWillChangeFrameNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(keyboardWillHide(_:)),
-            name: UIResponder.keyboardWillHideNotification,
-            object: nil
-        )
-    }
-}
-
-extension VoiceNoteViewController {
-    @objc
-    fileprivate func keyboardWillChangeFrame(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let frameValue = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
-        let keyboardFrame = view.convert(frameValue.cgRectValue, from: nil)
-        let overlap = max(0, collectionView.frame.maxY - keyboardFrame.minY)
-        applyKeyboardInset(overlap, userInfo: userInfo)
-        scrollActiveResponderVisible()
-    }
-
-    @objc
-    fileprivate func keyboardWillHide(_ notification: Notification) {
-        applyKeyboardInset(0, userInfo: notification.userInfo)
-    }
-
-    private func applyKeyboardInset(_ bottom: CGFloat, userInfo: [AnyHashable: Any]?) {
-        let duration = (userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval) ?? 0.25
-        let curveRaw = (userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt)
-            ?? UInt(UIView.AnimationCurve.easeInOut.rawValue)
-        let options = UIView.AnimationOptions(rawValue: curveRaw << 16)
-        UIView.animate(withDuration: duration, delay: 0, options: options) {
-            self.collectionView.contentInset.bottom = bottom
-            self.collectionView.verticalScrollIndicatorInsets.bottom = bottom
-        }
-    }
-
-    private func scrollActiveResponderVisible() {
-        guard let responder = collectionView.activeFirstResponder() else { return }
-        let frameInCollection = responder.convert(responder.bounds, to: collectionView)
-        collectionView.scrollRectToVisible(frameInCollection.insetBy(dx: 0, dy: -16), animated: true)
-    }
-}
-
-private extension UIView {
-    func activeFirstResponder() -> UIView? {
-        if isFirstResponder { return self }
-        for subview in subviews {
-            if let found = subview.activeFirstResponder() { return found }
-        }
-        return nil
-    }
-}
-
-// MARK: - Tab Actions
-
-private extension VoiceNoteViewController {
-    func scrollToSection(section: Section) {
-        let sectionIndex = section.rawValue
-        let headerIndexPath = IndexPath(item: 0, section: sectionIndex)
-
-        if let attributes = collectionView.collectionViewLayout.layoutAttributesForSupplementaryView(
-            ofKind: UICollectionView.elementKindSectionHeader,
-            at: headerIndexPath
-        ) {
-            let offsetY = max(
-                -collectionView.adjustedContentInset.top,
-                attributes.frame.minY - collectionView.adjustedContentInset.top
-            )
-            collectionView.setContentOffset(CGPoint(x: 0, y: offsetY), animated: true)
-            return
-        }
-
-        collectionView.scrollToItem(at: headerIndexPath, at: .top, animated: true)
-    }
-}
-
-// MARK: - UICollectionViewDelegate
-
-extension VoiceNoteViewController: UICollectionViewDelegate {
-    public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        guard case .script = dataSource.itemIdentifier(for: indexPath) else { return false }
-        return viewModel.editingMode != .script
-    }
-
-    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        defer { collectionView.deselectItem(at: indexPath, animated: false) }
-        guard case .script(let index) = dataSource.itemIdentifier(for: indexPath) else { return }
-        let timestamp = viewModel.scriptSections[index].timestamp
-        viewModel.scriptTimestampTapped(timestamp)
     }
 }
 
@@ -497,5 +398,21 @@ extension VoiceNoteViewController: UITextFieldDelegate {
     public func textFieldDidEndEditing(_ textField: UITextField) {
         guard viewModel.editingMode == .title else { return }
         viewModel.doneTitleEditing(title: textField.text ?? "")
+    }
+}
+
+// MARK: - Page
+
+private extension VoiceNoteViewController {
+    enum Page: Int, CaseIterable {
+        case summary
+        case script
+
+        var title: String {
+            switch self {
+            case .summary: return "요약"
+            case .script: return "스크립트"
+            }
+        }
     }
 }
