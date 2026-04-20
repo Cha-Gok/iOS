@@ -49,6 +49,8 @@ final class KeyPointContentView: UIView, UIContentView {
         stack.spacing = 8
         stack.isLayoutMarginsRelativeArrangement = true
         stack.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+        stack.backgroundColor = UIColor.gray100
+        stack.layer.cornerRadius = Constant.cornerRadius
         return stack
     }()
 
@@ -69,9 +71,6 @@ final class KeyPointContentView: UIView, UIContentView {
     // MARK: - Setup
 
     private func setupUI() {
-        backgroundColor = UIColor.gray100
-        layer.cornerRadius = Constant.cornerRadius
-
         contentStack.addArrangedSubview(badgeLabel)
         contentStack.addArrangedSubview(textLabel)
         addSubview(contentStack)
@@ -85,7 +84,7 @@ final class KeyPointContentView: UIView, UIContentView {
             contentStack.leadingAnchor.constraint(equalTo: leadingAnchor),
             contentStack.trailingAnchor.constraint(equalTo: trailingAnchor),
             contentStack.topAnchor.constraint(equalTo: topAnchor),
-            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor)
+            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
     }
 
@@ -119,13 +118,13 @@ final class KeyPointContentView: UIView, UIContentView {
     stack.translatesAutoresizingMaskIntoConstraints = false
 
     let container = UIView()
-    container.backgroundColor = .gray100
+    container.backgroundColor = .systemPink
     container.addSubview(stack)
 
     NSLayoutConstraint.activate([
         stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
         stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
-        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
     ])
 
     return container
