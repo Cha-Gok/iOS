@@ -28,39 +28,29 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         }
     )
 
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = Typography.title1.font
-        label.textColor = UIColor.gray950
-        label.lineBreakMode = .byTruncatingTail
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        label.isUserInteractionEnabled = true
-        let tap = UITapGestureRecognizer(target: self, action: #selector(titleLabelTapped))
-        label.addGestureRecognizer(tap)
-        return label
-    }()
-
-    @objc
-    private func titleLabelTapped() {
-        viewModel.enterTitleEditing()
-    }
-
-    private lazy var titleTextField: UITextField = {
-        let field = UITextField()
-        field.font = Typography.title1.font
+    private lazy var titleField: TypographyTextField = {
+        let field = TypographyTextField(typography: .title1)
         field.textColor = UIColor.gray950
         field.tintColor = UIColor.gray950
         field.returnKeyType = .done
         field.delegate = self
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(titleFieldTapped))
+        field.addGestureRecognizer(tap)
         return field
     }()
+
+    @objc
+    private func titleFieldTapped() {
+        viewModel.enterTitleEditing()
+    }
 
     private lazy var doneButton: UIBarButtonItem = {
         let item = UIBarButtonItem(title: "완료", primaryAction: UIAction { [weak self] _ in
             guard let self else { return }
             switch viewModel.editingMode {
             case .title:
-                viewModel.doneTitleEditing(title: titleTextField.text ?? "")
+                viewModel.doneTitleEditing(title: titleField.text ?? "")
             case .script:
                 viewModel.doneScriptEditing()
             case nil:
@@ -178,8 +168,8 @@ private extension VoiceNoteViewController {
     }
 
     func setupNavigationBar() {
-        titleLabel.text = viewModel.title
-        titleLabel.frame.size.width = view.bounds.width
+        titleField.text = viewModel.title
+        titleField.frame.size.width = view.bounds.width
         let menu = UIMenu(children: [
             UIAction(title: "기록 이동하기", handler: { [weak self] _ in
                 self?.viewModel.moveVoiceNote()
@@ -201,7 +191,7 @@ private extension VoiceNoteViewController {
         normalRightBarButtonItems = [moreItem, searchItem]
         normalLeftBarButtonItem = UIBarButtonItem(customView: backChevronButton)
         navigationItem.leftBarButtonItem = normalLeftBarButtonItem
-        navigationItem.titleView = titleLabel
+        navigationItem.titleView = titleField
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
@@ -358,13 +348,9 @@ private extension VoiceNoteViewController {
     }
 
     func enterTitleEditMode() {
-        titleTextField.text = viewModel.title
-        titleTextField.frame.size.width = view.bounds.width
-        navigationItem.titleView = titleTextField
-        titleLabel.isHidden = true
         navigationItem.rightBarButtonItems = [doneButton]
-        titleTextField.becomeFirstResponder()
-        titleTextField.selectAll(nil)
+        titleField.becomeFirstResponder()
+        titleField.selectAll(nil as Any?)
     }
 
     func enterScriptEditMode() {
@@ -378,9 +364,8 @@ private extension VoiceNoteViewController {
 
     func exitEditMode() {
         view.endEditing(true)
-        titleLabel.text = viewModel.title
-        titleLabel.isHidden = false
-        navigationItem.titleView = titleLabel
+        titleField.text = viewModel.title
+        navigationItem.titleView = titleField
         navigationItem.leftBarButtonItem = normalLeftBarButtonItem
         navigationItem.rightBarButtonItems = normalRightBarButtonItems
         navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
@@ -390,6 +375,10 @@ private extension VoiceNoteViewController {
 // MARK: - UITextFieldDelegate
 
 extension VoiceNoteViewController: UITextFieldDelegate {
+    public func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
+        viewModel.editingMode == .title
+    }
+
     public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         viewModel.doneTitleEditing(title: textField.text ?? "")
         return true
