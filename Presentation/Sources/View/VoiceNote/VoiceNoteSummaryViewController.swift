@@ -20,7 +20,9 @@ final class VoiceNoteSummaryViewController: UIViewController {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) { nil }
+    required init?(coder: NSCoder) {
+        nil
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -100,7 +102,7 @@ private extension VoiceNoteSummaryViewController {
         }
 
         let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case let .keyPoint(number, text) = item else { return }
+            guard case .keyPoint(let number, let text) = item else { return }
             cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
         }
 

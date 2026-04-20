@@ -74,6 +74,7 @@ final class KeywordsContentView: UIView, UIContentView {
         return yOffset + rowHeight
     }
 }
+
 #Preview {
     let viewController = UIViewController()
     viewController.view.backgroundColor = .systemBackground
@@ -87,9 +88,8 @@ final class KeywordsContentView: UIView, UIContentView {
     NSLayoutConstraint.activate([
         contentView.leadingAnchor.constraint(equalTo: viewController.view.leadingAnchor, constant: 20),
         contentView.trailingAnchor.constraint(equalTo: viewController.view.trailingAnchor, constant: -20),
-        contentView.centerYAnchor.constraint(equalTo: viewController.view.centerYAnchor),
+        contentView.centerYAnchor.constraint(equalTo: viewController.view.centerYAnchor)
     ])
 
     return viewController
 }
-

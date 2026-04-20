@@ -87,7 +87,7 @@ final class KeyPointContentView: UIView, UIContentView {
             contentStack.leadingAnchor.constraint(equalTo: leadingAnchor),
             contentStack.trailingAnchor.constraint(equalTo: trailingAnchor),
             contentStack.topAnchor.constraint(equalTo: topAnchor),
-            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor),
+            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 
@@ -127,7 +127,7 @@ final class KeyPointContentView: UIView, UIContentView {
     NSLayoutConstraint.activate([
         stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
         stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
-        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
     ])
 
     return container

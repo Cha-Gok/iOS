@@ -11,17 +11,17 @@ public class TypographyTextView: UITextView {
         didSet { applyTypography() }
     }
 
-    public override var text: String! {
+    override public var text: String! {
         didSet { applyTypography() }
     }
 
-    public override var textColor: UIColor? {
+    override public var textColor: UIColor? {
         didSet { applyTypography() }
     }
 
     public init(typography: Typography, alignment: NSTextAlignment = .left) {
         self.typography = typography
-        self.typographyAlignment = alignment
+        typographyAlignment = alignment
         super.init(frame: .zero, textContainer: nil)
         applyTypography()
     }
@@ -74,7 +74,7 @@ public class TypographyTextView: UITextView {
     NSLayoutConstraint.activate([
         stack.leadingAnchor.constraint(equalTo: viewController.view.leadingAnchor, constant: 20),
         stack.trailingAnchor.constraint(equalTo: viewController.view.trailingAnchor, constant: -20),
-        stack.centerYAnchor.constraint(equalTo: viewController.view.centerYAnchor),
+        stack.centerYAnchor.constraint(equalTo: viewController.view.centerYAnchor)
     ])
 
     return viewController

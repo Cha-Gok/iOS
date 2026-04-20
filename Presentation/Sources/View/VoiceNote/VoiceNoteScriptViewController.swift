@@ -21,7 +21,9 @@ final class VoiceNoteScriptViewController: UIViewController {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) { nil }
+    required init?(coder: NSCoder) {
+        nil
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -79,7 +81,7 @@ private extension VoiceNoteScriptViewController {
 private extension VoiceNoteScriptViewController {
     func makeDataSource() -> UICollectionViewDiffableDataSource<Section, Item> {
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard let self, case let .script(index) = item else { return }
+            guard let self, case .script(let index) = item else { return }
             let section = viewModel.scriptSections[index]
             let isHighlighted = viewModel.playingSectionIndex == index
 

@@ -8,21 +8,25 @@ public class TypographyTextField: UITextField {
     }
 
     public var typographyAlignment: NSTextAlignment {
+        didSet {
+            textAlignment = typographyAlignment
+            applyTypography()
+        }
+    }
+
+    override public var text: String? {
         didSet { applyTypography() }
     }
 
-    public override var text: String? {
-        didSet { applyTypography() }
-    }
-
-    public override var textColor: UIColor? {
+    override public var textColor: UIColor? {
         didSet { applyTypography() }
     }
 
     public init(typography: Typography, alignment: NSTextAlignment = .left) {
         self.typography = typography
-        self.typographyAlignment = alignment
+        typographyAlignment = alignment
         super.init(frame: .zero)
+        textAlignment = alignment
         applyTypography()
     }
 
