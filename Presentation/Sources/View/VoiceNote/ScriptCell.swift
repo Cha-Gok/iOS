@@ -1,16 +1,16 @@
+import Core
 import UIKit
 
 // MARK: - ScriptContentConfiguration
 
 struct ScriptContentConfiguration: UIContentConfiguration {
     var sectionIndex: Int = 0
-    var timestamp: String = ""
-    var timestampSeconds: TimeInterval = 0
+    var timestamp: TimeInterval = 0
     var text: String = ""
     var isHighlighted: Bool = false
     var isEditing: Bool = false
     var onTextEdited: ((Int, String) -> Void)?
-    var onTap: ((TimeInterval) -> Void)?
+    var onTextHeightChanged: (() -> Void)?
 
     func makeContentView() -> UIView & UIContentView {
         ScriptContentView(configuration: self)
@@ -30,42 +30,25 @@ final class ScriptContentView: UIView, UIContentView {
 
     // MARK: - UI Components
 
-    private let timeLabel: UILabel = {
-        let label = UILabel()
+    private let timeLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .caption)
         label.textColor = UIColor.gray600
-        label.isUserInteractionEnabled = true
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
-    private let textBackground: UIView = {
-        let view = UIView()
-        view.layer.cornerRadius = 8
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
-    private let textLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
     private lazy var textView: UITextView = {
-        let textView = UITextView()
-        textView.backgroundColor = .clear
-        textView.isEditable = true
+        let spacing = Constant.scriptCellSpacing
+        let textView = TypographyTextView(typography: .body1)
+        textView.textColor = UIColor.gray950
+        textView.isEditable = false
+        textView.isSelectable = false
         textView.isScrollEnabled = false
-        textView.textContainerInset = .zero
+        textView.textContainerInset = UIEdgeInsets(top: spacing, left: spacing, bottom: spacing, right: spacing)
         textView.textContainer.lineFragmentPadding = 0
-        textView.layoutManager.usesFontLeading = false
+        textView.layer.cornerRadius = Constant.scriptCellCornerRadius
         textView.delegate = self
-        textView.translatesAutoresizingMaskIntoConstraints = false
         return textView
     }()
-
-    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(cellTapped))
 
     // MARK: - Init
 
@@ -85,83 +68,36 @@ final class ScriptContentView: UIView, UIContentView {
 
     private func setupUI() {
         addSubview(timeLabel)
-        addSubview(textBackground)
+        addSubview(textView)
 
-        addGestureRecognizer(tapGesture)
+        for subview in [timeLabel, textView] {
+            subview.translatesAutoresizingMaskIntoConstraints = false
+        }
 
+        let spacing = Constant.scriptCellSpacing
         NSLayoutConstraint.activate([
             timeLabel.topAnchor.constraint(equalTo: topAnchor),
-            timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
+            timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: spacing),
             timeLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
 
-            textBackground.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: 8),
-            textBackground.leadingAnchor.constraint(equalTo: leadingAnchor),
-            textBackground.trailingAnchor.constraint(equalTo: trailingAnchor),
-            textBackground.bottomAnchor.constraint(equalTo: bottomAnchor)
+            textView.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: spacing),
+            textView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            textView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
-    }
-
-    @objc
-    private func cellTapped() {
-        guard let config = configuration as? ScriptContentConfiguration,
-              !config.isEditing else { return }
-        config.onTap?(config.timestampSeconds)
     }
 
     // MARK: - Apply
 
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? ScriptContentConfiguration else { return }
-        timeLabel.setTypography(text: config.timestamp, style: .caption)
-        tapGesture.isEnabled = !config.isEditing
+        timeLabel.text = config.timestamp.durationString
 
-        installContentView(isEditing: config.isEditing)
-
-        if config.isEditing {
-            if textView.text != config.text {
-                applyTextViewTypography(text: config.text, color: textViewColor(isHighlighted: config.isHighlighted))
-            }
-        } else {
-            textLabel.setTypography(text: config.text, style: .body1)
-        }
-
-        applyHighlight(isHighlighted: config.isHighlighted, isEditing: config.isEditing)
-    }
-
-    private func applyTextViewTypography(text: String, color: UIColor) {
-        var attributes = Typography.body1.textAttributes
-        attributes[.foregroundColor] = color
-        textView.attributedText = NSAttributedString(string: text, attributes: attributes)
-        textView.typingAttributes = attributes
-    }
-
-    private func textViewColor(isHighlighted: Bool) -> UIColor {
-        isHighlighted ? .white : UIColor.gray600
-    }
-
-    private func installContentView(isEditing: Bool) {
-        let contentView: UIView = isEditing ? textView : textLabel
-        guard contentView.superview !== textBackground else { return }
-
-        textBackground.subviews.forEach { $0.removeFromSuperview() }
-        textBackground.addSubview(contentView)
-        NSLayoutConstraint.activate([
-            contentView.topAnchor.constraint(equalTo: textBackground.topAnchor, constant: 8),
-            contentView.bottomAnchor.constraint(equalTo: textBackground.bottomAnchor, constant: -8),
-            contentView.leadingAnchor.constraint(equalTo: textBackground.leadingAnchor, constant: 8),
-            contentView.trailingAnchor.constraint(equalTo: textBackground.trailingAnchor, constant: -8)
-        ])
-    }
-
-    // MARK: - Highlight
-
-    private func applyHighlight(isHighlighted: Bool, isEditing: Bool) {
-        textBackground.backgroundColor = isHighlighted ? UIColor.point600.withAlphaComponent(0.3) : .clear
-        if isEditing {
-            applyTextViewTypography(text: textView.text ?? "", color: textViewColor(isHighlighted: isHighlighted))
-        } else {
-            textLabel.textColor = isHighlighted ? .white : UIColor.gray600
-        }
+        textView.isEditable = config.isEditing
+        textView.isSelectable = config.isEditing
+        textView.isUserInteractionEnabled = config.isEditing
+        textView.text = config.text
+        textView.backgroundColor = config.isHighlighted ? .scriptCellHighlight : .clear
     }
 }
 
@@ -172,26 +108,49 @@ extension ScriptContentView: UITextViewDelegate {
         guard let config = configuration as? ScriptContentConfiguration else { return }
         let text = textView.text ?? ""
         config.onTextEdited?(config.sectionIndex, text)
-
-        if let collectionView = firstAvailableViewController()?.view.subviews
-            .first(where: { $0 is UICollectionView }) as? UICollectionView
-        {
-            UIView.performWithoutAnimation {
-                collectionView.collectionViewLayout.invalidateLayout()
-            }
-        }
+        config.onTextHeightChanged?()
     }
 }
 
-private extension UIView {
-    func firstAvailableViewController() -> UIViewController? {
-        var responder: UIResponder? = self
-        while responder != nil {
-            if let viewController = responder as? UIViewController {
-                return viewController
-            }
-            responder = responder?.next
-        }
-        return nil
-    }
+// MARK: - Preview
+
+#Preview {
+    let normalConfig = ScriptContentConfiguration(
+        sectionIndex: 0,
+        timestamp: 0,
+        text: "일반 상태의 스크립트 텍스트입니다."
+    )
+    let highlightedConfig = ScriptContentConfiguration(
+        sectionIndex: 1,
+        timestamp: 12,
+        text: "현재 재생 중인 하이라이트 상태의 스크립트입니다.",
+        isHighlighted: true
+    )
+    let editingConfig = ScriptContentConfiguration(
+        sectionIndex: 2,
+        timestamp: 24,
+        text: "편집 모드의 스크립트 — 탭하여 수정할 수 있습니다.",
+        isEditing: true
+    )
+
+    let normalCell = ScriptContentView(configuration: normalConfig)
+    let highlightedCell = ScriptContentView(configuration: highlightedConfig)
+    let editingCell = ScriptContentView(configuration: editingConfig)
+
+    let stack = UIStackView(arrangedSubviews: [normalCell, highlightedCell, editingCell])
+    stack.axis = .vertical
+    stack.spacing = 16
+    stack.translatesAutoresizingMaskIntoConstraints = false
+
+    let container = UIView()
+    container.backgroundColor = .gray100
+    container.addSubview(stack)
+
+    NSLayoutConstraint.activate([
+        stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+        stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+    ])
+
+    return container
 }

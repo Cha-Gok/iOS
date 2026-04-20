@@ -24,29 +24,37 @@ final class KeyPointContentView: UIView, UIContentView {
 
     // MARK: - UI Components
 
-    private let badgeView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.point600
-        view.layer.cornerRadius = 12
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
-    private let badgeLabel: UILabel = {
-        let label = UILabel()
+    private let badgeLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .title3, alignment: .center)
         label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
+        label.backgroundColor = UIColor.point600
+        label.layer.cornerRadius = Constant.keyPointBadgeSize / 2
+        label.clipsToBounds = true
         return label
     }()
 
-    private let textLabel: UILabel = {
-        let label = UILabel()
+    private let textLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .body1)
         label.textColor = UIColor.gray800
         label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+
+    private let contentStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = Constant.keyPointContentSpacing
+        stack.isLayoutMarginsRelativeArrangement = true
+        stack.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: Constant.keyPointCardVerticalPadding,
+            leading: Constant.keyPointCardHorizontalPadding,
+            bottom: Constant.keyPointCardVerticalPadding,
+            trailing: Constant.keyPointCardHorizontalPadding
+        )
+        stack.backgroundColor = UIColor.gray100
+        stack.layer.cornerRadius = Constant.cornerRadius
+        return stack
     }()
 
     // MARK: - Init
@@ -66,26 +74,20 @@ final class KeyPointContentView: UIView, UIContentView {
     // MARK: - Setup
 
     private func setupUI() {
-        backgroundColor = UIColor.gray100
-        layer.cornerRadius = Constant.cornerRadius
+        contentStack.addArrangedSubview(badgeLabel)
+        contentStack.addArrangedSubview(textLabel)
+        addSubview(contentStack)
 
-        badgeView.addSubview(badgeLabel)
-        addSubview(badgeView)
-        addSubview(textLabel)
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            badgeView.widthAnchor.constraint(equalToConstant: 24),
-            badgeView.heightAnchor.constraint(equalToConstant: 24),
-            badgeView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            badgeView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            badgeLabel.widthAnchor.constraint(equalToConstant: Constant.keyPointBadgeSize),
+            badgeLabel.heightAnchor.constraint(equalToConstant: Constant.keyPointBadgeSize),
 
-            badgeLabel.centerXAnchor.constraint(equalTo: badgeView.centerXAnchor),
-            badgeLabel.centerYAnchor.constraint(equalTo: badgeView.centerYAnchor),
-
-            textLabel.leadingAnchor.constraint(equalTo: badgeView.trailingAnchor, constant: 8),
-            textLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            textLabel.topAnchor.constraint(equalTo: topAnchor, constant: 8),
-            textLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
+            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            contentStack.topAnchor.constraint(equalTo: topAnchor),
+            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 
@@ -94,6 +96,39 @@ final class KeyPointContentView: UIView, UIContentView {
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? KeyPointContentConfiguration else { return }
         badgeLabel.text = "\(config.number)"
-        textLabel.setTypography(text: config.text, style: .body1)
+        textLabel.text = config.text
     }
+}
+
+// MARK: - Preview
+
+#Preview {
+    let firstConfig = KeyPointContentConfiguration(
+        number: 1,
+        text: "한 줄짜리 핵심 포인트 예시입니다."
+    )
+    let secondConfig = KeyPointContentConfiguration(
+        number: 2,
+        text: "여러 줄로 길게 이어지는 핵심 포인트 예시입니다. 텍스트가 길어져도 뱃지는 수직 중앙에 정렬되어 유지됩니다."
+    )
+
+    let firstCell = KeyPointContentView(configuration: firstConfig)
+    let secondCell = KeyPointContentView(configuration: secondConfig)
+
+    let stack = UIStackView(arrangedSubviews: [firstCell, secondCell])
+    stack.axis = .vertical
+    stack.spacing = 6
+    stack.translatesAutoresizingMaskIntoConstraints = false
+
+    let container = UIView()
+    container.backgroundColor = .systemPink
+    container.addSubview(stack)
+
+    NSLayoutConstraint.activate([
+        stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+        stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+    ])
+
+    return container
 }

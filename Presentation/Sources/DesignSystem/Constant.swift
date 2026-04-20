@@ -114,13 +114,13 @@ public extension Constant {
     static let onBoardingPaginationTopMargin: CGFloat = 52
 }
 
-// MARK: - KeywordChipView Constants
+// MARK: - KeywordChipLabel Constants
 
 public extension Constant {
-    /// KeywordChipView 수평 패딩 (12)
+    /// KeywordChipLabel 수평 패딩 (12)
     static let keywordChipHorizontalPadding: CGFloat = 12
 
-    /// KeywordChipView 수직 패딩 (8)
+    /// KeywordChipLabel 수직 패딩 (8)
     static let keywordChipVerticalPadding: CGFloat = 8
 
     /// 키워드 칩 가로 간격 (10)
@@ -163,6 +163,48 @@ public extension Constant {
 
     /// LanguagePicker 라디오 버튼과 텍스트 사이 간격 (6)
     static let languagePickerTitleSpacing: CGFloat = 6
+}
+
+// MARK: - ScriptCell Constants
+
+public extension Constant {
+    /// ScriptCell 기본 간격 (8) — 타임스탬프 여백·본문 내부 패딩 공통
+    static let scriptCellSpacing: CGFloat = 8
+
+    /// ScriptCell 본문 버블 모서리 반경 (8)
+    static let scriptCellCornerRadius: CGFloat = 8
+}
+
+// MARK: - MetadataCell Constants
+
+public extension Constant {
+    /// MetadataCell 폴더 아이콘과 라벨 사이 간격 (5)
+    static let metadataCellIconSpacing: CGFloat = 5
+
+    /// MetadataCell 날짜·재생시간 라벨 사이 간격 (2)
+    static let metadataCellLineSpacing: CGFloat = 2
+
+    /// MetadataCell 폴더 행과 날짜 그룹 사이 간격 (11)
+    static let metadataCellSectionSpacing: CGFloat = 11
+
+    /// MetadataCell 폴더 아이콘 크기 (20)
+    static let metadataCellIconSize: CGFloat = 20
+}
+
+// MARK: - KeyPointCell Constants
+
+public extension Constant {
+    /// KeyPointCell 번호 뱃지 크기 (24) — 원형 뱃지의 width·height 기준값. cornerRadius는 이 값의 1/2로 파생
+    static let keyPointBadgeSize: CGFloat = 24
+
+    /// KeyPointCell 뱃지와 본문 텍스트 사이 간격 (8)
+    static let keyPointContentSpacing: CGFloat = 8
+
+    /// KeyPointCell 카드 좌우 패딩 (12)
+    static let keyPointCardHorizontalPadding: CGFloat = 12
+
+    /// KeyPointCell 카드 상하 패딩 (8)
+    static let keyPointCardVerticalPadding: CGFloat = 8
 }
 
 // MARK: - BackgroundView Constants

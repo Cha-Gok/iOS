@@ -123,9 +123,6 @@ public final class FolderViewController: CollectionViewController {
     }
 
     private func setupNavigationBar() {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = UIColor.gray50
         backButton.addAction(
             UIAction { [weak self] _ in
                 self?.vm.didTapBack()

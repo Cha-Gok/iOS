@@ -28,41 +28,38 @@ final class MetadataContentView: UIView, UIContentView {
     private let folderRow: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 5
-        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.spacing = Constant.metadataCellIconSpacing
         return stack
     }()
 
     private let folderIcon: UIImageView = {
         let imageView = UIImageView(image: UIImage(systemName: "folder"))
-        imageView.tintColor = UIColor.gray750
-        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.tintColor = .metadataLabel
         return imageView
     }()
 
-    private let folderLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = UIColor.gray750
+    private let folderLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .body1)
+        label.textColor = .metadataLabel
         return label
     }()
 
-    private let dateLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = UIColor.gray750
+    private let dateLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .body1)
+        label.textColor = .metadataLabel
         return label
     }()
 
-    private let durationLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = UIColor.gray750
+    private let durationLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .body1)
+        label.textColor = .metadataLabel
         return label
     }()
 
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 2
-        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.spacing = Constant.metadataCellLineSpacing
         return stack
     }()
 
@@ -89,12 +86,16 @@ final class MetadataContentView: UIView, UIContentView {
         stackView.addArrangedSubview(folderRow)
         stackView.addArrangedSubview(dateLabel)
         stackView.addArrangedSubview(durationLabel)
-        stackView.setCustomSpacing(15, after: folderRow)
+        stackView.setCustomSpacing(Constant.metadataCellSectionSpacing, after: folderRow)
 
         addSubview(stackView)
+
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        folderIcon.translatesAutoresizingMaskIntoConstraints = false
+
         NSLayoutConstraint.activate([
-            folderIcon.widthAnchor.constraint(equalToConstant: 20),
-            folderIcon.heightAnchor.constraint(equalToConstant: 20),
+            folderIcon.widthAnchor.constraint(equalToConstant: Constant.metadataCellIconSize),
+            folderIcon.heightAnchor.constraint(equalToConstant: Constant.metadataCellIconSize),
 
             stackView.topAnchor.constraint(equalTo: topAnchor),
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -107,8 +108,19 @@ final class MetadataContentView: UIView, UIContentView {
 
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? MetadataContentConfiguration else { return }
-        folderLabel.setTypography(text: config.folderName, style: .body1)
-        dateLabel.setTypography(text: config.date, style: .body1)
-        durationLabel.setTypography(text: config.duration, style: .body1)
+        folderLabel.text = config.folderName
+        dateLabel.text = config.date
+        durationLabel.text = config.duration
     }
+}
+
+// MARK: - Preview
+
+#Preview {
+    let config = MetadataContentConfiguration(
+        folderName: "회의 노트",
+        date: "2026년 4월 20일 오후 2:30",
+        duration: "재생시간 12:34"
+    )
+    MetadataContentView(configuration: config)
 }

@@ -154,14 +154,6 @@ public final class FolderDetailViewController: CollectionViewController {
     }
 
     private func setupNavigation() {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = UIColor.gray50
-        appearance.shadowColor = .clear
-
-        navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        navigationController?.navigationBar.compactAppearance = appearance
         let leftItem = UIBarButtonItem(customView: backButton)
         navigationItem.leftBarButtonItem = leftItem
 

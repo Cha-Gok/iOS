@@ -31,8 +31,8 @@ public enum Typography {
         }
     }
 
-    // TODO: 행간
-    public var lineHeightMultiple: CGFloat {
+    /// Figma 스펙의 line-height 비율(폰트 크기 대비). 130% → 1.3, 150% → 1.5.
+    public var lineHeightRatio: CGFloat {
         switch self {
         case .header1, .header2, .title1, .title2, .title3, .subtitle2, .body2, .label, .caption:
             return 1.3
@@ -56,13 +56,12 @@ public enum Typography {
 
     var textAttributes: [NSAttributedString.Key: Any] {
         let paragraphStyle = NSMutableParagraphStyle()
-        let fontLineHeight = font.lineHeight
-        let targetLineHeight = fontLineHeight * lineHeightMultiple
+        let targetLineHeight = font.pointSize * lineHeightRatio
 
         paragraphStyle.minimumLineHeight = targetLineHeight
         paragraphStyle.maximumLineHeight = targetLineHeight
 
-        let baselineOffset = (targetLineHeight - fontLineHeight) / 2
+        let baselineOffset = (targetLineHeight - font.lineHeight) / 2
 
         return [
             .font: font,
