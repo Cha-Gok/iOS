@@ -20,7 +20,7 @@ final class KeywordsContentView: UIView, UIContentView {
     private let interItemSpacing: CGFloat = Constant.keywordChipInterItemSpacing
     private let lineSpacing: CGFloat = Constant.keywordChipLineSpacing
 
-    private var chipViews: [KeywordChipLabel] = []
+    private var chipLabels: [KeywordChipLabel] = []
     private var contentHeight: CGFloat = 0
 
     init(configuration: UIContentConfiguration) {
@@ -47,9 +47,9 @@ final class KeywordsContentView: UIView, UIContentView {
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? KeywordsContentConfiguration else { return }
 
-        chipViews.forEach { $0.removeFromSuperview() }
-        chipViews = config.keywords.map(KeywordChipLabel.init(text:))
-        chipViews.forEach(addSubview)
+        chipLabels.forEach { $0.removeFromSuperview() }
+        chipLabels = config.keywords.map(KeywordChipLabel.init(text:))
+        chipLabels.forEach(addSubview)
 
         contentHeight = 0
         invalidateIntrinsicContentSize()
@@ -57,14 +57,14 @@ final class KeywordsContentView: UIView, UIContentView {
     }
 
     private func layoutChips(for availableWidth: CGFloat) -> CGFloat {
-        guard availableWidth > 0, chipViews.isEmpty == false else { return 0 }
+        guard availableWidth > 0, chipLabels.isEmpty == false else { return 0 }
 
         var xOffset: CGFloat = 0
         var yOffset: CGFloat = 0
         var rowHeight: CGFloat = 0
 
-        for chipView in chipViews {
-            let chipSize = chipView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
+        for chipLabel in chipLabels {
+            let chipSize = chipLabel.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
 
             if xOffset > 0, xOffset + chipSize.width > availableWidth {
                 xOffset = 0
@@ -72,7 +72,7 @@ final class KeywordsContentView: UIView, UIContentView {
                 rowHeight = 0
             }
 
-            chipView.frame = CGRect(origin: CGPoint(x: xOffset, y: yOffset), size: chipSize)
+            chipLabel.frame = CGRect(origin: CGPoint(x: xOffset, y: yOffset), size: chipSize)
 
             xOffset += chipSize.width + interItemSpacing
             rowHeight = max(rowHeight, chipSize.height)
