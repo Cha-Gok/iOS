@@ -12,6 +12,7 @@ public final class KeywordChipLabel: TypographyLabel {
         super.init(typography: .label)
         textColor = UIColor.gray950
         backgroundColor = UIColor.gray100
+        layer.cornerRadius = Constant.capsuleCornerRadius
         clipsToBounds = true
         self.text = text
     }
@@ -31,11 +32,6 @@ public final class KeywordChipLabel: TypographyLabel {
             width: size.width + insets.left + insets.right,
             height: size.height + insets.top + insets.bottom
         )
-    }
-
-    public override func layoutSubviews() {
-        super.layoutSubviews()
-        layer.cornerRadius = bounds.height / 2
     }
 }
 
