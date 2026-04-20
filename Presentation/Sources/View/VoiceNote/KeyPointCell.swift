@@ -47,6 +47,14 @@ final class KeyPointContentView: UIView, UIContentView {
         return label
     }()
 
+    private let contentStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 8
+        return stack
+    }()
+
     // MARK: - Init
 
     init(configuration: UIContentConfiguration) {
@@ -68,23 +76,20 @@ final class KeyPointContentView: UIView, UIContentView {
         layer.cornerRadius = Constant.cornerRadius
 
         badgeView.addArrangedSubview(badgeLabel)
-        addSubview(badgeView)
-        addSubview(textLabel)
+        contentStack.addArrangedSubview(badgeView)
+        contentStack.addArrangedSubview(textLabel)
+        addSubview(contentStack)
 
-        for subview in [badgeView, textLabel] {
-            subview.translatesAutoresizingMaskIntoConstraints = false
-        }
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
             badgeView.widthAnchor.constraint(equalToConstant: 24),
             badgeView.heightAnchor.constraint(equalToConstant: 24),
-            badgeView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            badgeView.centerYAnchor.constraint(equalTo: centerYAnchor),
 
-            textLabel.leadingAnchor.constraint(equalTo: badgeView.trailingAnchor, constant: 8),
-            textLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            textLabel.topAnchor.constraint(equalTo: topAnchor, constant: 8),
-            textLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
+            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
+            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+            contentStack.topAnchor.constraint(equalTo: topAnchor, constant: 8),
+            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
         ])
     }
 
