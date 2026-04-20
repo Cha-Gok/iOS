@@ -80,7 +80,8 @@ public final class AppDIContainer {
             microphoneRepository: voiceRecordRepository,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
-            wasteBasketRepository: wasteBasketRepository
+            wasteBasketRepository: wasteBasketRepository,
+            languageRepository: languageRepository
         )
     }
 

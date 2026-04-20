@@ -45,6 +45,7 @@ public final class MainViewModel {
     }
 
     private(set) var showPermissionAlert: Bool = false
+    private(set) var showLanguageAlert: Bool = false
 
     private(set) var errorMessage: String?
 
@@ -54,6 +55,7 @@ public final class MainViewModel {
     let voiceNoteUseCase: any VoiceNoteUseCase
     let folderUseCase: any FolderUseCase
     let wasteBasketRepository: any WasteBasketRepository
+    let languageRepository: any LanguageRepository
 
     // TODO: 화면 전환
     public weak var mainCoordinator: MainCoordinatorDelegate?
@@ -62,12 +64,14 @@ public final class MainViewModel {
         microphoneRepository: any VoiceRecordRepository,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
-        wasteBasketRepository: any WasteBasketRepository
+        wasteBasketRepository: any WasteBasketRepository,
+        languageRepository: any LanguageRepository
     ) {
         self.microphoneRepository = microphoneRepository
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.wasteBasketRepository = wasteBasketRepository
+        self.languageRepository = languageRepository
     }
 }
 
@@ -95,12 +99,20 @@ extension MainViewModel {
         self.didScroll = didScroll
     }
 
-    func closeAlertView() {
+    func closePermissionAlert() {
         showPermissionAlert = false
     }
 
-    func openAlertView() {
+    func openPermissionAlert() {
         showPermissionAlert = true
+    }
+    
+    func closeLanguageAlert() {
+        showLanguageAlert = false
+    }
+    
+    func openLanguageAlert() {
+        showLanguageAlert = true
     }
 }
 
@@ -185,10 +197,22 @@ extension MainViewModel {
     func handleRecordButtonTap() {
         let status = microphoneRepository.checkMicrophonePermission()
         if status != .authorized {
-            openAlertView()
+            openPermissionAlert()
         } else {
             presentRecodingView()
         }
+    }
+}
+
+// MARK: - Language Method
+
+extension MainViewModel {
+    func checkLanguage() -> Language {
+        languageRepository.fetchLanguage()
+    }
+    
+    func saveLanguage(_ lang: Language) {
+        languageRepository.saveLanguage(lang)
     }
 }
 
@@ -203,7 +227,8 @@ extension MainViewModel {
                     defaultItems: previewData.defaultVoiceNotes
                 ),
                 folderUseCase: PreviewFolderUseCase(items: previewData.folders),
-                wasteBasketRepository: PreviewWasteBasketRepository(items: previewData.wasteBasketItems)
+                wasteBasketRepository: PreviewWasteBasketRepository(items: previewData.wasteBasketItems),
+                languageRepository: PreviewLanguageRepository()
             )
 
             viewModel.categoryData[0].items = previewData.recentVoiceNotes.map(LibraryItem.voiceNote)
@@ -468,6 +493,16 @@ extension MainViewModel {
             func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
             func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
             func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
+        }
+        
+        struct PreviewLanguageRepository: LanguageRepository {
+            func fetchLanguage() -> Language {
+                .ko
+            }
+            
+            func saveLanguage(_ language: Language) {
+                AppLogger.info("Language State : \(language)")
+            }
         }
     }
 #endif
