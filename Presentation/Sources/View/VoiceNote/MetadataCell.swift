@@ -28,7 +28,7 @@ final class MetadataContentView: UIView, UIContentView {
     private let folderRow: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 5
+        stack.spacing = Constant.metadataCellIconSpacing
         return stack
     }()
 

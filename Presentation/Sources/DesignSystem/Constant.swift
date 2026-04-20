@@ -172,6 +172,13 @@ public extension Constant {
     static let scriptCellSpacing: CGFloat = 8
 }
 
+// MARK: - MetadataCell Constants
+
+public extension Constant {
+    /// MetadataCell 폴더 아이콘과 라벨 사이 간격 (5)
+    static let metadataCellIconSpacing: CGFloat = 5
+}
+
 // MARK: - BackgroundView Constants
 
 public extension Constant {
