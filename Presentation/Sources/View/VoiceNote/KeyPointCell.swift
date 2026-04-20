@@ -27,7 +27,7 @@ final class KeyPointContentView: UIView, UIContentView {
     private let badgeLabel: UILabel = {
         let label = UILabel()
         label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        label.font = Typography.title3.font
         label.textAlignment = .center
         label.backgroundColor = UIColor.point600
         label.layer.cornerRadius = Constant.keyPointBadgeSize / 2
