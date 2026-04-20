@@ -101,16 +101,6 @@ public final class MainViewController: ViewController {
     // MARK: Setup
 
     private func setup() {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.gray50
-        appearance.shadowColor = .clear
-        appearance.backgroundEffect = nil
-
-        navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        navigationController?.navigationBar.compactAppearance = appearance
-
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: navTitle)
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "magnifyingglass"),
