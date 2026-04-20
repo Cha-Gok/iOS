@@ -24,19 +24,14 @@ final class KeyPointContentView: UIView, UIContentView {
 
     // MARK: - UI Components
 
-    private let badgeView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.backgroundColor = UIColor.point600
-        stack.layer.cornerRadius = 12
-        return stack
-    }()
-
     private let badgeLabel: UILabel = {
         let label = UILabel()
         label.textColor = .white
         label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
         label.textAlignment = .center
+        label.backgroundColor = UIColor.point600
+        label.layer.cornerRadius = 12
+        label.clipsToBounds = true
         return label
     }()
 
@@ -77,16 +72,15 @@ final class KeyPointContentView: UIView, UIContentView {
         backgroundColor = UIColor.gray100
         layer.cornerRadius = Constant.cornerRadius
 
-        badgeView.addArrangedSubview(badgeLabel)
-        contentStack.addArrangedSubview(badgeView)
+        contentStack.addArrangedSubview(badgeLabel)
         contentStack.addArrangedSubview(textLabel)
         addSubview(contentStack)
 
         contentStack.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            badgeView.widthAnchor.constraint(equalToConstant: 24),
-            badgeView.heightAnchor.constraint(equalToConstant: 24),
+            badgeLabel.widthAnchor.constraint(equalToConstant: 24),
+            badgeLabel.heightAnchor.constraint(equalToConstant: 24),
 
             contentStack.leadingAnchor.constraint(equalTo: leadingAnchor),
             contentStack.trailingAnchor.constraint(equalTo: trailingAnchor),
