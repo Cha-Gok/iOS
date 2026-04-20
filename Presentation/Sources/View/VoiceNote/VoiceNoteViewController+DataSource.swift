@@ -11,17 +11,35 @@ extension VoiceNoteViewController {
             config.headerMode = Section(rawValue: sectionIndex) == .metadata ? .none : .supplementary
 
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
-            let topInset: CGFloat = Section(rawValue: sectionIndex) == .metadata ? 24 : 12
-            section.contentInsets = NSDirectionalEdgeInsets(top: topInset, leading: 20, bottom: 32, trailing: 20)
+
+            for boundarySupplementaryItem in section.boundarySupplementaryItems {
+                boundarySupplementaryItem.pinToVisibleBounds = false
+                let headerTop: CGFloat
+                switch Section(rawValue: sectionIndex) {
+                case .keyPoints: headerTop = 26
+                case .keywords: headerTop = 32
+                case .scripts: headerTop = 32
+                default: headerTop = 0
+                }
+                boundarySupplementaryItem.contentInsets = NSDirectionalEdgeInsets(top: headerTop, leading: 20, bottom: 0, trailing: 20)
+            }
+
+            let cellTop: CGFloat
+            switch Section(rawValue: sectionIndex) {
+            case .metadata: cellTop = 24
+            case .keyPoints: cellTop = 16
+            case .keywords: cellTop = 12
+            case .scripts: cellTop = 12
+            default: cellTop = 0
+            }
+            section.contentInsets = NSDirectionalEdgeInsets(top: cellTop, leading: 20, bottom: 0, trailing: 20)
+
             switch Section(rawValue: sectionIndex) {
             case .keyPoints: section.interGroupSpacing = 6
-            case .scripts: section.interGroupSpacing = 16
+            case .scripts:   section.interGroupSpacing = 16
             default: break
             }
-            section.boundarySupplementaryItems.forEach {
-                $0.pinToVisibleBounds = false
-                $0.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
-            }
+
             return section
         }
     }
@@ -36,7 +54,7 @@ extension VoiceNoteViewController {
         }
 
         let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case .keyPoint(let number, let text) = item else { return }
+            guard case let .keyPoint(number, text) = item else { return }
             cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
         }
 
@@ -47,7 +65,7 @@ extension VoiceNoteViewController {
         }
 
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard let self, case .script(let index) = item else { return }
+            guard let self, case let .script(index) = item else { return }
             let section = viewModel.scriptSections[index]
             let isHighlighted = viewModel.playingSectionIndex == index
 
