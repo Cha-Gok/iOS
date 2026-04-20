@@ -188,6 +188,13 @@ public extension Constant {
     static let metadataCellIconSize: CGFloat = 20
 }
 
+// MARK: - KeyPointCell Constants
+
+public extension Constant {
+    /// KeyPointCell 번호 뱃지 크기 (24) — 원형 뱃지의 width·height 기준값. cornerRadius는 이 값의 1/2로 파생
+    static let keyPointBadgeSize: CGFloat = 24
+}
+
 // MARK: - BackgroundView Constants
 
 public extension Constant {

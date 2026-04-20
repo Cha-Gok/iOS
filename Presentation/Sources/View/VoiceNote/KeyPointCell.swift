@@ -30,7 +30,7 @@ final class KeyPointContentView: UIView, UIContentView {
         label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
         label.textAlignment = .center
         label.backgroundColor = UIColor.point600
-        label.layer.cornerRadius = 12
+        label.layer.cornerRadius = Constant.keyPointBadgeSize / 2
         label.clipsToBounds = true
         return label
     }()
@@ -79,8 +79,8 @@ final class KeyPointContentView: UIView, UIContentView {
         contentStack.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            badgeLabel.widthAnchor.constraint(equalToConstant: 24),
-            badgeLabel.heightAnchor.constraint(equalToConstant: 24),
+            badgeLabel.widthAnchor.constraint(equalToConstant: Constant.keyPointBadgeSize),
+            badgeLabel.heightAnchor.constraint(equalToConstant: Constant.keyPointBadgeSize),
 
             contentStack.leadingAnchor.constraint(equalTo: leadingAnchor),
             contentStack.trailingAnchor.constraint(equalTo: trailingAnchor),
