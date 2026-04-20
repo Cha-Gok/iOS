@@ -86,6 +86,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.keyboardDismissMode = .interactive
+        collectionView.delegate = self
         return collectionView
     }()
 
@@ -466,6 +467,22 @@ private extension VoiceNoteViewController {
         }
 
         collectionView.scrollToItem(at: headerIndexPath, at: .top, animated: true)
+    }
+}
+
+// MARK: - UICollectionViewDelegate
+
+extension VoiceNoteViewController: UICollectionViewDelegate {
+    public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        guard case .script = dataSource.itemIdentifier(for: indexPath) else { return false }
+        return viewModel.editingMode != .script
+    }
+
+    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        defer { collectionView.deselectItem(at: indexPath, animated: false) }
+        guard case .script(let index) = dataSource.itemIdentifier(for: indexPath) else { return }
+        let timestamp = viewModel.scriptSections[index].timestamp
+        viewModel.scriptTimestampTapped(timestamp)
     }
 }
 

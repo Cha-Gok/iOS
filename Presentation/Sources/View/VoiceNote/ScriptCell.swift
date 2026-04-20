@@ -11,7 +11,6 @@ struct ScriptContentConfiguration: UIContentConfiguration {
     var isEditing: Bool = false
     var onTextEdited: ((Int, String) -> Void)?
     var onTextHeightChanged: (() -> Void)?
-    var onTap: ((TimeInterval) -> Void)?
 
     func makeContentView() -> UIView & UIContentView {
         ScriptContentView(configuration: self)
@@ -59,8 +58,6 @@ final class ScriptContentView: UIView, UIContentView {
         return textView
     }()
 
-    private lazy var tapGesture = UITapGestureRecognizer(target: self, action: #selector(cellTapped))
-
     // MARK: - Init
 
     init(configuration: UIContentConfiguration) {
@@ -82,8 +79,6 @@ final class ScriptContentView: UIView, UIContentView {
         addSubview(textBackground)
         textBackground.addSubview(textView)
 
-        addGestureRecognizer(tapGesture)
-
         NSLayoutConstraint.activate([
             timeLabel.topAnchor.constraint(equalTo: topAnchor),
             timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
@@ -101,19 +96,11 @@ final class ScriptContentView: UIView, UIContentView {
         ])
     }
 
-    @objc
-    private func cellTapped() {
-        guard let config = configuration as? ScriptContentConfiguration,
-              !config.isEditing else { return }
-        config.onTap?(config.timestamp)
-    }
-
     // MARK: - Apply
 
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? ScriptContentConfiguration else { return }
         timeLabel.setTypography(text: config.timestamp.durationString, style: .caption)
-        tapGesture.isEnabled = !config.isEditing
 
         textView.isEditable = config.isEditing
         textView.isSelectable = config.isEditing

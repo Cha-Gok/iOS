@@ -62,9 +62,6 @@ extension VoiceNoteViewController {
                     UIView.performWithoutAnimation {
                         self.collectionView.collectionViewLayout.invalidateLayout()
                     }
-                },
-                onTap: { [weak self] time in
-                    self?.viewModel.scriptTimestampTapped(time)
                 }
             )
         }
