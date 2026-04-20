@@ -49,21 +49,20 @@ public final class MainViewController: ViewController {
     private lazy var langAction: UIAction = UIAction(title: "녹음 언어 선택") { [weak self] _ in
         self?.vm.openLanguageAlert()
     }
-    
+
     private lazy var termsofServiceAction: UIAction = UIAction(title: "약관 보기") { [weak self] _ in
-        
     }
-    
+
     private let searchItem: UIBarButtonItem = .init(
         image: UIImage(systemName: "magnifyingglass"),
         menu: nil
     )
-    
+
     private lazy var settingItem: UIBarButtonItem = .init(
         image: UIImage(systemName: "gearshape"),
         menu: UIMenu(title: "", children: [langAction, termsofServiceAction])
     )
-    
+
     // TODO: Language Picker Alert
     private let cancelLanguageAlertButton: GlassButton = .close("취소")
     private let primaryLanguageAlertButton: GlassButton = .primary("저장하기")
@@ -74,13 +73,13 @@ public final class MainViewController: ViewController {
         overlay.isHidden = true
         return overlay
     }()
-    
+
     private lazy var languagePicker: LanguagePicker = .init(
         selected: vm.checkLanguage(),
         axis: .horizontal,
         showAlert: true
     )
-    
+
     private lazy var languageAlertView: LanguagePickertAlert = .init(
         title: "언어 선택",
         languagePicker: languagePicker,
@@ -182,7 +181,7 @@ public final class MainViewController: ViewController {
             permissionAlertView.centerYAnchor.constraint(equalTo: permissionAlertOverlayView.centerYAnchor)
         ])
     }
-    
+
     private func setupLanguageAlert() {
         cancelLanguageAlertButton.addAction(UIAction { [weak self] _ in
             self?.vm.closeLanguageAlert()

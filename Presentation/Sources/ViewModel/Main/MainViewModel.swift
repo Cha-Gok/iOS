@@ -106,11 +106,11 @@ extension MainViewModel {
     func openPermissionAlert() {
         showPermissionAlert = true
     }
-    
+
     func closeLanguageAlert() {
         showLanguageAlert = false
     }
-    
+
     func openLanguageAlert() {
         showLanguageAlert = true
     }
@@ -210,7 +210,7 @@ extension MainViewModel {
     func checkLanguage() -> Language {
         languageRepository.fetchLanguage()
     }
-    
+
     func saveLanguage(_ lang: Language) {
         languageRepository.saveLanguage(lang)
     }
@@ -494,12 +494,12 @@ extension MainViewModel {
             func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
             func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
         }
-        
+
         struct PreviewLanguageRepository: LanguageRepository {
             func fetchLanguage() -> Language {
                 .ko
             }
-            
+
             func saveLanguage(_ language: Language) {
                 AppLogger.info("Language State : \(language)")
             }

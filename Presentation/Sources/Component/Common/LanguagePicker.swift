@@ -50,7 +50,11 @@ final class LanguagePicker: UIStackView {
         }
 
         for language in Language.allCases {
-            let itemView = LanguageItemView(language: language, isSelected: language == selectedLanguage, showAlert: showAlert)
+            let itemView = LanguageItemView(
+                language: language,
+                isSelected: language == selectedLanguage,
+                showAlert: showAlert
+            )
             itemView.addGestureRecognizer(
                 UITapGestureRecognizer(target: self, action: #selector(itemTapped(_:)))
             )

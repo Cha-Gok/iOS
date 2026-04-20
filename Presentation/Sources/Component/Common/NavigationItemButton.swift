@@ -1,7 +1,6 @@
 import UIKit
 
 final class NavigationItemButton: UIButton {
-
     typealias Attribute = [NSAttributedString.Key: Any]
 
     // MARK: - State
@@ -40,14 +39,15 @@ final class NavigationItemButton: UIButton {
         var config = UIButton.Configuration.plain()
         config.contentInsets = .zero
         config.automaticallyUpdateForSelection = false
-        self.configuration = config
+        configuration = config
 
-        self.configurationUpdateHandler = { [weak self] button in
+        configurationUpdateHandler = { [weak self] button in
             guard let self, var config = button.configuration else { return }
             let symbolConfig = UIImage.SymbolConfiguration(weight: .bold)
 
             if button.isSelected {
-                config.image = selectedItem.imageName.flatMap { UIImage(systemName: $0)?.withConfiguration(symbolConfig) }
+                config.image = selectedItem.imageName
+                    .flatMap { UIImage(systemName: $0)?.withConfiguration(symbolConfig) }
                 config.title = selectedItem.title
                 config.baseForegroundColor = selectedForegroundColor
             } else {

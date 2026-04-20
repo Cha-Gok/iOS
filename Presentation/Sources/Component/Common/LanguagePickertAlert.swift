@@ -33,7 +33,7 @@ final class LanguagePickertAlert: UIView {
         t.numberOfLines = 0
         return t
     }()
-    
+
     private let languagePicker: LanguagePicker
 
     init(

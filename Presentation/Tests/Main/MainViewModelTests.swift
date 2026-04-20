@@ -151,10 +151,10 @@ final class MainViewModelTests: XCTestCase {
 
         sut.viewModel.closePermissionAlert()
         XCTAssertFalse(sut.viewModel.showPermissionAlert)
-        
+
         sut.viewModel.openLanguageAlert()
         XCTAssertTrue(sut.viewModel.showLanguageAlert)
-        
+
         sut.viewModel.closeLanguageAlert()
         XCTAssertFalse(sut.viewModel.showLanguageAlert)
     }
@@ -194,7 +194,7 @@ final class MainViewModelTests: XCTestCase {
         XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
         XCTAssertTrue(sut.viewModel.showPermissionAlert)
     }
-    
+
     // MARK: - Language Tests
 
     func test_checkLanguage_언어데이터로드확인() {
