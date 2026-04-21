@@ -9,13 +9,24 @@ public actor DefaultSTTRepository: STTRepository {
     private var currentTask: SFSpeechRecognitionTask?
     private var currentContinuation: CheckedContinuation<Transcript, any Error>?
 
+    /// Speech Framework에 동시 요청이 들어가지 않도록 `transcribe`를 FIFO로 순차화한다.
+    private var isBusy = false
+    private var waiters: [Waiter] = []
+
+    private struct Waiter: Sendable {
+        let id: UUID
+        let continuation: CheckedContinuation<Bool, Never>
+    }
+
     public init(storageService: any StorageService) {
         self.storageService = storageService
     }
 
     public func transcribe(audioFilePath: String) async throws(STTRepositoryError) -> Transcript {
         guard !Task.isCancelled else { throw .cancelled }
-        guard currentTask == nil else { throw .transcribeFailed }
+
+        try await acquireSlot()
+        defer { releaseSlot() }
 
         let absoluteURL = storageService.absoluteURL(for: audioFilePath)
         AppLogger.info("음성 전사를 시작합니다: \(absoluteURL.lastPathComponent)")
@@ -40,6 +51,47 @@ public actor DefaultSTTRepository: STTRepository {
         } catch {
             throw mapToRepositoryError(from: error)
         }
+    }
+
+    // MARK: - Slot Queue
+
+    /// 슬롯을 확보한다. 이미 진행 중인 전사가 있으면 FIFO로 대기한다.
+    /// 대기 중 호출자 Task가 취소되면 `.cancelled`를 던진다.
+    private func acquireSlot() async throws(STTRepositoryError) {
+        if !isBusy {
+            isBusy = true
+            return
+        }
+        let grantedSlot = await waitInQueue()
+        if !grantedSlot { throw .cancelled }
+    }
+
+    /// FIFO 큐에 대기자를 추가하고 슬롯이 인계될 때까지 대기한다.
+    /// 반환값이 `true`면 슬롯을 획득했다는 뜻이며, `false`면 대기 중 취소된 것이다.
+    private func waitInQueue() async -> Bool {
+        let id = UUID()
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                waiters.append(Waiter(id: id, continuation: continuation))
+            }
+        } onCancel: {
+            Task { await self.cancelWaiter(id: id) }
+        }
+    }
+
+    /// 슬롯을 반환한다. 대기자가 있으면 `isBusy`를 유지한 채 다음 호출자에게 슬롯을 인계한다.
+    private func releaseSlot() {
+        guard !waiters.isEmpty else {
+            isBusy = false
+            return
+        }
+        waiters.removeFirst().continuation.resume(returning: true)
+    }
+
+    /// 대기 중 취소된 호출자를 큐에서 제거하고 `false`를 반환해 `.cancelled`로 빠지게 한다.
+    private func cancelWaiter(id: UUID) {
+        guard let index = waiters.firstIndex(where: { $0.id == id }) else { return }
+        waiters.remove(at: index).continuation.resume(returning: false)
     }
 
     public nonisolated func checkSTTPermission() -> PermissionStatus {
