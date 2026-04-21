@@ -19,7 +19,7 @@ public final class TrashViewModel {
     private(set) var select: SelectionMode = .none
     private(set) var selectedItems: [WasteBasketItem] = []
     private(set) var showTrashAlert: Bool = false
-
+    
     public weak var coordinator: TrashCoordinatorDelegate?
 
     // MARK: - UseCase
@@ -103,9 +103,18 @@ extension TrashViewModel {
         do {
             let wasteBaskets: [WasteBasketItem] = try repository.fetchAll()
             items = wasteBaskets.map(\.toLibraryItem)
+            sortItems()
         } catch {
             AppLogger.error(error)
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func sortItems() {
+        items.sort { (lhs, rhs) -> Bool in
+            let lhsDate = lhs.deletedAt ?? .distantPast
+            let rhsDate = rhs.deletedAt ?? .distantPast
+            return lhsDate > rhsDate
         }
     }
 }
@@ -168,6 +177,28 @@ extension TrashViewModel {
             let restoreIDs = Set(restoreItems.map(\.id))
             items.removeAll { restoreIDs.contains($0.id) }
             setSelectionMode(.none)
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    func cancelRestore(item: WasteBasketItem) {
+        do {
+            try repository.moveToWasteBasket(item: item)
+            items.append(item.toLibraryItem)
+            sortItems()
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func cancelRestore(items restoreItems: [WasteBasketItem]) {
+        do {
+            try repository.moveAllToWasteBasket(items: restoreItems)
+            items.append(contentsOf: restoreItems.map(\.toLibraryItem))
+            sortItems()
         } catch {
             AppLogger.error(error)
             errorMessage = error.localizedDescription

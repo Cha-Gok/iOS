@@ -32,6 +32,13 @@ public enum LibraryItem: Hashable, Sendable {
         case .voiceNote(let voiceNote): return voiceNote.id
         }
     }
+
+    public var deletedAt: Date? {
+        switch self {
+        case .folder(let folder): return folder.deletedAt
+        case .voiceNote(let voiceNote): return voiceNote.deletedAt
+        }
+    }
 }
 
 public struct CategoryToggle: Hashable, Sendable {
