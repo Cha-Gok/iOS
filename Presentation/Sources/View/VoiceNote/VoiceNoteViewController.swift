@@ -242,23 +242,15 @@ private extension VoiceNoteViewController {
     }
 
     func applyCurrentPage(_ page: Page) {
-        let target = pages[page.rawValue]
-        syncSegmentedControl(to: page)
-        guard pageViewController.viewControllers?.first !== target else { return }
-        let currentIndex = pageViewController.viewControllers?.first
-            .flatMap(pages.firstIndex(of:)) ?? 0
-        let direction: UIPageViewController.NavigationDirection =
-            page.rawValue > currentIndex ? .forward : .reverse
-        pageViewController.setViewControllers(
-            [target],
-            direction: direction,
-            animated: true
-        )
-    }
-
-    func syncSegmentedControl(to page: Page) {
-        guard segmentedControl.selectedSegmentIndex != page.rawValue else { return }
         segmentedControl.selectSegment(index: page.rawValue)
+
+        let target = pages[page.rawValue]
+        guard let current = pageViewController.viewControllers?.first,
+              let currentIndex = pages.firstIndex(of: current),
+              current !== target else { return }
+
+        let direction: UIPageViewController.NavigationDirection = page.rawValue > currentIndex ? .forward : .reverse
+        pageViewController.setViewControllers([target], direction: direction, animated: true)
     }
 }
 
@@ -287,10 +279,10 @@ extension VoiceNoteViewController: UIPageViewControllerDataSource, UIPageViewCon
         previousViewControllers: [UIViewController],
         transitionCompleted completed: Bool
     ) {
-        guard let current = pageViewController.viewControllers?.first,
-              let idx = pages.firstIndex(of: current),
-              let page = Page(rawValue: idx),
-              completed
+        guard completed,
+              let current = pageViewController.viewControllers?.first,
+              let index = pages.firstIndex(of: current),
+              let page = Page(rawValue: index)
         else { return }
         viewModel.updateCurrentPage(page)
     }
