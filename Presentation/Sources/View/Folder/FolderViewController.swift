@@ -266,6 +266,8 @@ public extension FolderViewController {
             [weak self] _, _, completion in
             if case .folder(let folder) = item {
                 self?.vm.move(folder: folder)
+                // Swipe 종료 애니메이션과 목록 갱신 타이밍이 어긋나면 셀이 튕겨 보일 수 있어 즉시 반영합니다.
+                self?.updateDataSource(animated: false)
             }
             completion(true)
         }
@@ -281,7 +283,9 @@ public extension FolderViewController {
         editAction.backgroundColor = UIColor.gray500
         editAction.image = UIImage(systemName: "pencil")
 
-        return UISwipeActionsConfiguration(actions: [deleteAction, editAction])
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction, editAction])
+        configuration.performsFirstActionWithFullSwipe = false
+        return configuration
     }
 }
 
