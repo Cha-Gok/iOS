@@ -46,6 +46,7 @@ public final class RecordingViewModel {
     }
 
     public enum Action {
+        case viewDidAppear
         case recordButtonTapped
         case cancelButtonTapped
         case finishButtonTapped
@@ -74,6 +75,9 @@ public final class RecordingViewModel {
 
     public func send(_ action: Action) {
         switch action {
+        case .viewDidAppear:
+            guard state.recordingState == .idle else { return }
+            startRecording()
         case .recordButtonTapped:
             switch state.recordingState {
             case .paused:

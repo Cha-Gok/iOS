@@ -70,6 +70,40 @@ extension RecordingViewModelTests {
 // MARK: - 녹음 시작
 
 extension RecordingViewModelTests {
+    func test_idle상태_viewDidAppear_녹음을자동시작하고recording상태가된다() async {
+        // Given
+        let sut = makeSUT()
+        let stream = AsyncStream<Waveform> { $0.finish() }
+        await sut.repository.setStartResult(.success(stream))
+        await sut.repository.expectStartRecording(callCount: 1)
+
+        // When
+        sut.viewModel.send(.viewDidAppear)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.recordingState, .recording)
+        await sut.repository.verify()
+    }
+
+    func test_recording상태_viewDidAppear_추가녹음을시작하지않는다() async {
+        // Given
+        let sut = makeSUT()
+        let stream = AsyncStream<Waveform> { $0.finish() }
+        await sut.repository.setStartResult(.success(stream))
+        await sut.repository.expectStartRecording(callCount: 1)
+
+        // When
+        sut.viewModel.send(.viewDidAppear)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        sut.viewModel.send(.viewDidAppear)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.recordingState, .recording)
+        await sut.repository.verify()
+    }
+
     func test_idle상태_recordButtonTapped_녹음을시작하고recording상태가된다() async {
         // Given
         let sut = makeSUT()
