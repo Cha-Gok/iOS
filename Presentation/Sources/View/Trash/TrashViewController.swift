@@ -300,9 +300,13 @@ private extension TrashViewController {
             guard let self else { return }
             switch vm.select {
             case .multiple:
-                print("선택 삭제하기")
+                vm.delete(items: vm.selectedItems)
+                chagokBackgroundView.makeToast(
+                    type: .normal,
+                    "삭제되었습니다"
+                )
             default:
-                print("안쓰는 부분")
+                break
             }
         }
     }
@@ -314,7 +318,11 @@ private extension TrashViewController {
             case .none:
                 print("검색 버튼 탭됨")
             case .multiple, .all:
-                print("선택 복원하기")
+                let restoredItems = vm.selectedItems
+                vm.restore(items: vm.selectedItems)
+                chagokBackgroundView.makeToast("원래 위치로 복원됐어요.") { [weak self] in
+                    self?.vm.cancelRestore(items: restoredItems)
+                }
             }
         }
     }
