@@ -142,18 +142,7 @@ public final class VoiceNoteViewModel {
             return
         }
 
-        let updatedNote = VoiceNote(
-            id: voiceNote.id,
-            title: trimmedTitle,
-            createdAt: voiceNote.createdAt,
-            updatedAt: .now,
-            folderID: voiceNote.folderID,
-            voiceRecord: voiceNote.voiceRecord,
-            keywords: voiceNote.keywords,
-            transcript: voiceNote.transcript,
-            summary: voiceNote.summary,
-            analysisState: voiceNote.analysisState
-        )
+        let updatedNote = voiceNote.copyWith(title: trimmedTitle)
 
         do {
             _ = try voiceNoteUseCase.update(updatedNote)
@@ -170,18 +159,7 @@ public final class VoiceNoteViewModel {
             return
         }
 
-        let updatedNote = VoiceNote(
-            id: voiceNote.id,
-            title: voiceNote.title,
-            createdAt: voiceNote.createdAt,
-            updatedAt: .now,
-            folderID: voiceNote.folderID,
-            voiceRecord: voiceNote.voiceRecord,
-            keywords: voiceNote.keywords,
-            transcript: updatedTranscript,
-            summary: voiceNote.summary,
-            analysisState: voiceNote.analysisState
-        )
+        let updatedNote = voiceNote.copyWith(transcript: updatedTranscript)
 
         do {
             voiceNote = try voiceNoteUseCase.update(updatedNote)
