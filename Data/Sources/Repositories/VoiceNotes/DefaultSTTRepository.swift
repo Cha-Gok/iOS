@@ -6,6 +6,7 @@ import Speech
 /// 음성 인식(STT) 리포지토리 기본 구현체.
 public actor DefaultSTTRepository: STTRepository {
     private let storageService: any StorageService
+    private let languageRepository: any LanguageRepository
     private var currentTask: SFSpeechRecognitionTask?
     private var currentContinuation: CheckedContinuation<Transcript, any Error>?
 
@@ -18,8 +19,12 @@ public actor DefaultSTTRepository: STTRepository {
         let continuation: CheckedContinuation<Bool, Never>
     }
 
-    public init(storageService: any StorageService) {
+    public init(
+        storageService: any StorageService,
+        languageRepository: any LanguageRepository
+    ) {
         self.storageService = storageService
+        self.languageRepository = languageRepository
     }
 
     public func transcribe(audioFilePath: String) async throws(STTRepositoryError) -> Transcript {
@@ -136,8 +141,9 @@ public actor DefaultSTTRepository: STTRepository {
     ) throws(STTRepositoryError) {
         guard !Task.isCancelled else { throw .cancelled }
 
-        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "ko-KR")) else {
-            AppLogger.error("SFSpeechRecognizer 초기화 실패 (ko-KR)")
+        let localeIdentifier = languageRepository.fetchLanguage().localeIdentifier
+        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: localeIdentifier)) else {
+            AppLogger.error("SFSpeechRecognizer 초기화 실패 (\(localeIdentifier))")
             throw .transcribeFailed
         }
 
