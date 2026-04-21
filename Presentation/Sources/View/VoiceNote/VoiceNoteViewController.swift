@@ -12,6 +12,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let titleContainerView = NavigationTitleContainerView()
     private let playerView = AudioPlayerView()
     private let segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
+    private let bottomFadeView = VoiceNoteBottomFadeView()
 
     private let backItem = UIBarButtonItem(image: .chevronLeft)
     private let editCancelItem = UIBarButtonItem(image: .cornerUpLeft)
@@ -71,6 +72,7 @@ private extension VoiceNoteViewController {
         pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
 
         view.addSubview(pageViewController.view)
+        view.addSubview(bottomFadeView)
         view.addSubview(playerView)
         view.addSubview(segmentedControl)
 
@@ -97,6 +99,11 @@ private extension VoiceNoteViewController {
             segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             segmentedControl.heightAnchor.constraint(equalToConstant: 42),
+
+            bottomFadeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bottomFadeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bottomFadeView.bottomAnchor.constraint(equalTo: playerView.topAnchor),
+            bottomFadeView.heightAnchor.constraint(equalToConstant: 169),
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
