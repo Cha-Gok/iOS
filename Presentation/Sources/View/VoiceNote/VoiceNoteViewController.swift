@@ -316,7 +316,6 @@ private extension VoiceNoteViewController {
             navigationItem.leftBarButtonItem = editCancelItem
             navigationItem.rightBarButtonItems = [doneItem]
             editCancelItem.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
-            viewModel.updateCurrentPage(.script)
         case nil:
             titleContainerView.setEditing(false)
             titleContainerView.text = viewModel.title

@@ -126,6 +126,7 @@ public final class VoiceNoteViewModel {
     public func enterScriptEditing() {
         if currentPlaybackState.status == .playing { pause() }
         editableScriptSections = scriptSections
+        currentPage = .script
         editingMode = .script
     }
 
