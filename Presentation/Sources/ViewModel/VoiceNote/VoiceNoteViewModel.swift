@@ -224,6 +224,13 @@ public final class VoiceNoteViewModel {
         moveToWasteBasket()
     }
 
+    public func regenerateSummary() {
+        guard voiceNote.transcript != nil,
+              voiceNote.analysisState != .analyzing else { return }
+        voiceNote.analysisState = .analyzing
+        Task { await performSummarization() }
+    }
+
     public func dismissError() {
         errorMessage = nil
     }
