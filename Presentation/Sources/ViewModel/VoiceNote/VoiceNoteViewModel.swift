@@ -216,6 +216,7 @@ public final class VoiceNoteViewModel {
         return Transcript(
             id: original.id,
             createdAt: original.createdAt,
+            updatedAt: .now,
             sections: sections
         )
     }
@@ -433,6 +434,13 @@ public extension VoiceNoteViewModel {
 
     var hasScriptEdits: Bool {
         editableScriptSections != (voiceNote.transcript?.sections ?? [])
+    }
+
+    /// 요약 생성 이후 스크립트가 수정되어 요약이 최신 상태가 아닌지 여부.
+    var isSummaryOutdated: Bool {
+        guard let summary = voiceNote.summary,
+              let transcript = voiceNote.transcript else { return false }
+        return summary.createdAt < transcript.updatedAt
     }
 }
 
