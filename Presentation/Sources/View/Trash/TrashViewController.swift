@@ -75,6 +75,10 @@ public final class TrashViewController: CollectionViewController {
         let primary = GlassButton.danger("비우기")
         primary.addAction(UIAction { [weak self] _ in
             self?.vm.deleteAll()
+            self?.chagokBackgroundView.makeToast(
+                type: .normal,
+                "영구 삭제 되었습니다"
+            )
             self?.vm.closeTrashAlert()
         }, for: .touchUpInside)
         return primary
@@ -314,7 +318,7 @@ private extension TrashViewController {
                 vm.delete(items: vm.selectedItems)
                 chagokBackgroundView.makeToast(
                     type: .normal,
-                    "삭제되었습니다"
+                    "영구 삭제 되었습니다"
                 )
             default:
                 break
