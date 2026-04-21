@@ -4,18 +4,39 @@ import DomainTesting
 import XCTest
 
 @MainActor
+final class MockTrashCoordinatorDelegate: TrashCoordinatorDelegate {
+    func presentFolderList(with: Receive, dismiss: ((String) -> Void)?) {}
+    
+    var popCalled = false
+    var pushedVoiceNote: VoiceNote?
+    var pushedFolder: Folder?
+
+    func pop() {
+        popCalled = true
+    }
+
+    func pushVoiceNoteView(voiceNote: VoiceNote) {
+        pushedVoiceNote = voiceNote
+    }
+
+    func pushMyFolderDetailView(_ folder: Folder) {
+        pushedFolder = folder
+    }
+}
+
+@MainActor
 final class TrashViewModelTests: XCTestCase {
     // MARK: - SUT
 
     private struct SUT {
         let viewModel: TrashViewModel
         let mockRepo: MockWasteBasketRepository // Use single repo for all DefaultUseCases
-        let mockCoordinator: MockBaseCoordinatorDelegate
+        let mockCoordinator: MockTrashCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
         let mockRepo = MockWasteBasketRepository()
-        let mockCoordinator = MockBaseCoordinatorDelegate()
+        let mockCoordinator = MockTrashCoordinatorDelegate()
 
         let viewModel = TrashViewModel(
             repository: mockRepo
@@ -38,69 +59,19 @@ final class TrashViewModelTests: XCTestCase {
         // Then
         XCTAssertTrue(sut.viewModel.items.isEmpty, "초기 항목 배열은 비어있어야 합니다.")
         XCTAssertNil(sut.viewModel.errorMessage, "초기 에러 메시지는 없어야 합니다.")
-        XCTAssertEqual(sut.viewModel.selectedOrder, .createdAt, "기본 정렬 순서는 생성일(.createdAt)이어야 합니다.")
-        XCTAssertFalse(sut.viewModel.isSelectionMode, "초기 선택 모드는 false여야 합니다.")
-        XCTAssertTrue(sut.viewModel.selectedItems.isEmpty, "선택된 아이템 초기 배열은 비어있어야 합니다.")
-        XCTAssertFalse(sut.viewModel.showAlert, "초기 경고창 상태는 false여야 합니다.")
-        XCTAssertTrue(sut.viewModel.isEmpty, "초기 isEmpty 속성은 true여야 합니다.")
+        XCTAssertFalse(sut.viewModel.showTrashAlert, "초기 경고창 상태는 false여야 합니다.")
     }
 
-    // MARK: - Action Tests
-
-    func test_toggleSelectionMode_토글확인_및_선택아이템초기화() {
+    func test_openTrashAlert_상태변경() {
         // Given
         let sut = makeSUT()
-        let dummyItem = WasteBasketItem.folder(
-            obj: Folder(name: "테스트 폴더", createdAt: Date().addingTimeInterval(-86400 * 5))
-        )
-        sut.mockRepo.setDeleteResult(.success(()))
-        sut.viewModel.toggleSelectionMode() // isSelectionMode = true
-        XCTAssertTrue(sut.viewModel.isSelectionMode, "토글 후 true가 되어야 합니다.")
-
-        sut.viewModel.selectItem(dummyItem)
-        XCTAssertEqual(sut.viewModel.selectedItems.count, 1, "선택 시 배열에 추가되어야 합니다.")
+        XCTAssertFalse(sut.viewModel.showTrashAlert)
 
         // When
-        sut.viewModel.toggleSelectionMode() // isSelectionMode = false
+        sut.viewModel.openTrashAlert()
 
         // Then
-        XCTAssertFalse(sut.viewModel.isSelectionMode, "다시 토글 후 false가 되어야 합니다.")
-        XCTAssertTrue(sut.viewModel.selectedItems.isEmpty, "선택 모드 해제 시 선택된 아이템 배열이 초기화되어야 합니다.")
-    }
-
-    func test_touchCreatedAction_정렬방식변경() {
-        // Given
-        let sut = makeSUT()
-        sut.viewModel.touchUpdatedAction() // 일단 강제로 수정일 순으로 변경
-
-        // When
-        sut.viewModel.touchCreatedAction()
-
-        // Then
-        XCTAssertEqual(sut.viewModel.selectedOrder, .createdAt, "선택된 정렬 방식이 생성일(.createdAt) 순이어야 합니다.")
-    }
-
-    func test_touchUpdatedAction_정렬방식변경() {
-        // Given
-        let sut = makeSUT()
-
-        // When
-        sut.viewModel.touchUpdatedAction()
-
-        // Then
-        XCTAssertEqual(sut.viewModel.selectedOrder, .updatedAt, "선택된 정렬 방식이 수정일(.updatedAt) 순이어야 합니다.")
-    }
-
-    func test_toggleShowAlert_상태토글() {
-        // Given
-        let sut = makeSUT()
-        XCTAssertFalse(sut.viewModel.showAlert)
-
-        // When
-        sut.viewModel.toggleShowAlert()
-
-        // Then
-        XCTAssertTrue(sut.viewModel.showAlert, "알럿 상태가 true가 되어야 합니다.")
+        XCTAssertTrue(sut.viewModel.showTrashAlert, "알럿 상태가 true가 되어야 합니다.")
     }
 
     func test_didTapBack_코디네이터pop호출() {
@@ -139,6 +110,28 @@ final class TrashViewModelTests: XCTestCase {
         // Then
         sut.mockRepo.verify()
         XCTAssertEqual(sut.viewModel.items.count, 2, "2개의 항목을 정상적으로 불러와야 합니다.")
+    }
+
+    func test_fetchItems_정렬_확인() async {
+        // Given
+        let sut = makeSUT()
+        let now = Date()
+        let items: [WasteBasketItem] = [
+            .folder(obj: Folder(name: "오래된 삭제", deletedAt: now.addingTimeInterval(-1000))),
+            .folder(obj: Folder(name: "최근 삭제", deletedAt: now)),
+            .folder(obj: Folder(name: "중간 삭제", deletedAt: now.addingTimeInterval(-500)))
+        ]
+        sut.mockRepo.setFetchAllResult(.success(items))
+
+        // When
+        sut.viewModel.fetchItems()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        // Then
+        XCTAssertEqual(sut.viewModel.items.count, 3)
+        XCTAssertEqual(sut.viewModel.items[0].deletedAt, now, "가장 최근 삭제된 항목이 첫 번째여야 합니다.")
+        XCTAssertEqual(sut.viewModel.items[1].deletedAt, now.addingTimeInterval(-500))
+        XCTAssertEqual(sut.viewModel.items[2].deletedAt, now.addingTimeInterval(-1000), "가장 오래된 삭제된 항목이 마지막이어야 합니다.")
     }
 
     // MARK: - Delete & Restore Tests
@@ -204,5 +197,41 @@ final class TrashViewModelTests: XCTestCase {
         // Then
         sut.mockRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty, "복원 후 휴지통 목록에서 항목이 제거되어야 합니다.")
+    }
+    func test_cancelRestoreItem_단일항목복원취소() async {
+        // Given
+        let sut = makeSUT()
+        let item = WasteBasketItem.folder(obj: Folder(name: "복원취소용 폴더"))
+        sut.mockRepo.setMoveResult(.success(()))
+        sut.mockRepo.expectMoveToWasteBasket(item: item, callCount: 1)
+
+        // When
+        sut.viewModel.cancelRestore(item: item)
+
+        // Then
+        sut.mockRepo.verify()
+        XCTAssertEqual(sut.viewModel.items.count, 1, "복원 취소 후 항목이 다시 휴지통에 추가되어야 합니다.")
+    }
+
+    func test_cancelRestoreItems_복수항목복원취소() async {
+        // Given
+        let sut = makeSUT()
+        let items = [
+            WasteBasketItem.folder(obj: Folder(name: "복원취소용 폴더 1")),
+            WasteBasketItem.voiceNote(obj: VoiceNote(
+                title: "복원취소용 노트 1",
+                folderID: UUID(),
+                voiceRecord: VoiceRecord(audioFilePath: "test.m4a", duration: 10)
+            ))
+        ]
+        sut.mockRepo.setMoveResult(.success(()))
+        sut.mockRepo.expectMoveAllToWasteBasket(items: items, callCount: 1)
+
+        // When
+        sut.viewModel.cancelRestore(items: items)
+
+        // Then
+        sut.mockRepo.verify()
+        XCTAssertEqual(sut.viewModel.items.count, 2, "복원 취소 후 모든 항목이 다시 휴지통에 추가되어야 합니다.")
     }
 }
