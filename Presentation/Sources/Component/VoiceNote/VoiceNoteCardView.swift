@@ -110,8 +110,7 @@ struct EditVoiceNoteCardModifier: ViewModifier {
             .frame(minHeight: 118)
             .frame(maxWidth: .infinity, maxHeight: 120, alignment: .leading)
             .padding(.horizontal)
-            .background(.point200.opacity(0.2))
-            .glassEffect(.clear, in: .rect(cornerRadius: 20))
+            .glassEffect(.clear.tint(.point200.opacity(0.2)), in: .rect(cornerRadius: 20))
             .overlay {
                 if isSelected {
                     RoundedRectangle(cornerRadius: 20)

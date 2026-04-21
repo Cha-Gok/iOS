@@ -86,8 +86,7 @@ struct EditFolderCardModifier: ViewModifier {
         content
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
-            .background(.point200.opacity(0.2))
-            .glassEffect(.clear, in: .rect(cornerRadius: 20))
+            .glassEffect(.clear.tint(.point200.opacity(0.2)), in: .rect(cornerRadius: 20))
             .overlay {
                 if isSelected {
                     RoundedRectangle(cornerRadius: 20)
