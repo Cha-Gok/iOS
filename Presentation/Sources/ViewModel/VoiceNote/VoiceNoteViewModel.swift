@@ -14,6 +14,7 @@ public final class VoiceNoteViewModel {
     public private(set) var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
     public private(set) var playingSectionIndex: Int?
     public private(set) var editableScriptSections: [TranscriptSection] = []
+    public private(set) var currentPage: Page = .summary
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
@@ -130,6 +131,10 @@ public final class VoiceNoteViewModel {
 
     public func cancelEditing() {
         editingMode = nil
+    }
+
+    public func updateCurrentPage(_ page: Page) {
+        currentPage = page
     }
 
     public func updateScriptSection(sectionIndex: Int, text: String) {
@@ -429,6 +434,18 @@ public extension VoiceNoteViewModel {
     enum EditingMode: Sendable {
         case title
         case script
+    }
+
+    enum Page: Int, CaseIterable, Sendable {
+        case summary
+        case script
+
+        public var title: String {
+            switch self {
+            case .summary: return "요약"
+            case .script: return "스크립트"
+            }
+        }
     }
 }
 

@@ -3,7 +3,9 @@ import SwiftUI
 import UIKit
 
 public final class VoiceNoteViewController: UIViewController, Alertable {
-    let viewModel: VoiceNoteViewModel
+    fileprivate typealias Page = VoiceNoteViewModel.Page
+
+    private let viewModel: VoiceNoteViewModel
 
     // MARK: - UI Components
 
@@ -31,7 +33,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private lazy var summaryViewController = VoiceNoteSummaryViewController(viewModel: viewModel)
     private lazy var scriptViewController = VoiceNoteScriptViewController(viewModel: viewModel)
     private lazy var pages: [UIViewController] = [summaryViewController, scriptViewController]
-    private var currentPageIndex: Int = 0
 
     // MARK: - Init
 
@@ -161,10 +162,9 @@ private extension VoiceNoteViewController {
     }
 
     func setupTabBar() {
-        segmentedControl.addAction(UIAction { [weak self] action in
-            guard let self, let sender = action.sender as? UnderlineSegmentedControl else { return }
-            let index = sender.selectedSegmentIndex
-            switchToPage(at: index, animated: true)
+        segmentedControl.addAction(UIAction { [weak self] _ in
+            guard let self, let page = Page(rawValue: segmentedControl.selectedSegmentIndex) else { return }
+            viewModel.updateCurrentPage(page)
         }, for: .valueChanged)
     }
 
@@ -181,6 +181,7 @@ private extension VoiceNoteViewController {
         observeErrorMessage()
         observeEditingState()
         observeScriptEdits()
+        observeCurrentPage()
     }
 
     func observeScriptEdits() {
@@ -227,20 +228,36 @@ private extension VoiceNoteViewController {
 // MARK: - Page Switching
 
 private extension VoiceNoteViewController {
-    func switchToPage(at index: Int, animated: Bool) {
-        guard pages.indices.contains(index), index != currentPageIndex else { return }
-        let direction: UIPageViewController.NavigationDirection = index > currentPageIndex ? .forward : .reverse
-        pageViewController.setViewControllers(
-            [pages[index]],
-            direction: direction,
-            animated: animated
-        )
-        currentPageIndex = index
+    func observeCurrentPage() {
+        withObservationTracking {
+            _ = viewModel.currentPage
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.applyCurrentPage(self.viewModel.currentPage)
+                self.observeCurrentPage()
+            }
+        }
     }
 
-    func syncSegmentedControl(to index: Int) {
-        guard segmentedControl.selectedSegmentIndex != index else { return }
-        segmentedControl.selectSegment(index: index)
+    func applyCurrentPage(_ page: Page) {
+        let target = pages[page.rawValue]
+        syncSegmentedControl(to: page)
+        guard pageViewController.viewControllers?.first !== target else { return }
+        let currentIndex = pageViewController.viewControllers?.first
+            .flatMap(pages.firstIndex(of:)) ?? 0
+        let direction: UIPageViewController.NavigationDirection =
+            page.rawValue > currentIndex ? .forward : .reverse
+        pageViewController.setViewControllers(
+            [target],
+            direction: direction,
+            animated: true
+        )
+    }
+
+    func syncSegmentedControl(to page: Page) {
+        guard segmentedControl.selectedSegmentIndex != page.rawValue else { return }
+        segmentedControl.selectSegment(index: page.rawValue)
     }
 }
 
@@ -269,11 +286,12 @@ extension VoiceNoteViewController: UIPageViewControllerDataSource, UIPageViewCon
         previousViewControllers: [UIViewController],
         transitionCompleted completed: Bool
     ) {
-        guard completed,
-              let current = pageViewController.viewControllers?.first,
-              let idx = pages.firstIndex(of: current) else { return }
-        currentPageIndex = idx
-        syncSegmentedControl(to: idx)
+        guard let current = pageViewController.viewControllers?.first,
+              let idx = pages.firstIndex(of: current),
+              let page = Page(rawValue: idx),
+              completed
+        else { return }
+        viewModel.updateCurrentPage(page)
     }
 }
 
@@ -305,30 +323,13 @@ private extension VoiceNoteViewController {
             navigationItem.leftBarButtonItem = editCancelItem
             navigationItem.rightBarButtonItems = [doneItem]
             editCancelItem.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
-            switchToPage(at: Page.script.rawValue, animated: true)
-            syncSegmentedControl(to: Page.script.rawValue)
+            viewModel.updateCurrentPage(.script)
         case nil:
             titleContainerView.setEditing(false)
             titleContainerView.text = viewModel.title
             titleContainerView.isHidden = false
             navigationItem.leftBarButtonItem = backItem
             navigationItem.rightBarButtonItems = [moreItem, searchItem]
-        }
-    }
-}
-
-// MARK: - Page
-
-private extension VoiceNoteViewController {
-    enum Page: Int, CaseIterable {
-        case summary
-        case script
-
-        var title: String {
-            switch self {
-            case .summary: return "요약"
-            case .script: return "스크립트"
-            }
         }
     }
 }
