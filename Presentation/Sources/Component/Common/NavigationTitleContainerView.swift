@@ -16,7 +16,7 @@ final class NavigationTitleContainerView: UIView {
     // MARK: - UI Components
 
     private let titleLabel: TypographyLabel = {
-        let label = TypographyLabel(typography: .title1)
+        let label = TypographyLabel(typography: .header2)
         label.textColor = UIColor.gray950
         label.lineBreakMode = .byTruncatingTail
         label.numberOfLines = 1
@@ -25,7 +25,7 @@ final class NavigationTitleContainerView: UIView {
     }()
 
     private let titleField: TypographyTextField = {
-        let field = TypographyTextField(typography: .title1)
+        let field = TypographyTextField(typography: .header2)
         field.textColor = UIColor.gray950
         field.tintColor = UIColor.gray950
         field.returnKeyType = .done
