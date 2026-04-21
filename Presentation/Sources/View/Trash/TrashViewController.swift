@@ -55,6 +55,13 @@ public final class TrashViewController: CollectionViewController {
     ) { [weak self] _ in
         self?.vm.setSelectionMode(.multiple)
     }
+    
+    private lazy var selectAllAction = UIAction(
+        title: "전체 선택하기",
+        image: nil
+    ) { [weak self] _ in
+        self?.vm.setSelectionMode(.all)
+    }
 
     private lazy var cancelButton: GlassButton = {
         let cancel = GlassButton.close("취소")
@@ -238,7 +245,7 @@ extension TrashViewController {
     private func updateRightBarButtonMenu(_ select: SelectionMode) {
         let menu: UIMenu = .init(
             title: "",
-            children: [selectAction, emptyTrashAction]
+            children: [selectAllAction, selectAction, emptyTrashAction]
         )
         moreAndActionButton.menu = menu
     }
@@ -300,6 +307,10 @@ private extension TrashViewController {
             guard let self else { return }
             switch vm.select {
             case .multiple:
+                guard !vm.selectedItems.isEmpty else {
+                    vm.setSelectionMode(.none)
+                    return
+                }
                 vm.delete(items: vm.selectedItems)
                 chagokBackgroundView.makeToast(
                     type: .normal,
@@ -318,6 +329,10 @@ private extension TrashViewController {
             case .none:
                 print("검색 버튼 탭됨")
             case .multiple, .all:
+                guard !vm.selectedItems.isEmpty else {
+                    vm.setSelectionMode(.none)
+                    return
+                }
                 let restoredItems = vm.selectedItems
                 vm.restore(items: vm.selectedItems)
                 chagokBackgroundView.makeToast("원래 위치로 복원됐어요.") { [weak self] in
