@@ -14,11 +14,6 @@ public actor DefaultSTTRepository: STTRepository {
     private var isBusy = false
     private var waiters: [Waiter] = []
 
-    private struct Waiter: Sendable {
-        let id: UUID
-        let continuation: CheckedContinuation<Bool, Never>
-    }
-
     public init(
         storageService: any StorageService,
         languageRepository: any LanguageRepository
@@ -152,7 +147,8 @@ public actor DefaultSTTRepository: STTRepository {
         }
 
         let request = SFSpeechURLRecognitionRequest(url: audioFileURL)
-        request.requiresOnDeviceRecognition = false
+        // 현재 로캘/디바이스가 on-device 인식을 지원하면 오프라인 모드로, 아니면 서버 인식으로 폴백.
+        request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
         currentContinuation = continuation
 
         currentTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
@@ -256,4 +252,9 @@ public actor DefaultSTTRepository: STTRepository {
             .error("알 수 없는 전사 오류: \(error.localizedDescription) (Domain: \(nsError.domain), Code: \(nsError.code))")
         return .unknown(error)
     }
+}
+
+private struct Waiter {
+    let id: UUID
+    let continuation: CheckedContinuation<Bool, Never>
 }

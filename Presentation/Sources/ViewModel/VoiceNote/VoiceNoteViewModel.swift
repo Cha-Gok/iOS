@@ -61,7 +61,15 @@ public final class VoiceNoteViewModel {
     }
 
     public func onDisappear() {
-        stop()
+        playbackObservationTask?.cancel()
+        playbackObservationTask = nil
+        voiceNoteObservationTask?.cancel()
+        voiceNoteObservationTask = nil
+        do {
+            try playbackRepository.stop()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     public func playPause() {
@@ -261,18 +269,6 @@ public final class VoiceNoteViewModel {
             } catch {
                 errorMessage = error.localizedDescription
             }
-        }
-    }
-
-    private func stop() {
-        playbackObservationTask?.cancel()
-        playbackObservationTask = nil
-        voiceNoteObservationTask?.cancel()
-        voiceNoteObservationTask = nil
-        do {
-            try playbackRepository.stop()
-        } catch {
-            errorMessage = error.localizedDescription
         }
     }
 
