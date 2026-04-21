@@ -9,46 +9,13 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
 
     private let titleContainerView = NavigationTitleContainerView()
     private let playerView = AudioPlayerView()
-    private lazy var segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
+    private let segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
 
-    private lazy var backBarButton: UIBarButtonItem = .init(
-        image: UIImage(systemName: "chevron.left")?
-            .withConfiguration(UIImage.SymbolConfiguration(weight: .bold)),
-        primaryAction: UIAction { [weak self] _ in
-            self?.viewModel.pop()
-        }
-    )
-
-    private lazy var editCancelButton: UIBarButtonItem = {
-        let item = UIBarButtonItem(
-            image: .cornerUpLeft,
-            primaryAction: UIAction { [weak self] _ in
-                self?.viewModel.cancelEditing()
-            }
-        )
-        item.hidesSharedBackground = true
-        return item
-    }()
-
-    private lazy var doneButton: UIBarButtonItem = {
-        let item = UIBarButtonItem(title: "완료", primaryAction: UIAction { [weak self] _ in
-            guard let self else { return }
-            switch viewModel.editingMode {
-            case .title:
-                viewModel.doneTitleEditing(title: titleContainerView.text ?? "")
-            case .script:
-                viewModel.doneScriptEditing()
-            case nil:
-                break
-            }
-        })
-        item.tintColor = UIColor.point800
-        item.hidesSharedBackground = true
-        return item
-    }()
-
-    private var normalLeftBarButtonItem: UIBarButtonItem?
-    private var normalRightBarButtonItems: [UIBarButtonItem] = []
+    private let backItem = UIBarButtonItem(image: .chevronLeft)
+    private let editCancelItem = UIBarButtonItem(image: .cornerUpLeft)
+    private let doneItem = UIBarButtonItem(title: "완료")
+    private let moreItem = UIBarButtonItem(image: .moreVertical)
+    private let searchItem = UIBarButtonItem(image: .search)
 
     private lazy var pageViewController: UIPageViewController = {
         let pvc = UIPageViewController(
@@ -83,6 +50,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     override public func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupBindings()
         viewModel.onAppear()
     }
 
@@ -98,7 +66,11 @@ private extension VoiceNoteViewController {
     func setupUI() {
         view.backgroundColor = UIColor.gray0
 
-        addPageViewController()
+        addChild(pageViewController)
+        pageViewController.didMove(toParent: self)
+        pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
+
+        view.addSubview(pageViewController.view)
         view.addSubview(playerView)
         view.addSubview(segmentedControl)
 
@@ -106,23 +78,11 @@ private extension VoiceNoteViewController {
         setupNavigationBar()
         setupTabBar()
         setupPlayerView()
-        setupBindings()
-    }
-
-    func addPageViewController() {
-        addChild(pageViewController)
-        view.addSubview(pageViewController.view)
-        pageViewController.didMove(toParent: self)
-        pageViewController.setViewControllers(
-            [pages[0]],
-            direction: .forward,
-            animated: false
-        )
     }
 
     func setupConstraints() {
-        for subview in [pageViewController.view!, playerView, segmentedControl] {
-            subview.translatesAutoresizingMaskIntoConstraints = false
+        for subview in [pageViewController.view, playerView, segmentedControl] {
+            subview?.translatesAutoresizingMaskIntoConstraints = false
         }
 
         NSLayoutConstraint.activate([
@@ -157,34 +117,47 @@ private extension VoiceNoteViewController {
     }
 
     func setupNavigationBar() {
-        backBarButton.tintColor = UIColor.gray950
         setupTitleContainer()
-        let menu = UIMenu(children: [
-            UIAction(title: "기록 이동하기", handler: { [weak self] _ in
+
+        for item in [backItem, editCancelItem, doneItem, moreItem, searchItem] {
+            item.hidesSharedBackground = true
+        }
+        backItem.tintColor = UIColor.gray950
+        doneItem.tintColor = UIColor.point800
+        [moreItem, searchItem].forEach { $0.tintColor = .white }
+
+        backItem.primaryAction = UIAction { [weak self] _ in
+            self?.viewModel.pop()
+        }
+        editCancelItem.primaryAction = UIAction { [weak self] _ in
+            self?.viewModel.cancelEditing()
+        }
+        doneItem.primaryAction = UIAction { [weak self] _ in
+            guard let self else { return }
+            switch viewModel.editingMode {
+            case .title:
+                viewModel.doneTitleEditing(title: titleContainerView.text ?? "")
+            case .script:
+                viewModel.doneScriptEditing()
+            case nil:
+                break
+            }
+        }
+        moreItem.menu = UIMenu(children: [
+            UIAction(title: "기록 이동하기") { [weak self] _ in
                 self?.viewModel.moveVoiceNote()
-            }),
-            UIAction(title: "편집하기", handler: { [weak self] _ in
+            },
+            UIAction(title: "편집하기") { [weak self] _ in
                 self?.viewModel.enterScriptEditing()
-            }),
-            UIAction(title: "삭제하기", attributes: .destructive, handler: { [weak self] _ in
+            },
+            UIAction(title: "삭제하기", attributes: .destructive) { [weak self] _ in
                 self?.viewModel.deleteVoiceNote()
-            })
+            }
         ])
-        let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: menu)
-        let searchItem = UIBarButtonItem(
-            image: UIImage(systemName: "magnifyingglass"),
-            style: .plain,
-            target: nil,
-            action: nil
-        )
-        normalRightBarButtonItems = [moreItem, searchItem]
-        normalLeftBarButtonItem = backBarButton
-        navigationItem.leftBarButtonItem = normalLeftBarButtonItem
+
+        navigationItem.leftBarButtonItem = backItem
         navigationItem.titleView = titleContainerView
-        navigationItem.rightBarButtonItems = normalRightBarButtonItems
-        navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
-        navigationItem.leftBarButtonItem?.hidesSharedBackground = true
-        navigationItem.rightBarButtonItems?.forEach { $0.hidesSharedBackground = true }
+        navigationItem.rightBarButtonItems = [moreItem, searchItem]
     }
 
     func setupTabBar() {
@@ -326,21 +299,20 @@ private extension VoiceNoteViewController {
         case .title:
             titleContainerView.text = viewModel.title
             titleContainerView.setEditing(true)
-            navigationItem.rightBarButtonItems = [doneButton]
+            navigationItem.rightBarButtonItems = [doneItem]
         case .script:
             titleContainerView.isHidden = true
-            navigationItem.leftBarButtonItem = editCancelButton
-            navigationItem.rightBarButtonItems = [doneButton]
-            editCancelButton.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
+            navigationItem.leftBarButtonItem = editCancelItem
+            navigationItem.rightBarButtonItems = [doneItem]
+            editCancelItem.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
             switchToPage(at: Page.script.rawValue, animated: true)
             syncSegmentedControl(to: Page.script.rawValue)
         case nil:
             titleContainerView.setEditing(false)
             titleContainerView.text = viewModel.title
             titleContainerView.isHidden = false
-            navigationItem.leftBarButtonItem = normalLeftBarButtonItem
-            navigationItem.rightBarButtonItems = normalRightBarButtonItems
-            navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
+            navigationItem.leftBarButtonItem = backItem
+            navigationItem.rightBarButtonItems = [moreItem, searchItem]
         }
     }
 }
