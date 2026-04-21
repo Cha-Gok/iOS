@@ -19,7 +19,7 @@ public final class TrashViewModel {
     private(set) var select: SelectionMode = .none
     private(set) var selectedItems: [WasteBasketItem] = []
     private(set) var showTrashAlert: Bool = false
-    
+
     public weak var coordinator: TrashCoordinatorDelegate?
 
     // MARK: - UseCase
@@ -65,7 +65,7 @@ extension TrashViewModel {
     func openTrashAlert() {
         showTrashAlert = true
     }
-    
+
     func closeTrashAlert() {
         showTrashAlert = false
     }
@@ -77,20 +77,20 @@ extension TrashViewModel {
     func didTapBack() {
         coordinator?.pop()
     }
-    
+
     func pushVoiceNote(_ voiceNote: VoiceNote) {
         coordinator?.pushVoiceNoteView(voiceNote: voiceNote)
     }
-    
+
     func pushDetailFolder(_ folder: Folder) {
         coordinator?.pushMyFolderDetailView(folder)
     }
-    
+
     func selectItem(_ item: WasteBasketItem) {
         if select == .none { setSelectionMode(.multiple) }
         selectedItems.append(item)
     }
-    
+
     func deselectItem(_ item: WasteBasketItem) {
         selectedItems.removeAll { $0.id == item.id }
     }
@@ -111,7 +111,7 @@ extension TrashViewModel {
     }
 
     private func sortItems() {
-        items.sort { (lhs, rhs) -> Bool in
+        items.sort { lhs, rhs -> Bool in
             let lhsDate = lhs.deletedAt ?? .distantPast
             let rhsDate = rhs.deletedAt ?? .distantPast
             return lhsDate > rhsDate
@@ -182,7 +182,7 @@ extension TrashViewModel {
             errorMessage = error.localizedDescription
         }
     }
-    
+
     func cancelRestore(item: WasteBasketItem) {
         do {
             try repository.moveToWasteBasket(item: item)

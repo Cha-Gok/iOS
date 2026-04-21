@@ -6,7 +6,7 @@ import XCTest
 @MainActor
 final class MockTrashCoordinatorDelegate: TrashCoordinatorDelegate {
     func presentFolderList(with: Receive, dismiss: ((String) -> Void)?) {}
-    
+
     var popCalled = false
     var pushedVoiceNote: VoiceNote?
     var pushedFolder: Folder?
@@ -198,7 +198,8 @@ final class TrashViewModelTests: XCTestCase {
         sut.mockRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty, "복원 후 휴지통 목록에서 항목이 제거되어야 합니다.")
     }
-    func test_cancelRestoreItem_단일항목복원취소() async {
+
+    func test_cancelRestoreItem_단일항목복원취소() {
         // Given
         let sut = makeSUT()
         let item = WasteBasketItem.folder(obj: Folder(name: "복원취소용 폴더"))
@@ -213,7 +214,7 @@ final class TrashViewModelTests: XCTestCase {
         XCTAssertEqual(sut.viewModel.items.count, 1, "복원 취소 후 항목이 다시 휴지통에 추가되어야 합니다.")
     }
 
-    func test_cancelRestoreItems_복수항목복원취소() async {
+    func test_cancelRestoreItems_복수항목복원취소() {
         // Given
         let sut = makeSUT()
         let items = [

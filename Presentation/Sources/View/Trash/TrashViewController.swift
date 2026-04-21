@@ -55,7 +55,7 @@ public final class TrashViewController: CollectionViewController {
     ) { [weak self] _ in
         self?.vm.setSelectionMode(.multiple)
     }
-    
+
     private lazy var selectAllAction = UIAction(
         title: "전체 선택하기",
         image: nil
@@ -125,7 +125,7 @@ public final class TrashViewController: CollectionViewController {
         setupAlertView()
         updateNavigationBarAppearance(isTransparent: vm.showTrashAlert)
     }
-    
+
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         vm.fetchItems()
@@ -175,7 +175,7 @@ public final class TrashViewController: CollectionViewController {
             var backgroundConfig = UIBackgroundConfiguration.listCell()
             backgroundConfig.backgroundColor = .clear
             cell.backgroundConfiguration = backgroundConfig
-            
+
             switch itemIdentifier {
             case .folder(let folder):
                 cell.contentConfiguration = UIHostingConfiguration {
@@ -245,6 +245,7 @@ public final class TrashViewController: CollectionViewController {
 }
 
 // MARK: - Update Method
+
 extension TrashViewController {
     private func updateRightBarButtonMenu(_ select: SelectionMode) {
         let menu: UIMenu = .init(
@@ -253,7 +254,7 @@ extension TrashViewController {
         )
         moreAndActionButton.menu = menu
     }
-    
+
     private func updateNavigationItems(_ select: SelectionMode) {
         let isEditMode = (select != .none)
         for item in [backButton, moreAndActionButton, searchAndMoveButton] {
@@ -272,7 +273,7 @@ extension TrashViewController {
         }
         updateNavigationBarAppearance(isTransparent: shouldShowAlert)
     }
-    
+
     private func updateDataSource(reconfigure: Bool = false) {
         var snapshot = SnapShot()
         snapshot.appendSections([.main])
@@ -282,7 +283,7 @@ extension TrashViewController {
         }
         dataSource?.apply(snapshot, animatingDifferences: true)
     }
-    
+
     func updateInteractionForAlert(isPresented: Bool) {
         collectionView.isUserInteractionEnabled = !isPresented
         backButton.isUserInteractionEnabled = !isPresented
@@ -348,11 +349,11 @@ private extension TrashViewController {
 }
 
 #if DEBUG
- #Preview {
-    UINavigationController(
-        rootViewController: TrashViewController(
-            vm: .preview()
+    #Preview {
+        UINavigationController(
+            rootViewController: TrashViewController(
+                vm: .preview()
+            )
         )
-    )
- }
+    }
 #endif
