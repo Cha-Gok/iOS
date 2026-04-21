@@ -140,21 +140,24 @@ private extension VoiceNoteSummaryViewController {
             guard let self, let section = Section(rawValue: indexPath.section),
                   let title = section.headerTitle else { return }
 
-            if section == .keyPoints, canRegenerateSummary {
-                let chip = ChipView(icon: UIImage(systemName: "arrow.clockwise"), text: "재생성")
-                header.configure(title: title, trailingView: chip) { [weak self] in
+            if section == .keyPoints, let state = regenerationChipState {
+                let chip = RegenerationChip(state: state)
+                let onTap: (() -> Void)? = state == .loading ? nil : { [weak self] in
                     self?.viewModel.regenerateSummary()
                 }
+                header.configure(title: title, trailingView: chip, onTrailingTap: onTap)
             } else {
                 header.configure(title: title)
             }
         }
     }
 
-    var canRegenerateSummary: Bool {
+    var regenerationChipState: RegenerationChip.State? {
         switch viewModel.voiceNote.analysisState {
-        case .completed, .failed: return true
-        case .pending, .analyzing, .transcribed: return false
+        case .pending, .transcribed: return nil
+        case .analyzing: return .loading
+        case .completed: return viewModel.isSummaryOutdated ? .outdated : .idle
+        case .failed: return .idle
         }
     }
 
@@ -171,6 +174,7 @@ private extension VoiceNoteSummaryViewController {
         snapshot.appendItems(keywordItems, toSection: .keywords)
 
         snapshot.reconfigureItems(metadataItems + keywordItems)
+        snapshot.reloadSections([.keyPoints])
         dataSource.apply(snapshot, animatingDifferences: true)
     }
 }
@@ -188,6 +192,7 @@ private extension VoiceNoteSummaryViewController {
                 case .analyzing:
                     var snapshot = self.dataSource.snapshot()
                     snapshot.reconfigureItems([.metadata])
+                    snapshot.reloadSections([.keyPoints])
                     self.dataSource.apply(snapshot, animatingDifferences: false)
                 case .completed, .transcribed:
                     self.applySnapshot()

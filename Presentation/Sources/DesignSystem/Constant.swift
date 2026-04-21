@@ -147,6 +147,9 @@ public extension Constant {
 
     /// ChipView 최소 높이 (28)
     static let chipMinimumHeight: CGFloat = 28
+
+    /// ChipView 보조 표시 dot 크기 (6)
+    static let chipIndicatorSize: CGFloat = 6
 }
 
 // MARK: - LanguagePicker Constants

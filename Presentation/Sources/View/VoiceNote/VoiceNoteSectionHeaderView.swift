@@ -82,7 +82,7 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
 
 #Preview("trailingView 있음") {
     let header = VoiceNoteSectionHeaderView()
-    let chip = ChipView(icon: UIImage(systemName: "arrow.clockwise"), text: "재생성")
+    let chip = RegenerationChip(state: .idle)
     header.configure(title: "핵심 포인트", trailingView: chip)
     header.backgroundColor = .black
     return header
