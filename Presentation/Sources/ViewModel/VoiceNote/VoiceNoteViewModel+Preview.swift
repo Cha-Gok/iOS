@@ -54,7 +54,8 @@
             VoiceNote(
                 title: "미리보기 기록",
                 folderID: UUID(),
-                voiceRecord: voiceRecord
+                voiceRecord: voiceRecord,
+                analysisState: .pending
             )
         }
 

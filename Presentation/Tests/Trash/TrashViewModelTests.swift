@@ -96,7 +96,8 @@ final class TrashViewModelTests: XCTestCase {
             .voiceNote(obj: VoiceNote(
                 title: "테스트 노트",
                 folderID: UUID(),
-                voiceRecord: VoiceRecord(audioFilePath: "VoiceRecords/null.m4a", duration: 10)
+                voiceRecord: VoiceRecord(audioFilePath: "VoiceRecords/null.m4a", duration: 10),
+                analysisState: .pending
             ))
         ]
 
@@ -222,7 +223,8 @@ final class TrashViewModelTests: XCTestCase {
             WasteBasketItem.voiceNote(obj: VoiceNote(
                 title: "복원취소용 노트 1",
                 folderID: UUID(),
-                voiceRecord: VoiceRecord(audioFilePath: "test.m4a", duration: 10)
+                voiceRecord: VoiceRecord(audioFilePath: "test.m4a", duration: 10),
+                analysisState: .pending
             ))
         ]
         sut.mockRepo.setMoveResult(.success(()))

@@ -1,20 +1,27 @@
 @testable import Data
 import Domain
+import DomainTesting
 import XCTest
 
 final class DefaultSTTRepositoryTest: XCTestCase {
     private var sut: DefaultSTTRepository!
     private var mockStorageService: MockStorageService!
+    private var mockLanguageRepository: MockLanguageRepository!
 
     override func setUp() {
         super.setUp()
         mockStorageService = MockStorageService()
-        sut = DefaultSTTRepository(storageService: mockStorageService)
+        mockLanguageRepository = MockLanguageRepository()
+        sut = DefaultSTTRepository(
+            storageService: mockStorageService,
+            languageRepository: mockLanguageRepository
+        )
     }
 
     override func tearDown() {
         sut = nil
         mockStorageService = nil
+        mockLanguageRepository = nil
         super.tearDown()
     }
 }

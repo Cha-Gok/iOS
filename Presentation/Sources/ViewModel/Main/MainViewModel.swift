@@ -355,7 +355,8 @@ extension MainViewModel {
                     transcript: summarized
                         ? Transcript(sections: [TranscriptSection(timestamp: 0, text: "\(title) 전사본")])
                         : nil,
-                    summary: summarized ? Summary(text: "\(title) 요약") : nil
+                    summary: summarized ? Summary(text: "\(title) 요약") : nil,
+                    analysisState: summarized ? .completed : .pending
                 )
             }
         }

@@ -21,7 +21,10 @@ public final class AppDIContainer {
     private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
     private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(store: localDataBase)
     private lazy var wasteBasketRepository = DefaultWasteBasketRepository(store: localDataBase)
-    private lazy var sttRepository = DefaultSTTRepository(storageService: storageService)
+    private lazy var sttRepository = DefaultSTTRepository(
+        storageService: storageService,
+        languageRepository: languageRepository
+    )
     private lazy var summaryRepository = DefaultSummaryRepository()
 
     /// Analysis (Domain Service)

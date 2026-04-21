@@ -47,11 +47,6 @@ public final class VoiceNoteViewModel {
         self.wasteBasketRepository = wasteBasketRepository
     }
 
-    deinit {
-        playbackObservationTask?.cancel()
-        voiceNoteObservationTask?.cancel()
-    }
-
     // MARK: - View Actions
 
     public func onAppear() {
@@ -61,6 +56,10 @@ public final class VoiceNoteViewModel {
     }
 
     public func onDisappear() {
+        playbackObservationTask?.cancel()
+        playbackObservationTask = nil
+        voiceNoteObservationTask?.cancel()
+        voiceNoteObservationTask = nil
         stop()
     }
 
@@ -143,18 +142,7 @@ public final class VoiceNoteViewModel {
             return
         }
 
-        let updatedNote = VoiceNote(
-            id: voiceNote.id,
-            title: trimmedTitle,
-            createdAt: voiceNote.createdAt,
-            updatedAt: .now,
-            folderID: voiceNote.folderID,
-            voiceRecord: voiceNote.voiceRecord,
-            keywords: voiceNote.keywords,
-            transcript: voiceNote.transcript,
-            summary: voiceNote.summary,
-            analysisState: voiceNote.analysisState
-        )
+        let updatedNote = voiceNote.copyWith(title: trimmedTitle)
 
         do {
             _ = try voiceNoteUseCase.update(updatedNote)
@@ -171,22 +159,10 @@ public final class VoiceNoteViewModel {
             return
         }
 
-        let updatedNote = VoiceNote(
-            id: voiceNote.id,
-            title: voiceNote.title,
-            createdAt: voiceNote.createdAt,
-            updatedAt: .now,
-            folderID: voiceNote.folderID,
-            voiceRecord: voiceNote.voiceRecord,
-            keywords: voiceNote.keywords,
-            transcript: updatedTranscript,
-            summary: voiceNote.summary,
-            analysisState: voiceNote.analysisState
-        )
+        let updatedNote = voiceNote.copyWith(transcript: updatedTranscript)
 
         do {
-            _ = try voiceNoteUseCase.update(updatedNote)
-            voiceNote = updatedNote
+            voiceNote = try voiceNoteUseCase.update(updatedNote)
             editingMode = nil
         } catch {
             errorMessage = "스크립트 수정에 실패했습니다: \(error.localizedDescription)"
@@ -253,6 +229,7 @@ public final class VoiceNoteViewModel {
         voiceNoteObservationTask = Task {
             do {
                 let stream = try voiceNoteUseCase.observe(id: voiceNote.id)
+                // 초기값은 init에서 주입된 voiceNote와 동일하므로 스킵하고, 이후 변경분만 반영한다.
                 for await note in stream.dropFirst() {
                     let folderChanged = voiceNote.folderID != note.folderID
                     voiceNote = note
@@ -261,18 +238,6 @@ public final class VoiceNoteViewModel {
             } catch {
                 errorMessage = error.localizedDescription
             }
-        }
-    }
-
-    private func stop() {
-        playbackObservationTask?.cancel()
-        playbackObservationTask = nil
-        voiceNoteObservationTask?.cancel()
-        voiceNoteObservationTask = nil
-        do {
-            try playbackRepository.stop()
-        } catch {
-            errorMessage = error.localizedDescription
         }
     }
 
@@ -295,6 +260,14 @@ public final class VoiceNoteViewModel {
     private func seek(to time: TimeInterval) {
         do {
             try playbackRepository.seek(to: time)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func stop() {
+        do {
+            try playbackRepository.stop()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -367,7 +340,8 @@ public extension VoiceNoteViewModel {
     }
 
     var hasScriptEdits: Bool {
-        editableScriptSections != (voiceNote.transcript?.sections ?? [])
+        guard editingMode == .script else { return false }
+        return editableScriptSections != (voiceNote.transcript?.sections ?? [])
     }
 
     /// 요약 생성 이후 스크립트가 수정되어 요약이 최신 상태가 아닌지 여부.

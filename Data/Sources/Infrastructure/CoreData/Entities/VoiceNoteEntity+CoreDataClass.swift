@@ -82,7 +82,7 @@ extension VoiceNoteEntity: ManagedObjectMapping {
             transcript: t,
             summary: s,
             deletedAt: deletedAt,
-            analysisState: state
+            analysisState: state ?? Self.deriveAnalysisState(transcript: t, summary: s)
         )
     }
 
@@ -211,5 +211,12 @@ extension VoiceNoteEntity: ManagedObjectMapping {
 
     public static var sortDescriptors: [NSSortDescriptor] {
         [NSSortDescriptor(keyPath: \VoiceNoteEntity.updatedAt, ascending: false)]
+    }
+
+    /// analysisStateRaw가 nil인 기존 레코드 호환용: transcript/summary 존재 여부로 상태를 파생합니다.
+    private static func deriveAnalysisState(transcript: Transcript?, summary: Summary?) -> AnalysisState {
+        if summary != nil { return .completed }
+        if transcript != nil { return .transcribed }
+        return .pending
     }
 }
