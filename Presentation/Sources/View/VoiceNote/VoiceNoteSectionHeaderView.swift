@@ -18,6 +18,8 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
         return stack
     }()
 
+    private var onTrailingTap: (() -> Void)?
+
     // MARK: - Init
 
     override init(frame: CGRect) {
@@ -47,8 +49,9 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
 
     // MARK: - Configure
 
-    func configure(title: String, trailingView: UIView? = nil) {
+    func configure(title: String, trailingView: UIView? = nil, onTrailingTap: (() -> Void)? = nil) {
         titleLabel.text = title
+        self.onTrailingTap = onTrailingTap
         setTrailingView(trailingView)
     }
 
@@ -64,6 +67,16 @@ final class VoiceNoteSectionHeaderView: UICollectionReusableView {
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         contentStack.addArrangedSubview(spacer)
         contentStack.addArrangedSubview(view)
+
+        if onTrailingTap != nil {
+            view.isUserInteractionEnabled = true
+            view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(trailingTapped)))
+        }
+    }
+
+    @objc
+    private func trailingTapped() {
+        onTrailingTap?()
     }
 }
 
