@@ -103,7 +103,7 @@ final class NavigationTitleContainerView: UIView {
             titleField.leadingAnchor.constraint(equalTo: leadingAnchor),
             titleField.trailingAnchor.constraint(equalTo: trailingAnchor),
             titleField.topAnchor.constraint(equalTo: topAnchor),
-            titleField.bottomAnchor.constraint(equalTo: bottomAnchor),
+            titleField.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 

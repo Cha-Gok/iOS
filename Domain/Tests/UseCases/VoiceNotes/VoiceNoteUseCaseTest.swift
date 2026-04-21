@@ -8,24 +8,20 @@ final class VoiceNoteUseCaseTest: XCTestCase {
     private struct SUT {
         let useCase: VoiceNoteUseCase
         let repository: MockVoiceNoteRepository
-        let sttRepository: MockSTTRepository
-        let summaryRepository: MockSummaryRepository
+        let analysisService: MockVoiceNoteAnalysisService
     }
 
     private func makeSUT() -> SUT {
         let repository = MockVoiceNoteRepository()
-        let sttRepository = MockSTTRepository()
-        let summaryRepository = MockSummaryRepository()
+        let analysisService = MockVoiceNoteAnalysisService()
         let useCase = DefaultVoiceNoteUseCase(
             repository: repository,
-            sttRepository: sttRepository,
-            summaryRepository: summaryRepository
+            analysisService: analysisService
         )
         return SUT(
             useCase: useCase,
             repository: repository,
-            sttRepository: sttRepository,
-            summaryRepository: summaryRepository
+            analysisService: analysisService
         )
     }
 }
@@ -40,11 +36,13 @@ extension VoiceNoteUseCaseTest {
 
         sut.repository.setCreateResult(.success(expectedNote))
         sut.repository.expectCreate(callCount: 1)
+        sut.analysisService.expectEnqueue(callCount: 1)
 
         let result = try sut.useCase.create(voiceRecord)
 
         XCTAssertEqual(result.id, expectedNote.id)
         sut.repository.verify()
+        sut.analysisService.verify()
     }
 }
 
@@ -106,72 +104,16 @@ extension VoiceNoteUseCaseTest {
     }
 }
 
-// MARK: - Transcribe
+// MARK: - Regenerate
 
 extension VoiceNoteUseCaseTest {
-    func test_transcribe_정상호출시_전사본을반환한다() async throws {
+    func test_regenerateSummary_호출시_분석서비스의regenerate를호출한다() {
         let sut = makeSUT()
-        let audioPath = "test.m4a"
-        let transcript = Transcript.stub(text: "전사본")
+        let id = UUID()
+        sut.analysisService.expectRegenerate(callCount: 1)
 
-        await sut.sttRepository.setResult(.success(transcript))
-        await sut.sttRepository.expectTranscribe(callCount: 1, audioFilePath: audioPath)
+        sut.useCase.regenerateSummary(id: id)
 
-        let result = try await sut.useCase.transcribe(audioFilePath: audioPath)
-
-        XCTAssertEqual(result.sections.first?.text, "전사본")
-        await sut.sttRepository.verify()
-    }
-
-    func test_transcribe_STT실패시_analysisFailed에러를던진다() async {
-        let sut = makeSUT()
-        await sut.sttRepository.setResult(.failure(.transcribeFailed))
-
-        do {
-            _ = try await sut.useCase.transcribe(audioFilePath: "test.m4a")
-            XCTFail("에러가 발생해야 합니다.")
-        } catch {
-            guard case VoiceNoteUseCaseError.analysisFailed = error else {
-                return XCTFail("잘못된 에러 타입: \(error)")
-            }
-        }
-    }
-}
-
-// MARK: - Summarize
-
-extension VoiceNoteUseCaseTest {
-    func test_summarize_정상호출시_키워드와요약을반환한다() async throws {
-        let sut = makeSUT()
-        let transcript = Transcript.stub(text: "전사본")
-        let summary = Summary.stub(text: "요약본")
-        let keywords = [Keyword.stub(word: "키워드")]
-
-        await sut.summaryRepository.setResult(.success((keywords, summary)))
-        await sut.summaryRepository.expectSummarize(
-            callCount: 1,
-            transcriptText: transcript.sections.map(\.text).joined(separator: "\n")
-        )
-
-        let result = try await sut.useCase.summarize(transcript: transcript, language: .ko)
-
-        XCTAssertEqual(result.summary.text, "요약본")
-        XCTAssertEqual(result.keywords.first?.word, "키워드")
-        await sut.summaryRepository.verify()
-    }
-
-    func test_summarize_요약실패시_analysisFailed에러를던진다() async {
-        let sut = makeSUT()
-        let transcript = Transcript.stub(text: "전사본")
-        await sut.summaryRepository.setResult(.failure(.summarizeFailed))
-
-        do {
-            _ = try await sut.useCase.summarize(transcript: transcript, language: .ko)
-            XCTFail("에러가 발생해야 합니다.")
-        } catch {
-            guard case VoiceNoteUseCaseError.analysisFailed = error else {
-                return XCTFail("잘못된 에러 타입: \(error)")
-            }
-        }
+        sut.analysisService.verify()
     }
 }

@@ -45,8 +45,7 @@ final class FolderDetailViewModelTests: XCTestCase {
             folderID: folderID,
             voiceNoteUseCase: DefaultVoiceNoteUseCase(
                 repository: mockVoiceNoteRepo,
-                sttRepository: MockSTTRepository(),
-                summaryRepository: MockSummaryRepository()
+                analysisService: MockVoiceNoteAnalysisService()
             ),
             wasteBasketRepository: mockWasteBasketRepo
         )

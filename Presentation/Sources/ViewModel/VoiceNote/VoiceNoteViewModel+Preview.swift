@@ -41,7 +41,6 @@
                 voiceNote: voiceNote,
                 voiceNoteUseCase: PreviewVoiceNoteUseCase(items: [voiceNote]),
                 folderUseCase: PreviewFolderUseCase(),
-                languageRepository: PreviewLanguageRepository(),
                 playbackRepository: PreviewPlaybackRepository(),
                 wasteBasketRepository: PreviewWasteBasketRepository()
             )
@@ -80,17 +79,6 @@
             voiceNote
         }
 
-        func transcribe(audioFilePath _: String) async throws(VoiceNoteUseCaseError) -> Transcript {
-            Transcript()
-        }
-
-        func summarize(
-            transcript _: Transcript,
-            language _: Language
-        ) async throws(VoiceNoteUseCaseError) -> (keywords: [Keyword], summary: Summary) {
-            (keywords: [], summary: Summary(text: ""))
-        }
-
         func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote> {
             guard let item = items.first(where: { $0.id == id }) else { throw .recordNotFound(id) }
             return AsyncStream { continuation in
@@ -98,6 +86,8 @@
                 continuation.finish()
             }
         }
+
+        func regenerateSummary(id _: UUID) {}
     }
 
     private struct PreviewFolderUseCase: FolderUseCase {
@@ -124,14 +114,6 @@
         func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder {
             folder
         }
-    }
-
-    private struct PreviewLanguageRepository: LanguageRepository {
-        func fetchLanguage() -> Language {
-            .ko
-        }
-
-        func saveLanguage(_: Language) {}
     }
 
     private struct PreviewPlaybackRepository: VoiceRecordPlaybackRepository {

@@ -28,7 +28,6 @@ public final class VoiceNoteViewModel {
 
     private let voiceNoteUseCase: any VoiceNoteUseCase
     private let folderUseCase: any FolderUseCase
-    private let languageRepository: any LanguageRepository
     private let playbackRepository: any VoiceRecordPlaybackRepository
     private let wasteBasketRepository: any WasteBasketRepository
 
@@ -38,14 +37,12 @@ public final class VoiceNoteViewModel {
         voiceNote: VoiceNote,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
-        languageRepository: any LanguageRepository,
         playbackRepository: any VoiceRecordPlaybackRepository,
         wasteBasketRepository: any WasteBasketRepository
     ) {
         self.voiceNote = voiceNote
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
-        self.languageRepository = languageRepository
         self.playbackRepository = playbackRepository
         self.wasteBasketRepository = wasteBasketRepository
     }
@@ -61,16 +58,6 @@ public final class VoiceNoteViewModel {
         setupPlayback()
         fetchFolderName()
         observeVoiceNote()
-        switch voiceNote.analysisState {
-        case .pending, .failed:
-            voiceNote.analysisState = .analyzing
-            Task { await performTranscription() }
-        case .transcribed:
-            voiceNote.analysisState = .analyzing
-            Task { await performSummarization() }
-        case .analyzing, .completed:
-            break
-        }
     }
 
     public func onDisappear() {
@@ -226,10 +213,7 @@ public final class VoiceNoteViewModel {
     }
 
     public func regenerateSummary() {
-        guard voiceNote.transcript != nil,
-              voiceNote.analysisState != .analyzing else { return }
-        voiceNote.analysisState = .analyzing
-        Task { await performSummarization() }
+        voiceNoteUseCase.regenerateSummary(id: voiceNote.id)
     }
 
     public func dismissError() {
@@ -243,56 +227,6 @@ public final class VoiceNoteViewModel {
             folderName = try folderUseCase.fetch(by: voiceNote.folderID).name
         } catch {
             AppLogger.error(error)
-        }
-    }
-
-    private func performTranscription() async {
-        do {
-            let transcript = try await voiceNoteUseCase.transcribe(
-                audioFilePath: voiceNote.voiceRecord.audioFilePath
-            )
-            let withTranscript = VoiceNote(
-                id: voiceNote.id,
-                title: voiceNote.title,
-                createdAt: voiceNote.createdAt,
-                updatedAt: .now,
-                folderID: voiceNote.folderID,
-                voiceRecord: voiceNote.voiceRecord,
-                transcript: transcript,
-                analysisState: .transcribed
-            )
-            _ = try voiceNoteUseCase.update(withTranscript)
-            await performSummarization()
-        } catch {
-            errorMessage = error.localizedDescription
-            voiceNote.analysisState = .failed
-        }
-    }
-
-    private func performSummarization() async {
-        guard let transcript = voiceNote.transcript else { return }
-        do {
-            let language = languageRepository.fetchLanguage()
-            let (keywords, summary) = try await voiceNoteUseCase.summarize(
-                transcript: transcript,
-                language: language
-            )
-            let completed = VoiceNote(
-                id: voiceNote.id,
-                title: voiceNote.title,
-                createdAt: voiceNote.createdAt,
-                updatedAt: .now,
-                folderID: voiceNote.folderID,
-                voiceRecord: voiceNote.voiceRecord,
-                keywords: keywords,
-                transcript: transcript,
-                summary: summary,
-                analysisState: .completed
-            )
-            _ = try voiceNoteUseCase.update(completed)
-        } catch {
-            // STT는 성공했으므로 .failed로 덮어쓰지 않음 — 스크립트는 유지
-            errorMessage = error.localizedDescription
         }
     }
 
@@ -464,4 +398,3 @@ public extension VoiceNoteViewModel {
         }
     }
 }
-

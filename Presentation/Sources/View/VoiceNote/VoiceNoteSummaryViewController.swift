@@ -154,10 +154,11 @@ private extension VoiceNoteSummaryViewController {
 
     var regenerationChipState: RegenerationChip.State? {
         switch viewModel.voiceNote.analysisState {
-        case .pending, .transcribed: return nil
-        case .analyzing: return .loading
+        // 첫 분석 중에는 요약 섹션이 비어 있어 칩을 숨긴다.
+        case .pending, .transcribing, .transcriptionFailed, .transcribed, .summarizing: return nil
+        case .regenerating: return .loading
         case .completed: return viewModel.isSummaryOutdated ? .outdated : .idle
-        case .failed: return .idle
+        case .summarizationFailed: return .idle
         }
     }
 
@@ -189,14 +190,14 @@ private extension VoiceNoteSummaryViewController {
             guard let self else { return }
             Task { @MainActor in
                 switch self.viewModel.voiceNote.analysisState {
-                case .analyzing:
+                case .transcribing, .summarizing, .regenerating:
                     var snapshot = self.dataSource.snapshot()
                     snapshot.reconfigureItems([.metadata])
                     snapshot.reloadSections([.keyPoints])
                     self.dataSource.apply(snapshot, animatingDifferences: false)
                 case .completed, .transcribed:
                     self.applySnapshot()
-                case .failed, .pending:
+                case .pending, .transcriptionFailed, .summarizationFailed:
                     break
                 }
                 self.observeAnalysisState()
