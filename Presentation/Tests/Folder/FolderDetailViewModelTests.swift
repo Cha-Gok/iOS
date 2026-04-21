@@ -126,8 +126,8 @@ final class FolderDetailViewModelTests: XCTestCase {
         let sut = makeSUT()
 
         // 선택 모드이지만 아이템은 없는 상태
-        sut.viewModel.setSelectionMode(.single)
-        XCTAssertEqual(sut.viewModel.select, .single)
+        sut.viewModel.setSelectionMode(.multiple)
+        XCTAssertEqual(sut.viewModel.select, .multiple)
 
         // 아이템 없이 얼럿 오픈 시도
         sut.viewModel.openAlertView()
@@ -168,8 +168,8 @@ final class FolderDetailViewModelTests: XCTestCase {
         let voiceNote = VoiceNote.stub(title: "테스트 노트")
 
         // 선택 모드 켜기
-        sut.viewModel.setSelectionMode(.single)
-        XCTAssertEqual(sut.viewModel.select, .single)
+        sut.viewModel.setSelectionMode(.multiple)
+        XCTAssertEqual(sut.viewModel.select, .multiple)
 
         // 아이템 선택
         sut.viewModel.selectItem(voiceNote)

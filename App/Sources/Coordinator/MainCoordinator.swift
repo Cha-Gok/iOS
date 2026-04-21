@@ -96,6 +96,10 @@ extension MainCoordinator: FolderCoordinatorDelegate {
 
 extension MainCoordinator: FolderDetailCoordinatorDelegate {}
 
+// MARK: TrashCoordinating
+
+extension MainCoordinator: TrashCoordinatorDelegate {}
+
 // MARK: VoiceNoteCoordinating
 
 extension MainCoordinator: VoiceNoteCoordinatorDelegate {}

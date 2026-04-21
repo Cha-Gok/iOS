@@ -1,23 +1,23 @@
 import Domain
 import SwiftUI
 
-struct FolderCardView: View {
+struct TrashVoiceNoteCardView: View {
     let isSelected: Bool
     var select: SelectionMode
-    let folder: Folder
-    let action: ((Folder, Bool) -> Void)?
+    let voiceNote: VoiceNote
+    let action: ((VoiceNote, Bool) -> Void)?
     let completeAction: (() -> Void)?
 
     init(
         select: SelectionMode = .none,
         isSelected: Bool = false,
-        folder: Folder,
-        action: ((Folder, Bool) -> Void)? = nil,
+        voiceNote: VoiceNote,
+        action: ((VoiceNote, Bool) -> Void)? = nil,
         completeAction: (() -> Void)? = nil
     ) {
         self.select = select
         self.isSelected = isSelected
-        self.folder = folder
+        self.voiceNote = voiceNote
         self.action = action
         self.completeAction = completeAction
     }
@@ -36,7 +36,7 @@ struct FolderCardView: View {
         .editfolderCardStyle(isSelected: isSelected)
         .onTapGesture {
             if isEdit {
-                action?(folder, !isSelected)
+                action?(voiceNote, !isSelected)
             } else {
                 completeAction?()
             }
@@ -60,39 +60,12 @@ struct FolderCardView: View {
     private var cardContent: some View {
         HStack(spacing: 8) {
             Group {
-                Image(systemName: "folder")
-                Text(folder.name)
+                Image(systemName: "microphone")
+                Text(voiceNote.title)
                     .font(Font.custom("Pretendard", size: 16))
                 Spacer()
-                Text(String(folder.content.count))
-                    .font(Font.custom("Pretendard", size: 16))
-                    .multilineTextAlignment(.trailing)
             }
             .foregroundColor(.gray800)
         }
-    }
-}
-
-extension View {
-    func editfolderCardStyle(isSelected: Bool) -> some View {
-        modifier(EditFolderCardModifier(isSelected: isSelected))
-    }
-}
-
-struct EditFolderCardModifier: ViewModifier {
-    let isSelected: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(.point200.opacity(0.2))
-            .glassEffect(.clear, in: .rect(cornerRadius: 20))
-            .overlay {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(.point900, lineWidth: 1)
-                }
-            }
     }
 }

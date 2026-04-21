@@ -2,28 +2,25 @@ import Core
 import Domain
 import Foundation
 
+public protocol TrashCoordinatorDelegate: BaseCoordinatorDelegate {
+    /// 음성 노트 이동
+    func pushVoiceNoteView(voiceNote: VoiceNote)
+    /// 상세 폴더 이동
+    func pushMyFolderDetailView(_ folder: Folder)
+}
+
 @MainActor
 @Observable
 public final class TrashViewModel {
     // MARK: - State
 
-    enum Order {
-        case createdAt
-        case updatedAt
-    }
-
     private(set) var items: [LibraryItem] = []
     private(set) var errorMessage: String?
-    private(set) var selectedOrder: Order = .createdAt
-    private(set) var isSelectionMode: Bool = false
+    private(set) var select: SelectionMode = .none
     private(set) var selectedItems: [WasteBasketItem] = []
-    private(set) var showAlert: Bool = false
+    private(set) var showTrashAlert: Bool = false
 
-    var isEmpty: Bool {
-        items.isEmpty
-    }
-
-    public weak var coordinator: BaseCoordinatorDelegate?
+    public weak var coordinator: TrashCoordinatorDelegate?
 
     // MARK: - UseCase
 
@@ -35,53 +32,42 @@ public final class TrashViewModel {
         repository: WasteBasketRepository
     ) {
         self.repository = repository
-        sortItems()
     }
 }
 
 // MARK: - Setter / Getter
 
 extension TrashViewModel {
-    private func setSelectedOrder(_ order: Order) {
-        selectedOrder = order
-        sortItems()
-    }
-
-    private func sortItems() {
-        switch selectedOrder {
-        case .createdAt:
-            items.sort { $0.createdAt > $1.createdAt }
-        case .updatedAt:
-            items.sort { $0.updatedAt > $1.updatedAt }
+    func setSelectionMode(_ select: SelectionMode) {
+        self.select = select
+        if select == .none {
+            allClearSelected()
+        } else if select == .all {
+            allSelected()
         }
     }
 
-    func toggleSelectionMode() {
-        isSelectionMode.toggle()
-        if !isSelectionMode {
-            delete(items: selectedItems)
-            selectedItems.removeAll()
+    private func allSelected() {
+        selectedItems = items.compactMap {
+            switch $0 {
+            case .folder(let folder):
+                return .folder(obj: folder)
+            case .voiceNote(let voiceNote):
+                return .voiceNote(obj: voiceNote)
+            }
         }
     }
 
-    func toggleShowAlert() {
-        showAlert.toggle()
+    private func allClearSelected() {
+        selectedItems.removeAll()
     }
 
-    func selectItem(_ item: WasteBasketItem) {
-        selectedItems.insert(item, at: 0)
+    func openTrashAlert() {
+        showTrashAlert = true
     }
 
-    func deselectItem(_ item: WasteBasketItem) {
-        selectedItems.removeAll { $0 == item }
-    }
-
-    func touchCreatedAction() {
-        setSelectedOrder(.createdAt)
-    }
-
-    func touchUpdatedAction() {
-        setSelectedOrder(.updatedAt)
+    func closeTrashAlert() {
+        showTrashAlert = false
     }
 }
 
@@ -90,6 +76,23 @@ extension TrashViewModel {
 extension TrashViewModel {
     func didTapBack() {
         coordinator?.pop()
+    }
+
+    func pushVoiceNote(_ voiceNote: VoiceNote) {
+        coordinator?.pushVoiceNoteView(voiceNote: voiceNote)
+    }
+
+    func pushDetailFolder(_ folder: Folder) {
+        coordinator?.pushMyFolderDetailView(folder)
+    }
+
+    func selectItem(_ item: WasteBasketItem) {
+        if select == .none { setSelectionMode(.multiple) }
+        selectedItems.append(item)
+    }
+
+    func deselectItem(_ item: WasteBasketItem) {
+        selectedItems.removeAll { $0.id == item.id }
     }
 }
 
@@ -100,9 +103,18 @@ extension TrashViewModel {
         do {
             let wasteBaskets: [WasteBasketItem] = try repository.fetchAll()
             items = wasteBaskets.map(\.toLibraryItem)
+            sortItems()
         } catch {
             AppLogger.error(error)
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func sortItems() {
+        items.sort { lhs, rhs -> Bool in
+            let lhsDate = lhs.deletedAt ?? .distantPast
+            let rhsDate = rhs.deletedAt ?? .distantPast
+            return lhsDate > rhsDate
         }
     }
 }
@@ -114,6 +126,7 @@ extension TrashViewModel {
         do {
             try repository.allClear()
             items.removeAll()
+            setSelectionMode(.none)
         } catch {
             AppLogger.error(error)
             errorMessage = error.localizedDescription
@@ -124,17 +137,19 @@ extension TrashViewModel {
         do {
             try repository.delete(item: item)
             items.removeAll { $0.id == item.id }
+            setSelectionMode(.none)
         } catch {
             AppLogger.error(error)
             errorMessage = error.localizedDescription
         }
     }
 
-    private func delete(items deleteItems: [WasteBasketItem]) {
+    func delete(items deleteItems: [WasteBasketItem]) {
         do {
             try repository.deleteAll(items: deleteItems)
             let deleteIDs = Set(deleteItems.map(\.id))
             items.removeAll { deleteIDs.contains($0.id) }
+            setSelectionMode(.none)
         } catch {
             AppLogger.error(error)
             errorMessage = error.localizedDescription
@@ -149,6 +164,7 @@ extension TrashViewModel {
         do {
             try repository.restore(item: item)
             items.removeAll { $0.id == item.id }
+            setSelectionMode(.none)
         } catch {
             AppLogger.error(error)
             errorMessage = error.localizedDescription
@@ -160,9 +176,106 @@ extension TrashViewModel {
             try repository.restoreAll(items: restoreItems)
             let restoreIDs = Set(restoreItems.map(\.id))
             items.removeAll { restoreIDs.contains($0.id) }
+            setSelectionMode(.none)
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func cancelRestore(item: WasteBasketItem) {
+        do {
+            try repository.moveToWasteBasket(item: item)
+            items.append(item.toLibraryItem)
+            sortItems()
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func cancelRestore(items restoreItems: [WasteBasketItem]) {
+        do {
+            try repository.moveAllToWasteBasket(items: restoreItems)
+            items.append(contentsOf: restoreItems.map(\.toLibraryItem))
+            sortItems()
         } catch {
             AppLogger.error(error)
             errorMessage = error.localizedDescription
         }
     }
 }
+
+#if DEBUG
+    extension TrashViewModel {
+        static func preview() -> TrashViewModel {
+            let previewData = PreviewData.make()
+            let viewModel = TrashViewModel(
+                repository: PreviewWasteBasketRepository(items: previewData.items)
+            )
+            viewModel.fetchItems()
+            return viewModel
+        }
+    }
+
+    private extension TrashViewModel {
+        struct PreviewData {
+            let items: [WasteBasketItem]
+
+            static func make(now: Date = .now) -> Self {
+                let items: [WasteBasketItem] = (0 ..< 10).map { index in
+                    if index.isMultiple(of: 2) {
+                        let createdOffset = TimeInterval((index + 2) * 43200) * -1
+                        let updatedOffset = TimeInterval((index + 1) * 21600) * -1
+
+                        return .voiceNote(
+                            obj: VoiceNote(
+                                title: "휴지통 메모 \(index + 1)",
+                                createdAt: now.addingTimeInterval(createdOffset),
+                                updatedAt: now.addingTimeInterval(updatedOffset),
+                                folderID: UUID(),
+                                voiceRecord: VoiceRecord(
+                                    createdAt: now.addingTimeInterval(createdOffset),
+                                    audioFilePath: "VoiceRecords/preview-\(index).m4a",
+                                    duration: Double(120 + index * 15)
+                                ),
+                                transcript: nil,
+                                summary: nil
+                            )
+                        )
+                    } else {
+                        let createdOffset = TimeInterval((index + 1) * 64800) * -1
+                        let deletedOffset = TimeInterval((index + 1) * 10800) * -1
+
+                        return .folder(
+                            obj: Folder(
+                                name: "휴지통 폴더 \(index + 1)",
+                                createdAt: now.addingTimeInterval(createdOffset),
+                                content: [],
+                                isDeletable: true,
+                                deletedAt: now.addingTimeInterval(deletedOffset)
+                            )
+                        )
+                    }
+                }
+                return PreviewData(items: items)
+            }
+        }
+
+        struct PreviewWasteBasketRepository: WasteBasketRepository {
+            let items: [WasteBasketItem]
+
+            func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
+                items
+            }
+
+            func allClear() throws(DeleteWasteBasketRepositoryError) {}
+            func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {}
+            func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {}
+            func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {}
+            func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
+            func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
+            func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
+        }
+    }
+#endif

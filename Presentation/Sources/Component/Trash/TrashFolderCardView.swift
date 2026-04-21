@@ -1,7 +1,7 @@
 import Domain
 import SwiftUI
 
-struct FolderCardView: View {
+struct TrashFolderCardView: View {
     let isSelected: Bool
     var select: SelectionMode
     let folder: Folder
@@ -64,35 +64,8 @@ struct FolderCardView: View {
                 Text(folder.name)
                     .font(Font.custom("Pretendard", size: 16))
                 Spacer()
-                Text(String(folder.content.count))
-                    .font(Font.custom("Pretendard", size: 16))
-                    .multilineTextAlignment(.trailing)
             }
             .foregroundColor(.gray800)
         }
-    }
-}
-
-extension View {
-    func editfolderCardStyle(isSelected: Bool) -> some View {
-        modifier(EditFolderCardModifier(isSelected: isSelected))
-    }
-}
-
-struct EditFolderCardModifier: ViewModifier {
-    let isSelected: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(.point200.opacity(0.2))
-            .glassEffect(.clear, in: .rect(cornerRadius: 20))
-            .overlay {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(.point900, lineWidth: 1)
-                }
-            }
     }
 }

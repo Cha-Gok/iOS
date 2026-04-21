@@ -220,10 +220,7 @@ public final class MainViewController: ViewController {
             cell.contentConfiguration = UIHostingConfiguration {
                 switch item {
                 case .folder(let data):
-                    FolderCardView(
-                        name: data.name,
-                        totalCount: data.content.count
-                    )
+                    FolderCardView(folder: data)
                 case .voiceNote(let data):
                     VoiceNoteCardView(
                         voiceNote: data,

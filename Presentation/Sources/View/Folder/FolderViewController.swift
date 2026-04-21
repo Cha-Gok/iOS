@@ -225,8 +225,10 @@ extension FolderViewController {
                     switch item {
                     case .folder(let data):
                         FolderCardView(
-                            name: data.name,
-                            totalCount: data.content.count
+                            folder: data,
+                            completeAction: { [weak self] in
+                                self?.vm.pushDetail(data)
+                            }
                         )
                     case .voiceNote(let data):
                         VoiceNoteCardView(

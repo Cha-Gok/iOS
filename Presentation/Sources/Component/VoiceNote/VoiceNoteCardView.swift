@@ -3,12 +3,12 @@ import SwiftUI
 
 struct VoiceNoteCardView: View {
     let isSelected: Bool
-    var select: FolderDetailViewModel.Select
+    var select: SelectionMode
     let voiceNote: VoiceNote
     let action: ((VoiceNote, Bool) -> Void)?
     let completeAction: (() -> Void)?
     init(
-        select: FolderDetailViewModel.Select = .none,
+        select: SelectionMode = .none,
         isSelected: Bool = false,
         voiceNote: VoiceNote,
         action: ((VoiceNote, Bool) -> Void)? = nil,
@@ -34,7 +34,7 @@ struct VoiceNoteCardView: View {
                 cardContent
             }
         }
-        .editCardStyle(isSelected: isSelected)
+        .editVoiceNoteCardStyle(isSelected: isSelected)
         .onTapGesture {
             if isEdit {
                 action?(voiceNote, !isSelected)
@@ -93,7 +93,7 @@ struct VoiceNoteCardView: View {
 }
 
 extension View {
-    func editCardStyle(isSelected: Bool) -> some View {
+    func editVoiceNoteCardStyle(isSelected: Bool) -> some View {
         modifier(
             EditVoiceNoteCardModifier(
                 isSelected: isSelected
