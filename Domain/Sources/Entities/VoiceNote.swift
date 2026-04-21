@@ -35,7 +35,7 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
         transcript: Transcript? = nil,
         summary: Summary? = nil,
         deletedAt: Date? = nil,
-        analysisState: AnalysisState? = nil
+        analysisState: AnalysisState
     ) {
         self.id = id
         self.title = title
@@ -47,15 +47,7 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
         self.transcript = transcript
         self.summary = summary
         self.deletedAt = deletedAt
-        if let analysisState {
-            self.analysisState = analysisState
-        } else if summary != nil, transcript != nil {
-            self.analysisState = .completed
-        } else if transcript != nil {
-            self.analysisState = .transcribed
-        } else {
-            self.analysisState = .pending
-        }
+        self.analysisState = analysisState
     }
 }
 

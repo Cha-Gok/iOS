@@ -19,7 +19,8 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
                 createdAt: voiceRecord.createdAt,
                 updatedAt: voiceRecord.createdAt,
                 folderID: defaultFolder.id,
-                voiceRecord: voiceRecord
+                voiceRecord: voiceRecord,
+                analysisState: .pending
             )
             return try store.create(voiceNote, as: VoiceNoteEntity.self)
         } catch {

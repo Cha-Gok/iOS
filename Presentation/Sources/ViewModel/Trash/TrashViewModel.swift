@@ -240,7 +240,8 @@ extension TrashViewModel {
                                     duration: Double(120 + index * 15)
                                 ),
                                 transcript: nil,
-                                summary: nil
+                                summary: nil,
+                                analysisState: .pending
                             )
                         )
                     } else {

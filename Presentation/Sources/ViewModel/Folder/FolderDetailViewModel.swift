@@ -233,7 +233,8 @@ extension FolderDetailViewModel {
                         voiceRecord: VoiceRecord(
                             audioFilePath: "preview-\(index + 1).m4a",
                             duration: Double(90 + (index * 15))
-                        )
+                        ),
+                        analysisState: .pending
                     )
                 }
                 return PreviewData(items: items)
@@ -252,7 +253,8 @@ extension FolderDetailViewModel {
                     voiceRecord: voiceRecord,
                     keywords: [],
                     transcript: nil,
-                    summary: nil
+                    summary: nil,
+                    analysisState: .pending
                 )
             }
 

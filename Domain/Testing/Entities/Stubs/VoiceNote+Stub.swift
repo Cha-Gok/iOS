@@ -15,7 +15,16 @@ public extension VoiceNote {
         deletedAt: Date? = nil,
         analysisState: AnalysisState? = nil
     ) -> VoiceNote {
-        VoiceNote(
+        let resolvedState: AnalysisState = if let analysisState {
+            analysisState
+        } else if summary != nil, transcript != nil {
+            .completed
+        } else if transcript != nil {
+            .transcribed
+        } else {
+            .pending
+        }
+        return VoiceNote(
             id: id,
             title: title,
             createdAt: createdAt,
@@ -26,7 +35,7 @@ public extension VoiceNote {
             transcript: transcript,
             summary: summary,
             deletedAt: deletedAt,
-            analysisState: analysisState
+            analysisState: resolvedState
         )
     }
 }

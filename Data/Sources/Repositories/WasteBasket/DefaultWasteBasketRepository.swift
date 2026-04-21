@@ -99,7 +99,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     keywords: voiceNote.keywords,
                     transcript: voiceNote.transcript,
                     summary: voiceNote.summary,
-                    deletedAt: .now
+                    deletedAt: .now,
+                    analysisState: voiceNote.analysisState
                 )
                 _ = try store.update(updated, as: VoiceNoteEntity.self)
 
@@ -136,7 +137,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                         keywords: voiceNote.keywords,
                         transcript: voiceNote.transcript,
                         summary: voiceNote.summary,
-                        deletedAt: .now
+                        deletedAt: .now,
+                        analysisState: voiceNote.analysisState
                     )
                     _ = try store.update(updated, as: VoiceNoteEntity.self)
 
@@ -175,7 +177,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     keywords: voiceNote.keywords,
                     transcript: voiceNote.transcript,
                     summary: voiceNote.summary,
-                    deletedAt: nil
+                    deletedAt: nil,
+                    analysisState: voiceNote.analysisState
                 )
                 _ = try store.update(updated, as: VoiceNoteEntity.self)
 
@@ -212,7 +215,8 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                         keywords: voiceNote.keywords,
                         transcript: voiceNote.transcript,
                         summary: voiceNote.summary,
-                        deletedAt: nil
+                        deletedAt: nil,
+                        analysisState: voiceNote.analysisState
                     )
                     _ = try store.update(updated, as: VoiceNoteEntity.self)
 

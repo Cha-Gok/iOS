@@ -28,7 +28,8 @@ final class VoiceNoteEntityTests: XCTestCase {
         keywords: [Keyword] = [],
         transcript: Transcript? = nil,
         summary: Summary? = nil,
-        deletedAt: Date? = nil
+        deletedAt: Date? = nil,
+        analysisState: AnalysisState = .pending
     ) -> VoiceNote {
         let record = voiceRecord ?? makeVoiceRecord()
         return VoiceNote(
@@ -38,7 +39,8 @@ final class VoiceNoteEntityTests: XCTestCase {
             keywords: keywords,
             transcript: transcript,
             summary: summary,
-            deletedAt: deletedAt
+            deletedAt: deletedAt,
+            analysisState: analysisState
         )
     }
 
@@ -119,7 +121,8 @@ final class VoiceNoteEntityTests: XCTestCase {
             keywords: voiceNote.keywords,
             transcript: voiceNote.transcript,
             summary: voiceNote.summary,
-            deletedAt: voiceNote.deletedAt
+            deletedAt: voiceNote.deletedAt,
+            analysisState: voiceNote.analysisState
         )
         _ = try store.update(updatedNote, as: VoiceNoteEntity.self)
 
@@ -155,7 +158,8 @@ final class VoiceNoteEntityTests: XCTestCase {
             keywords: voiceNote.keywords,
             transcript: transcript,
             summary: voiceNote.summary,
-            deletedAt: voiceNote.deletedAt
+            deletedAt: voiceNote.deletedAt,
+            analysisState: voiceNote.analysisState
         )
         _ = try store.update(updatedNote, as: VoiceNoteEntity.self)
 
@@ -197,7 +201,8 @@ final class VoiceNoteEntityTests: XCTestCase {
             keywords: keywords,
             transcript: transcript,
             summary: summary,
-            deletedAt: voiceNote.deletedAt
+            deletedAt: voiceNote.deletedAt,
+            analysisState: voiceNote.analysisState
         )
         _ = try store.update(updatedNote, as: VoiceNoteEntity.self)
 
@@ -243,7 +248,8 @@ final class VoiceNoteEntityTests: XCTestCase {
             ],
             transcript: voiceNote.transcript,
             summary: voiceNote.summary,
-            deletedAt: voiceNote.deletedAt
+            deletedAt: voiceNote.deletedAt,
+            analysisState: voiceNote.analysisState
         )
         _ = try store.update(updatedNote, as: VoiceNoteEntity.self)
 
@@ -314,21 +320,24 @@ final class VoiceNoteEntityTests: XCTestCase {
             createdAt: now.addingTimeInterval(-200),
             updatedAt: now.addingTimeInterval(-200),
             folderID: folder.id,
-            voiceRecord: makeVoiceRecord()
+            voiceRecord: makeVoiceRecord(),
+            analysisState: .pending
         )
         let noteMiddle = VoiceNote(
             title: "Middle",
             createdAt: now.addingTimeInterval(-100),
             updatedAt: now.addingTimeInterval(-100),
             folderID: folder.id,
-            voiceRecord: makeVoiceRecord()
+            voiceRecord: makeVoiceRecord(),
+            analysisState: .pending
         )
         let noteNewest = VoiceNote(
             title: "Newest",
             createdAt: now,
             updatedAt: now,
             folderID: folder.id,
-            voiceRecord: makeVoiceRecord()
+            voiceRecord: makeVoiceRecord(),
+            analysisState: .pending
         )
 
         // 의도적으로 순서를 뒤섞어 생성
@@ -457,7 +466,8 @@ final class VoiceNoteEntityTests: XCTestCase {
             keywords: voiceNote.keywords,
             transcript: nil,
             summary: voiceNote.summary,
-            deletedAt: voiceNote.deletedAt
+            deletedAt: voiceNote.deletedAt,
+            analysisState: voiceNote.analysisState
         )
         _ = try store.update(updatedNote, as: VoiceNoteEntity.self)
 
