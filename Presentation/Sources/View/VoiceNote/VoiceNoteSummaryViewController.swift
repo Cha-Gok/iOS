@@ -137,16 +137,24 @@ private extension VoiceNoteSummaryViewController {
         UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView>(
             elementKind: UICollectionView.elementKindSectionHeader
         ) { [weak self] header, _, indexPath in
-            guard let section = Section(rawValue: indexPath.section),
+            guard let self, let section = Section(rawValue: indexPath.section),
                   let title = section.headerTitle else { return }
 
-            if section == .keyPoints {
+            if section == .keyPoints, canRegenerateSummary {
                 let chip = ChipView(icon: UIImage(systemName: "arrow.clockwise"), text: "재생성")
-                header.configure(title: title, trailingView: chip)
+                header.configure(title: title, trailingView: chip) { [weak self] in
+                    self?.viewModel.regenerateSummary()
+                }
             } else {
                 header.configure(title: title)
             }
-            _ = self
+        }
+    }
+
+    var canRegenerateSummary: Bool {
+        switch viewModel.voiceNote.analysisState {
+        case .completed, .failed: return true
+        case .pending, .analyzing, .transcribed: return false
         }
     }
 
