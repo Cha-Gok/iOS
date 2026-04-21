@@ -37,7 +37,7 @@ final class NavigationTitleContainerView: UIView {
 
     /// setEditing으로 진입한 편집 상태 여부.
     /// resignFirstResponder가 편집 종료 콜백을 재발화시키는 것을 막기 위해 사용한다.
-    private var isEditingTitle = false
+    private(set) var isEditingTitle = false
 
     var text: String? {
         get { titleField.text }

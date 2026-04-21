@@ -181,20 +181,7 @@ private extension VoiceNoteViewController {
         observePlaybackState()
         observeErrorMessage()
         observeEditingState()
-        observeScriptEdits()
         observeCurrentPage()
-    }
-
-    func observeScriptEdits() {
-        withObservationTracking {
-            _ = viewModel.hasScriptEdits
-        } onChange: { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                self.applyEditingMode(self.viewModel.editingMode)
-                self.observeScriptEdits()
-            }
-        }
     }
 
     func observePlaybackState() {
@@ -294,11 +281,12 @@ private extension VoiceNoteViewController {
     func observeEditingState() {
         withObservationTracking {
             _ = viewModel.editingMode
+            _ = viewModel.hasScriptEdits
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                self.applyEditingMode(self.viewModel.editingMode)
-                self.observeEditingState()
+                applyEditingMode(viewModel.editingMode)
+                observeEditingState()
             }
         }
     }
@@ -308,8 +296,10 @@ private extension VoiceNoteViewController {
     func applyEditingMode(_ mode: VoiceNoteViewModel.EditingMode?) {
         switch mode {
         case .title:
-            titleContainerView.text = viewModel.title
-            titleContainerView.setEditing(true)
+            if !titleContainerView.isEditingTitle {
+                titleContainerView.text = viewModel.title
+                titleContainerView.setEditing(true)
+            }
             navigationItem.rightBarButtonItems = [doneItem]
         case .script:
             titleContainerView.isHidden = true
