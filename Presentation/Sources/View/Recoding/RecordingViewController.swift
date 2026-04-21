@@ -122,6 +122,7 @@ public final class RecordingViewController: ViewController {
 
     override public func updateProperties() {
         super.updateProperties()
+        updateNavigationBarAppearance(isTransparent: true)
         chagokBackgroundView.amplitude.value = viewModel.state.amplitude
         titleLabel.setTypography(text: viewModel.state.title, style: .header2)
         timestampLabel.setTypography(text: viewModel.state.displayStartDate, style: .subtitle2)
