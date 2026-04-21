@@ -224,7 +224,12 @@ extension FolderViewController {
                 cell.contentConfiguration = UIHostingConfiguration {
                     switch item {
                     case .folder(let data):
-                        FolderCardView(folder: data)
+                        FolderCardView(
+                            folder: data,
+                            completeAction: { [weak self] in
+                                self?.vm.pushDetail(data)
+                            }
+                        )
                     case .voiceNote(let data):
                         VoiceNoteCardView(
                             voiceNote: data
