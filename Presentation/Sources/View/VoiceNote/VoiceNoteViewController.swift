@@ -68,12 +68,13 @@ private extension VoiceNoteViewController {
         view.backgroundColor = UIColor.gray0
 
         addChild(pageViewController)
-        pageViewController.didMove(toParent: self)
         pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
 
         view.addSubview(pageViewController.view)
         view.addSubview(playerView)
         view.addSubview(segmentedControl)
+
+        pageViewController.didMove(toParent: self)
 
         setupConstraints()
         setupNavigationBar()
