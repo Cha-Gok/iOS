@@ -179,7 +179,7 @@ public final class TrashViewController: CollectionViewController {
             switch itemIdentifier {
             case .folder(let folder):
                 cell.contentConfiguration = UIHostingConfiguration {
-                    FolderCardView(
+                    TrashFolderCardView(
                         select: vm.select,
                         isSelected: vm.selectedItems.contains(.folder(obj: folder)),
                         folder: folder
@@ -196,7 +196,7 @@ public final class TrashViewController: CollectionViewController {
                 .margins(.all, 0)
             case .voiceNote(let voiceNote):
                 cell.contentConfiguration = UIHostingConfiguration {
-                    VoiceNoteCardView(
+                    TrashVoiceNoteCardView(
                         select: vm.select,
                         isSelected: vm.selectedItems.contains(.voiceNote(obj: voiceNote)),
                         voiceNote: voiceNote
