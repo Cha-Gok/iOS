@@ -1,13 +1,27 @@
+import Core
 import UIKit
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
+    private(set) var dependencyContainer: AppDIContainer?
+    private(set) var initializationError: Error?
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         configureNavigationBarAppearance()
+        do {
+            dependencyContainer = try AppDIContainer()
+        } catch {
+            AppLogger.error(error)
+            initializationError = error
+        }
         return true
+    }
+
+    func applicationWillTerminate(_ application: UIApplication) {
+        dependencyContainer?.voiceNoteAnalysisService.cancelAll()
     }
 
     private func configureNavigationBarAppearance() {

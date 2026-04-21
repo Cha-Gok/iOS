@@ -137,16 +137,28 @@ private extension VoiceNoteSummaryViewController {
         UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView>(
             elementKind: UICollectionView.elementKindSectionHeader
         ) { [weak self] header, _, indexPath in
-            guard let section = Section(rawValue: indexPath.section),
+            guard let self, let section = Section(rawValue: indexPath.section),
                   let title = section.headerTitle else { return }
 
-            if section == .keyPoints {
-                let chip = ChipView(icon: UIImage(systemName: "arrow.clockwise"), text: "재생성")
-                header.configure(title: title, trailingView: chip)
+            if section == .keyPoints, let state = regenerationChipState {
+                let chip = RegenerationChip(state: state)
+                let onTap: (() -> Void)? = state == .loading ? nil : { [weak self] in
+                    self?.viewModel.regenerateSummary()
+                }
+                header.configure(title: title, trailingView: chip, onTrailingTap: onTap)
             } else {
                 header.configure(title: title)
             }
-            _ = self
+        }
+    }
+
+    var regenerationChipState: RegenerationChip.State? {
+        switch viewModel.voiceNote.analysisState {
+        // 첫 분석 중에는 요약 섹션이 비어 있어 칩을 숨긴다.
+        case .pending, .transcribing, .transcriptionFailed, .transcribed, .summarizing: return nil
+        case .regenerating: return .loading
+        case .completed: return viewModel.isSummaryOutdated ? .outdated : .idle
+        case .summarizationFailed: return .idle
         }
     }
 
@@ -163,6 +175,7 @@ private extension VoiceNoteSummaryViewController {
         snapshot.appendItems(keywordItems, toSection: .keywords)
 
         snapshot.reconfigureItems(metadataItems + keywordItems)
+        snapshot.reloadSections([.keyPoints])
         dataSource.apply(snapshot, animatingDifferences: true)
     }
 }
@@ -177,13 +190,14 @@ private extension VoiceNoteSummaryViewController {
             guard let self else { return }
             Task { @MainActor in
                 switch self.viewModel.voiceNote.analysisState {
-                case .analyzing:
+                case .transcribing, .summarizing, .regenerating:
                     var snapshot = self.dataSource.snapshot()
                     snapshot.reconfigureItems([.metadata])
+                    snapshot.reloadSections([.keyPoints])
                     self.dataSource.apply(snapshot, animatingDifferences: false)
                 case .completed, .transcribed:
                     self.applySnapshot()
-                case .failed, .pending:
+                case .pending, .transcriptionFailed, .summarizationFailed:
                     break
                 }
                 self.observeAnalysisState()

@@ -37,8 +37,7 @@ final class RecordingViewModelTests: XCTestCase {
             repository: repository,
             voiceNoteUseCase: DefaultVoiceNoteUseCase(
                 repository: voiceNoteRepository,
-                sttRepository: MockSTTRepository(),
-                summaryRepository: MockSummaryRepository()
+                analysisService: MockVoiceNoteAnalysisService()
             )
         )
         viewModel.coordinator = coordinator

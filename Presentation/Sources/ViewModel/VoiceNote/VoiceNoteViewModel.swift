@@ -14,6 +14,7 @@ public final class VoiceNoteViewModel {
     public private(set) var currentPlaybackState = AudioPlaybackState(status: .idle, currentTime: 0, duration: 0)
     public private(set) var playingSectionIndex: Int?
     public private(set) var editableScriptSections: [TranscriptSection] = []
+    public private(set) var currentPage: Page = .summary
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
@@ -27,7 +28,6 @@ public final class VoiceNoteViewModel {
 
     private let voiceNoteUseCase: any VoiceNoteUseCase
     private let folderUseCase: any FolderUseCase
-    private let languageRepository: any LanguageRepository
     private let playbackRepository: any VoiceRecordPlaybackRepository
     private let wasteBasketRepository: any WasteBasketRepository
 
@@ -37,14 +37,12 @@ public final class VoiceNoteViewModel {
         voiceNote: VoiceNote,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
-        languageRepository: any LanguageRepository,
         playbackRepository: any VoiceRecordPlaybackRepository,
         wasteBasketRepository: any WasteBasketRepository
     ) {
         self.voiceNote = voiceNote
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
-        self.languageRepository = languageRepository
         self.playbackRepository = playbackRepository
         self.wasteBasketRepository = wasteBasketRepository
     }
@@ -60,16 +58,6 @@ public final class VoiceNoteViewModel {
         setupPlayback()
         fetchFolderName()
         observeVoiceNote()
-        switch voiceNote.analysisState {
-        case .pending, .failed:
-            voiceNote.analysisState = .analyzing
-            Task { await performTranscription() }
-        case .transcribed:
-            voiceNote.analysisState = .analyzing
-            Task { await performSummarization() }
-        case .analyzing, .completed:
-            break
-        }
     }
 
     public func onDisappear() {
@@ -125,11 +113,16 @@ public final class VoiceNoteViewModel {
     public func enterScriptEditing() {
         if currentPlaybackState.status == .playing { pause() }
         editableScriptSections = scriptSections
+        currentPage = .script
         editingMode = .script
     }
 
     public func cancelEditing() {
         editingMode = nil
+    }
+
+    public func updateCurrentPage(_ page: Page) {
+        currentPage = page
     }
 
     public func updateScriptSection(sectionIndex: Int, text: String) {
@@ -210,12 +203,17 @@ public final class VoiceNoteViewModel {
         return Transcript(
             id: original.id,
             createdAt: original.createdAt,
+            updatedAt: .now,
             sections: sections
         )
     }
 
     public func deleteVoiceNote() {
         moveToWasteBasket()
+    }
+
+    public func regenerateSummary() {
+        voiceNoteUseCase.regenerateSummary(id: voiceNote.id)
     }
 
     public func dismissError() {
@@ -229,56 +227,6 @@ public final class VoiceNoteViewModel {
             folderName = try folderUseCase.fetch(by: voiceNote.folderID).name
         } catch {
             AppLogger.error(error)
-        }
-    }
-
-    private func performTranscription() async {
-        do {
-            let transcript = try await voiceNoteUseCase.transcribe(
-                audioFilePath: voiceNote.voiceRecord.audioFilePath
-            )
-            let withTranscript = VoiceNote(
-                id: voiceNote.id,
-                title: voiceNote.title,
-                createdAt: voiceNote.createdAt,
-                updatedAt: .now,
-                folderID: voiceNote.folderID,
-                voiceRecord: voiceNote.voiceRecord,
-                transcript: transcript,
-                analysisState: .transcribed
-            )
-            _ = try voiceNoteUseCase.update(withTranscript)
-            await performSummarization()
-        } catch {
-            errorMessage = error.localizedDescription
-            voiceNote.analysisState = .failed
-        }
-    }
-
-    private func performSummarization() async {
-        guard let transcript = voiceNote.transcript else { return }
-        do {
-            let language = languageRepository.fetchLanguage()
-            let (keywords, summary) = try await voiceNoteUseCase.summarize(
-                transcript: transcript,
-                language: language
-            )
-            let completed = VoiceNote(
-                id: voiceNote.id,
-                title: voiceNote.title,
-                createdAt: voiceNote.createdAt,
-                updatedAt: .now,
-                folderID: voiceNote.folderID,
-                voiceRecord: voiceNote.voiceRecord,
-                keywords: keywords,
-                transcript: transcript,
-                summary: summary,
-                analysisState: .completed
-            )
-            _ = try voiceNoteUseCase.update(completed)
-        } catch {
-            // STT는 성공했으므로 .failed로 덮어쓰지 않음 — 스크립트는 유지
-            errorMessage = error.localizedDescription
         }
     }
 
@@ -421,6 +369,13 @@ public extension VoiceNoteViewModel {
     var hasScriptEdits: Bool {
         editableScriptSections != (voiceNote.transcript?.sections ?? [])
     }
+
+    /// 요약 생성 이후 스크립트가 수정되어 요약이 최신 상태가 아닌지 여부.
+    var isSummaryOutdated: Bool {
+        guard let summary = voiceNote.summary,
+              let transcript = voiceNote.transcript else { return false }
+        return summary.createdAt < transcript.updatedAt
+    }
 }
 
 // MARK: - Nested Types
@@ -429,5 +384,17 @@ public extension VoiceNoteViewModel {
     enum EditingMode: Sendable {
         case title
         case script
+    }
+
+    enum Page: Int, CaseIterable, Sendable {
+        case summary
+        case script
+
+        public var title: String {
+            switch self {
+            case .summary: return "요약"
+            case .script: return "스크립트"
+            }
+        }
     }
 }

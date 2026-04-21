@@ -19,6 +19,9 @@ public final class VoiceNoteEntity: NSManagedObject {
     public var deletedAt: Date?
 
     @NSManaged
+    public var analysisStateRaw: String?
+
+    @NSManaged
     public var folder: FolderEntity
 
     @NSManaged
@@ -65,6 +68,8 @@ extension VoiceNoteEntity: ManagedObjectMapping {
         let keys = (keywords as? Set<KeywordEntity> ?? []).map { $0.toModel() }
         let t = transcript?.toModel()
         let s = summary?.toModel()
+        // nil이면 VoiceNote.init이 summary/transcript로 상태를 파생 (기존 레코드 호환)
+        let state = analysisStateRaw.flatMap(AnalysisState.init(rawValue:))
 
         return VoiceNote(
             id: id,
@@ -76,7 +81,8 @@ extension VoiceNoteEntity: ManagedObjectMapping {
             keywords: keys,
             transcript: t,
             summary: s,
-            deletedAt: deletedAt
+            deletedAt: deletedAt,
+            analysisState: state
         )
     }
 
@@ -86,6 +92,7 @@ extension VoiceNoteEntity: ManagedObjectMapping {
         createdAt = model.createdAt
         updatedAt = model.updatedAt
         deletedAt = model.deletedAt
+        analysisStateRaw = model.analysisState.rawValue
 
         guard let context = managedObjectContext else { return }
 
@@ -133,6 +140,7 @@ extension VoiceNoteEntity: ManagedObjectMapping {
         title = model.title
         updatedAt = model.updatedAt
         deletedAt = model.deletedAt
+        analysisStateRaw = model.analysisState.rawValue
 
         guard let context = managedObjectContext else { return }
 

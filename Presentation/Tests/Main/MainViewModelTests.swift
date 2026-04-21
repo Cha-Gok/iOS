@@ -63,8 +63,7 @@ final class MainViewModelTests: XCTestCase {
             microphoneRepository: mockVoiceRecordRepo,
             voiceNoteUseCase: DefaultVoiceNoteUseCase(
                 repository: mockVoiceNoteRepo,
-                sttRepository: MockSTTRepository(),
-                summaryRepository: MockSummaryRepository()
+                analysisService: MockVoiceNoteAnalysisService()
             ),
             folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
             wasteBasketRepository: mockWasteBasketRepo,

@@ -10,6 +10,9 @@ public final class TranscriptEntity: NSManagedObject {
     public var createdAt: Date
 
     @NSManaged
+    public var updatedAt: Date?
+
+    @NSManaged
     public var sectionsData: Data?
 
     @NSManaged
@@ -29,6 +32,7 @@ extension TranscriptEntity: ManagedObjectMapping {
         return Transcript(
             id: id,
             createdAt: createdAt,
+            updatedAt: updatedAt ?? createdAt,
             sections: sections
         )
     }
@@ -36,6 +40,7 @@ extension TranscriptEntity: ManagedObjectMapping {
     public func insert(from model: ModelType) throws {
         id = model.id
         createdAt = model.createdAt
+        updatedAt = model.updatedAt
         sectionsData = try? JSONEncoder().encode(model.sections)
     }
 

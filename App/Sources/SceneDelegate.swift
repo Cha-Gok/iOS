@@ -14,9 +14,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     ) {
         guard let windowScene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: windowScene)
+        let appDelegate = UIApplication.shared.delegate as? AppDelegate
 
-        do {
-            let dependencyContainer = try AppDIContainer()
+        if let dependencyContainer = appDelegate?.dependencyContainer {
             #if DEBUG
                 dependencyContainer.seedDebugDataIfNeeded()
             #endif
@@ -25,8 +25,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 dependencyContainer: dependencyContainer
             )
             appCoordinator?.start()
-        } catch {
-            AppLogger.error(error)
+        } else {
+            let error = appDelegate?.initializationError
+                ?? NSError(domain: "ChaGok", code: -1, userInfo: nil)
             showInitializationFailureAlert(on: window, error: error)
         }
     }

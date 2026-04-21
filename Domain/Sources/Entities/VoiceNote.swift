@@ -1,11 +1,14 @@
 import Foundation
 
-public enum AnalysisState: Sendable, Hashable {
+public enum AnalysisState: String, Sendable, Hashable {
     case pending
-    case analyzing
+    case transcribing
+    case transcriptionFailed
     case transcribed
+    case summarizing
+    case regenerating
     case completed
-    case failed
+    case summarizationFailed
 }
 
 public struct VoiceNote: Sendable, Identifiable, Hashable {

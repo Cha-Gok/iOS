@@ -4,7 +4,7 @@ import Foundation
 /// 음성 메모 통합 유스케이스 프로토콜.
 @MainActor
 public protocol VoiceNoteUseCase: Sendable {
-    /// 새로운 음성 메모를 생성합니다.
+    /// 새로운 음성 메모를 생성하고 분석 파이프라인을 시작합니다.
     func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteUseCaseError) -> VoiceNote
 
     /// 기본 폴더의 모든 음성 메모를 조회합니다.
@@ -22,31 +22,24 @@ public protocol VoiceNoteUseCase: Sendable {
     /// 음성 메모 정보를 업데이트합니다.
     func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote
 
-    /// 오디오 파일을 전사하여 Transcript를 반환합니다.
-    func transcribe(audioFilePath: String) async throws(VoiceNoteUseCaseError) -> Transcript
-
-    /// Transcript를 분석하여 키워드와 요약을 반환합니다.
-    func summarize(transcript: Transcript, language: Language) async throws(VoiceNoteUseCaseError)
-        -> (keywords: [Keyword], summary: Summary)
-
     /// ID로 음성 메모를 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
     func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote>
+
+    /// 완료/실패 상태의 요약을 재생성합니다.
+    func regenerateSummary(id: UUID)
 }
 
 /// 음성 메모 통합 유스케이스 구현체.
 public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
     private let repository: VoiceNoteRepository
-    private let sttRepository: STTRepository
-    private let summaryRepository: SummaryRepository
+    private let analysisService: any VoiceNoteAnalysisService
 
     public init(
         repository: VoiceNoteRepository,
-        sttRepository: STTRepository,
-        summaryRepository: SummaryRepository
+        analysisService: any VoiceNoteAnalysisService
     ) {
         self.repository = repository
-        self.sttRepository = sttRepository
-        self.summaryRepository = summaryRepository
+        self.analysisService = analysisService
     }
 
     // MARK: - Create
@@ -74,11 +67,16 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
             throw error
         }
 
+        let created: VoiceNote
         do {
-            return try repository.create(voiceRecord)
+            created = try repository.create(voiceRecord)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }
+
+        // 3. 분석 파이프라인 자동 시작 (fire-and-forget)
+        analysisService.enqueue(voiceNoteID: created.id)
+        return created
     }
 
     // MARK: - Fetch
@@ -161,32 +159,9 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         }
     }
 
-    // MARK: - Transcribe
+    // MARK: - Analysis Facade
 
-    public func transcribe(audioFilePath: String) async throws(VoiceNoteUseCaseError) -> Transcript {
-        do {
-            try Task.checkCancellation()
-            return try await sttRepository.transcribe(audioFilePath: audioFilePath)
-        } catch {
-            if Task.isCancelled { throw .cancelled }
-            AppLogger.error(error)
-            throw VoiceNoteUseCaseError.analysisFailed(error)
-        }
-    }
-
-    // MARK: - Summarize
-
-    public func summarize(
-        transcript: Transcript,
-        language: Language
-    ) async throws(VoiceNoteUseCaseError) -> (keywords: [Keyword], summary: Summary) {
-        do {
-            try Task.checkCancellation()
-            return try await summaryRepository.summarize(transcript: transcript, language: language)
-        } catch {
-            if Task.isCancelled { throw .cancelled }
-            AppLogger.error(error)
-            throw VoiceNoteUseCaseError.analysisFailed(error)
-        }
+    public func regenerateSummary(id: UUID) {
+        analysisService.regenerate(voiceNoteID: id)
     }
 }

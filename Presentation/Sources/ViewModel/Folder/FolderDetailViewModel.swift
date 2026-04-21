@@ -284,17 +284,6 @@ extension FolderDetailViewModel {
                 voiceNote
             }
 
-            func transcribe(audioFilePath: String) async throws(VoiceNoteUseCaseError) -> Transcript {
-                Transcript()
-            }
-
-            func summarize(
-                transcript: Transcript,
-                language: Language
-            ) async throws(VoiceNoteUseCaseError) -> (keywords: [Keyword], summary: Summary) {
-                (keywords: [], summary: Summary(text: ""))
-            }
-
             func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote> {
                 guard let item = items.first(where: { $0.id == id }) else {
                     throw .recordNotFound(id)
@@ -304,6 +293,8 @@ extension FolderDetailViewModel {
                     continuation.finish()
                 }
             }
+
+            func regenerateSummary(id _: UUID) {}
         }
 
         final class PreviewWasteBasketRepository: WasteBasketRepository {

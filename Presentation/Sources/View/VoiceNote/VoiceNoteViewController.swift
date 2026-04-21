@@ -1,77 +1,23 @@
 import Domain
+import SwiftUI
 import UIKit
 
 public final class VoiceNoteViewController: UIViewController, Alertable {
-    let viewModel: VoiceNoteViewModel
+    fileprivate typealias Page = VoiceNoteViewModel.Page
+
+    private let viewModel: VoiceNoteViewModel
 
     // MARK: - UI Components
 
+    private let titleContainerView = NavigationTitleContainerView()
     private let playerView = AudioPlayerView()
-    private lazy var segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
+    private let segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
 
-    private lazy var titleLabel: TypographyLabel = {
-        let label = TypographyLabel(typography: .title1)
-        label.textColor = UIColor.gray950
-        label.lineBreakMode = .byTruncatingTail
-        label.numberOfLines = 1
-        return label
-    }()
-
-    private lazy var titleField: TypographyTextField = {
-        let field = TypographyTextField(typography: .title1)
-        field.textColor = UIColor.gray950
-        field.tintColor = UIColor.gray950
-        field.returnKeyType = .done
-        field.delegate = self
-        field.isHidden = true
-        return field
-    }()
-
-    private lazy var titleContainer: TitleContainerView = {
-        let container = TitleContainerView(label: titleLabel, textField: titleField)
-        let tap = UITapGestureRecognizer(target: self, action: #selector(titleContainerTapped))
-        container.addGestureRecognizer(tap)
-        return container
-    }()
-
-    @objc
-    private func titleContainerTapped() {
-        viewModel.enterTitleEditing()
-    }
-
-    private lazy var backBarButton: UIBarButtonItem = UIBarButtonItem(
-        image: UIImage(systemName: "chevron.left")?
-            .withConfiguration(UIImage.SymbolConfiguration(weight: .bold)),
-        primaryAction: UIAction { [weak self] _ in
-            self?.viewModel.pop()
-        }
-    )
-
-    private lazy var editCancelButton: UIBarButtonItem = UIBarButtonItem(
-        image: .cornerUpLeft,
-        primaryAction: UIAction { [weak self] _ in
-            self?.viewModel.cancelEditing()
-        }
-    )
-
-    private lazy var doneButton: UIBarButtonItem = {
-        let item = UIBarButtonItem(title: "완료", primaryAction: UIAction { [weak self] _ in
-            guard let self else { return }
-            switch viewModel.editingMode {
-            case .title:
-                viewModel.doneTitleEditing(title: titleField.text ?? "")
-            case .script:
-                viewModel.doneScriptEditing()
-            case nil:
-                break
-            }
-        })
-        item.tintColor = UIColor.point800
-        return item
-    }()
-
-    private var normalLeftBarButtonItem: UIBarButtonItem?
-    private var normalRightBarButtonItems: [UIBarButtonItem] = []
+    private let backItem = UIBarButtonItem(image: .chevronLeft)
+    private let editCancelItem = UIBarButtonItem(image: .cornerUpLeft)
+    private let doneItem = UIBarButtonItem(title: "완료")
+    private let moreItem = UIBarButtonItem(image: .moreVertical)
+    private let searchItem = UIBarButtonItem(image: .search)
 
     private lazy var pageViewController: UIPageViewController = {
         let pvc = UIPageViewController(
@@ -87,7 +33,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private lazy var summaryViewController = VoiceNoteSummaryViewController(viewModel: viewModel)
     private lazy var scriptViewController = VoiceNoteScriptViewController(viewModel: viewModel)
     private lazy var pages: [UIViewController] = [summaryViewController, scriptViewController]
-    private var currentPageIndex: Int = 0
 
     // MARK: - Init
 
@@ -106,6 +51,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     override public func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupBindings()
         viewModel.onAppear()
     }
 
@@ -121,31 +67,24 @@ private extension VoiceNoteViewController {
     func setupUI() {
         view.backgroundColor = UIColor.gray0
 
-        addPageViewController()
+        addChild(pageViewController)
+        pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
+
+        view.addSubview(pageViewController.view)
         view.addSubview(playerView)
         view.addSubview(segmentedControl)
+
+        pageViewController.didMove(toParent: self)
 
         setupConstraints()
         setupNavigationBar()
         setupTabBar()
         setupPlayerView()
-        setupBindings()
-    }
-
-    func addPageViewController() {
-        addChild(pageViewController)
-        view.addSubview(pageViewController.view)
-        pageViewController.didMove(toParent: self)
-        pageViewController.setViewControllers(
-            [pages[0]],
-            direction: .forward,
-            animated: false
-        )
     }
 
     func setupConstraints() {
-        for subview in [pageViewController.view!, playerView, segmentedControl] {
-            subview.translatesAutoresizingMaskIntoConstraints = false
+        for subview in [pageViewController.view, playerView, segmentedControl] {
+            subview?.translatesAutoresizingMaskIntoConstraints = false
         }
 
         NSLayoutConstraint.activate([
@@ -165,43 +104,68 @@ private extension VoiceNoteViewController {
         ])
     }
 
+    func setupTitleContainer() {
+        titleContainerView.text = viewModel.title
+        titleContainerView.onTapTitle = { [weak self] in
+            self?.viewModel.enterTitleEditing()
+        }
+        titleContainerView.onShouldBeginEditing = { [weak self] in
+            guard let self, viewModel.editingMode == nil else { return }
+            viewModel.enterTitleEditing()
+        }
+        titleContainerView.onCommit = { [weak self] text in
+            self?.viewModel.doneTitleEditing(title: text)
+        }
+    }
+
     func setupNavigationBar() {
-        backBarButton.tintColor = UIColor.gray950
-        titleLabel.text = viewModel.title
-        titleField.text = viewModel.title
-        let menu = UIMenu(children: [
-            UIAction(title: "기록 이동하기", handler: { [weak self] _ in
+        setupTitleContainer()
+
+        for item in [backItem, editCancelItem, doneItem, moreItem, searchItem] {
+            item.hidesSharedBackground = true
+        }
+        backItem.tintColor = UIColor.gray950
+        doneItem.tintColor = UIColor.point800
+        [moreItem, searchItem].forEach { $0.tintColor = .white }
+
+        backItem.primaryAction = UIAction { [weak self] _ in
+            self?.viewModel.pop()
+        }
+        editCancelItem.primaryAction = UIAction { [weak self] _ in
+            self?.viewModel.cancelEditing()
+        }
+        doneItem.primaryAction = UIAction { [weak self] _ in
+            guard let self else { return }
+            switch viewModel.editingMode {
+            case .title:
+                viewModel.doneTitleEditing(title: titleContainerView.text ?? "")
+            case .script:
+                viewModel.doneScriptEditing()
+            case nil:
+                break
+            }
+        }
+        moreItem.menu = UIMenu(children: [
+            UIAction(title: "기록 이동하기") { [weak self] _ in
                 self?.viewModel.moveVoiceNote()
-            }),
-            UIAction(title: "편집하기", handler: { [weak self] _ in
+            },
+            UIAction(title: "편집하기") { [weak self] _ in
                 self?.viewModel.enterScriptEditing()
-            }),
-            UIAction(title: "삭제하기", attributes: .destructive, handler: { [weak self] _ in
+            },
+            UIAction(title: "삭제하기", attributes: .destructive) { [weak self] _ in
                 self?.viewModel.deleteVoiceNote()
-            })
+            }
         ])
-        let moreItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: menu)
-        let searchItem = UIBarButtonItem(
-            image: UIImage(systemName: "magnifyingglass"),
-            style: .plain,
-            target: nil,
-            action: nil
-        )
-        normalRightBarButtonItems = [moreItem, searchItem]
-        normalLeftBarButtonItem = backBarButton
-        navigationItem.leftBarButtonItem = normalLeftBarButtonItem
-        navigationItem.titleView = titleContainer
-        navigationItem.rightBarButtonItems = normalRightBarButtonItems
-        navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
-        navigationItem.leftBarButtonItem?.hidesSharedBackground = true
-        navigationItem.rightBarButtonItems?.forEach { $0.hidesSharedBackground = true }
+
+        navigationItem.leftBarButtonItem = backItem
+        navigationItem.titleView = titleContainerView
+        navigationItem.rightBarButtonItems = [moreItem, searchItem]
     }
 
     func setupTabBar() {
-        segmentedControl.addAction(UIAction { [weak self] action in
-            guard let self, let sender = action.sender as? UnderlineSegmentedControl else { return }
-            let index = sender.selectedSegmentIndex
-            switchToPage(at: index, animated: true)
+        segmentedControl.addAction(UIAction { [weak self] _ in
+            guard let self, let page = Page(rawValue: segmentedControl.selectedSegmentIndex) else { return }
+            viewModel.updateCurrentPage(page)
         }, for: .valueChanged)
     }
 
@@ -217,19 +181,7 @@ private extension VoiceNoteViewController {
         observePlaybackState()
         observeErrorMessage()
         observeEditingState()
-        observeScriptEdits()
-    }
-
-    func observeScriptEdits() {
-        withObservationTracking {
-            _ = viewModel.hasScriptEdits
-        } onChange: { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                self.applyEditingMode(self.viewModel.editingMode)
-                self.observeScriptEdits()
-            }
-        }
+        observeCurrentPage()
     }
 
     func observePlaybackState() {
@@ -264,20 +216,28 @@ private extension VoiceNoteViewController {
 // MARK: - Page Switching
 
 private extension VoiceNoteViewController {
-    func switchToPage(at index: Int, animated: Bool) {
-        guard pages.indices.contains(index), index != currentPageIndex else { return }
-        let direction: UIPageViewController.NavigationDirection = index > currentPageIndex ? .forward : .reverse
-        pageViewController.setViewControllers(
-            [pages[index]],
-            direction: direction,
-            animated: animated
-        )
-        currentPageIndex = index
+    func observeCurrentPage() {
+        withObservationTracking {
+            _ = viewModel.currentPage
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.applyCurrentPage(self.viewModel.currentPage)
+                self.observeCurrentPage()
+            }
+        }
     }
 
-    func syncSegmentedControl(to index: Int) {
-        guard segmentedControl.selectedSegmentIndex != index else { return }
-        segmentedControl.selectSegment(index: index)
+    func applyCurrentPage(_ page: Page) {
+        segmentedControl.selectSegment(index: page.rawValue)
+
+        let target = pages[page.rawValue]
+        guard let current = pageViewController.viewControllers?.first,
+              let currentIndex = pages.firstIndex(of: current),
+              current !== target else { return }
+
+        let direction: UIPageViewController.NavigationDirection = page.rawValue > currentIndex ? .forward : .reverse
+        pageViewController.setViewControllers([target], direction: direction, animated: true)
     }
 }
 
@@ -308,9 +268,10 @@ extension VoiceNoteViewController: UIPageViewControllerDataSource, UIPageViewCon
     ) {
         guard completed,
               let current = pageViewController.viewControllers?.first,
-              let idx = pages.firstIndex(of: current) else { return }
-        currentPageIndex = idx
-        syncSegmentedControl(to: idx)
+              let index = pages.firstIndex(of: current),
+              let page = Page(rawValue: index)
+        else { return }
+        viewModel.updateCurrentPage(page)
     }
 }
 
@@ -320,11 +281,12 @@ private extension VoiceNoteViewController {
     func observeEditingState() {
         withObservationTracking {
             _ = viewModel.editingMode
+            _ = viewModel.hasScriptEdits
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                self.applyEditingMode(self.viewModel.editingMode)
-                self.observeEditingState()
+                applyEditingMode(viewModel.editingMode)
+                observeEditingState()
             }
         }
     }
@@ -334,98 +296,30 @@ private extension VoiceNoteViewController {
     func applyEditingMode(_ mode: VoiceNoteViewModel.EditingMode?) {
         switch mode {
         case .title:
-            titleLabel.isHidden = true
-            titleField.isHidden = false
-            titleField.text = viewModel.title
-            navigationItem.rightBarButtonItems = [doneButton]
-            titleField.becomeFirstResponder()
-        case .script:
-            navigationItem.titleView = nil
-            navigationItem.leftBarButtonItem = editCancelButton
-            navigationItem.rightBarButtonItems = [doneButton]
-            editCancelButton.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
-            switchToPage(at: Page.script.rawValue, animated: true)
-            syncSegmentedControl(to: Page.script.rawValue)
-        case nil:
-            titleField.resignFirstResponder()
-            titleLabel.text = viewModel.title
-            titleField.isHidden = true
-            titleLabel.isHidden = false
-            navigationItem.titleView = titleContainer
-            navigationItem.leftBarButtonItem = normalLeftBarButtonItem
-            navigationItem.rightBarButtonItems = normalRightBarButtonItems
-            navigationItem.rightBarButtonItems?.forEach { $0.tintColor = .white }
-        }
-    }
-}
-
-// MARK: - UITextFieldDelegate
-
-extension VoiceNoteViewController: UITextFieldDelegate {
-    public func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
-        if viewModel.editingMode == nil {
-            viewModel.enterTitleEditing()
-        }
-        return true
-    }
-
-    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        viewModel.doneTitleEditing(title: textField.text ?? "")
-        return true
-    }
-
-    public func textFieldDidEndEditing(_ textField: UITextField) {
-        guard viewModel.editingMode == .title else { return }
-        viewModel.doneTitleEditing(title: textField.text ?? "")
-    }
-}
-
-// MARK: - Page
-
-private extension VoiceNoteViewController {
-    enum Page: Int, CaseIterable {
-        case summary
-        case script
-
-        var title: String {
-            switch self {
-            case .summary: return "요약"
-            case .script: return "스크립트"
+            if !titleContainerView.isEditingTitle {
+                titleContainerView.text = viewModel.title
+                titleContainerView.setEditing(true)
             }
+            navigationItem.rightBarButtonItems = [doneItem]
+        case .script:
+            titleContainerView.isHidden = true
+            navigationItem.leftBarButtonItem = editCancelItem
+            navigationItem.rightBarButtonItems = [doneItem]
+            editCancelItem.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
+        case nil:
+            titleContainerView.setEditing(false)
+            titleContainerView.text = viewModel.title
+            titleContainerView.isHidden = false
+            navigationItem.leftBarButtonItem = backItem
+            navigationItem.rightBarButtonItems = [moreItem, searchItem]
         }
     }
 }
 
-// MARK: - TitleContainerView
-
-private final class TitleContainerView: UIView {
-    let label: TypographyLabel
-    let textField: TypographyTextField
-
-    init(label: TypographyLabel, textField: TypographyTextField) {
-        self.label = label
-        self.textField = textField
-        super.init(frame: .zero)
-        addSubview(label)
-        addSubview(textField)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: leadingAnchor),
-            label.trailingAnchor.constraint(equalTo: trailingAnchor),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor),
-            textField.leadingAnchor.constraint(equalTo: leadingAnchor),
-            textField.trailingAnchor.constraint(equalTo: trailingAnchor),
-            textField.firstBaselineAnchor.constraint(equalTo: label.firstBaselineAnchor)
-        ])
+#if DEBUG
+    #Preview("보이스 노트") {
+        UINavigationController(
+            rootViewController: VoiceNoteViewController(viewModel: .preview())
+        )
     }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
-
-    override var intrinsicContentSize: CGSize {
-        CGSize(width: 10000, height: UIView.noIntrinsicMetric)
-    }
-}
+#endif

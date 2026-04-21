@@ -24,13 +24,21 @@ public final class AppDIContainer {
     private lazy var sttRepository = DefaultSTTRepository(storageService: storageService)
     private lazy var summaryRepository = DefaultSummaryRepository()
 
+    /// Analysis (Domain Service)
+    private(set) lazy var voiceNoteAnalysisService = DefaultVoiceNoteAnalysisService(
+        voiceNoteRepository: voiceNoteRepository,
+        sttRepository: sttRepository,
+        summaryRepository: summaryRepository,
+        languageRepository: languageRepository
+    )
+
     /// UseCase
     private lazy var folderUseCase = DefaultFolderUseCase(repository: folderRepository)
     private lazy var voiceNoteUseCase = DefaultVoiceNoteUseCase(
         repository: voiceNoteRepository,
-        sttRepository: sttRepository,
-        summaryRepository: summaryRepository
+        analysisService: voiceNoteAnalysisService
     )
+
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
     }
@@ -69,7 +77,6 @@ public final class AppDIContainer {
             voiceNote: voiceNote,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
-            languageRepository: languageRepository,
             playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService),
             wasteBasketRepository: wasteBasketRepository
         )
