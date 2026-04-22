@@ -210,6 +210,16 @@ public extension Constant {
     static let keyPointCardVerticalPadding: CGFloat = 8
 }
 
+// MARK: - UnderlineTabButton Constants
+
+public extension Constant {
+    /// UnderlineTabButton 타이틀과 카운트 사이 간격 (4)
+    static let underlineTabContentSpacing: CGFloat = 4
+
+    /// UnderlineTabButton 선택 인디케이터 높이 (2)
+    static let underlineTabIndicatorHeight: CGFloat = 2
+}
+
 // MARK: - BackgroundView Constants
 
 public extension Constant {

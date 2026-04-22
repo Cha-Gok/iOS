@@ -1,29 +1,33 @@
 import UIKit
 
 final class UnderlineTabButton: UIControl {
-    private let title: String
-    private var count: Int?
-
-    private let label: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.textAlignment = .center
+    private let titleLabel = TypographyLabel(typography: .body1, alignment: .center)
+    private let countLabel: TypographyLabel = {
+        let label = TypographyLabel(typography: .title3, alignment: .center)
+        label.textColor = UIColor.point700
+        label.isHidden = true
         return label
+    }()
+
+    private lazy var contentStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [titleLabel, countLabel])
+        stack.axis = .horizontal
+        stack.spacing = Constant.underlineTabContentSpacing
+        stack.alignment = .center
+        return stack
     }()
 
     private let indicator: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.point700
-        view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
 
     // MARK: - Init
 
     init(title: String, isSelected: Bool = false) {
-        self.title = title
         super.init(frame: .zero)
-        updateLabelText()
+        titleLabel.text = title
         setupUI()
         setSelected(isSelected, animated: false)
     }
@@ -36,44 +40,39 @@ final class UnderlineTabButton: UIControl {
     // MARK: - Setup
 
     private func setupUI() {
-        addSubview(label)
+        addSubview(contentStack)
         addSubview(indicator)
 
+        for subview in [contentStack, indicator] {
+            subview.translatesAutoresizingMaskIntoConstraints = false
+        }
+
         NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor),
+            contentStack.centerXAnchor.constraint(equalTo: centerXAnchor),
+            contentStack.centerYAnchor.constraint(equalTo: centerYAnchor),
 
             indicator.leadingAnchor.constraint(equalTo: leadingAnchor),
             indicator.trailingAnchor.constraint(equalTo: trailingAnchor),
             indicator.bottomAnchor.constraint(equalTo: bottomAnchor),
-            indicator.heightAnchor.constraint(equalToConstant: 2)
+            indicator.heightAnchor.constraint(equalToConstant: Constant.underlineTabIndicatorHeight)
         ])
     }
 
     func setSelected(_ isSelected: Bool, animated: Bool = true) {
         self.isSelected = isSelected
-        if isSelected {
-            label.setTypography(style: .title3)
-            label.textColor = .white
-            indicator.isHidden = false
-        } else {
-            label.setTypography(style: .body2)
-            label.textColor = UIColor.gray600
-            indicator.isHidden = true
-        }
+        indicator.isHidden = !isSelected
+        titleLabel.typography = isSelected ? .title3 : .body1
+        titleLabel.textColor = isSelected ? UIColor.gray950 : UIColor.gray600
     }
 
-    /// 탭 제목 우측에 표시할 카운트. `nil`이면 원본 제목만 노출합니다.
+    /// 탭 제목 우측에 표시할 카운트. `nil`이면 숨깁니다.
     func setCount(_ count: Int?) {
-        self.count = count
-        updateLabelText()
-    }
-
-    private func updateLabelText() {
         if let count {
-            label.text = "\(title) \(count)"
+            countLabel.text = "\(count)"
+            countLabel.isHidden = false
         } else {
-            label.text = title
+            countLabel.text = nil
+            countLabel.isHidden = true
         }
     }
 }
