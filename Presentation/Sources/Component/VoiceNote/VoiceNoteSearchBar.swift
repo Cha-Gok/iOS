@@ -26,6 +26,7 @@ public final class VoiceNoteSearchBar: UIView {
         let field = TypographyTextField(typography: .body1)
         field.textColor = .white
         field.tintColor = .white
+        field.returnKeyType = .search
         field.clearButtonMode = .never
         field.autocorrectionType = .no
         field.autocapitalizationType = .none
@@ -50,11 +51,26 @@ public final class VoiceNoteSearchBar: UIView {
     public init() {
         super.init(frame: .zero)
         setupUI()
+        setupActions()
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         nil
+    }
+
+    @discardableResult
+    override public func becomeFirstResponder() -> Bool {
+        textField.becomeFirstResponder()
+    }
+
+    @discardableResult
+    override public func resignFirstResponder() -> Bool {
+        textField.resignFirstResponder()
+    }
+
+    public func setQuery(_ query: String) {
+        textField.text = query
     }
 
     // MARK: - Setup
@@ -94,6 +110,20 @@ public final class VoiceNoteSearchBar: UIView {
             textField.topAnchor.constraint(equalTo: searchContainer.contentView.topAnchor),
             textField.bottomAnchor.constraint(equalTo: searchContainer.contentView.bottomAnchor)
         ])
+    }
+
+    private func setupActions() {
+        textField.addAction(UIAction { [weak self] _ in
+            self?.onQueryChanged?(self?.textField.text ?? "")
+        }, for: .editingChanged)
+
+        textField.addAction(UIAction { [weak self] _ in
+            self?.onReturn?()
+        }, for: .editingDidEndOnExit)
+
+        closeButton.addAction(UIAction { [weak self] _ in
+            self?.onClose?()
+        }, for: .touchUpInside)
     }
 }
 
