@@ -458,9 +458,13 @@ private extension VoiceNoteViewController {
         matchNavBar.configure(currentIndex: displayedIndex, total: total)
 
         if isSearching {
+            navigationItem.hidesBackButton = true
+            navigationItem.leftBarButtonItem = nil
             navigationItem.rightBarButtonItems = []
             titleContainerView.isHidden = true
         } else if viewModel.editingMode == nil {
+            navigationItem.hidesBackButton = false
+            navigationItem.leftBarButtonItem = backItem
             navigationItem.rightBarButtonItems = [moreItem, searchItem]
             titleContainerView.isHidden = false
         }
