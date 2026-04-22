@@ -14,12 +14,14 @@ final class UnderlineTabButton: UIControl {
         stack.axis = .horizontal
         stack.spacing = Constant.underlineTabContentSpacing
         stack.alignment = .center
+        stack.isUserInteractionEnabled = false
         return stack
     }()
 
     private let indicator: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.point700
+        view.isUserInteractionEnabled = false
         return view
     }()
 
