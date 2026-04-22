@@ -59,6 +59,10 @@ public final class VoiceNoteSearchBar: UIView {
         nil
     }
 
+    override public var intrinsicContentSize: CGSize {
+        CGSize(width: UIView.layoutFittingExpandedSize.width, height: 46)
+    }
+
     @discardableResult
     override public func becomeFirstResponder() -> Bool {
         textField.becomeFirstResponder()
@@ -90,9 +94,11 @@ public final class VoiceNoteSearchBar: UIView {
         }
 
         NSLayoutConstraint.activate([
+            heightAnchor.constraint(equalToConstant: 46),
+
             searchContainer.topAnchor.constraint(equalTo: topAnchor),
             searchContainer.leadingAnchor.constraint(equalTo: leadingAnchor),
-            searchContainer.heightAnchor.constraint(equalToConstant: 46),
+            searchContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
             searchContainer.trailingAnchor.constraint(equalTo: closeButton.leadingAnchor, constant: -12),
 
             closeButton.topAnchor.constraint(equalTo: topAnchor),
