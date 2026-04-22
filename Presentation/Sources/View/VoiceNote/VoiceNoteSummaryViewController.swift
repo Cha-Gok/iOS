@@ -30,6 +30,22 @@ final class VoiceNoteSummaryViewController: UIViewController {
         setupLayout()
         applySnapshot()
         observeAnalysisState()
+        observeSearchQuery()
+    }
+
+    /// 지정한 매치 위치로 컬렉션을 스크롤합니다.
+    func scrollToMatch(_ match: VoiceNoteSearchMatch) {
+        let indexPath: IndexPath
+        switch match.location {
+        case .keyPoint(let index):
+            indexPath = IndexPath(item: index, section: Section.keyPoints.rawValue)
+        case .keyword:
+            indexPath = IndexPath(item: 0, section: Section.keywords.rawValue)
+        case .script:
+            return
+        }
+        guard dataSource.itemIdentifier(for: indexPath) != nil else { return }
+        collectionView.scrollToItem(at: indexPath, at: .centeredVertically, animated: true)
     }
 
     private func setupLayout() {
@@ -101,14 +117,19 @@ private extension VoiceNoteSummaryViewController {
             )
         }
 
-        let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
+        let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
             guard case .keyPoint(let number, let text) = item else { return }
-            cell.contentConfiguration = KeyPointContentConfiguration(number: number, text: text)
+            cell.contentConfiguration = KeyPointContentConfiguration(
+                number: number,
+                text: text,
+                searchQuery: self?.viewModel.searchQuery ?? ""
+            )
         }
 
         let keywordsCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
             cell.contentConfiguration = KeywordsContentConfiguration(
-                keywords: self?.viewModel.keywords ?? []
+                keywords: self?.viewModel.keywords ?? [],
+                searchQuery: self?.viewModel.searchQuery ?? ""
             )
         }
 
@@ -203,6 +224,29 @@ private extension VoiceNoteSummaryViewController {
                 self.observeAnalysisState()
             }
         }
+    }
+
+    func observeSearchQuery() {
+        withObservationTracking {
+            _ = viewModel.searchQuery
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.reconfigureForSearch()
+                self.observeSearchQuery()
+            }
+        }
+    }
+
+    func reconfigureForSearch() {
+        var snapshot = dataSource.snapshot()
+        let items = snapshot.itemIdentifiers
+        guard !items.isEmpty else { return }
+        snapshot.reconfigureItems(items.filter {
+            if case .metadata = $0 { return false }
+            return true
+        })
+        dataSource.apply(snapshot, animatingDifferences: false)
     }
 }
 

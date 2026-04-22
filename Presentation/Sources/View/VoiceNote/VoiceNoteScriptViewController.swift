@@ -34,6 +34,15 @@ final class VoiceNoteScriptViewController: UIViewController {
         observeTranscriptSections()
         observePlayingParagraph()
         observeEditingMode()
+        observeSearchState()
+    }
+
+    /// 지정한 매치 위치의 스크립트 섹션으로 컬렉션을 스크롤합니다.
+    func scrollToMatch(_ match: VoiceNoteSearchMatch) {
+        guard case .script(let sectionIndex) = match.location else { return }
+        let indexPath = IndexPath(item: sectionIndex, section: 0)
+        guard dataSource.itemIdentifier(for: indexPath) != nil else { return }
+        collectionView.scrollToItem(at: indexPath, at: .centeredVertically, animated: true)
     }
 
     private func setupLayout() {
@@ -85,12 +94,21 @@ private extension VoiceNoteScriptViewController {
             let section = viewModel.scriptSections[index]
             let isHighlighted = viewModel.playingSectionIndex == index
 
+            let focusedRange: NSRange? = {
+                guard let match = viewModel.currentMatch,
+                      case .script(let sectionIndex) = match.location,
+                      sectionIndex == index else { return nil }
+                return match.range
+            }()
+
             cell.contentConfiguration = ScriptContentConfiguration(
                 sectionIndex: index,
                 timestamp: section.timestamp,
                 text: section.text,
                 isHighlighted: isHighlighted,
                 isEditing: viewModel.editingMode == .script,
+                searchQuery: viewModel.searchQuery,
+                currentMatchRange: focusedRange,
                 onTextEdited: { [weak self] sIdx, text in
                     self?.viewModel.updateScriptSection(sectionIndex: sIdx, text: text)
                 },
@@ -178,6 +196,20 @@ private extension VoiceNoteScriptViewController {
             Task { @MainActor in
                 self.reconfigureScripts()
                 self.observeEditingMode()
+            }
+        }
+    }
+
+    func observeSearchState() {
+        withObservationTracking {
+            _ = viewModel.searchQuery
+            _ = viewModel.currentMatchIndex
+            _ = viewModel.currentPage
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.reconfigureScripts()
+                self.observeSearchState()
             }
         }
     }
