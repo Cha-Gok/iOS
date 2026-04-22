@@ -1,6 +1,9 @@
 import UIKit
 
 final class UnderlineTabButton: UIControl {
+    private let title: String
+    private var count: Int?
+
     private let label: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -18,8 +21,9 @@ final class UnderlineTabButton: UIControl {
     // MARK: - Init
 
     init(title: String, isSelected: Bool = false) {
+        self.title = title
         super.init(frame: .zero)
-        label.text = title
+        updateLabelText()
         setupUI()
         setSelected(isSelected, animated: false)
     }
@@ -56,6 +60,20 @@ final class UnderlineTabButton: UIControl {
             label.setTypography(style: .body2)
             label.textColor = UIColor.gray600
             indicator.isHidden = true
+        }
+    }
+
+    /// 탭 제목 우측에 표시할 카운트. `nil`이면 원본 제목만 노출합니다.
+    func setCount(_ count: Int?) {
+        self.count = count
+        updateLabelText()
+    }
+
+    private func updateLabelText() {
+        if let count {
+            label.text = "\(title) \(count)"
+        } else {
+            label.text = title
         }
     }
 }
