@@ -13,6 +13,12 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let playerView = AudioPlayerView()
     private let segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
     private let bottomFadeView = VoiceNoteBottomFadeView()
+    private let dimOverlayView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.dimBackground
+        view.isHidden = true
+        return view
+    }()
 
     private let backItem = UIBarButtonItem(image: .chevronLeft)
     private let editCancelItem = UIBarButtonItem(image: .cornerUpLeft)
@@ -75,6 +81,7 @@ private extension VoiceNoteViewController {
         view.addSubview(bottomFadeView)
         view.addSubview(playerView)
         view.addSubview(segmentedControl)
+        view.addSubview(dimOverlayView)
 
         pageViewController.didMove(toParent: self)
 
@@ -82,10 +89,11 @@ private extension VoiceNoteViewController {
         setupNavigationBar()
         setupTabBar()
         setupPlayerView()
+        setupDimOverlay()
     }
 
     func setupConstraints() {
-        for subview in [pageViewController.view, playerView, segmentedControl] {
+        for subview in [pageViewController.view, playerView, segmentedControl, dimOverlayView] {
             subview?.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -107,8 +115,23 @@ private extension VoiceNoteViewController {
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
+            dimOverlayView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            dimOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            dimOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            dimOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+
+    func setupDimOverlay() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dimOverlayTapped))
+        dimOverlayView.addGestureRecognizer(tap)
+    }
+
+    @objc
+    func dimOverlayTapped() {
+        viewModel.doneTitleEditing(title: titleContainerView.text ?? "")
     }
 
     func setupTitleContainer() {
@@ -308,17 +331,20 @@ private extension VoiceNoteViewController {
                 titleContainerView.setEditing(true)
             }
             navigationItem.rightBarButtonItems = [doneItem]
+            dimOverlayView.isHidden = false
         case .script:
             titleContainerView.isHidden = true
             navigationItem.leftBarButtonItem = editCancelItem
             navigationItem.rightBarButtonItems = [doneItem]
             editCancelItem.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
+            dimOverlayView.isHidden = true
         case nil:
             titleContainerView.setEditing(false)
             titleContainerView.text = viewModel.title
             titleContainerView.isHidden = false
             navigationItem.leftBarButtonItem = backItem
             navigationItem.rightBarButtonItems = [moreItem, searchItem]
+            dimOverlayView.isHidden = true
         }
     }
 }
