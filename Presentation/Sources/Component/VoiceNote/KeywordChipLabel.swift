@@ -19,9 +19,9 @@ public final class KeywordChipLabel: TypographyLabel {
         self.text = text
     }
 
-    /// 텍스트 내 `query`에 일치하는 모든 범위를 `highlightColor`로 하이라이트합니다.
+    /// 텍스트 내 `query`에 일치하는 모든 범위에 형광펜 스타일의 배경 하이라이트를 적용합니다.
     /// `query`가 비어 있으면 기본 타이포그래피로 복원됩니다.
-    public func applyHighlight(query: String, highlightColor: UIColor) {
+    public func applyHighlight(query: String, highlightBackgroundColor: UIColor) {
         guard !query.isEmpty else {
             text = baseText
             return
@@ -29,7 +29,7 @@ public final class KeywordChipLabel: TypographyLabel {
         attributedText = baseText.highlighted(
             query: query,
             baseAttributes: typography.textAttributes,
-            highlightColor: highlightColor
+            highlightBackgroundColor: highlightBackgroundColor
         )
     }
 

@@ -48,7 +48,7 @@ final class KeywordsContentView: UIView, UIContentView {
         chipLabels.forEach { $0.removeFromSuperview() }
         chipLabels = config.keywords.map { keyword in
             let chip = KeywordChipLabel(text: keyword)
-            chip.applyHighlight(query: config.searchQuery, highlightColor: UIColor.point700)
+            chip.applyHighlight(query: config.searchQuery, highlightBackgroundColor: UIColor.point700)
             return chip
         }
         chipLabels.forEach(addSubview)

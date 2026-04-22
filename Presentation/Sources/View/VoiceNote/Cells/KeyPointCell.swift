@@ -103,7 +103,7 @@ final class KeyPointContentView: UIView, UIContentView {
             textLabel.attributedText = config.text.highlighted(
                 query: config.searchQuery,
                 baseAttributes: Typography.body1.textAttributes,
-                highlightColor: UIColor.point700
+                highlightBackgroundColor: UIColor.point700
             )
         }
     }

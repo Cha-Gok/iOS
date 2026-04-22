@@ -107,9 +107,9 @@ final class ScriptContentView: UIView, UIContentView {
             textView.attributedText = config.text.highlighted(
                 query: config.searchQuery,
                 baseAttributes: baseTextAttributes,
-                highlightColor: UIColor.point700,
+                highlightBackgroundColor: UIColor.point700,
                 focusedRange: config.currentMatchRange,
-                focusedHighlightColor: UIColor.point800
+                focusedHighlightBackgroundColor: UIColor.point800
             )
         }
     }

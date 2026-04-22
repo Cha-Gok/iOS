@@ -23,27 +23,30 @@ extension String {
         return ranges
     }
 
-    /// `query` 매치를 `highlightColor`로 하이라이트한 `NSAttributedString`을 반환합니다.
-    /// `focusedRange`가 지정되면 해당 범위에는 `focusedHighlightColor`를 우선 적용합니다.
+    /// `query` 매치 영역에 형광펜 스타일의 배경 하이라이트를 적용한 `NSAttributedString`을 반환합니다.
+    /// 매치 영역의 글자색은 `gray950`으로 고정되어 배경 위에서 가독성을 보장합니다.
+    /// `focusedRange`가 지정되면 해당 범위는 `focusedHighlightBackgroundColor`로 덮어씌웁니다.
     func highlighted(
         query: String,
         baseAttributes: [NSAttributedString.Key: Any],
-        highlightColor: UIColor,
+        highlightBackgroundColor: UIColor,
         focusedRange: NSRange? = nil,
-        focusedHighlightColor: UIColor? = nil
+        focusedHighlightBackgroundColor: UIColor? = nil
     ) -> NSAttributedString {
         let attributed = NSMutableAttributedString(string: self, attributes: baseAttributes)
         guard !query.isEmpty else { return attributed }
 
         for range in ranges(of: query) {
-            attributed.addAttribute(.foregroundColor, value: highlightColor, range: range)
+            attributed.addAttribute(.backgroundColor, value: highlightBackgroundColor, range: range)
+            attributed.addAttribute(.foregroundColor, value: UIColor.gray950, range: range)
         }
 
-        if let focusedRange, let focusedHighlightColor,
+        if let focusedRange, let focusedHighlightBackgroundColor,
            focusedRange.location != NSNotFound,
            focusedRange.location + focusedRange.length <= (self as NSString).length
         {
-            attributed.addAttribute(.foregroundColor, value: focusedHighlightColor, range: focusedRange)
+            attributed.addAttribute(.backgroundColor, value: focusedHighlightBackgroundColor, range: focusedRange)
+            attributed.addAttribute(.foregroundColor, value: UIColor.gray950, range: focusedRange)
         }
 
         return attributed
