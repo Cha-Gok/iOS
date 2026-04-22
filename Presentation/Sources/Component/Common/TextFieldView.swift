@@ -89,7 +89,7 @@ final class TextFieldView: UIView {
     init(
         field: Field,
         cancelButton: GlassButton,
-        primaryButton: GlassButton,
+        primaryButton: GlassButton
     ) {
         self.field = field
         self.cancelButton = cancelButton

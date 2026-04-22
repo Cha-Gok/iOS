@@ -38,6 +38,7 @@ public final class FolderViewController: CollectionViewController {
         overlay.isHidden = true
         return overlay
     }()
+
     private lazy var textField = TextFieldView(
         field: .init(
             mode: .create,
@@ -98,7 +99,7 @@ public final class FolderViewController: CollectionViewController {
     }
 
     // MARK: - Setup
-    
+
     private func setup() {
         collectionView.showsVerticalScrollIndicator = false
 
@@ -130,7 +131,7 @@ public final class FolderViewController: CollectionViewController {
             textField.centerYAnchor.constraint(equalTo: containerGuide.centerYAnchor),
             textField.centerXAnchor.constraint(equalTo: containerGuide.centerXAnchor),
             textField.topAnchor.constraint(greaterThanOrEqualTo: containerGuide.topAnchor, constant: 20),
-            textField.bottomAnchor.constraint(lessThanOrEqualTo: containerGuide.bottomAnchor, constant: -20),
+            textField.bottomAnchor.constraint(lessThanOrEqualTo: containerGuide.bottomAnchor, constant: -20)
         ])
     }
 
@@ -230,7 +231,7 @@ extension FolderViewController {
             textField.field.text = vm.editFolder?.name ?? ""
         }
     }
-    
+
     private func updateTextFieldAlert() {
         let shouldShowAlert = vm.showTextField
         textFieldAlertOverlayView.isHidden = !shouldShowAlert
@@ -240,7 +241,7 @@ extension FolderViewController {
         }
         updateNavigationBarAppearance(isTransparent: shouldShowAlert)
     }
-    
+
     func updateInteractionForAlert(isPresented: Bool) {
         collectionView.isUserInteractionEnabled = !isPresented
         backButton.isUserInteractionEnabled = !isPresented

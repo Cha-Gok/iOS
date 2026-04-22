@@ -41,7 +41,7 @@ public extension Constant {
 public extension Constant {
     /// AlertView Spacing Top 상수 값
     static let alertTopContentSpacing: CGFloat = 12
-    
+
     /// AlertView Spacing Botttom 상수 값
     static let alertBottomContentSpacing: CGFloat = 8
 

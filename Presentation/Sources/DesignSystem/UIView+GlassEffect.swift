@@ -18,7 +18,7 @@ extension UIView {
             visualEffectView.topAnchor.constraint(equalTo: topAnchor),
             visualEffectView.leadingAnchor.constraint(equalTo: leadingAnchor),
             visualEffectView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            visualEffectView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            visualEffectView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 }
