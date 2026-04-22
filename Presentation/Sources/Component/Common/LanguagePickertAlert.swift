@@ -19,7 +19,7 @@ final class LanguagePickerAlert: UIView {
         let view = UIStackView()
         view.axis = .horizontal
         view.distribution = .fill
-        view.spacing = Constant.alertSpacing
+        view.spacing = Constant.alertBottomContentSpacing
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()

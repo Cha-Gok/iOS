@@ -13,6 +13,7 @@ final class AlertView: UIView {
     private let topContent: UIStackView = {
         let view = UIStackView()
         view.axis = .vertical
+        view.spacing = Constant.alertTopContentSpacing
         view.distribution = .fill
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
@@ -22,7 +23,7 @@ final class AlertView: UIView {
         let view = UIStackView()
         view.axis = .horizontal
         view.distribution = .fill
-        view.spacing = Constant.alertSpacing
+        view.spacing = Constant.alertBottomContentSpacing
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -52,6 +53,7 @@ final class AlertView: UIView {
         subTitle: String,
         closeButton: GlassButton,
         primaryButton: GlassButton,
+        tintColor: UIColor = .point200.withAlphaComponent(0.2),
         frame: CGRect = .zero
     ) {
         self.title = title
@@ -59,6 +61,7 @@ final class AlertView: UIView {
         self.closeButton = closeButton
         self.primaryButton = primaryButton
         super.init(frame: frame)
+        applyGlassEffect(tintColor: tintColor)
         setup()
         setupButton()
         childSetup()
@@ -66,7 +69,7 @@ final class AlertView: UIView {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
 }
 
@@ -108,7 +111,6 @@ extension AlertView {
     /// AlertView의 전체 배경색, 테두리(border), 모서리 등 가장 기초적인 View 스타일을 설정합니다.
     private func setup() {
         translatesAutoresizingMaskIntoConstraints = false
-        backgroundColor = .point200.withAlphaComponent(Constant.backgroundOpacity)
         layer.borderWidth = Constant.borderWidth
         layer.borderColor = UIColor.gray600.cgColor
     }

@@ -89,12 +89,13 @@ final class TextFieldView: UIView {
     init(
         field: Field,
         cancelButton: GlassButton,
-        primaryButton: GlassButton
+        primaryButton: GlassButton,
     ) {
         self.field = field
         self.cancelButton = cancelButton
         self.primaryButton = primaryButton
         super.init(frame: .zero)
+        applyGlassEffect(tintColor: .gray200.withAlphaComponent(0.2))
         setup()
     }
 
