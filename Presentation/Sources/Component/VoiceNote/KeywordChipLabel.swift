@@ -8,12 +8,29 @@ public final class KeywordChipLabel: TypographyLabel {
         right: Constant.keywordChipHorizontalPadding
     )
 
+    private var baseText: String = ""
+
     public init(text: String) {
         super.init(typography: .label)
         textColor = UIColor.gray750
         backgroundColor = UIColor.gray100
         clipsToBounds = true
+        baseText = text
         self.text = text
+    }
+
+    /// 텍스트 내 `query`에 일치하는 모든 범위에 형광펜 스타일의 배경 하이라이트를 적용합니다.
+    /// `query`가 비어 있으면 기본 타이포그래피로 복원됩니다.
+    public func applyHighlight(query: String, highlightBackgroundColor: UIColor) {
+        guard !query.isEmpty else {
+            text = baseText
+            return
+        }
+        attributedText = baseText.highlighted(
+            query: query,
+            baseAttributes: typography.textAttributes,
+            highlightBackgroundColor: highlightBackgroundColor
+        )
     }
 
     @available(*, unavailable)

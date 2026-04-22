@@ -2,6 +2,7 @@ import UIKit
 
 struct KeywordsContentConfiguration: UIContentConfiguration {
     var keywords: [String] = []
+    var searchQuery: String = ""
 
     func makeContentView() -> UIView & UIContentView {
         KeywordsContentView(configuration: self)
@@ -45,7 +46,11 @@ final class KeywordsContentView: UIView, UIContentView {
         guard let config = configuration as? KeywordsContentConfiguration else { return }
 
         chipLabels.forEach { $0.removeFromSuperview() }
-        chipLabels = config.keywords.map(KeywordChipLabel.init(text:))
+        chipLabels = config.keywords.map { keyword in
+            let chip = KeywordChipLabel(text: keyword)
+            chip.applyHighlight(query: config.searchQuery, highlightBackgroundColor: UIColor.point700)
+            return chip
+        }
         chipLabels.forEach(addSubview)
     }
 

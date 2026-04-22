@@ -13,6 +13,9 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let playerView = AudioPlayerView()
     private let segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
     private let bottomFadeView = VoiceNoteBottomFadeView()
+    private let searchBar = VoiceNoteSearchBar()
+
+    private var searchModeLastApplied = false
     private let dimOverlayView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.dimBackground
@@ -89,11 +92,12 @@ private extension VoiceNoteViewController {
         setupNavigationBar()
         setupTabBar()
         setupPlayerView()
+        setupSearchBar()
         setupDimOverlay()
     }
 
     func setupConstraints() {
-        for subview in [pageViewController.view, playerView, segmentedControl, dimOverlayView] {
+        for subview in [pageViewController.view, playerView, segmentedControl, bottomFadeView, dimOverlayView] {
             subview?.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -186,6 +190,9 @@ private extension VoiceNoteViewController {
                 self?.viewModel.deleteVoiceNote()
             }
         ])
+        searchItem.primaryAction = UIAction { [weak self] _ in
+            self?.viewModel.enterSearchMode()
+        }
 
         navigationItem.leftBarButtonItem = backItem
         navigationItem.titleView = titleContainerView
@@ -207,11 +214,27 @@ private extension VoiceNoteViewController {
         playerView.onSeekEnded = { [weak self] time in self?.viewModel.seekEnded(time) }
     }
 
+    func setupSearchBar() {
+        searchBar.onReturn = { [weak self] query in
+            self?.viewModel.updateSearchQuery(query)
+        }
+        searchBar.onClose = { [weak self] in
+            self?.viewModel.exitSearchMode()
+        }
+        searchBar.onMatchPrev = { [weak self] in
+            self?.viewModel.previousMatch()
+        }
+        searchBar.onMatchNext = { [weak self] in
+            self?.viewModel.nextMatch()
+        }
+    }
+
     func setupBindings() {
         observePlaybackState()
         observeErrorMessage()
         observeEditingState()
         observeCurrentPage()
+        observeSearchState()
     }
 
     func observePlaybackState() {
@@ -268,6 +291,10 @@ private extension VoiceNoteViewController {
 
         let direction: UIPageViewController.NavigationDirection = page.rawValue > currentIndex ? .forward : .reverse
         pageViewController.setViewControllers([target], direction: direction, animated: true)
+
+        if viewModel.searchMode {
+            applySearchState()
+        }
     }
 }
 
@@ -330,21 +357,94 @@ private extension VoiceNoteViewController {
                 titleContainerView.text = viewModel.title
                 titleContainerView.setEditing(true)
             }
-            navigationItem.rightBarButtonItems = [doneItem]
             dimOverlayView.isHidden = false
         case .script:
             titleContainerView.isHidden = true
-            navigationItem.leftBarButtonItem = editCancelItem
-            navigationItem.rightBarButtonItems = [doneItem]
             editCancelItem.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
             dimOverlayView.isHidden = true
         case nil:
             titleContainerView.setEditing(false)
             titleContainerView.text = viewModel.title
             titleContainerView.isHidden = false
+            dimOverlayView.isHidden = true
+        }
+        updateNavigationItems()
+    }
+
+    func updateNavigationItems() {
+        if viewModel.searchMode {
+            navigationItem.hidesBackButton = true
+            navigationItem.leftBarButtonItem = nil
+            navigationItem.rightBarButtonItems = []
+            navigationItem.titleView = searchBar
+            return
+        }
+
+        navigationItem.hidesBackButton = false
+        navigationItem.titleView = titleContainerView
+        switch viewModel.editingMode {
+        case .title:
+            navigationItem.leftBarButtonItem = backItem
+            navigationItem.rightBarButtonItems = [doneItem]
+        case .script:
+            navigationItem.leftBarButtonItem = editCancelItem
+            navigationItem.rightBarButtonItems = [doneItem]
+        case nil:
             navigationItem.leftBarButtonItem = backItem
             navigationItem.rightBarButtonItems = [moreItem, searchItem]
-            dimOverlayView.isHidden = true
+        }
+    }
+}
+
+// MARK: - Search Mode
+
+private extension VoiceNoteViewController {
+    func observeSearchState() {
+        withObservationTracking {
+            _ = viewModel.searchMode
+            _ = viewModel.searchQuery
+            _ = viewModel.currentMatchIndex
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.applySearchState()
+                self.observeSearchState()
+            }
+        }
+    }
+
+    func applySearchState() {
+        let isSearching = viewModel.searchMode
+        let didToggle = isSearching != searchModeLastApplied
+        searchModeLastApplied = isSearching
+
+        segmentedControl.setCount(viewModel.summaryMatchCount, at: Page.summary.rawValue)
+        segmentedControl.setCount(viewModel.scriptMatchCount, at: Page.script.rawValue)
+
+        searchBar.configureMatch(
+            countText: viewModel.matchCountText,
+            hasMatches: viewModel.hasCurrentPageMatches
+        )
+
+        updateNavigationItems()
+
+        if didToggle {
+            if isSearching {
+                searchBar.becomeFirstResponder()
+            } else {
+                searchBar.setQuery("")
+                searchBar.resignFirstResponder()
+            }
+            view.layoutIfNeeded()
+        }
+
+        if let match = viewModel.currentMatch {
+            switch match.location {
+            case .keyPoint, .keyword:
+                summaryViewController.scrollToMatch(match)
+            case .script:
+                scriptViewController.scrollToMatch(match)
+            }
         }
     }
 }

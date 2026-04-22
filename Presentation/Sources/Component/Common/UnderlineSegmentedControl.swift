@@ -59,4 +59,10 @@ final class UnderlineSegmentedControl: UIControl {
             button.setSelected(idx == index, animated: animated)
         }
     }
+
+    /// 지정한 인덱스의 탭에 카운트 배지를 표시합니다. `nil`이면 카운트를 숨깁니다.
+    func setCount(_ count: Int?, at index: Int) {
+        guard buttons.indices.contains(index) else { return }
+        buttons[index].setCount(count)
+    }
 }

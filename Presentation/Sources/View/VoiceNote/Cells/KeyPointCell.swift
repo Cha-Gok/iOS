@@ -5,6 +5,7 @@ import UIKit
 struct KeyPointContentConfiguration: UIContentConfiguration {
     var number: Int = 0
     var text: String = ""
+    var searchQuery: String = ""
 
     func makeContentView() -> UIView & UIContentView {
         KeyPointContentView(configuration: self)
@@ -96,7 +97,15 @@ final class KeyPointContentView: UIView, UIContentView {
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? KeyPointContentConfiguration else { return }
         badgeLabel.text = "\(config.number)"
-        textLabel.text = config.text
+        if config.searchQuery.isEmpty {
+            textLabel.text = config.text
+        } else {
+            textLabel.attributedText = config.text.highlighted(
+                query: config.searchQuery,
+                baseAttributes: Typography.body1.textAttributes,
+                highlightBackgroundColor: UIColor.point700
+            )
+        }
     }
 }
 
