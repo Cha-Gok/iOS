@@ -15,6 +15,9 @@ public final class VoiceNoteViewModel {
     public private(set) var playingSectionIndex: Int?
     public private(set) var editableScriptSections: [TranscriptSection] = []
     public private(set) var currentPage: Page = .summary
+    public private(set) var searchMode: Bool = false
+    public private(set) var searchQuery: String = ""
+    public private(set) var currentMatchIndex: Int = 0
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
@@ -22,6 +25,8 @@ public final class VoiceNoteViewModel {
     private var voiceNoteObservationTask: Task<Void, Never>?
     @ObservationIgnored
     private var wasPlayingBeforeSeek = false
+    @ObservationIgnored
+    private var wasPlayingBeforeSearch = false
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
     // MARK: - UseCases
@@ -121,7 +126,48 @@ public final class VoiceNoteViewModel {
     }
 
     public func updateCurrentPage(_ page: Page) {
+        guard currentPage != page else { return }
         currentPage = page
+        if searchMode {
+            currentMatchIndex = 0
+        }
+    }
+
+    public func enterSearchMode() {
+        guard !searchMode else { return }
+        searchMode = true
+        searchQuery = ""
+        currentMatchIndex = 0
+        wasPlayingBeforeSearch = currentPlaybackState.status == .playing
+        if wasPlayingBeforeSearch { pause() }
+    }
+
+    public func exitSearchMode() {
+        guard searchMode else { return }
+        searchMode = false
+        searchQuery = ""
+        currentMatchIndex = 0
+        if wasPlayingBeforeSearch {
+            wasPlayingBeforeSearch = false
+            play()
+        }
+    }
+
+    public func updateSearchQuery(_ query: String) {
+        searchQuery = query
+        currentMatchIndex = 0
+    }
+
+    public func nextMatch() {
+        let count = currentPageMatches.count
+        guard count > 0 else { return }
+        currentMatchIndex = (currentMatchIndex + 1) % count
+    }
+
+    public func previousMatch() {
+        let count = currentPageMatches.count
+        guard count > 0 else { return }
+        currentMatchIndex = (currentMatchIndex - 1 + count) % count
     }
 
     public func updateScriptSection(sectionIndex: Int, text: String) {
@@ -349,6 +395,47 @@ public extension VoiceNoteViewModel {
         guard let summary = voiceNote.summary,
               let transcript = voiceNote.transcript else { return false }
         return summary.createdAt < transcript.updatedAt
+    }
+
+    /// 요약 페이지에서 매치되는 항목 목록. 핵심 포인트 → 키워드 순서로 정렬됩니다.
+    var summaryMatches: [VoiceNoteSearchMatch] {
+        guard !searchQuery.isEmpty else { return [] }
+        var matches: [VoiceNoteSearchMatch] = []
+        for (index, point) in keyPoints.enumerated() {
+            for range in point.text.ranges(of: searchQuery) {
+                matches.append(.init(location: .keyPoint(index: index), range: range))
+            }
+        }
+        for (index, keyword) in keywords.enumerated() {
+            for range in keyword.ranges(of: searchQuery) {
+                matches.append(.init(location: .keyword(index: index), range: range))
+            }
+        }
+        return matches
+    }
+
+    /// 스크립트 페이지에서 매치되는 항목 목록. 섹션 순서 → 섹션 내 위치 순서로 정렬됩니다.
+    var scriptMatches: [VoiceNoteSearchMatch] {
+        guard !searchQuery.isEmpty else { return [] }
+        var matches: [VoiceNoteSearchMatch] = []
+        for (index, section) in scriptSections.enumerated() {
+            for range in section.text.ranges(of: searchQuery) {
+                matches.append(.init(location: .script(sectionIndex: index), range: range))
+            }
+        }
+        return matches
+    }
+
+    /// 현재 페이지에 해당하는 매치 목록.
+    var currentPageMatches: [VoiceNoteSearchMatch] {
+        currentPage == .summary ? summaryMatches : scriptMatches
+    }
+
+    /// 현재 포커스된 매치.
+    var currentMatch: VoiceNoteSearchMatch? {
+        let matches = currentPageMatches
+        guard matches.indices.contains(currentMatchIndex) else { return nil }
+        return matches[currentMatchIndex]
     }
 }
 
