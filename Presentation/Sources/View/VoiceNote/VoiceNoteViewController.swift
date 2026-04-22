@@ -418,10 +418,8 @@ private extension VoiceNoteViewController {
         let didToggle = isSearching != searchModeLastApplied
         searchModeLastApplied = isSearching
 
-        let summaryCount = isSearching ? viewModel.summaryMatches.count : nil
-        let scriptCount = isSearching ? viewModel.scriptMatches.count : nil
-        segmentedControl.setCount(summaryCount, at: Page.summary.rawValue)
-        segmentedControl.setCount(scriptCount, at: Page.script.rawValue)
+        segmentedControl.setCount(viewModel.summaryMatchCount, at: Page.summary.rawValue)
+        segmentedControl.setCount(viewModel.scriptMatchCount, at: Page.script.rawValue)
 
         searchBar.configureMatch(
             countText: viewModel.matchCountText,

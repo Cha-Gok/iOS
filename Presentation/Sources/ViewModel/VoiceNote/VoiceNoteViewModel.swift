@@ -449,6 +449,16 @@ public extension VoiceNoteViewModel {
     var hasCurrentPageMatches: Bool {
         !currentPageMatches.isEmpty
     }
+
+    /// 세그먼트에 표시할 요약 매치 수. 검색 모드가 아니거나 쿼리가 비어 있으면 `nil`을 반환해 카운트를 숨깁니다.
+    var summaryMatchCount: Int? {
+        searchMode && !searchQuery.isEmpty ? summaryMatches.count : nil
+    }
+
+    /// 세그먼트에 표시할 스크립트 매치 수. 검색 모드가 아니거나 쿼리가 비어 있으면 `nil`을 반환해 카운트를 숨깁니다.
+    var scriptMatchCount: Int? {
+        searchMode && !searchQuery.isEmpty ? scriptMatches.count : nil
+    }
 }
 
 // MARK: - Nested Types
