@@ -9,6 +9,8 @@ struct ScriptContentConfiguration: UIContentConfiguration {
     var text: String = ""
     var isHighlighted: Bool = false
     var isEditing: Bool = false
+    var searchQuery: String = ""
+    var currentMatchRange: NSRange?
     var onTextEdited: ((Int, String) -> Void)?
     var onTextHeightChanged: (() -> Void)?
 
@@ -96,8 +98,26 @@ final class ScriptContentView: UIView, UIContentView {
         textView.isEditable = config.isEditing
         textView.isSelectable = config.isEditing
         textView.isUserInteractionEnabled = config.isEditing
-        textView.text = config.text
         textView.backgroundColor = config.isHighlighted ? .scriptCellHighlight : .clear
+
+        // 편집 모드와 검색 모드는 상호 배타적이지만, 안전을 위해 편집 중에는 하이라이트를 적용하지 않는다.
+        if config.isEditing || config.searchQuery.isEmpty {
+            textView.text = config.text
+        } else {
+            textView.attributedText = config.text.highlighted(
+                query: config.searchQuery,
+                baseAttributes: baseTextAttributes,
+                highlightColor: UIColor.point700,
+                focusedRange: config.currentMatchRange,
+                focusedHighlightColor: UIColor.point800
+            )
+        }
+    }
+
+    private var baseTextAttributes: [NSAttributedString.Key: Any] {
+        var attributes = Typography.body1.textAttributes
+        attributes[.foregroundColor] = UIColor.gray950
+        return attributes
     }
 }
 
