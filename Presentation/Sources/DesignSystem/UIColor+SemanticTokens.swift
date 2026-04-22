@@ -10,4 +10,9 @@ public extension UIColor {
     static var metadataLabel: UIColor {
         .gray750
     }
+
+    /// 편집 모드 진입 시 본문 영역을 가리는 딤 오버레이 색상
+    static var dimBackground: UIColor {
+        .black.withAlphaComponent(0.6)
+    }
 }
