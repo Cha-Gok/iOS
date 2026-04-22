@@ -1,9 +1,8 @@
 import UIKit
 
 public final class VoiceNoteSearchBar: UIView {
-    public var onQueryChanged: ((String) -> Void)?
     public var onClose: (() -> Void)?
-    public var onReturn: (() -> Void)?
+    public var onReturn: ((String) -> Void)?
     public var onMatchPrev: (() -> Void)?
     public var onMatchNext: (() -> Void)?
 
@@ -131,11 +130,8 @@ public final class VoiceNoteSearchBar: UIView {
 
     private func setupActions() {
         textField.addAction(UIAction { [weak self] _ in
-            self?.onQueryChanged?(self?.textField.text ?? "")
-        }, for: .editingChanged)
-
-        textField.addAction(UIAction { [weak self] _ in
-            self?.onReturn?()
+            guard let self else { return }
+            onReturn?(textField.text ?? "")
         }, for: .editingDidEndOnExit)
 
         closeButton.addAction(UIAction { [weak self] _ in

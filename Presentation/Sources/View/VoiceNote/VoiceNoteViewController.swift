@@ -215,7 +215,7 @@ private extension VoiceNoteViewController {
     }
 
     func setupSearchBar() {
-        searchBar.onQueryChanged = { [weak self] query in
+        searchBar.onReturn = { [weak self] query in
             self?.viewModel.updateSearchQuery(query)
         }
         searchBar.onClose = { [weak self] in
