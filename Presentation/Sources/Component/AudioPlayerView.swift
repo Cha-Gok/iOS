@@ -49,7 +49,7 @@ final class AudioPlayerView: UIView {
         return UIButton(configuration: config)
     }()
 
-    private let progressSlider = UISlider()
+    private let progressSlider = TrackTappableSlider()
 
     private lazy var durationStackView: UIStackView = {
         let stackView = UIStackView()
@@ -85,12 +85,15 @@ final class AudioPlayerView: UIView {
     }
 
     func apply(_ state: AudioPlaybackState) {
-        currentTimeLabel.text = state.currentTime.durationString
         totalDurationLabel.text = state.duration.durationString
         var config = playPauseButton.configuration
         config?.image = state.status == .playing ? UIImage(systemName: "pause.fill") : UIImage(systemName: "play.fill")
         playPauseButton.configuration = config
         progressSlider.maximumValue = Float(state.duration)
+
+        // 사용자가 슬라이더를 만지는 동안에는 재생 위치로 덮어쓰지 않는다.
+        guard !progressSlider.isTracking else { return }
+        currentTimeLabel.text = state.currentTime.durationString
         progressSlider.value = Float(state.currentTime)
     }
 
@@ -143,5 +146,29 @@ final class AudioPlayerView: UIView {
             guard let self else { return }
             currentTimeLabel.text = TimeInterval(progressSlider.value).durationString
         }, for: .valueChanged)
+    }
+}
+
+private final class TrackTappableSlider: UISlider {
+    override func thumbRect(forBounds bounds: CGRect, trackRect rect: CGRect, value: Float) -> CGRect {
+        .zero
+    }
+
+    override func beginTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
+        updateValue(to: touch)
+        return true
+    }
+
+    override func continueTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
+        updateValue(to: touch)
+        return true
+    }
+
+    private func updateValue(to touch: UITouch) {
+        let location = touch.location(in: self)
+        let ratio = Float(max(0, min(1, location.x / bounds.width)))
+        let newValue = minimumValue + ratio * (maximumValue - minimumValue)
+        setValue(newValue, animated: false)
+        sendActions(for: .valueChanged)
     }
 }
