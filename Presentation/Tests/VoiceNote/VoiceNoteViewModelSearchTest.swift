@@ -321,11 +321,25 @@ private struct FakeVoiceNoteUseCase: VoiceNoteUseCase {
         VoiceNote.stub(voiceRecord: voiceRecord)
     }
 
-    func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote] { [voiceNote] }
-    func fetchAll(folderID _: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote] { [voiceNote] }
-    func fetch(byId _: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote { voiceNote }
-    func fetchRecent(limit _: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote] { [voiceNote] }
-    func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote { voiceNote }
+    func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+        [voiceNote]
+    }
+
+    func fetchAll(folderID _: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+        [voiceNote]
+    }
+
+    func fetch(byId _: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote {
+        voiceNote
+    }
+
+    func fetchRecent(limit _: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
+        [voiceNote]
+    }
+
+    func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote {
+        voiceNote
+    }
 
     func observe(id _: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote> {
         AsyncStream { continuation in
@@ -350,13 +364,17 @@ private struct FakeFolderUseCase: FolderUseCase {
         [Folder(name: "기본 폴더", isDeletable: false)]
     }
 
-    func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] { [] }
+    func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
+        []
+    }
 
     func fetch(by _: UUID) throws(FolderUseCaseError) -> Folder {
         Folder(name: "기본 폴더", isDeletable: false)
     }
 
-    func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder { folder }
+    func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder {
+        folder
+    }
 }
 
 private struct FakeWasteBasketRepository: WasteBasketRepository {
@@ -365,7 +383,10 @@ private struct FakeWasteBasketRepository: WasteBasketRepository {
     func deleteAll(items _: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {}
     func moveToWasteBasket(item _: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {}
     func moveAllToWasteBasket(items _: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
-    func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] { [] }
+    func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
+        []
+    }
+
     func restore(item _: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
     func restoreAll(items _: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
 }

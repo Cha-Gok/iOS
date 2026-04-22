@@ -117,14 +117,15 @@ private extension VoiceNoteSummaryViewController {
             )
         }
 
-        let keyPointCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard case .keyPoint(let number, let text) = item else { return }
-            cell.contentConfiguration = KeyPointContentConfiguration(
-                number: number,
-                text: text,
-                searchQuery: self?.viewModel.searchQuery ?? ""
-            )
-        }
+        let keyPointCellReg = UICollectionView
+            .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
+                guard case .keyPoint(let number, let text) = item else { return }
+                cell.contentConfiguration = KeyPointContentConfiguration(
+                    number: number,
+                    text: text,
+                    searchQuery: self?.viewModel.searchQuery ?? ""
+                )
+            }
 
         let keywordsCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
             cell.contentConfiguration = KeywordsContentConfiguration(
