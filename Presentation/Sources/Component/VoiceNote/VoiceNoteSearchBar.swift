@@ -5,6 +5,8 @@ public final class VoiceNoteSearchBar: UIView {
     public var onClose: (() -> Void)?
     public var onReturn: (() -> Void)?
 
+    private let matchAccessoryBar = VoiceNoteMatchAccessoryBar()
+
     private let searchContainer: UIVisualEffectView = {
         let effect = UIGlassEffect(style: .clear)
         effect.tintColor = .point100.withAlphaComponent(0.2)
@@ -52,6 +54,7 @@ public final class VoiceNoteSearchBar: UIView {
         super.init(frame: .zero)
         setupUI()
         setupActions()
+        textField.inputAccessoryView = matchAccessoryBar
     }
 
     @available(*, unavailable)

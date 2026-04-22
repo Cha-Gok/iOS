@@ -15,13 +15,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let bottomFadeView = VoiceNoteBottomFadeView()
     private let searchBar = VoiceNoteSearchBar()
 
-    private let matchNavBar: VoiceNoteMatchNavigationBar = {
-        let bar = VoiceNoteMatchNavigationBar()
-        bar.isHidden = true
-        return bar
-    }()
-
-    private var matchNavBottomConstraint: NSLayoutConstraint?
     private var searchModeLastApplied = false
     private let dimOverlayView: UIView = {
         let view = UIView()
@@ -91,7 +84,6 @@ private extension VoiceNoteViewController {
         view.addSubview(bottomFadeView)
         view.addSubview(playerView)
         view.addSubview(segmentedControl)
-        view.addSubview(matchNavBar)
         view.addSubview(dimOverlayView)
 
         pageViewController.didMove(toParent: self)
@@ -101,20 +93,13 @@ private extension VoiceNoteViewController {
         setupTabBar()
         setupPlayerView()
         setupSearchBar()
-        setupMatchNavBar()
         setupDimOverlay()
     }
 
     func setupConstraints() {
-        for subview in [pageViewController.view, playerView, segmentedControl, matchNavBar, dimOverlayView] {
+        for subview in [pageViewController.view, playerView, segmentedControl, bottomFadeView, dimOverlayView] {
             subview?.translatesAutoresizingMaskIntoConstraints = false
         }
-
-        let matchNavBottom = matchNavBar.bottomAnchor.constraint(
-            equalTo: view.safeAreaLayoutGuide.bottomAnchor,
-            constant: -16
-        )
-        matchNavBottomConstraint = matchNavBottom
 
         NSLayoutConstraint.activate([
             pageViewController.view.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
@@ -135,10 +120,6 @@ private extension VoiceNoteViewController {
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-
-            matchNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            matchNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            matchNavBottom,
 
             dimOverlayView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             dimOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -242,22 +223,12 @@ private extension VoiceNoteViewController {
         }
     }
 
-    func setupMatchNavBar() {
-        matchNavBar.onPrev = { [weak self] in
-            self?.viewModel.previousMatch()
-        }
-        matchNavBar.onNext = { [weak self] in
-            self?.viewModel.nextMatch()
-        }
-    }
-
     func setupBindings() {
         observePlaybackState()
         observeErrorMessage()
         observeEditingState()
         observeCurrentPage()
         observeSearchState()
-        registerKeyboardObservers()
     }
 
     func observePlaybackState() {
@@ -314,6 +285,10 @@ private extension VoiceNoteViewController {
 
         let direction: UIPageViewController.NavigationDirection = page.rawValue > currentIndex ? .forward : .reverse
         pageViewController.setViewControllers([target], direction: direction, animated: true)
+
+        if viewModel.searchMode {
+            applySearchState()
+        }
     }
 }
 
@@ -376,21 +351,41 @@ private extension VoiceNoteViewController {
                 titleContainerView.text = viewModel.title
                 titleContainerView.setEditing(true)
             }
-            navigationItem.rightBarButtonItems = [doneItem]
             dimOverlayView.isHidden = false
         case .script:
             titleContainerView.isHidden = true
-            navigationItem.leftBarButtonItem = editCancelItem
-            navigationItem.rightBarButtonItems = [doneItem]
             editCancelItem.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
             dimOverlayView.isHidden = true
         case nil:
             titleContainerView.setEditing(false)
             titleContainerView.text = viewModel.title
             titleContainerView.isHidden = false
+            dimOverlayView.isHidden = true
+        }
+        updateNavigationItems()
+    }
+
+    func updateNavigationItems() {
+        if viewModel.searchMode {
+            navigationItem.hidesBackButton = true
+            navigationItem.leftBarButtonItem = nil
+            navigationItem.rightBarButtonItems = []
+            navigationItem.titleView = searchBar
+            return
+        }
+
+        navigationItem.hidesBackButton = false
+        navigationItem.titleView = titleContainerView
+        switch viewModel.editingMode {
+        case .title:
+            navigationItem.leftBarButtonItem = backItem
+            navigationItem.rightBarButtonItems = [doneItem]
+        case .script:
+            navigationItem.leftBarButtonItem = editCancelItem
+            navigationItem.rightBarButtonItems = [doneItem]
+        case nil:
             navigationItem.leftBarButtonItem = backItem
             navigationItem.rightBarButtonItems = [moreItem, searchItem]
-            dimOverlayView.isHidden = true
         }
     }
 }
@@ -403,7 +398,6 @@ private extension VoiceNoteViewController {
             _ = viewModel.searchMode
             _ = viewModel.searchQuery
             _ = viewModel.currentMatchIndex
-            _ = viewModel.currentPage
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
@@ -418,30 +412,12 @@ private extension VoiceNoteViewController {
         let didToggle = isSearching != searchModeLastApplied
         searchModeLastApplied = isSearching
 
-        matchNavBar.isHidden = !isSearching
-        playerView.isHidden = isSearching
-        bottomFadeView.isHidden = isSearching
-
         let summaryCount = isSearching ? viewModel.summaryMatches.count : nil
         let scriptCount = isSearching ? viewModel.scriptMatches.count : nil
         segmentedControl.setCount(summaryCount, at: Page.summary.rawValue)
         segmentedControl.setCount(scriptCount, at: Page.script.rawValue)
 
-        let total = viewModel.currentPageMatches.count
-        let displayedIndex = total > 0 ? viewModel.currentMatchIndex + 1 : 0
-        matchNavBar.configure(currentIndex: displayedIndex, total: total)
-
-        if isSearching {
-            navigationItem.hidesBackButton = true
-            navigationItem.leftBarButtonItem = nil
-            navigationItem.rightBarButtonItems = []
-            navigationItem.titleView = searchBar
-        } else if viewModel.editingMode == nil {
-            navigationItem.hidesBackButton = false
-            navigationItem.leftBarButtonItem = backItem
-            navigationItem.rightBarButtonItems = [moreItem, searchItem]
-            navigationItem.titleView = titleContainerView
-        }
+        updateNavigationItems()
 
         if didToggle {
             if isSearching {
@@ -450,6 +426,7 @@ private extension VoiceNoteViewController {
                 searchBar.setQuery("")
                 searchBar.resignFirstResponder()
             }
+            view.layoutIfNeeded()
         }
 
         if let match = viewModel.currentMatch {
@@ -459,56 +436,6 @@ private extension VoiceNoteViewController {
             case .script:
                 scriptViewController.scrollToMatch(match)
             }
-        }
-
-        view.layoutIfNeeded()
-    }
-}
-
-// MARK: - Keyboard
-
-private extension VoiceNoteViewController {
-    func registerKeyboardObservers() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(searchKeyboardWillChangeFrame(_:)),
-            name: UIResponder.keyboardWillChangeFrameNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(searchKeyboardWillHide(_:)),
-            name: UIResponder.keyboardWillHideNotification,
-            object: nil
-        )
-    }
-}
-
-private extension VoiceNoteViewController {
-    @objc
-    func searchKeyboardWillChangeFrame(_ notification: Notification) {
-        guard viewModel.searchMode,
-              let userInfo = notification.userInfo,
-              let frameValue = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
-        let keyboardFrame = view.convert(frameValue.cgRectValue, from: nil)
-        let overlap = max(0, view.bounds.maxY - keyboardFrame.minY)
-        let inset = max(0, overlap - view.safeAreaInsets.bottom)
-        applyMatchNavKeyboardInset(inset, userInfo: userInfo)
-    }
-
-    @objc
-    func searchKeyboardWillHide(_ notification: Notification) {
-        applyMatchNavKeyboardInset(0, userInfo: notification.userInfo)
-    }
-
-    private func applyMatchNavKeyboardInset(_ inset: CGFloat, userInfo: [AnyHashable: Any]?) {
-        let duration = (userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval) ?? 0.25
-        let curveRaw = (userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt)
-            ?? UInt(UIView.AnimationCurve.easeInOut.rawValue)
-        let options = UIView.AnimationOptions(rawValue: curveRaw << 16)
-        matchNavBottomConstraint?.constant = -(inset + 16)
-        UIView.animate(withDuration: duration, delay: 0, options: options) {
-            self.view.layoutIfNeeded()
         }
     }
 }
