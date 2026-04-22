@@ -93,5 +93,6 @@ struct EditFolderCardModifier: ViewModifier {
                         .stroke(.point900, lineWidth: 1)
                 }
             }
+            .contentShape(.rect(cornerRadius: 20))
     }
 }
