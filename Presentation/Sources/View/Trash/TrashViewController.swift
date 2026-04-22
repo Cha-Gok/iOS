@@ -295,6 +295,19 @@ extension TrashViewController {
 // MARK: - Helper Method
 
 private extension TrashViewController {
+    func selectedItemsForBulkAction() -> [WasteBasketItem]? {
+        switch vm.select {
+        case .none:
+            return nil
+        case .multiple, .all:
+            guard !vm.selectedItems.isEmpty else {
+                vm.setSelectionMode(.none)
+                return nil
+            }
+            return vm.selectedItems
+        }
+    }
+
     func backButtonAction() -> UIAction {
         UIAction { [weak self] _ in
             guard let self else { return }
@@ -310,20 +323,14 @@ private extension TrashViewController {
     func moreAndActionButtonAction() -> UIAction {
         UIAction { [weak self] _ in
             guard let self else { return }
-            switch vm.select {
-            case .multiple:
-                guard !vm.selectedItems.isEmpty else {
-                    vm.setSelectionMode(.none)
-                    return
-                }
-                vm.delete(items: vm.selectedItems)
-                chagokBackgroundView.makeToast(
-                    type: .normal,
-                    "영구 삭제 되었습니다"
-                )
-            default:
-                break
+            guard let selectedItems = selectedItemsForBulkAction() else {
+                return
             }
+            vm.delete(items: selectedItems)
+            chagokBackgroundView.makeToast(
+                type: .normal,
+                "영구 삭제 되었습니다"
+            )
         }
     }
 
@@ -334,14 +341,12 @@ private extension TrashViewController {
             case .none:
                 print("검색 버튼 탭됨")
             case .multiple, .all:
-                guard !vm.selectedItems.isEmpty else {
-                    vm.setSelectionMode(.none)
+                guard let selectedItems = selectedItemsForBulkAction() else {
                     return
                 }
-                let restoredItems = vm.selectedItems
-                vm.restore(items: vm.selectedItems)
+                vm.restore(items: selectedItems)
                 chagokBackgroundView.makeToast("원래 위치로 복원됐어요.") { [weak self] in
-                    self?.vm.cancelRestore(items: restoredItems)
+                    self?.vm.cancelRestore(items: selectedItems)
                 }
             }
         }

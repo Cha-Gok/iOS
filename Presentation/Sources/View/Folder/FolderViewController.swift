@@ -31,6 +31,14 @@ public final class FolderViewController: CollectionViewController {
     private var cancelButton: GlassButton = .close("취소")
     private var primaryButton: GlassButton = .primary("만들기")
 
+    private let textFieldAlertOverlayView: UIView = {
+        let overlay = UIView()
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        overlay.isHidden = true
+        return overlay
+    }()
+
     private lazy var textField = TextFieldView(
         field: .init(
             mode: .create,
@@ -81,13 +89,8 @@ public final class FolderViewController: CollectionViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        // Navigation
-        updateNavigationBarAppearance(isTransparent: vm.showTextField)
         // textField
-        textField.isHidden = !vm.showTextField
-        if vm.showTextField {
-            view.bringSubviewToFront(textField)
-        }
+        updateTextFieldAlert()
         syncTextFieldField()
         // error Message
         updateErrorMessage()
@@ -99,15 +102,31 @@ public final class FolderViewController: CollectionViewController {
 
     private func setup() {
         collectionView.showsVerticalScrollIndicator = false
+
+        // 1. overlay — 화면 전체를 덮는 반투명 배경
+        view.addSubview(textFieldAlertOverlayView)
+
+        // 2. layoutGuide — 키보드 위 영역을 잡는 가이드 (overlay 위)
         let containerGuide = UILayoutGuide()
-        view.addLayoutGuide(containerGuide)
-        view.addSubview(textField)
+        textFieldAlertOverlayView.addLayoutGuide(containerGuide)
+
+        // 3. textField — containerGuide 중앙에 배치 (overlay 위)
+        textFieldAlertOverlayView.addSubview(textField)
 
         NSLayoutConstraint.activate([
+            // overlay: 화면 전체
+            textFieldAlertOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            textFieldAlertOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            textFieldAlertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            textFieldAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            // containerGuide: safeArea top ~ 키보드 top
             containerGuide.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            containerGuide.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            containerGuide.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            containerGuide.leadingAnchor.constraint(equalTo: textFieldAlertOverlayView.leadingAnchor),
+            containerGuide.trailingAnchor.constraint(equalTo: textFieldAlertOverlayView.trailingAnchor),
             containerGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
+
+            // textField: containerGuide 중앙
             textField.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
             textField.centerYAnchor.constraint(equalTo: containerGuide.centerYAnchor),
             textField.centerXAnchor.constraint(equalTo: containerGuide.centerXAnchor),
@@ -212,6 +231,22 @@ extension FolderViewController {
             textField.field.text = vm.editFolder?.name ?? ""
         }
     }
+
+    private func updateTextFieldAlert() {
+        let shouldShowAlert = vm.showTextField
+        textFieldAlertOverlayView.isHidden = !shouldShowAlert
+        updateInteractionForAlert(isPresented: shouldShowAlert)
+        if shouldShowAlert {
+            view.bringSubviewToFront(textFieldAlertOverlayView)
+        }
+        updateNavigationBarAppearance(isTransparent: shouldShowAlert)
+    }
+
+    func updateInteractionForAlert(isPresented: Bool) {
+        collectionView.isUserInteractionEnabled = !isPresented
+        backButton.isUserInteractionEnabled = !isPresented
+        addButton.isUserInteractionEnabled = !isPresented
+    }
 }
 
 // MARK: - Diffable DataSource
@@ -266,6 +301,8 @@ public extension FolderViewController {
             [weak self] _, _, completion in
             if case .folder(let folder) = item {
                 self?.vm.move(folder: folder)
+                // Swipe 종료 애니메이션과 목록 갱신 타이밍이 어긋나면 셀이 튕겨 보일 수 있어 즉시 반영합니다.
+                self?.updateDataSource(animated: false)
             }
             completion(true)
         }
@@ -281,7 +318,9 @@ public extension FolderViewController {
         editAction.backgroundColor = UIColor.gray500
         editAction.image = UIImage(systemName: "pencil")
 
-        return UISwipeActionsConfiguration(actions: [deleteAction, editAction])
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction, editAction])
+        configuration.performsFirstActionWithFullSwipe = false
+        return configuration
     }
 }
 

@@ -73,7 +73,8 @@ public final class FolderDetailViewController: CollectionViewController {
         title: "기록을 삭제할까요?",
         subTitle: "휴지통으로 이동되며,\n직접 비우기 전까지 보관돼요.",
         closeButton: cancelAlertButton,
-        primaryButton: primaryAlertButton
+        primaryButton: primaryAlertButton,
+        tintColor: .gray200.withAlphaComponent(0.2)
     )
 
     private let vm: FolderDetailViewModel

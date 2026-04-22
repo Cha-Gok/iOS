@@ -95,6 +95,7 @@ final class TextFieldView: UIView {
         self.cancelButton = cancelButton
         self.primaryButton = primaryButton
         super.init(frame: .zero)
+        applyGlassEffect(tintColor: .gray200.withAlphaComponent(0.2))
         setup()
     }
 
