@@ -49,7 +49,7 @@ final class AudioPlayerView: UIView {
         return UIButton(configuration: config)
     }()
 
-    private let progressSlider = TrackTappableSlider()
+    private let progressView = PlaybackProgressView()
 
     private lazy var durationStackView: UIStackView = {
         let stackView = UIStackView()
@@ -89,18 +89,17 @@ final class AudioPlayerView: UIView {
         var config = playPauseButton.configuration
         config?.image = state.status == .playing ? UIImage(systemName: "pause.fill") : UIImage(systemName: "play.fill")
         playPauseButton.configuration = config
-        progressSlider.maximumValue = Float(state.duration)
-
-        // 사용자가 슬라이더를 만지는 동안에는 재생 위치로 덮어쓰지 않는다.
-        guard !progressSlider.isTracking else { return }
-        currentTimeLabel.text = state.currentTime.durationString
-        progressSlider.value = Float(state.currentTime)
+        progressView.setDuration(state.duration)
+        progressView.setCurrentTime(state.currentTime)
+        if !progressView.isInteracting {
+            currentTimeLabel.text = state.currentTime.durationString
+        }
     }
 
     private func setupUI() {
         backgroundColor = .gray0
 
-        for view in [progressSlider, durationStackView, buttonStackView] {
+        for view in [progressView, durationStackView, buttonStackView] {
             view.translatesAutoresizingMaskIntoConstraints = false
             addSubview(view)
         }
@@ -115,11 +114,12 @@ final class AudioPlayerView: UIView {
             forwardButton.widthAnchor.constraint(equalToConstant: 60),
             forwardButton.heightAnchor.constraint(equalToConstant: 60),
 
-            progressSlider.topAnchor.constraint(equalTo: topAnchor),
-            progressSlider.leadingAnchor.constraint(equalTo: leadingAnchor),
-            progressSlider.trailingAnchor.constraint(equalTo: trailingAnchor),
+            progressView.topAnchor.constraint(equalTo: topAnchor),
+            progressView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            progressView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            progressView.heightAnchor.constraint(equalToConstant: 8),
 
-            durationStackView.topAnchor.constraint(equalTo: progressSlider.bottomAnchor, constant: 18),
+            durationStackView.topAnchor.constraint(equalTo: progressView.bottomAnchor, constant: 18),
             durationStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
             durationStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
 
@@ -134,41 +134,23 @@ final class AudioPlayerView: UIView {
         rewindButton.addAction(UIAction { [weak self] _ in self?.onRewind?() }, for: .touchUpInside)
         playPauseButton.addAction(UIAction { [weak self] _ in self?.onPlayPause?() }, for: .touchUpInside)
         forwardButton.addAction(UIAction { [weak self] _ in self?.onForward?() }, for: .touchUpInside)
-        progressSlider.addAction(UIAction { [weak self] _ in
-            self?.onSeekBegan?()
-        }, for: .touchDown)
-        progressSlider.addAction(UIAction { [weak self] _ in
-            guard let self else { return }
-            onSeekEnded?(TimeInterval(progressSlider.value))
-        }, for: [.touchUpInside, .touchUpOutside])
-        // 드래그 중 시간 레이블만 실시간 업데이트
-        progressSlider.addAction(UIAction { [weak self] _ in
-            guard let self else { return }
-            currentTimeLabel.text = TimeInterval(progressSlider.value).durationString
-        }, for: .valueChanged)
+
+        progressView.onSeekBegan = { [weak self] in self?.onSeekBegan?() }
+        progressView.onValueChanging = { [weak self] time in
+            self?.currentTimeLabel.text = time.durationString
+        }
+        progressView.onSeekEnded = { [weak self] time in self?.onSeekEnded?(time) }
     }
 }
 
-private final class TrackTappableSlider: UISlider {
-    override func thumbRect(forBounds bounds: CGRect, trackRect rect: CGRect, value: Float) -> CGRect {
-        .zero
-    }
+#Preview("정지") {
+    let view = AudioPlayerView()
+    view.apply(AudioPlaybackState(status: .idle, currentTime: 0, duration: 180))
+    return view
+}
 
-    override func beginTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
-        updateValue(to: touch)
-        return true
-    }
-
-    override func continueTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
-        updateValue(to: touch)
-        return true
-    }
-
-    private func updateValue(to touch: UITouch) {
-        let location = touch.location(in: self)
-        let ratio = Float(max(0, min(1, location.x / bounds.width)))
-        let newValue = minimumValue + ratio * (maximumValue - minimumValue)
-        setValue(newValue, animated: false)
-        sendActions(for: .valueChanged)
-    }
+#Preview("재생 중") {
+    let view = AudioPlayerView()
+    view.apply(AudioPlaybackState(status: .playing, currentTime: 72, duration: 180))
+    return view
 }
