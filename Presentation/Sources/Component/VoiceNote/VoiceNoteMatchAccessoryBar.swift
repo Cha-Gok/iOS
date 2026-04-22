@@ -40,7 +40,7 @@ public final class VoiceNoteMatchAccessoryBar: UIView {
         backgroundColor = .gray200
         setupUI()
         setupActions()
-        configure(currentIndex: 0, total: 0)
+        configure(countText: "0 / 0", hasMatches: false)
     }
 
     @available(*, unavailable)
@@ -48,9 +48,8 @@ public final class VoiceNoteMatchAccessoryBar: UIView {
         nil
     }
 
-    public func configure(currentIndex: Int, total: Int) {
-        countLabel.text = "\(currentIndex) / \(total)"
-        let hasMatches = total > 0
+    public func configure(countText: String, hasMatches: Bool) {
+        countLabel.text = countText
         prevButton.isEnabled = hasMatches
         nextButton.isEnabled = hasMatches
         prevButton.tintColor = hasMatches ? .gray950 : .gray600

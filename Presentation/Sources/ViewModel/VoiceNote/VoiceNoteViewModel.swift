@@ -437,6 +437,18 @@ public extension VoiceNoteViewModel {
         guard matches.indices.contains(currentMatchIndex) else { return nil }
         return matches[currentMatchIndex]
     }
+
+    /// 매치 카운트 표시 문자열 ("현재 / 전체" 포맷, 매치 없으면 "0 / 0").
+    var matchCountText: String {
+        let total = currentPageMatches.count
+        let display = total > 0 ? currentMatchIndex + 1 : 0
+        return "\(display) / \(total)"
+    }
+
+    /// 현재 페이지에 매치가 하나 이상 있는지 여부.
+    var hasCurrentPageMatches: Bool {
+        !currentPageMatches.isEmpty
+    }
 }
 
 // MARK: - Nested Types

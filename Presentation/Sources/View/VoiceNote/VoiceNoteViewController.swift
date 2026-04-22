@@ -124,7 +124,7 @@ private extension VoiceNoteViewController {
             dimOverlayView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             dimOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             dimOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            dimOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            dimOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 
@@ -188,7 +188,7 @@ private extension VoiceNoteViewController {
             },
             UIAction(title: "삭제하기", attributes: .destructive) { [weak self] _ in
                 self?.viewModel.deleteVoiceNote()
-            },
+            }
         ])
         searchItem.primaryAction = UIAction { [weak self] _ in
             self?.viewModel.enterSearchMode()
@@ -220,6 +220,12 @@ private extension VoiceNoteViewController {
         }
         searchBar.onClose = { [weak self] in
             self?.viewModel.exitSearchMode()
+        }
+        searchBar.onMatchPrev = { [weak self] in
+            self?.viewModel.previousMatch()
+        }
+        searchBar.onMatchNext = { [weak self] in
+            self?.viewModel.nextMatch()
         }
     }
 
@@ -416,6 +422,11 @@ private extension VoiceNoteViewController {
         let scriptCount = isSearching ? viewModel.scriptMatches.count : nil
         segmentedControl.setCount(summaryCount, at: Page.summary.rawValue)
         segmentedControl.setCount(scriptCount, at: Page.script.rawValue)
+
+        searchBar.configureMatch(
+            countText: viewModel.matchCountText,
+            hasMatches: viewModel.hasCurrentPageMatches
+        )
 
         updateNavigationItems()
 

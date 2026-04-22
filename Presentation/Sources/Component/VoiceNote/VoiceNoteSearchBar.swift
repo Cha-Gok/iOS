@@ -4,6 +4,8 @@ public final class VoiceNoteSearchBar: UIView {
     public var onQueryChanged: ((String) -> Void)?
     public var onClose: (() -> Void)?
     public var onReturn: (() -> Void)?
+    public var onMatchPrev: (() -> Void)?
+    public var onMatchNext: (() -> Void)?
 
     private let matchAccessoryBar = VoiceNoteMatchAccessoryBar()
 
@@ -55,6 +57,8 @@ public final class VoiceNoteSearchBar: UIView {
         setupUI()
         setupActions()
         textField.inputAccessoryView = matchAccessoryBar
+        matchAccessoryBar.onPrev = { [weak self] in self?.onMatchPrev?() }
+        matchAccessoryBar.onNext = { [weak self] in self?.onMatchNext?() }
     }
 
     @available(*, unavailable)
@@ -78,6 +82,10 @@ public final class VoiceNoteSearchBar: UIView {
 
     public func setQuery(_ query: String) {
         textField.text = query
+    }
+
+    public func configureMatch(countText: String, hasMatches: Bool) {
+        matchAccessoryBar.configure(countText: countText, hasMatches: hasMatches)
     }
 
     // MARK: - Setup
