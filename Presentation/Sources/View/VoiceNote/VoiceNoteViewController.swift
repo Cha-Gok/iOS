@@ -121,10 +121,13 @@ private extension VoiceNoteViewController {
             pageViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             pageViewController.view.bottomAnchor.constraint(equalTo: contentBottomGuide.topAnchor),
 
-            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            segmentedControl.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor,
+                constant: Constant.underlineSegmentedControlTopMargin
+            ),
             segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            segmentedControl.heightAnchor.constraint(equalToConstant: 42),
+            segmentedControl.heightAnchor.constraint(equalToConstant: Constant.underlineSegmentedControlHeight),
 
             bottomFadeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomFadeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),

@@ -100,17 +100,7 @@ extension MainCoordinator: FolderCoordinatorDelegate {
 
 extension MainCoordinator: FolderDetailCoordinatorDelegate {
     func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?) {
-        let coordinator = MoveFolderCoordinator(
-            dependencyContainer: dependencyContainer,
-            voiceNotes: voiceNotes,
-            onComplete: onComplete,
-            onFinish: { [weak self] coordinator in
-                self?.free(coordinator: coordinator)
-            }
-        )
-        store(coordinator: coordinator)
-        coordinator.start()
-        presenter.present(coordinator.presenter, animated: true)
+        presentMoveFolder(voiceNotes: voiceNotes, onComplete: onComplete, topDetentStyle: .belowNavigationBar)
     }
 }
 
@@ -120,4 +110,31 @@ extension MainCoordinator: TrashCoordinatorDelegate {}
 
 // MARK: - VoiceNoteCoordinatorDelegate
 
-extension MainCoordinator: VoiceNoteCoordinatorDelegate {}
+extension MainCoordinator: VoiceNoteCoordinatorDelegate {
+    func presentMoveFolder(for voiceNote: VoiceNote, onComplete: ((String) -> Void)?) {
+        presentMoveFolder(voiceNotes: [voiceNote], onComplete: onComplete, topDetentStyle: .belowSegmentControl)
+    }
+}
+
+// MARK: - Helpers
+
+private extension MainCoordinator {
+    func presentMoveFolder(
+        voiceNotes: [VoiceNote],
+        onComplete: ((String) -> Void)?,
+        topDetentStyle: MoveFolderCoordinator.TopDetentStyle
+    ) {
+        let coordinator = MoveFolderCoordinator(
+            dependencyContainer: dependencyContainer,
+            voiceNotes: voiceNotes,
+            onComplete: onComplete,
+            topDetentStyle: topDetentStyle,
+            onFinish: { [weak self] coordinator in
+                self?.free(coordinator: coordinator)
+            }
+        )
+        store(coordinator: coordinator)
+        coordinator.start()
+        presenter.present(coordinator.presenter, animated: true)
+    }
+}

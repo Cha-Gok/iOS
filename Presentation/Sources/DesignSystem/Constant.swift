@@ -223,6 +223,16 @@ public extension Constant {
     static let underlineTabIndicatorHeight: CGFloat = 2
 }
 
+// MARK: - UnderlineSegmentedControl Constants
+
+public extension Constant {
+    /// UnderlineSegmentedControl 표준 높이 (42)
+    static let underlineSegmentedControlHeight: CGFloat = 42
+
+    /// UnderlineSegmentedControl 상단 여백 (safeArea 기준, 16)
+    static let underlineSegmentedControlTopMargin: CGFloat = 16
+}
+
 // MARK: - BackgroundView Constants
 
 public extension Constant {

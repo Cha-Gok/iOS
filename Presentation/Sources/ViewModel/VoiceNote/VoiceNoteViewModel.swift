@@ -5,7 +5,7 @@ import Foundation
 @MainActor
 public protocol VoiceNoteCoordinatorDelegate: AnyObject {
     func pop()
-    func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?)
+    func presentMoveFolder(for voiceNote: VoiceNote, onComplete: ((String) -> Void)?)
 }
 
 @MainActor
@@ -23,9 +23,12 @@ public final class VoiceNoteViewModel {
     public private(set) var searchQuery: String = ""
     public private(set) var currentMatchIndex: Int = 0
 
-    @ObservationIgnored private var playbackObservationTask: Task<Void, Never>?
-    @ObservationIgnored private var voiceNoteObservationTask: Task<Void, Never>?
-    @ObservationIgnored private var wasPlayingBeforeSeek = false
+    @ObservationIgnored
+    private var playbackObservationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var voiceNoteObservationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var wasPlayingBeforeSeek = false
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
     // MARK: - UseCases
@@ -106,7 +109,7 @@ public final class VoiceNoteViewModel {
     }
 
     public func moveVoiceNote(onComplete: ((String) -> Void)? = nil) {
-        coordinator?.presentFolderList(with: [voiceNote], onComplete: onComplete)
+        coordinator?.presentMoveFolder(for: voiceNote, onComplete: onComplete)
     }
 
     public func enterTitleEditing() {
