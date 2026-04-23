@@ -210,7 +210,9 @@ private extension VoiceNoteViewController {
         }
         moreItem.menu = UIMenu(children: [
             UIAction(title: "기록 이동하기") { [weak self] _ in
-                self?.viewModel.moveVoiceNote()
+                self?.viewModel.moveVoiceNote { [weak self] name in
+                    self?.view.makeToast(type: .normal, "`\(name)` 폴더로 이동됐어요.")
+                }
             },
             UIAction(title: "편집하기") { [weak self] _ in
                 self?.viewModel.enterScriptEditing()

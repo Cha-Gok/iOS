@@ -105,8 +105,8 @@ public final class VoiceNoteViewModel {
         coordinator?.pop()
     }
 
-    public func moveVoiceNote() {
-        coordinator?.presentFolderList(with: [voiceNote], onComplete: nil)
+    public func moveVoiceNote(onComplete: ((String) -> Void)? = nil) {
+        coordinator?.presentFolderList(with: [voiceNote], onComplete: onComplete)
     }
 
     public func enterTitleEditing() {
