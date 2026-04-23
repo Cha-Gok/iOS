@@ -235,6 +235,7 @@ public final class VoiceNoteViewModel {
     }
 
     public func regenerateSummary() {
+        if searchMode { exitSearchMode() }
         voiceNoteUseCase.regenerateSummary(id: voiceNote.id)
     }
 
