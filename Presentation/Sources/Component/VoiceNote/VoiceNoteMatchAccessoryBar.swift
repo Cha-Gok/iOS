@@ -6,7 +6,6 @@ public final class VoiceNoteMatchAccessoryBar: UIView {
 
     private let countLabel: TypographyLabel = {
         let label = TypographyLabel(typography: .title3)
-        label.text = "1 / 2"
         label.textColor = .gray950
         label.textAlignment = .center
         return label

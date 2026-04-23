@@ -73,7 +73,10 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
 
     // MARK: - Responder
 
-    override public var canBecomeFirstResponder: Bool { viewModel.searchMode }
+    override public var canBecomeFirstResponder: Bool {
+        viewModel.searchMode
+    }
+
     override public var inputAccessoryView: UIView? {
         viewModel.searchMode ? matchAccessoryBar : nil
     }
@@ -301,7 +304,8 @@ private extension VoiceNoteViewController {
         let target = pages[page.rawValue]
         if let current = pageViewController.viewControllers?.first,
            let currentIndex = pages.firstIndex(of: current),
-           current !== target {
+           current !== target
+        {
             let direction: UIPageViewController.NavigationDirection = page.rawValue > currentIndex ? .forward : .reverse
             pageViewController.setViewControllers([target], direction: direction, animated: true)
         }
