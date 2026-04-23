@@ -129,6 +129,10 @@ public final class AppDIContainer {
     public func makeNewFolderViewModel() -> NewFolderViewModel {
         return NewFolderViewModel(folderUseCase: folderUseCase)
     }
+    
+    public func makeSearchViewModel() -> SearchViewModel {
+        return SearchViewModel()
+    }
 
     #if DEBUG
         public func seedDebugDataIfNeeded() {

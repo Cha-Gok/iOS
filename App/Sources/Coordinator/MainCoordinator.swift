@@ -67,6 +67,13 @@ extension MainCoordinator: MainCoordinatorDelegate {
         let voiceNoteVC = VoiceNoteViewController(viewModel: voiceNoteVM)
         presenter.pushViewController(voiceNoteVC, animated: true)
     }
+    
+    func pushSearchView() {
+        let searchVM = dependencyContainer.makeSearchViewModel()
+        let searchVC = SearchViewController(vm: searchVM)
+        
+        presenter.pushViewController(searchVC, animated: true)
+    }
 
     // TODO: Present
 
