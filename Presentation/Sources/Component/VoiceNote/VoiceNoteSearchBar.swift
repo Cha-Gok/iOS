@@ -3,7 +3,6 @@ import UIKit
 public final class VoiceNoteSearchBar: UIView {
     public var onClose: (() -> Void)?
     public var onReturn: ((String) -> Void)?
-    public var onEditingEnded: (() -> Void)?
 
     private let searchContainer: UIVisualEffectView = {
         let effect = UIGlassEffect(style: .clear)
@@ -77,10 +76,6 @@ public final class VoiceNoteSearchBar: UIView {
         textField.text = query
     }
 
-    public func setFieldInputAccessoryView(_ view: UIView?) {
-        textField.inputAccessoryView = view
-    }
-
     // MARK: - Setup
 
     private func setupUI() {
@@ -127,10 +122,6 @@ public final class VoiceNoteSearchBar: UIView {
             guard let self else { return }
             onReturn?(textField.text ?? "")
         }, for: .editingDidEndOnExit)
-
-        textField.addAction(UIAction { [weak self] _ in
-            self?.onEditingEnded?()
-        }, for: .editingDidEnd)
 
         closeButton.addAction(UIAction { [weak self] _ in
             self?.onClose?()

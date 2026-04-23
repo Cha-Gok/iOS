@@ -70,16 +70,6 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
         super.viewWillDisappear(animated)
         viewModel.onDisappear()
     }
-
-    // MARK: - Responder
-
-    override public var canBecomeFirstResponder: Bool {
-        viewModel.searchMode
-    }
-
-    override public var inputAccessoryView: UIView? {
-        viewModel.searchMode ? matchAccessoryBar : nil
-    }
 }
 
 // MARK: - Setup
@@ -88,15 +78,16 @@ private extension VoiceNoteViewController {
     func setupUI() {
         view.backgroundColor = UIColor.gray0
 
-        addChild(pageViewController)
-        pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
-
         view.addSubview(pageViewController.view)
         view.addSubview(bottomFadeView)
         view.addSubview(playerView)
         view.addSubview(segmentedControl)
         view.addSubview(dimOverlayView)
+        view.addSubview(matchAccessoryBar)
+        matchAccessoryBar.isHidden = true
 
+        addChild(pageViewController)
+        pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
         pageViewController.didMove(toParent: self)
 
         setupConstraints()
@@ -108,7 +99,14 @@ private extension VoiceNoteViewController {
     }
 
     func setupConstraints() {
-        for subview in [pageViewController.view, playerView, segmentedControl, bottomFadeView, dimOverlayView] {
+        for subview in [
+            pageViewController.view,
+            playerView,
+            segmentedControl,
+            bottomFadeView,
+            dimOverlayView,
+            matchAccessoryBar
+        ] {
             subview?.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -135,7 +133,11 @@ private extension VoiceNoteViewController {
             dimOverlayView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             dimOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             dimOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            dimOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            dimOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            matchAccessoryBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            matchAccessoryBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            matchAccessoryBar.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor)
         ])
     }
 
@@ -226,17 +228,11 @@ private extension VoiceNoteViewController {
     }
 
     func setupSearchBar() {
-        searchBar.setFieldInputAccessoryView(matchAccessoryBar)
         searchBar.onReturn = { [weak self] query in
             self?.viewModel.updateSearchQuery(query)
         }
         searchBar.onClose = { [weak self] in
             self?.viewModel.exitSearchMode()
-        }
-        searchBar.onEditingEnded = { [weak self] in
-            guard let self, viewModel.searchMode else { return }
-            becomeFirstResponder()
-            reloadInputViews()
         }
         matchAccessoryBar.onPrev = { [weak self] in
             self?.viewModel.previousMatch()
@@ -448,15 +444,12 @@ private extension VoiceNoteViewController {
 
         if didToggle {
             playerView.isHidden = isSearching
+            matchAccessoryBar.isHidden = !isSearching
             if isSearching {
-                becomeFirstResponder()
-                reloadInputViews()
                 searchBar.becomeFirstResponder()
             } else {
                 searchBar.setQuery("")
                 searchBar.resignFirstResponder()
-                resignFirstResponder()
-                reloadInputViews()
             }
         }
 
