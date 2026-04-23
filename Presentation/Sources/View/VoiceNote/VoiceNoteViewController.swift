@@ -135,9 +135,9 @@ private extension VoiceNoteViewController {
             dimOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             dimOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            matchAccessoryBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            matchAccessoryBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            matchAccessoryBar.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor)
+            matchAccessoryBar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            matchAccessoryBar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            matchAccessoryBar.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: -8)
         ])
     }
 
