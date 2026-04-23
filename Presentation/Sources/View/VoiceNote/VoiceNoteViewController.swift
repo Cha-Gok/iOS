@@ -17,8 +17,9 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let matchAccessoryBar = VoiceNoteMatchAccessoryBar()
 
     private var searchModeLastApplied = false
-    private var bottomFadeToPlayerTop: NSLayoutConstraint?
-    private var bottomFadeToViewBottom: NSLayoutConstraint?
+    private let contentBottomGuide = UILayoutGuide()
+    private var contentBottomToPlayerTop: NSLayoutConstraint?
+    private var contentBottomToViewBottom: NSLayoutConstraint?
     private let dimOverlayView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.dimBackground
@@ -112,11 +113,13 @@ private extension VoiceNoteViewController {
             subview?.translatesAutoresizingMaskIntoConstraints = false
         }
 
+        view.addLayoutGuide(contentBottomGuide)
+
         NSLayoutConstraint.activate([
             pageViewController.view.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
             pageViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             pageViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            pageViewController.view.bottomAnchor.constraint(equalTo: playerView.topAnchor),
+            pageViewController.view.bottomAnchor.constraint(equalTo: contentBottomGuide.topAnchor),
 
             segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -126,10 +129,15 @@ private extension VoiceNoteViewController {
             bottomFadeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomFadeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bottomFadeView.heightAnchor.constraint(equalToConstant: 169),
+            bottomFadeView.bottomAnchor.constraint(equalTo: contentBottomGuide.topAnchor),
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
+            contentBottomGuide.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            contentBottomGuide.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            contentBottomGuide.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
             dimOverlayView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             dimOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -144,9 +152,9 @@ private extension VoiceNoteViewController {
             matchAccessoryBar.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: -8)
         ])
 
-        bottomFadeToPlayerTop = bottomFadeView.bottomAnchor.constraint(equalTo: playerView.topAnchor)
-        bottomFadeToViewBottom = bottomFadeView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        bottomFadeToPlayerTop?.isActive = true
+        contentBottomToPlayerTop = contentBottomGuide.topAnchor.constraint(equalTo: playerView.topAnchor)
+        contentBottomToViewBottom = contentBottomGuide.topAnchor.constraint(equalTo: view.bottomAnchor)
+        contentBottomToPlayerTop?.isActive = true
     }
 
     func setupDimOverlay() {
@@ -453,8 +461,8 @@ private extension VoiceNoteViewController {
         if didToggle {
             playerView.isHidden = isSearching
             matchAccessoryBar.isHidden = !isSearching
-            bottomFadeToPlayerTop?.isActive = !isSearching
-            bottomFadeToViewBottom?.isActive = isSearching
+            contentBottomToPlayerTop?.isActive = !isSearching
+            contentBottomToViewBottom?.isActive = isSearching
             if isSearching {
                 searchBar.becomeFirstResponder()
             } else {
