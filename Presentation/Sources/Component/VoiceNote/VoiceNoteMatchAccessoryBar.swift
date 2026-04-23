@@ -71,7 +71,7 @@ public final class VoiceNoteMatchAccessoryBar: UIView {
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             stackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             stackView.topAnchor.constraint(equalTo: topAnchor, constant: 12),
-            stackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12)
+            stackView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -12)
         ])
     }
 
