@@ -6,6 +6,7 @@ struct KeyPointContentConfiguration: UIContentConfiguration {
     var number: Int = 0
     var text: String = ""
     var searchQuery: String = ""
+    var currentMatchRange: NSRange?
 
     func makeContentView() -> UIView & UIContentView {
         KeyPointContentView(configuration: self)
@@ -103,7 +104,9 @@ final class KeyPointContentView: UIView, UIContentView {
             textLabel.attributedText = config.text.highlighted(
                 query: config.searchQuery,
                 baseAttributes: Typography.body1.textAttributes,
-                highlightBackgroundColor: UIColor.point700
+                highlightBackgroundColor: UIColor.point700,
+                focusedRange: config.currentMatchRange,
+                focusedHighlightBackgroundColor: .systemRed
             )
         }
     }
