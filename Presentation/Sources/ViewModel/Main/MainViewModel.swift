@@ -147,6 +147,10 @@ extension MainViewModel {
     func presentRecodingView() {
         mainCoordinator?.presentRecodingView()
     }
+    
+    func pushSearchView() {
+        mainCoordinator?.pushSearchView()
+    }
 }
 
 // MARK: - Update CategoryData
