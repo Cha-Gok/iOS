@@ -3,10 +3,7 @@ import UIKit
 public final class VoiceNoteSearchBar: UIView {
     public var onClose: (() -> Void)?
     public var onReturn: ((String) -> Void)?
-    public var onMatchPrev: (() -> Void)?
-    public var onMatchNext: (() -> Void)?
-
-    private let matchAccessoryBar = VoiceNoteMatchAccessoryBar()
+    public var onEditingEnded: (() -> Void)?
 
     private let searchContainer: UIVisualEffectView = {
         let effect = UIGlassEffect(style: .clear)
@@ -55,9 +52,6 @@ public final class VoiceNoteSearchBar: UIView {
         super.init(frame: .zero)
         setupUI()
         setupActions()
-        textField.inputAccessoryView = matchAccessoryBar
-        matchAccessoryBar.onPrev = { [weak self] in self?.onMatchPrev?() }
-        matchAccessoryBar.onNext = { [weak self] in self?.onMatchNext?() }
     }
 
     @available(*, unavailable)
@@ -83,8 +77,8 @@ public final class VoiceNoteSearchBar: UIView {
         textField.text = query
     }
 
-    public func configureMatch(countText: String, hasMatches: Bool) {
-        matchAccessoryBar.configure(countText: countText, hasMatches: hasMatches)
+    public func setFieldInputAccessoryView(_ view: UIView?) {
+        textField.inputAccessoryView = view
     }
 
     // MARK: - Setup
@@ -133,6 +127,10 @@ public final class VoiceNoteSearchBar: UIView {
             guard let self else { return }
             onReturn?(textField.text ?? "")
         }, for: .editingDidEndOnExit)
+
+        textField.addAction(UIAction { [weak self] _ in
+            self?.onEditingEnded?()
+        }, for: .editingDidEnd)
 
         closeButton.addAction(UIAction { [weak self] _ in
             self?.onClose?()

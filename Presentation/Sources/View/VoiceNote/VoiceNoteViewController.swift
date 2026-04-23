@@ -14,6 +14,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
     private let bottomFadeView = VoiceNoteBottomFadeView()
     private let searchBar = VoiceNoteSearchBar()
+    private let matchAccessoryBar = VoiceNoteMatchAccessoryBar()
 
     private var searchModeLastApplied = false
     private let dimOverlayView: UIView = {
@@ -68,6 +69,13 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     override public func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         viewModel.onDisappear()
+    }
+
+    // MARK: - Responder
+
+    override public var canBecomeFirstResponder: Bool { viewModel.searchMode }
+    override public var inputAccessoryView: UIView? {
+        viewModel.searchMode ? matchAccessoryBar : nil
     }
 }
 
@@ -215,16 +223,22 @@ private extension VoiceNoteViewController {
     }
 
     func setupSearchBar() {
+        searchBar.setFieldInputAccessoryView(matchAccessoryBar)
         searchBar.onReturn = { [weak self] query in
             self?.viewModel.updateSearchQuery(query)
         }
         searchBar.onClose = { [weak self] in
             self?.viewModel.exitSearchMode()
         }
-        searchBar.onMatchPrev = { [weak self] in
+        searchBar.onEditingEnded = { [weak self] in
+            guard let self, viewModel.searchMode else { return }
+            becomeFirstResponder()
+            reloadInputViews()
+        }
+        matchAccessoryBar.onPrev = { [weak self] in
             self?.viewModel.previousMatch()
         }
-        searchBar.onMatchNext = { [weak self] in
+        matchAccessoryBar.onNext = { [weak self] in
             self?.viewModel.nextMatch()
         }
     }
@@ -421,7 +435,7 @@ private extension VoiceNoteViewController {
         segmentedControl.setCount(viewModel.summaryMatchCount, at: Page.summary.rawValue)
         segmentedControl.setCount(viewModel.scriptMatchCount, at: Page.script.rawValue)
 
-        searchBar.configureMatch(
+        matchAccessoryBar.configure(
             countText: viewModel.matchCountText,
             hasMatches: viewModel.hasCurrentPageMatches
         )
@@ -429,13 +443,17 @@ private extension VoiceNoteViewController {
         updateNavigationItems()
 
         if didToggle {
+            playerView.isHidden = isSearching
             if isSearching {
+                becomeFirstResponder()
+                reloadInputViews()
                 searchBar.becomeFirstResponder()
             } else {
                 searchBar.setQuery("")
                 searchBar.resignFirstResponder()
+                resignFirstResponder()
+                reloadInputViews()
             }
-            view.layoutIfNeeded()
         }
 
         if let match = viewModel.currentMatch {
