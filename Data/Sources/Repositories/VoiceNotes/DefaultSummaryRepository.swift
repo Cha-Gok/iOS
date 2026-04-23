@@ -23,7 +23,9 @@ public struct DefaultSummaryRepository: SummaryRepository {
                 instructions: """
                 You summarize transcript text.
                 Extract 3 to 5 concise keywords.
-                Write a short summary in \(language.rawValue).
+                Write 1 to 3 concise key points in \(language.rawValue) that capture the main ideas.
+                Use fewer key points for short or single-topic transcripts, and more for longer or multi-topic ones.
+                Each key point should be a single standalone sentence without bullet markers or numbering.
                 Return content that matches the schema.
                 """
             )
@@ -31,7 +33,7 @@ public struct DefaultSummaryRepository: SummaryRepository {
             do {
                 let response = try await session.respond(
                     to: """
-                    Read the following transcript and generate keywords and a summary.
+                    Read the following transcript and generate keywords and key points.
 
                     Transcript:
                     \(transcript.sections.map(\.text).joined(separator: "\n"))
@@ -44,12 +46,15 @@ public struct DefaultSummaryRepository: SummaryRepository {
                     .filter { !$0.isEmpty }
                     .map { Keyword(noteID: transcript.id, word: $0) }
 
-                let summaryText = response.content.summary
-                    .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                let keyPoints = response.content.keyPoints
+                    .map { $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
 
-                guard !summaryText.isEmpty else {
+                guard !keyPoints.isEmpty else {
                     throw SummaryRepositoryError.summarizeFailed
                 }
+
+                let summaryText = keyPoints.joined(separator: "\n")
 
                 return (keywords, Summary(text: summaryText))
 
