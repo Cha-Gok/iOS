@@ -97,7 +97,7 @@ extension VoiceNoteViewModelSearchTest {
         XCTAssertEqual(sut.playbackRepository.pauseCallCount - pausesBefore, 1)
     }
 
-    func test_검색모드종료시_wasPlaying이었으면_다시재생된다() async {
+    func test_검색모드종료시_재생중이었어도_재생을호출하지않는다() async {
         // Given
         let sut = makeSUT()
         await activatePlayback(sut, status: .playing)
@@ -110,10 +110,10 @@ extension VoiceNoteViewModelSearchTest {
         // Then
         XCTAssertFalse(sut.viewModel.searchMode)
         XCTAssertEqual(sut.viewModel.searchQuery, "")
-        XCTAssertEqual(sut.playbackRepository.playCallCount - playsBefore, 1)
+        XCTAssertEqual(sut.playbackRepository.playCallCount - playsBefore, 0)
     }
 
-    func test_검색모드종료시_wasPlaying이아니면_재생을호출하지않는다() async {
+    func test_검색모드종료시_재생중이아니었으면_재생을호출하지않는다() async {
         // Given
         let sut = makeSUT()
         await activatePlayback(sut, status: .idle)
