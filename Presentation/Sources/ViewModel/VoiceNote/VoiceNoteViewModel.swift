@@ -23,14 +23,9 @@ public final class VoiceNoteViewModel {
     public private(set) var searchQuery: String = ""
     public private(set) var currentMatchIndex: Int = 0
 
-    @ObservationIgnored
-    private var playbackObservationTask: Task<Void, Never>?
-    @ObservationIgnored
-    private var voiceNoteObservationTask: Task<Void, Never>?
-    @ObservationIgnored
-    private var wasPlayingBeforeSeek = false
-    @ObservationIgnored
-    private var wasPlayingBeforeSearch = false
+    @ObservationIgnored private var playbackObservationTask: Task<Void, Never>?
+    @ObservationIgnored private var voiceNoteObservationTask: Task<Void, Never>?
+    @ObservationIgnored private var wasPlayingBeforeSeek = false
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
     // MARK: - UseCases
@@ -142,8 +137,7 @@ public final class VoiceNoteViewModel {
         searchMode = true
         searchQuery = ""
         currentMatchIndex = 0
-        wasPlayingBeforeSearch = currentPlaybackState.status == .playing
-        if wasPlayingBeforeSearch { pause() }
+        if currentPlaybackState.status == .playing { pause() }
     }
 
     public func exitSearchMode() {
@@ -151,10 +145,6 @@ public final class VoiceNoteViewModel {
         searchMode = false
         searchQuery = ""
         currentMatchIndex = 0
-        if wasPlayingBeforeSearch {
-            wasPlayingBeforeSearch = false
-            play()
-        }
     }
 
     public func updateSearchQuery(_ query: String) {
