@@ -299,12 +299,12 @@ private extension VoiceNoteViewController {
         segmentedControl.selectSegment(index: page.rawValue)
 
         let target = pages[page.rawValue]
-        guard let current = pageViewController.viewControllers?.first,
-              let currentIndex = pages.firstIndex(of: current),
-              current !== target else { return }
-
-        let direction: UIPageViewController.NavigationDirection = page.rawValue > currentIndex ? .forward : .reverse
-        pageViewController.setViewControllers([target], direction: direction, animated: true)
+        if let current = pageViewController.viewControllers?.first,
+           let currentIndex = pages.firstIndex(of: current),
+           current !== target {
+            let direction: UIPageViewController.NavigationDirection = page.rawValue > currentIndex ? .forward : .reverse
+            pageViewController.setViewControllers([target], direction: direction, animated: true)
+        }
 
         if viewModel.searchMode {
             applySearchState()
