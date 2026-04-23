@@ -1,7 +1,7 @@
 import Domain
 import UIKit
 
-public final class MoveFolderListViewController: UIViewController {
+public final class MoveFolderListViewController: UIViewController, Alertable {
     private let viewModel: MoveFolderListViewModel
 
     public init(viewModel: MoveFolderListViewModel) {
@@ -98,6 +98,11 @@ public final class MoveFolderListViewController: UIViewController {
         moveButton.isEnabled = isEnabled
         moveButton.configuration?.baseBackgroundColor = isEnabled ? .point600 : .gray300
         moveButton.configuration?.baseForegroundColor = isEnabled ? .gray950 : .gray600
+
+        if let message = viewModel.state.errorMessage {
+            viewModel.send(.view(.errorMessageDismissed))
+            showAlert(message: message)
+        }
     }
 
     private func makeDataSource() -> DataSource {
@@ -142,7 +147,7 @@ public final class MoveFolderListViewController: UIViewController {
             folderListView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             folderListView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
-            moveButton.topAnchor.constraint(equalTo: folderListView.bottomAnchor, constant: 53),
+            moveButton.topAnchor.constraint(equalTo: folderListView.bottomAnchor, constant: 24),
             moveButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             moveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             moveButton.heightAnchor.constraint(equalToConstant: 54),

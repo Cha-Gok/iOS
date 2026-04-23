@@ -18,7 +18,7 @@ final class MockFolderDetailCoordinatorDelegate: FolderDetailCoordinatorDelegate
         pushedVoiceNote = voiceNote
     }
 
-    func presentFolderList(with receive: Receive, dismiss: ((String) -> Void)?) {
+    func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?) {
         presentFolderListCalled = true
     }
 }

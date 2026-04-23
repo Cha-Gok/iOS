@@ -2,7 +2,11 @@ import Core
 import Domain
 import Foundation
 
-public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {}
+@MainActor
+public protocol VoiceNoteCoordinatorDelegate: AnyObject {
+    func pop()
+    func presentMoveFolder(for voiceNote: VoiceNote, onComplete: ((String) -> Void)?)
+}
 
 @MainActor
 @Observable
@@ -25,8 +29,6 @@ public final class VoiceNoteViewModel {
     private var voiceNoteObservationTask: Task<Void, Never>?
     @ObservationIgnored
     private var wasPlayingBeforeSeek = false
-    @ObservationIgnored
-    private var wasPlayingBeforeSearch = false
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
     // MARK: - UseCases
@@ -106,8 +108,8 @@ public final class VoiceNoteViewModel {
         coordinator?.pop()
     }
 
-    public func moveVoiceNote() {
-        coordinator?.presentFolderList(with: .single(voiceNote))
+    public func moveVoiceNote(onComplete: ((String) -> Void)? = nil) {
+        coordinator?.presentMoveFolder(for: voiceNote, onComplete: onComplete)
     }
 
     public func enterTitleEditing() {
@@ -138,8 +140,7 @@ public final class VoiceNoteViewModel {
         searchMode = true
         searchQuery = ""
         currentMatchIndex = 0
-        wasPlayingBeforeSearch = currentPlaybackState.status == .playing
-        if wasPlayingBeforeSearch { pause() }
+        if currentPlaybackState.status == .playing { pause() }
     }
 
     public func exitSearchMode() {
@@ -147,10 +148,6 @@ public final class VoiceNoteViewModel {
         searchMode = false
         searchQuery = ""
         currentMatchIndex = 0
-        if wasPlayingBeforeSearch {
-            wasPlayingBeforeSearch = false
-            play()
-        }
     }
 
     public func updateSearchQuery(_ query: String) {

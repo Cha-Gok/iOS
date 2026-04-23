@@ -119,14 +119,14 @@ public final class AppDIContainer {
     }
 
     public func makeMoveFolderListViewModel(
-        receive: Receive,
-        dismiss: ((String) -> Void)? = nil
+        voiceNotes: [VoiceNote],
+        onComplete: ((String) -> Void)? = nil
     ) -> MoveFolderListViewModel {
         return MoveFolderListViewModel(
-            receive: receive,
+            voiceNotes: voiceNotes,
             folderUseCase: folderUseCase,
             voiceNoteUseCase: voiceNoteUseCase,
-            onDismiss: dismiss
+            onComplete: onComplete
         )
     }
 

@@ -2,7 +2,8 @@ import Core
 import Domain
 import Foundation
 
-public protocol NewFolderCoordinatorDelegate: BaseCoordinatorDelegate {
+@MainActor
+public protocol NewFolderCoordinatorDelegate: AnyObject {
     func cancel()
     func folderCreated()
 }

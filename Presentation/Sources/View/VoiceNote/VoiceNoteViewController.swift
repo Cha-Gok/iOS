@@ -121,10 +121,13 @@ private extension VoiceNoteViewController {
             pageViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             pageViewController.view.bottomAnchor.constraint(equalTo: contentBottomGuide.topAnchor),
 
-            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            segmentedControl.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor,
+                constant: Constant.underlineSegmentedControlTopMargin
+            ),
             segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            segmentedControl.heightAnchor.constraint(equalToConstant: 42),
+            segmentedControl.heightAnchor.constraint(equalToConstant: Constant.underlineSegmentedControlHeight),
 
             bottomFadeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomFadeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -210,7 +213,9 @@ private extension VoiceNoteViewController {
         }
         moreItem.menu = UIMenu(children: [
             UIAction(title: "기록 이동하기") { [weak self] _ in
-                self?.viewModel.moveVoiceNote()
+                self?.viewModel.moveVoiceNote { [weak self] name in
+                    self?.view.makeToast(type: .normal, "`\(name)` 폴더로 이동됐어요.")
+                }
             },
             UIAction(title: "편집하기") { [weak self] _ in
                 self?.viewModel.enterScriptEditing()

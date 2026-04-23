@@ -3,8 +3,8 @@ import Domain
 import Foundation
 
 @MainActor
-public protocol FolderCoordinatorDelegate: BaseCoordinatorDelegate {
-    /// 개인 폴더 -> 상세 폴더 화면 이동 함수
+public protocol FolderCoordinatorDelegate: AnyObject {
+    func pop()
     func pushMyFolderDetailView(_ folder: Folder)
 }
 

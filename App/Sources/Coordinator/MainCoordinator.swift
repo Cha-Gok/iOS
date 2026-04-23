@@ -81,9 +81,13 @@ extension MainCoordinator: MainCoordinatorDelegate {
     }
 }
 
-// MARK: FolderCoordinating
+// MARK: - FolderCoordinatorDelegate
 
 extension MainCoordinator: FolderCoordinatorDelegate {
+    func pop() {
+        presenter.popViewController(animated: true)
+    }
+
     func pushMyFolderDetailView(_ folder: Folder) {
         let myFolderDetailVM = dependencyContainer.makeMyFolderDetailViewModel(folder)
         myFolderDetailVM.coordinator = self
@@ -92,92 +96,45 @@ extension MainCoordinator: FolderCoordinatorDelegate {
     }
 }
 
-// MARK: DetailFolderCoordinating
+// MARK: - FolderDetailCoordinatorDelegate
 
-extension MainCoordinator: FolderDetailCoordinatorDelegate {}
+extension MainCoordinator: FolderDetailCoordinatorDelegate {
+    func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?) {
+        presentMoveFolder(voiceNotes: voiceNotes, onComplete: onComplete, topDetentStyle: .belowNavigationBar)
+    }
+}
 
-// MARK: TrashCoordinating
+// MARK: - TrashCoordinatorDelegate
 
 extension MainCoordinator: TrashCoordinatorDelegate {}
 
-// MARK: VoiceNoteCoordinating
+// MARK: - VoiceNoteCoordinatorDelegate
 
-extension MainCoordinator: VoiceNoteCoordinatorDelegate {}
-
-// MARK: - NewFolderCoordinatorDelegate
-
-extension MainCoordinator: NewFolderCoordinatorDelegate {
-    func cancel() {
-        guard let nav = presenter.presentedViewController as? UINavigationController,
-              let sheet = nav.sheetPresentationController else { return }
-
-        nav.popViewController(animated: true)
-
-        sheet.animateChanges {
-            sheet.detents = [.medium()]
-        }
-    }
-
-    func folderCreated() {
-        guard let nav = presenter.presentedViewController as? UINavigationController,
-              let sheet = nav.sheetPresentationController else { return }
-
-        nav.popViewController(animated: true)
-
-        sheet.animateChanges {
-            sheet.detents = [.medium()]
-        }
+extension MainCoordinator: VoiceNoteCoordinatorDelegate {
+    func presentMoveFolder(for voiceNote: VoiceNote, onComplete: ((String) -> Void)?) {
+        presentMoveFolder(voiceNotes: [voiceNote], onComplete: onComplete, topDetentStyle: .belowSegmentControl)
     }
 }
 
-// MARK: - MoveFolderListCoordinatorDelegate
+// MARK: - Helpers
 
-extension MainCoordinator: MoveFolderListCoordinatorDelegate {
-    func dismiss() {
-        presenter.dismiss(animated: true)
-    }
-
-    func pushNewFolder() {
-        guard let nav = presenter.presentedViewController as? UINavigationController,
-              let sheet = nav.sheetPresentationController else { return }
-
-        let viewModel = dependencyContainer.makeNewFolderViewModel()
-        viewModel.coordinator = self
-        let newFolderVC = NewFolderViewController(viewModel: viewModel)
-        newFolderVC.view.layoutIfNeeded()
-
-        nav.pushViewController(newFolderVC, animated: true)
-
-        sheet.animateChanges {
-            sheet.detents = [.custom { [weak newFolderVC] _ in
-                newFolderVC?.preferredContentSize.height
-            }]
-        }
-    }
-}
-
-// MARK: Base 공통 함수 묶음
-
-extension MainCoordinator: BaseCoordinatorDelegate {
-    // TODO: Pop
-
-    func pop() {
-        presenter.popViewController(animated: true)
-    }
-
-    // TODO: Present 폴더 이동 시트 ( 사용 화면 - 음성 노트, 개인 폴더 )
-    func presentFolderList(with receive: Receive, dismiss: ((String) -> Void)?) {
-        let viewModel = dependencyContainer.makeMoveFolderListViewModel(receive: receive, dismiss: dismiss)
-        viewModel.coordinator = self
-        let viewController = MoveFolderListViewController(viewModel: viewModel)
-        let nav = UINavigationController(rootViewController: viewController)
-        nav.isNavigationBarHidden = true
-
-        if let sheet = nav.sheetPresentationController {
-            sheet.detents = [.medium()]
-            sheet.prefersGrabberVisible = true
-        }
-
-        presenter.present(nav, animated: true)
+private extension MainCoordinator {
+    func presentMoveFolder(
+        voiceNotes: [VoiceNote],
+        onComplete: ((String) -> Void)?,
+        topDetentStyle: MoveFolderCoordinator.TopDetentStyle
+    ) {
+        let coordinator = MoveFolderCoordinator(
+            dependencyContainer: dependencyContainer,
+            voiceNotes: voiceNotes,
+            onComplete: onComplete,
+            topDetentStyle: topDetentStyle,
+            onFinish: { [weak self] coordinator in
+                self?.free(coordinator: coordinator)
+            }
+        )
+        store(coordinator: coordinator)
+        coordinator.start()
+        presenter.present(coordinator.presenter, animated: true)
     }
 }
