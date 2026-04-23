@@ -17,6 +17,8 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let matchAccessoryBar = VoiceNoteMatchAccessoryBar()
 
     private var searchModeLastApplied = false
+    private var bottomFadeToPlayerTop: NSLayoutConstraint?
+    private var bottomFadeToViewBottom: NSLayoutConstraint?
     private let dimOverlayView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.dimBackground
@@ -123,7 +125,6 @@ private extension VoiceNoteViewController {
 
             bottomFadeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomFadeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bottomFadeView.bottomAnchor.constraint(equalTo: playerView.topAnchor),
             bottomFadeView.heightAnchor.constraint(equalToConstant: 169),
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -139,6 +140,10 @@ private extension VoiceNoteViewController {
             matchAccessoryBar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
             matchAccessoryBar.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: -8)
         ])
+
+        bottomFadeToPlayerTop = bottomFadeView.bottomAnchor.constraint(equalTo: playerView.topAnchor)
+        bottomFadeToViewBottom = bottomFadeView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        bottomFadeToPlayerTop?.isActive = true
     }
 
     func setupDimOverlay() {
@@ -445,6 +450,8 @@ private extension VoiceNoteViewController {
         if didToggle {
             playerView.isHidden = isSearching
             matchAccessoryBar.isHidden = !isSearching
+            bottomFadeToPlayerTop?.isActive = !isSearching
+            bottomFadeToViewBottom?.isActive = isSearching
             if isSearching {
                 searchBar.becomeFirstResponder()
             } else {
