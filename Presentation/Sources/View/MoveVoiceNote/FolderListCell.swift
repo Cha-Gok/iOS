@@ -41,7 +41,6 @@ final class FolderCellContentView: UIView, UIContentView {
 
     private let backgroundView: UIVisualEffectView = {
         let glassEffect = UIGlassEffect()
-        glassEffect.tintColor = UIColor(red: 0x13 / 255, green: 0x00 / 255, blue: 0x3f / 255, alpha: 0x33 / 255)
         let view = UIVisualEffectView(effect: glassEffect)
         view.layer.cornerRadius = 20
         view.layer.masksToBounds = true
