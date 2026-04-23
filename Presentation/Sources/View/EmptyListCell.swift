@@ -1,26 +1,29 @@
 import UIKit
 
-struct MainEmptyContentConfiguration: UIContentConfiguration {
+struct EmptyContentConfiguration: UIContentConfiguration {
+    let message: String
     func makeContentView() -> any UIView & UIContentView {
-        MainEmptyContentView(configuration: self)
+        EmptyContentView(configuration: self, message: message)
     }
 
-    func updated(for state: any UIConfigurationState) -> MainEmptyContentConfiguration {
+    func updated(for state: any UIConfigurationState) -> EmptyContentConfiguration {
         self
     }
 }
 
-final class MainEmptyContentView: UIView, UIContentView {
+final class EmptyContentView: UIView, UIContentView {
     var configuration: UIContentConfiguration {
         didSet { apply(configuration: configuration) }
     }
+    let message: String
 
     // MARK: - Component
 
-    private let messageLabel: UILabel = {
+    private lazy var messageLabel: UILabel = {
         let l = UILabel()
         l.translatesAutoresizingMaskIntoConstraints = false
-        l.setTypography(text: "아직 녹음된 기록이 없습니다", style: .subtitle2)
+        l.setTypography(text: message, style: .subtitle2)
+        l.numberOfLines = 0
         l.textColor = UIColor.gray600
         l.textAlignment = .center
         return l
@@ -28,8 +31,9 @@ final class MainEmptyContentView: UIView, UIContentView {
 
     // MARK: Initialize
 
-    init(configuration: UIContentConfiguration) {
+    init(configuration: UIContentConfiguration, message: String) {
         self.configuration = configuration
+        self.message = message
         super.init(frame: .zero)
         setup()
         apply(configuration: configuration)
@@ -53,6 +57,6 @@ final class MainEmptyContentView: UIView, UIContentView {
     // MARK: - Apply
 
     private func apply(configuration: UIContentConfiguration) {
-        guard configuration is MainEmptyContentConfiguration else { return }
+        guard configuration is EmptyContentConfiguration else { return }
     }
 }
