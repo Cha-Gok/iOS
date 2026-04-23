@@ -2,7 +2,6 @@ import SwiftUI
 import UIKit
 
 public final class SearchViewController: ViewController {
-
     // MARK: - Type
 
     enum Section: Hashable {
@@ -57,7 +56,7 @@ public final class SearchViewController: ViewController {
         setupCollectionView()
     }
 
-    public override func updateProperties() {
+    override public func updateProperties() {
         super.updateProperties()
         updateNavigationBarAppearance(isTransparent: false)
         updateDataSource()
@@ -145,16 +144,16 @@ public final class SearchViewController: ViewController {
                 )
             }
         }
-        
+
         // 전역 Header
-        let headerRegistration = HeaderRegistration.init(elementKind: SearchHeader.elementKind) { [weak self] header, _, _ in
+        let headerRegistration = HeaderRegistration(elementKind: SearchHeader.elementKind) { [weak self] header, _, _ in
             guard let self else { return }
             header.configure(
                 keyword: vm.query,
                 resultCount: vm.filteredItems.count
             )
         }
-        
+
         dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
             if kind == SearchHeader.elementKind {
                 return collectionView.dequeueConfiguredReusableSupplementary(using: headerRegistration, for: indexPath)
@@ -169,7 +168,6 @@ public final class SearchViewController: ViewController {
 // MARK: - Update Method
 
 extension SearchViewController {
-    
     private func updateDataSource() {
         var snapshot = SnapShot()
 
@@ -190,7 +188,7 @@ extension SearchViewController {
 
         dataSource.apply(snapshot, animatingDifferences: true)
     }
-    
+
     private func updateVisibleHeader() {
         guard let header = collectionView
             .visibleSupplementaryViews(ofKind: SearchHeader.elementKind)

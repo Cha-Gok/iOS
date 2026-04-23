@@ -1,20 +1,19 @@
 import UIKit
 
 final class SearchHeader: UICollectionReusableView {
-    
     static let elementKind: String = "SearchHeader"
-    
+
     // MARK: - Component
-    
+
     private let container: UIStackView = {
         let search = UIStackView()
         search.translatesAutoresizingMaskIntoConstraints = false
         search.axis = .horizontal
         search.spacing = 2
-        
+
         return search
     }()
-    
+
     private let keywordLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -22,37 +21,37 @@ final class SearchHeader: UICollectionReusableView {
 
         return label
     }()
-    
+
     private let searchResultLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.setTypography(text: "검색 결과", style: .title3)
         label.textColor = .gray800
-        
+
         return label
     }()
-    
+
     private let resultCountLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .point700
-        
+
         return label
     }()
-    
+
     // MARK: - Initialize
-    
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
     }
-    
+
     required init?(coder: NSCoder) {
         nil
     }
-    
+
     // MARK: - Setup
-    
+
     private func setup() {
         let spacer = UIView()
         container.addArrangedSubview(keywordLabel)
@@ -60,7 +59,7 @@ final class SearchHeader: UICollectionReusableView {
         container.addArrangedSubview(resultCountLabel)
         container.addArrangedSubview(UIView())
         addSubview(container)
-        
+
         NSLayoutConstraint.activate([
             container.topAnchor.constraint(equalTo: topAnchor, constant: 24),
             container.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -68,9 +67,9 @@ final class SearchHeader: UICollectionReusableView {
             container.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
-    
+
     // MARK: - Configure
-    
+
     func configure(
         keyword: String,
         resultCount: Int

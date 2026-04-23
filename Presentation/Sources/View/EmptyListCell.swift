@@ -15,6 +15,7 @@ final class EmptyContentView: UIView, UIContentView {
     var configuration: UIContentConfiguration {
         didSet { apply(configuration: configuration) }
     }
+
     let message: String
 
     // MARK: - Component

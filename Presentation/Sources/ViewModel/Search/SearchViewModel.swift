@@ -1,18 +1,21 @@
-import Foundation
 import Domain
+import Foundation
 
-public protocol SearchCoordinatorDelegate: BaseCoordinatorDelegate {}
+@MainActor
+public protocol SearchCoordinatorDelegate: AnyObject {
+    /// 뒤로 가기
+    func pop()
+}
 
 @MainActor
 @Observable
 public final class SearchViewModel {
-
     // MARK: - Search State
 
     enum SearchState {
-        case empty        // 검색 전
-        case emptyResult  // 검색 결과 없음
-        case result       // 검색 결과 있음
+        case empty // 검색 전
+        case emptyResult // 검색 결과 없음
+        case result // 검색 결과 있음
     }
 
     // MARK: - State
@@ -20,19 +23,17 @@ public final class SearchViewModel {
     private(set) var searchState: SearchState = .empty
     private(set) var filteredItems: [LibraryItem] = []
     private(set) var query: String = ""
-    private weak var coordinator: SearchCoordinatorDelegate?
-    
+    public weak var coordinator: SearchCoordinatorDelegate?
+
     // MARK: Initialize
-    
-    public init() {
-        
-    }
-    
+
+    public init() {}
+
     // MARK: - Data (더미)
 
     let items: [LibraryItem] = [
         .folder(Folder(name: "여행 계획", createdAt: .now.addingTimeInterval(-86400), content: [], isDeletable: true)),
-        .folder(Folder(name: "업무 미팅", createdAt: .now.addingTimeInterval(-172800), content: [], isDeletable: true)),
+        .folder(Folder(name: "업무 미팅", createdAt: .now.addingTimeInterval(-172_800), content: [], isDeletable: true)),
         .voiceNote(VoiceNote(
             title: "아이디어 스케치",
             createdAt: .now.addingTimeInterval(-3600),
@@ -49,7 +50,7 @@ public final class SearchViewModel {
             voiceRecord: VoiceRecord(createdAt: .now.addingTimeInterval(-7200), audioFilePath: "", duration: 300),
             analysisState: .completed
         )),
-        .folder(Folder(name: "개인 프로젝트", createdAt: .now.addingTimeInterval(-259200), content: [], isDeletable: true)),
+        .folder(Folder(name: "개인 프로젝트", createdAt: .now.addingTimeInterval(-259_200), content: [], isDeletable: true)),
         .voiceNote(VoiceNote(
             title: "장보기 리스트",
             createdAt: .now.addingTimeInterval(-10800),

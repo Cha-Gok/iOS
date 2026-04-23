@@ -1,9 +1,8 @@
 import UIKit
 
 final class ChagokSearchBar: UIView {
-    
     // MARK: - Component
-    
+
     private let searchContainer: UIVisualEffectView = {
         let effect = UIGlassEffect(style: .clear)
         effect.tintColor = .point100.withAlphaComponent(0.2)
@@ -50,33 +49,32 @@ final class ChagokSearchBar: UIView {
         config.contentInsets = .zero
         return UIButton(configuration: config)
     }()
-    
+
     // MARK: - Initialize
-    
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
     }
-    
+
     required init?(coder: NSCoder) {
         nil
     }
-    
+
     override var intrinsicContentSize: CGSize {
         CGSize(width: UIView.layoutFittingExpandedSize.width, height: 46)
     }
-    
-    
+
     // MARK: - Setup
-    
+
     private func setupUI() {
         addSubview(searchContainer)
         addSubview(closeButton)
         searchContainer.contentView.addSubview(iconView)
         searchContainer.contentView.addSubview(textField)
 
-        [searchContainer, closeButton, iconView, textField].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
+        for item in [searchContainer, closeButton, iconView, textField] {
+            item.translatesAutoresizingMaskIntoConstraints = false
         }
 
         NSLayoutConstraint.activate([
