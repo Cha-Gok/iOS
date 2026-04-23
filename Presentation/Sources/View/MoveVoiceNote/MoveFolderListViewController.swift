@@ -146,7 +146,7 @@ public final class MoveFolderListViewController: UIViewController, Alertable {
             folderListView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             folderListView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
-            moveButton.topAnchor.constraint(equalTo: folderListView.bottomAnchor, constant: 53),
+            moveButton.topAnchor.constraint(equalTo: folderListView.bottomAnchor, constant: 24),
             moveButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             moveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             moveButton.heightAnchor.constraint(equalToConstant: 54),
