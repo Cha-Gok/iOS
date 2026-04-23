@@ -15,4 +15,6 @@ public protocol MainCoordinatorDelegate: AnyObject {
     func presentRecodingView()
     /// 공용 Pop함수
     func pop()
+    /// 검색 화면 Push함수
+    func pushSearchView()
 }
