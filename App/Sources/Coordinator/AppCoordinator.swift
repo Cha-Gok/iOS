@@ -48,6 +48,9 @@ final class AppCoordinator: BaseCoordinator<UINavigationController> {
     }
 
     private func startMain() {
+        #if DEBUG
+            dependencyContainer.seedDebugDataIfNeeded()
+        #endif
         let coordinator = MainCoordinator(
             presenter: presenter,
             dependencyContainer: dependencyContainer
