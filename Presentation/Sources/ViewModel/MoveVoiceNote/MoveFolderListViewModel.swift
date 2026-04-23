@@ -2,7 +2,8 @@ import Core
 import Domain
 import Foundation
 
-public protocol MoveFolderListCoordinatorDelegate: BaseCoordinatorDelegate {
+@MainActor
+public protocol MoveFolderListCoordinatorDelegate: AnyObject {
     func dismiss()
     func pushNewFolder()
 }
@@ -13,21 +14,21 @@ public final class MoveFolderListViewModel {
     public weak var coordinator: MoveFolderListCoordinatorDelegate?
     private(set) var state: State = .init()
 
-    private let receive: Receive
+    private let voiceNotes: [VoiceNote]
     private let folderUseCase: any FolderUseCase
     private let voiceNoteUseCase: any VoiceNoteUseCase
-    private let onDismiss: ((String) -> Void)?
+    private let onComplete: ((String) -> Void)?
 
     public init(
-        receive: Receive,
+        voiceNotes: [VoiceNote],
         folderUseCase: any FolderUseCase,
         voiceNoteUseCase: any VoiceNoteUseCase,
-        onDismiss: ((String) -> Void)? = nil
+        onComplete: ((String) -> Void)? = nil
     ) {
-        self.receive = receive
+        self.voiceNotes = voiceNotes
         self.folderUseCase = folderUseCase
         self.voiceNoteUseCase = voiceNoteUseCase
-        self.onDismiss = onDismiss
+        self.onComplete = onComplete
     }
 
     func send(_ action: Action) {
@@ -55,14 +56,9 @@ public final class MoveFolderListViewModel {
 
     private func fetchFolders() {
         do {
-            let voiceNote: VoiceNote = switch receive {
-            case .single(let item):
-                item
-            case .multiple(let items):
-                items.first!
-            }
+            guard let currentFolderID = voiceNotes.first?.folderID else { return }
             let folders = try folderUseCase.fetchAll()
-            let otherFolders = folders.filter { $0.id != voiceNote.folderID }
+            let otherFolders = folders.filter { $0.id != currentFolderID }
             send(.internal(.foldersLoaded(otherFolders)))
         } catch {
             AppLogger.error(error)
@@ -72,18 +68,11 @@ public final class MoveFolderListViewModel {
     private func moveVoiceNote() {
         guard let selectedFolder = state.selectedFolder else { return }
         do {
-            switch receive {
-            case .single(var voiceNote):
+            for var voiceNote in voiceNotes {
                 voiceNote.folderID = selectedFolder.id
                 _ = try voiceNoteUseCase.update(voiceNote)
-
-            case .multiple(let voiceNotes):
-                for var voiceNote in voiceNotes {
-                    voiceNote.folderID = selectedFolder.id
-                    _ = try voiceNoteUseCase.update(voiceNote)
-                }
             }
-            onDismiss?(selectedFolder.name)
+            onComplete?(selectedFolder.name)
             coordinator?.dismiss()
         } catch {
             AppLogger.error(error)

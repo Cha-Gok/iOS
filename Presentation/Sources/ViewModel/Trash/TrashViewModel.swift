@@ -2,10 +2,10 @@ import Core
 import Domain
 import Foundation
 
-public protocol TrashCoordinatorDelegate: BaseCoordinatorDelegate {
-    /// 음성 노트 이동
+@MainActor
+public protocol TrashCoordinatorDelegate: AnyObject {
+    func pop()
     func pushVoiceNoteView(voiceNote: VoiceNote)
-    /// 상세 폴더 이동
     func pushMyFolderDetailView(_ folder: Folder)
 }
 

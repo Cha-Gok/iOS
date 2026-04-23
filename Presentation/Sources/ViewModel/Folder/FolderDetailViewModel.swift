@@ -2,9 +2,11 @@ import Core
 import Domain
 import Foundation
 
-public protocol FolderDetailCoordinatorDelegate: BaseCoordinatorDelegate {
-    /// 음성노트로 이동
+@MainActor
+public protocol FolderDetailCoordinatorDelegate: AnyObject {
+    func pop()
     func pushVoiceNoteView(voiceNote: VoiceNote)
+    func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?)
 }
 
 @MainActor
@@ -92,7 +94,7 @@ extension FolderDetailViewModel {
     /// 폴더 이동 Present
     func presentMoveFolder(dismiss: @escaping (String) -> Void) {
         guard !selectedItems.isEmpty else { return }
-        coordinator?.presentFolderList(with: .multiple(selectedItems), dismiss: dismiss)
+        coordinator?.presentFolderList(with: selectedItems, onComplete: dismiss)
     }
 
     /// 전체 선택

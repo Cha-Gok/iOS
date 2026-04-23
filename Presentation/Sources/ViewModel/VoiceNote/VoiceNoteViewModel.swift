@@ -2,7 +2,11 @@ import Core
 import Domain
 import Foundation
 
-public protocol VoiceNoteCoordinatorDelegate: BaseCoordinatorDelegate {}
+@MainActor
+public protocol VoiceNoteCoordinatorDelegate: AnyObject {
+    func pop()
+    func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?)
+}
 
 @MainActor
 @Observable
@@ -107,7 +111,7 @@ public final class VoiceNoteViewModel {
     }
 
     public func moveVoiceNote() {
-        coordinator?.presentFolderList(with: .single(voiceNote))
+        coordinator?.presentFolderList(with: [voiceNote], onComplete: nil)
     }
 
     public func enterTitleEditing() {

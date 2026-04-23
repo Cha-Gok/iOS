@@ -5,8 +5,6 @@ import XCTest
 
 @MainActor
 final class MockTrashCoordinatorDelegate: TrashCoordinatorDelegate {
-    func presentFolderList(with: Receive, dismiss: ((String) -> Void)?) {}
-
     var popCalled = false
     var pushedVoiceNote: VoiceNote?
     var pushedFolder: Folder?
