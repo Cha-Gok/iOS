@@ -21,7 +21,13 @@ public final class KeywordChipLabel: TypographyLabel {
 
     /// 텍스트 내 `query`에 일치하는 모든 범위에 형광펜 스타일의 배경 하이라이트를 적용합니다.
     /// `query`가 비어 있으면 기본 타이포그래피로 복원됩니다.
-    public func applyHighlight(query: String, highlightBackgroundColor: UIColor) {
+    /// `focusedRange`가 지정되면 해당 범위는 `focusedHighlightBackgroundColor`로 덮어씌웁니다.
+    public func applyHighlight(
+        query: String,
+        highlightBackgroundColor: UIColor,
+        focusedRange: NSRange? = nil,
+        focusedHighlightBackgroundColor: UIColor? = nil
+    ) {
         guard !query.isEmpty else {
             text = baseText
             return
@@ -29,7 +35,9 @@ public final class KeywordChipLabel: TypographyLabel {
         attributedText = baseText.highlighted(
             query: query,
             baseAttributes: typography.textAttributes,
-            highlightBackgroundColor: highlightBackgroundColor
+            highlightBackgroundColor: highlightBackgroundColor,
+            focusedRange: focusedRange,
+            focusedHighlightBackgroundColor: focusedHighlightBackgroundColor
         )
     }
 

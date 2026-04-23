@@ -14,8 +14,11 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
     private let bottomFadeView = VoiceNoteBottomFadeView()
     private let searchBar = VoiceNoteSearchBar()
+    private let matchAccessoryBar = VoiceNoteMatchAccessoryBar()
 
     private var searchModeLastApplied = false
+    private var bottomFadeToPlayerTop: NSLayoutConstraint?
+    private var bottomFadeToViewBottom: NSLayoutConstraint?
     private let dimOverlayView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.dimBackground
@@ -77,15 +80,16 @@ private extension VoiceNoteViewController {
     func setupUI() {
         view.backgroundColor = UIColor.gray0
 
-        addChild(pageViewController)
-        pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
-
         view.addSubview(pageViewController.view)
         view.addSubview(bottomFadeView)
         view.addSubview(playerView)
         view.addSubview(segmentedControl)
         view.addSubview(dimOverlayView)
+        view.addSubview(matchAccessoryBar)
+        matchAccessoryBar.isHidden = true
 
+        addChild(pageViewController)
+        pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
         pageViewController.didMove(toParent: self)
 
         setupConstraints()
@@ -97,7 +101,14 @@ private extension VoiceNoteViewController {
     }
 
     func setupConstraints() {
-        for subview in [pageViewController.view, playerView, segmentedControl, bottomFadeView, dimOverlayView] {
+        for subview in [
+            pageViewController.view,
+            playerView,
+            segmentedControl,
+            bottomFadeView,
+            dimOverlayView,
+            matchAccessoryBar
+        ] {
             subview?.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -114,7 +125,6 @@ private extension VoiceNoteViewController {
 
             bottomFadeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomFadeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bottomFadeView.bottomAnchor.constraint(equalTo: playerView.topAnchor),
             bottomFadeView.heightAnchor.constraint(equalToConstant: 169),
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -124,8 +134,19 @@ private extension VoiceNoteViewController {
             dimOverlayView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             dimOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             dimOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            dimOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            dimOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            matchAccessoryBar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            matchAccessoryBar.trailingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.trailingAnchor,
+                constant: -20
+            ),
+            matchAccessoryBar.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: -8)
         ])
+
+        bottomFadeToPlayerTop = bottomFadeView.bottomAnchor.constraint(equalTo: playerView.topAnchor)
+        bottomFadeToViewBottom = bottomFadeView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        bottomFadeToPlayerTop?.isActive = true
     }
 
     func setupDimOverlay() {
@@ -221,10 +242,10 @@ private extension VoiceNoteViewController {
         searchBar.onClose = { [weak self] in
             self?.viewModel.exitSearchMode()
         }
-        searchBar.onMatchPrev = { [weak self] in
+        matchAccessoryBar.onPrev = { [weak self] in
             self?.viewModel.previousMatch()
         }
-        searchBar.onMatchNext = { [weak self] in
+        matchAccessoryBar.onNext = { [weak self] in
             self?.viewModel.nextMatch()
         }
     }
@@ -285,12 +306,13 @@ private extension VoiceNoteViewController {
         segmentedControl.selectSegment(index: page.rawValue)
 
         let target = pages[page.rawValue]
-        guard let current = pageViewController.viewControllers?.first,
-              let currentIndex = pages.firstIndex(of: current),
-              current !== target else { return }
-
-        let direction: UIPageViewController.NavigationDirection = page.rawValue > currentIndex ? .forward : .reverse
-        pageViewController.setViewControllers([target], direction: direction, animated: true)
+        if let current = pageViewController.viewControllers?.first,
+           let currentIndex = pages.firstIndex(of: current),
+           current !== target
+        {
+            let direction: UIPageViewController.NavigationDirection = page.rawValue > currentIndex ? .forward : .reverse
+            pageViewController.setViewControllers([target], direction: direction, animated: true)
+        }
 
         if viewModel.searchMode {
             applySearchState()
@@ -421,7 +443,7 @@ private extension VoiceNoteViewController {
         segmentedControl.setCount(viewModel.summaryMatchCount, at: Page.summary.rawValue)
         segmentedControl.setCount(viewModel.scriptMatchCount, at: Page.script.rawValue)
 
-        searchBar.configureMatch(
+        matchAccessoryBar.configure(
             countText: viewModel.matchCountText,
             hasMatches: viewModel.hasCurrentPageMatches
         )
@@ -429,13 +451,16 @@ private extension VoiceNoteViewController {
         updateNavigationItems()
 
         if didToggle {
+            playerView.isHidden = isSearching
+            matchAccessoryBar.isHidden = !isSearching
+            bottomFadeToPlayerTop?.isActive = !isSearching
+            bottomFadeToViewBottom?.isActive = isSearching
             if isSearching {
                 searchBar.becomeFirstResponder()
             } else {
                 searchBar.setQuery("")
                 searchBar.resignFirstResponder()
             }
-            view.layoutIfNeeded()
         }
 
         if let match = viewModel.currentMatch {

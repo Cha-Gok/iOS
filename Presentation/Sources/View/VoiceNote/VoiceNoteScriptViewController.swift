@@ -282,7 +282,7 @@ private extension UIView {
 
 extension VoiceNoteScriptViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        viewModel.editingMode != .script
+        viewModel.editingMode != .script && !viewModel.searchMode
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {

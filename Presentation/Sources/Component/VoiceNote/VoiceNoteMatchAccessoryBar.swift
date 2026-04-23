@@ -1,12 +1,11 @@
 import UIKit
 
-public final class VoiceNoteMatchAccessoryBar: UIView {
+public final class VoiceNoteMatchAccessoryBar: UIVisualEffectView {
     public var onPrev: (() -> Void)?
     public var onNext: (() -> Void)?
 
     private let countLabel: TypographyLabel = {
         let label = TypographyLabel(typography: .title3)
-        label.text = "1 / 2"
         label.textColor = .gray950
         label.textAlignment = .center
         return label
@@ -35,9 +34,11 @@ public final class VoiceNoteMatchAccessoryBar: UIView {
     }()
 
     public init() {
-        super.init(frame: CGRect(x: 0, y: 0, width: 0, height: 48))
-        autoresizingMask = [.flexibleWidth]
-        backgroundColor = .gray200
+        let effect = UIGlassEffect(style: .regular)
+        effect.tintColor = .gray200.withAlphaComponent(0.2)
+        super.init(effect: effect)
+        clipsToBounds = true
+        layer.cornerRadius = 20
         setupUI()
         setupActions()
         configure(countText: "0 / 0", hasMatches: false)
@@ -66,12 +67,12 @@ public final class VoiceNoteMatchAccessoryBar: UIView {
         }
 
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stackView)
+        contentView.addSubview(stackView)
         NSLayoutConstraint.activate([
-            stackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-            stackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            stackView.topAnchor.constraint(equalTo: topAnchor, constant: 12),
-            stackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12)
+            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
         ])
     }
 

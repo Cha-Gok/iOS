@@ -31,6 +31,7 @@ final class VoiceNoteSummaryViewController: UIViewController {
         applySnapshot()
         observeAnalysisState()
         observeSearchQuery()
+        observeCurrentMatch()
     }
 
     /// 지정한 매치 위치로 컬렉션을 스크롤합니다.
@@ -118,19 +119,37 @@ private extension VoiceNoteSummaryViewController {
         }
 
         let keyPointCellReg = UICollectionView
-            .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
+            .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, indexPath, item in
                 guard case .keyPoint(let number, let text) = item else { return }
+                let focusedRange: NSRange? = {
+                    guard let match = self?.viewModel.currentMatch,
+                          case .keyPoint(let idx) = match.location,
+                          idx == indexPath.item else { return nil }
+                    return match.range
+                }()
                 cell.contentConfiguration = KeyPointContentConfiguration(
                     number: number,
                     text: text,
-                    searchQuery: self?.viewModel.searchQuery ?? ""
+                    searchQuery: self?.viewModel.searchQuery ?? "",
+                    currentMatchRange: focusedRange
                 )
             }
 
         let keywordsCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
+            let focusedKeywordIndex: Int?
+            let focusedRange: NSRange?
+            if let match = self?.viewModel.currentMatch, case .keyword(let idx) = match.location {
+                focusedKeywordIndex = idx
+                focusedRange = match.range
+            } else {
+                focusedKeywordIndex = nil
+                focusedRange = nil
+            }
             cell.contentConfiguration = KeywordsContentConfiguration(
                 keywords: self?.viewModel.keywords ?? [],
-                searchQuery: self?.viewModel.searchQuery ?? ""
+                searchQuery: self?.viewModel.searchQuery ?? "",
+                focusedKeywordIndex: focusedKeywordIndex,
+                focusedRange: focusedRange
             )
         }
 
@@ -235,6 +254,19 @@ private extension VoiceNoteSummaryViewController {
             Task { @MainActor in
                 self.reconfigureForSearch()
                 self.observeSearchQuery()
+            }
+        }
+    }
+
+    func observeCurrentMatch() {
+        withObservationTracking {
+            _ = viewModel.currentMatchIndex
+            _ = viewModel.currentPage
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.reconfigureForSearch()
+                self.observeCurrentMatch()
             }
         }
     }
