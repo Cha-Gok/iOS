@@ -45,6 +45,8 @@ public final class MoveFolderListViewModel {
                 coordinator?.dismiss()
             case .addFolderButtonTapped:
                 coordinator?.pushNewFolder()
+            case .errorMessageDismissed:
+                state.errorMessage = nil
             }
         case .internal(let internalAction):
             switch internalAction {
@@ -62,6 +64,7 @@ public final class MoveFolderListViewModel {
             send(.internal(.foldersLoaded(otherFolders)))
         } catch {
             AppLogger.error(error)
+            state.errorMessage = error.localizedDescription
         }
     }
 
@@ -76,6 +79,7 @@ public final class MoveFolderListViewModel {
             coordinator?.dismiss()
         } catch {
             AppLogger.error(error)
+            state.errorMessage = error.localizedDescription
         }
     }
 }
@@ -87,6 +91,7 @@ extension MoveFolderListViewModel {
         let moveButtonTitle = "이동하기"
         var selectedFolder: Folder?
         var folders: [Folder] = []
+        var errorMessage: String?
 
         var isMoveButtonEnabled: Bool {
             selectedFolder != nil
@@ -100,6 +105,7 @@ extension MoveFolderListViewModel {
             case moveButtonTapped
             case closeButtonTapped
             case addFolderButtonTapped
+            case errorMessageDismissed
         }
 
         public enum Internal {

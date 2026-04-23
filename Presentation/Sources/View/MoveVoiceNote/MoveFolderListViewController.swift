@@ -1,7 +1,7 @@
 import Domain
 import UIKit
 
-public final class MoveFolderListViewController: UIViewController {
+public final class MoveFolderListViewController: UIViewController, Alertable {
     private let viewModel: MoveFolderListViewModel
 
     public init(viewModel: MoveFolderListViewModel) {
@@ -98,19 +98,23 @@ public final class MoveFolderListViewController: UIViewController {
         moveButton.isEnabled = isEnabled
         moveButton.configuration?.baseBackgroundColor = isEnabled ? .point600 : .gray300
         moveButton.configuration?.baseForegroundColor = isEnabled ? .gray950 : .gray600
+
+        if let message = viewModel.state.errorMessage {
+            viewModel.send(.view(.errorMessageDismissed))
+            showAlert(message: message)
+        }
     }
 
     private func makeDataSource() -> DataSource {
-        let cellRegistration = UICollectionView
-            .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-                guard let self else { return }
-                let isSelected = viewModel.state.selectedFolder?.id == item.id
-                cell.contentConfiguration = FolderCellContentConfiguration(
-                    title: item.name,
-                    number: item.content.count,
-                    isSelected: isSelected
-                )
-            }
+        let cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
+            guard let self else { return }
+            let isSelected = viewModel.state.selectedFolder?.id == item.id
+            cell.contentConfiguration = FolderCellContentConfiguration(
+                title: item.name,
+                number: item.content.count,
+                isSelected: isSelected
+            )
+        }
 
         return DataSource(collectionView: folderListView) { collectionView, indexPath, item in
             collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: item)
@@ -146,7 +150,7 @@ public final class MoveFolderListViewController: UIViewController {
             moveButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             moveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             moveButton.heightAnchor.constraint(equalToConstant: 54),
-            moveButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -74)
+            moveButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -74),
         ])
     }
 }
