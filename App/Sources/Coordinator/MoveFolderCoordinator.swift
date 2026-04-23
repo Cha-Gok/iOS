@@ -11,7 +11,6 @@ final class MoveFolderCoordinator: BaseCoordinator<UINavigationController> {
     private let onFinish: (MoveFolderCoordinator) -> Void
 
     init(
-        parentPresenter: UINavigationController,
         dependencyContainer: AppDIContainer,
         voiceNotes: [VoiceNote],
         onComplete: ((String) -> Void)?,
@@ -37,9 +36,25 @@ final class MoveFolderCoordinator: BaseCoordinator<UINavigationController> {
         presenter.setViewControllers([viewController], animated: false)
 
         if let sheet = presenter.sheetPresentationController {
-            sheet.detents = [.medium()]
+            sheet.detents = moveFolderListDetents
             sheet.prefersGrabberVisible = true
         }
+    }
+
+    /// 부모 네비게이션 바 바로 아래까지 올라오는 커스텀 detent 포함.
+    private var moveFolderListDetents: [UISheetPresentationController.Detent] {
+        [
+            .medium(),
+            .custom(identifier: .init("belowNavigationBar")) { [weak presenter] context in
+                guard let parentNav = presenter?.presentingViewController as? UINavigationController,
+                      let topView = parentNav.topViewController?.view,
+                      let window = topView.window else {
+                    return context.maximumDetentValue
+                }
+                let sheetHeight = window.bounds.height - topView.safeAreaInsets.top
+                return min(sheetHeight, context.maximumDetentValue)
+            }
+        ]
     }
 }
 
@@ -80,7 +95,7 @@ extension MoveFolderCoordinator: NewFolderCoordinatorDelegate {
         presenter.popViewController(animated: true)
 
         sheet.animateChanges {
-            sheet.detents = [.medium()]
+            sheet.detents = moveFolderListDetents
         }
     }
 
@@ -90,7 +105,7 @@ extension MoveFolderCoordinator: NewFolderCoordinatorDelegate {
         presenter.popViewController(animated: true)
 
         sheet.animateChanges {
-            sheet.detents = [.medium()]
+            sheet.detents = moveFolderListDetents
         }
     }
 }

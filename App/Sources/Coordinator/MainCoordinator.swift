@@ -101,7 +101,6 @@ extension MainCoordinator: FolderCoordinatorDelegate {
 extension MainCoordinator: FolderDetailCoordinatorDelegate {
     func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?) {
         let coordinator = MoveFolderCoordinator(
-            parentPresenter: presenter,
             dependencyContainer: dependencyContainer,
             voiceNotes: voiceNotes,
             onComplete: onComplete,
