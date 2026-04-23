@@ -67,6 +67,7 @@ public final class SearchViewController: ViewController {
 
     private func setup() {
         navigationItem.titleView = searchBar
+        navigationItem.hidesBackButton = true
     }
 
     private func setupSearchBar() {
@@ -75,10 +76,7 @@ public final class SearchViewController: ViewController {
             vm.search(searchBar.textField.text ?? "")
         }, for: .editingChanged)
 
-        searchBar.textField.addAction(UIAction { [weak self] _ in
-            guard let self else { return }
-            vm.search(searchBar.textField.text ?? "")
-        }, for: .editingDidEndOnExit)
+        searchBar.textField.delegate = self
 
         searchBar.closeButton.addAction(UIAction { [weak self] _ in
             guard let self else { return }
@@ -228,29 +226,13 @@ extension SearchViewController {
                     groupWidth: .fractionalWidth(1.0),
                     groupHeight: .estimated(120),
                     interGroupSpacing: 8,
-                    contentInsets: .init(top: 16, leading: 20, bottom: 0, trailing: 20)
+                    contentInsets: .init(top: 16, leading: 20, bottom: 0, trailing: 20),
+                    boundarySupplementaryItems: [searchHeaderItem()]
                 )
             }
         }
 
-        let configuration = UICollectionViewCompositionalLayoutConfiguration()
-        let globalHeader = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1.0),
-                heightDimension: .estimated(44)
-            ),
-            elementKind: SearchHeader.elementKind,
-            alignment: .top
-        )
-        globalHeader.contentInsets = .init(top: 0, leading: 20, bottom: 0, trailing: 20)
-        globalHeader.pinToVisibleBounds = true
-        globalHeader.zIndex = 10
-        configuration.boundarySupplementaryItems = [globalHeader]
-
-        return UICollectionViewCompositionalLayout(
-            sectionProvider: sectionProvider,
-            configuration: configuration
-        )
+        return UICollectionViewCompositionalLayout(sectionProvider: sectionProvider)
     }
 
     private func createSection(
@@ -259,7 +241,8 @@ extension SearchViewController {
         groupWidth: NSCollectionLayoutDimension,
         groupHeight: NSCollectionLayoutDimension,
         interGroupSpacing: CGFloat = 0.0,
-        contentInsets: NSDirectionalEdgeInsets = .zero
+        contentInsets: NSDirectionalEdgeInsets = .zero,
+        boundarySupplementaryItems: [NSCollectionLayoutBoundarySupplementaryItem] = []
     ) -> NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(widthDimension: itemWidth, heightDimension: itemHeight)
         let groupSize = NSCollectionLayoutSize(widthDimension: groupWidth, heightDimension: groupHeight)
@@ -268,7 +251,22 @@ extension SearchViewController {
         let section = NSCollectionLayoutSection(group: group)
         section.interGroupSpacing = interGroupSpacing
         section.contentInsets = contentInsets
+        section.boundarySupplementaryItems = boundarySupplementaryItems
         return section
+    }
+
+    private func searchHeaderItem() -> NSCollectionLayoutBoundarySupplementaryItem {
+        let header = NSCollectionLayoutBoundarySupplementaryItem(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .estimated(44)
+            ),
+            elementKind: SearchHeader.elementKind,
+            alignment: .top
+        )
+        header.pinToVisibleBounds = true
+        header.zIndex = 1_000
+        return header
     }
 
     private func emptySection() -> NSCollectionLayoutSection {
@@ -278,6 +276,15 @@ extension SearchViewController {
             groupWidth: .fractionalWidth(0),
             groupHeight: .fractionalHeight(0)
         )
+    }
+}
+
+// MARK: 검색 Delegate
+
+extension SearchViewController: UITextFieldDelegate {
+    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 }
 
