@@ -128,7 +128,7 @@ extension FolderViewModel {
 
     func move(folder: Folder) {
         do {
-            try trashUseCase.moveToTrash(folderID: folder.id)
+            try folderUseCase.moveToTrash(folderID: folder.id)
             category.items.removeAll {
                 if case .folder(let obj) = $0 { return obj.id == folder.id }
                 return false

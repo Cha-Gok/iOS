@@ -30,6 +30,7 @@ final class FolderDetailViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: FolderDetailViewModel
         let mockVoiceNoteRepo: MockVoiceNoteRepository
+        let mockFolderRepo: MockFolderRepository
         let mockTrashUseCase: MockTrashUseCase
         let mockCoordinator: MockFolderDetailCoordinatorDelegate
         let testFolderID: UUID
@@ -56,6 +57,7 @@ final class FolderDetailViewModelTests: XCTestCase {
         return SUT(
             viewModel: viewModel,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
+            mockFolderRepo: mockFolderRepo,
             mockTrashUseCase: mockTrashUseCase,
             mockCoordinator: mockCoordinator,
             testFolderID: folderID
@@ -230,6 +232,7 @@ final class FolderDetailViewModelTests: XCTestCase {
     func test_move_호출시_아이템제거및_선택모드해제() async {
         let sut = makeSUT()
         let note = VoiceNote.stub(title: "삭제할 노트")
+        let trash = Folder.stub(kind: .trash)
 
         sut.mockVoiceNoteRepo.setObserveFolderResult(.success(makeStream([note])))
         sut.mockVoiceNoteRepo.expectObserveFolder(callCount: 1, folderID: sut.testFolderID)
@@ -238,11 +241,14 @@ final class FolderDetailViewModelTests: XCTestCase {
 
         sut.viewModel.selectItem(note)
 
-        sut.mockTrashUseCase.expectMoveToTrash(noteID: note.id, callCount: 1)
+        sut.mockFolderRepo.setFetchByKindResult(.trash, result: .success([trash]))
+        sut.mockVoiceNoteRepo.setFetchResult(.success(note))
+        sut.mockVoiceNoteRepo.setUpdateResult(.success(note))
+        sut.mockVoiceNoteRepo.expectUpdate(callCount: 1)
 
         sut.viewModel.move()
 
-        sut.mockTrashUseCase.verify()
+        sut.mockVoiceNoteRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty)
         XCTAssertEqual(sut.viewModel.select, .none)
         XCTAssertTrue(sut.viewModel.selectedItems.isEmpty)

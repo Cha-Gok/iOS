@@ -182,7 +182,7 @@ extension FolderDetailViewModel {
         guard !selectedItems.isEmpty else { return }
         do {
             for note in selectedItems {
-                try trashUseCase.moveToTrash(noteID: note.id)
+                try voiceNoteUseCase.moveToTrash(noteID: note.id)
             }
             let selectedIDs = Set(selectedItems.map(\.id))
             items.removeAll { item in
@@ -203,7 +203,7 @@ extension FolderDetailViewModel {
     func restore(items: [VoiceNote]) {
         for item in items {
             do {
-                try trashUseCase.restoreNote(id: item.id)
+                try voiceNoteUseCase.restore(noteID: item.id)
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.errorDescription

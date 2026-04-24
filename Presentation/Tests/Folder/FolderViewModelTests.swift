@@ -144,14 +144,18 @@ final class FolderViewModelTests: XCTestCase {
 
     func test_move_성공시_리스트에서제거() async {
         let folder = Folder(name: "이동 폴더")
+        let trash = Folder.stub(kind: .trash)
         let sut = makeSUT(initialItems: [.folder(folder)])
 
-        sut.mockTrashUseCase.expectMoveToTrash(folderID: folder.id, callCount: 1)
+        sut.mockFolderRepo.setFetchByKindResult(.trash, result: .success([trash]))
+        sut.mockFolderRepo.setFetchByIDResult(.success(folder))
+        sut.mockFolderRepo.setUpdateResult(.success(folder))
+        sut.mockFolderRepo.expectUpdate(folderID: folder.id, callCount: 1)
 
         sut.viewModel.move(folder: folder)
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.mockTrashUseCase.verify()
+        sut.mockFolderRepo.verify()
         XCTAssertTrue(sut.viewModel.category.items.isEmpty)
     }
 

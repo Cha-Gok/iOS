@@ -319,7 +319,7 @@ public final class VoiceNoteViewModel {
     private func moveToWasteBasket() {
         do {
             stop()
-            try trashUseCase.moveToTrash(noteID: voiceNote.id)
+            try voiceNoteUseCase.moveToTrash(noteID: voiceNote.id)
             coordinator?.pop()
         } catch {
             errorMessage = error.localizedDescription
