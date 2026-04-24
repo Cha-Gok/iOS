@@ -98,6 +98,7 @@ private extension VoiceNoteSummaryViewController {
 
             section.interGroupSpacing = switch sectionType {
             case .keyPoints: 6
+            case .keywords: Constant.keywordChipLineSpacing
             default: 0
             }
 
@@ -153,6 +154,19 @@ private extension VoiceNoteSummaryViewController {
             )
         }
 
+        let keyPointSkeletonCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
+            guard case .keyPointSkeleton(let number, let beginOffset) = item else { return }
+            cell.contentConfiguration = KeyPointSkeletonContentConfiguration(
+                number: number,
+                beginOffset: beginOffset
+            )
+        }
+
+        let keywordsSkeletonCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
+            guard case .keywordsSkeleton(let beginOffset) = item else { return }
+            cell.contentConfiguration = KeywordsSkeletonContentConfiguration(beginOffset: beginOffset)
+        }
+
         let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
             collectionView: collectionView
         ) { col, indexPath, item in
@@ -163,6 +177,10 @@ private extension VoiceNoteSummaryViewController {
                 return col.dequeueConfiguredReusableCell(using: keyPointCellReg, for: indexPath, item: item)
             case .keywords:
                 return col.dequeueConfiguredReusableCell(using: keywordsCellReg, for: indexPath, item: item)
+            case .keyPointSkeleton:
+                return col.dequeueConfiguredReusableCell(using: keyPointSkeletonCellReg, for: indexPath, item: item)
+            case .keywordsSkeleton:
+                return col.dequeueConfiguredReusableCell(using: keywordsSkeletonCellReg, for: indexPath, item: item)
             }
         }
 
@@ -203,15 +221,36 @@ private extension VoiceNoteSummaryViewController {
         }
     }
 
+    var isShowingSkeleton: Bool {
+        switch viewModel.voiceNote.analysisState {
+        case .pending, .transcribing, .transcribed, .summarizing, .regenerating:
+            return true
+        case .completed, .transcriptionFailed, .summarizationFailed:
+            return false
+        }
+    }
+
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections(Section.allCases)
 
         let metadataItems: [Item] = [.metadata]
-        let keyPointItems = viewModel.keyPoints.map { Item.keyPoint(number: $0.number, text: $0.text) }
-        let keywordItems: [Item] = [.keywords]
-
         snapshot.appendItems(metadataItems, toSection: .metadata)
+
+        let keyPointItems: [Item]
+        let keywordItems: [Item]
+        if isShowingSkeleton {
+            keyPointItems = (0 ..< 3).map { idx in
+                .keyPointSkeleton(number: idx + 1, beginOffset: Double(idx) * 0.2)
+            }
+            keywordItems = (0 ..< 2).map { idx in
+                .keywordsSkeleton(beginOffset: Double(idx) * 0.2)
+            }
+        } else {
+            keyPointItems = viewModel.keyPoints.map { Item.keyPoint(number: $0.number, text: $0.text) }
+            keywordItems = [.keywords]
+        }
+
         snapshot.appendItems(keyPointItems, toSection: .keyPoints)
         snapshot.appendItems(keywordItems, toSection: .keywords)
 
@@ -231,14 +270,9 @@ private extension VoiceNoteSummaryViewController {
             guard let self else { return }
             Task { @MainActor in
                 switch self.viewModel.voiceNote.analysisState {
-                case .transcribing, .summarizing, .regenerating:
-                    var snapshot = self.dataSource.snapshot()
-                    snapshot.reconfigureItems([.metadata])
-                    snapshot.reloadSections([.keyPoints])
-                    self.dataSource.apply(snapshot, animatingDifferences: false)
-                case .completed, .transcribed:
+                case .pending, .transcribing, .transcribed, .summarizing, .regenerating, .completed:
                     self.applySnapshot()
-                case .pending, .transcriptionFailed, .summarizationFailed:
+                case .transcriptionFailed, .summarizationFailed:
                     break
                 }
                 self.observeAnalysisState()
@@ -304,5 +338,7 @@ extension VoiceNoteSummaryViewController {
         case metadata
         case keyPoint(number: Int, text: String)
         case keywords
+        case keyPointSkeleton(number: Int, beginOffset: CFTimeInterval)
+        case keywordsSkeleton(beginOffset: CFTimeInterval)
     }
 }

@@ -43,6 +43,10 @@ final class KeywordsSkeletonContentView: UIView, UIContentView {
         layer.cornerRadius = bounds.height / 2
     }
 
+    override var intrinsicContentSize: CGSize {
+        CGSize(width: UIView.noIntrinsicMetric, height: KeywordChipLabel.standardHeight)
+    }
+
     // MARK: - Setup
 
     private func setupUI() {
@@ -58,14 +62,7 @@ final class KeywordsSkeletonContentView: UIView, UIContentView {
                 equalTo: trailingAnchor,
                 constant: -Constant.keywordChipHorizontalPadding
             ),
-            skeletonLine.topAnchor.constraint(
-                equalTo: topAnchor,
-                constant: Constant.keywordChipVerticalPadding
-            ),
-            skeletonLine.bottomAnchor.constraint(
-                equalTo: bottomAnchor,
-                constant: -Constant.keywordChipVerticalPadding
-            ),
+            skeletonLine.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
     }
 
