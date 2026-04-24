@@ -39,6 +39,7 @@ public final class AppDIContainer {
     private lazy var folderUseCase = DefaultFolderUseCase(repository: folderRepository)
     private lazy var voiceNoteUseCase = DefaultVoiceNoteUseCase(
         repository: voiceNoteRepository,
+        folderRepository: folderRepository,
         analysisService: voiceNoteAnalysisService
     )
 

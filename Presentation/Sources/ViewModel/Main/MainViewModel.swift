@@ -327,7 +327,7 @@ extension MainViewModel {
                         name: "개인 폴더 \(index + 1)",
                         createdAt: now.addingTimeInterval(createdOffset),
                         content: Array(defaultVoiceNotes.prefix((index % 4) + 1)),
-                        isDeletable: true
+                        kind: .custom
                     )
                 }
 
@@ -355,7 +355,7 @@ extension MainViewModel {
                                 name: "휴지통 폴더 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
                                 content: [],
-                                isDeletable: true,
+                                kind: .custom,
                                 deletedAt: now.addingTimeInterval(deletedOffset)
                             )
                         )
@@ -520,7 +520,7 @@ extension MainViewModel {
             }
 
             func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
-                items.filter(\.isDeletable)
+                items.filter { $0.kind == .custom }
             }
 
             func fetch(by id: UUID) throws(FolderUseCaseError) -> Folder {
@@ -533,7 +533,7 @@ extension MainViewModel {
             }
 
             func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
-                let snapshot = items.filter(\.isDeletable)
+                let snapshot = items.filter { $0.kind == .custom }
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)
                     continuation.finish()

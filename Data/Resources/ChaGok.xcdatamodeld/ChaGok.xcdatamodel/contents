@@ -4,7 +4,7 @@
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="deletedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="isDeletable" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="kindRaw" attributeType="String" defaultValueString="custom"/>
         <attribute name="name" attributeType="String"/>
         <relationship name="voiceNotes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="VoiceNote" inverseName="folder" inverseEntity="VoiceNote"/>
     </entity>

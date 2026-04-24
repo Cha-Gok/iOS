@@ -126,9 +126,9 @@ final class FolderViewModelTests: XCTestCase {
     func test_fetchAll_정상로드() async {
         let sut = makeSUT()
         let expectedFolders = [
-            Folder(name: "새 폴더 1", isDeletable: true),
-            Folder(name: "기본 폴더", isDeletable: false), // isDeletable = false는 제외되어야 함
-            Folder(name: "새 폴더 2", isDeletable: true)
+            Folder(name: "새 폴더 1", kind: .custom),
+            Folder(name: "기본 폴더", kind: .default), // isDeletable = false는 제외되어야 함
+            Folder(name: "새 폴더 2", kind: .custom)
         ]
 
         sut.mockFolderRepo.setFetchAllResult(.success(expectedFolders))
@@ -168,7 +168,7 @@ final class FolderViewModelTests: XCTestCase {
             name: newName,
             createdAt: initialFolder.createdAt,
             content: initialFolder.content,
-            isDeletable: initialFolder.isDeletable,
+            kind: initialFolder.kind,
             deletedAt: initialFolder.deletedAt
         )
 

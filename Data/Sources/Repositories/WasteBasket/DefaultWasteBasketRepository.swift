@@ -148,7 +148,7 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     id: folder.id,
                     name: folder.name,
                     createdAt: folder.createdAt,
-                    isDeletable: folder.isDeletable,
+                    kind: folder.kind,
                     deletedAt: .now
                 )
                 _ = try store.update(updated, as: FolderEntity.self)
@@ -186,7 +186,7 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                         id: folder.id,
                         name: folder.name,
                         createdAt: folder.createdAt,
-                        isDeletable: folder.isDeletable,
+                        kind: folder.kind,
                         deletedAt: .now
                     )
                     _ = try store.update(updated, as: FolderEntity.self)
@@ -226,7 +226,7 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                     id: folder.id,
                     name: folder.name,
                     createdAt: folder.createdAt,
-                    isDeletable: folder.isDeletable,
+                    kind: folder.kind,
                     deletedAt: nil
                 )
                 _ = try store.update(updated, as: FolderEntity.self)
@@ -264,7 +264,7 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
                         id: folder.id,
                         name: folder.name,
                         createdAt: folder.createdAt,
-                        isDeletable: folder.isDeletable,
+                        kind: folder.kind,
                         deletedAt: nil
                     )
                     _ = try store.update(updated, as: FolderEntity.self)

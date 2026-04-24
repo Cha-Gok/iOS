@@ -17,7 +17,7 @@ public protocol FolderUseCase: Sendable {
     /// - Returns: 조회된 `Folder` 배열
     func fetchAll() throws(FolderUseCaseError) -> [Folder]
 
-    /// 기본 폴더(isDeletable == false)를 제외한 개인 폴더 목록을 조회합니다.
+    /// 개인 폴더(kind == .custom) 목록을 조회합니다.
     /// - Returns: 삭제 가능한 `Folder` 배열
     func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder]
 
@@ -48,7 +48,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
         guard trimName.count <= Policy.maxNameLength else { throw .invalidLengthName }
         guard trimName != Policy.defaultFolderName else { throw .reservedName }
 
-        let folder = Folder(name: trimName, isDeletable: true)
+        let folder = Folder(name: trimName, kind: .custom)
         do {
             return try repository.create(folder)
         } catch {
@@ -58,7 +58,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
     }
 
     public func createDefault() throws(FolderUseCaseError) -> Folder {
-        let folder = Folder(name: Policy.defaultFolderName, isDeletable: false)
+        let folder = Folder(name: Policy.defaultFolderName, kind: .default)
         do {
             return try repository.create(folder)
         } catch {
@@ -80,7 +80,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
     public func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
         do {
             let folders = try repository.fetchAll()
-            return folders.filter { $0.deletedAt == nil && $0.isDeletable }
+            return folders.filter { $0.deletedAt == nil && $0.kind == .custom }
         } catch {
             AppLogger.error(error)
             throw FolderUseCaseError(error)
@@ -107,7 +107,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
         return AsyncStream { continuation in
             let task = Task { @MainActor in
                 for await folders in stream {
-                    let deletable = folders.filter { $0.deletedAt == nil && $0.isDeletable }
+                    let deletable = folders.filter { $0.deletedAt == nil && $0.kind == .custom }
                     continuation.yield(deletable)
                 }
                 continuation.finish()
@@ -127,7 +127,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
             name: trimName,
             createdAt: folder.createdAt,
             content: folder.content,
-            isDeletable: folder.isDeletable,
+            kind: folder.kind,
             deletedAt: folder.deletedAt
         )
         do {

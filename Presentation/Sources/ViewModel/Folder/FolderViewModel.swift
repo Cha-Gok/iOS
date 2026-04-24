@@ -105,7 +105,7 @@ extension FolderViewModel {
             name: name,
             createdAt: folder.createdAt,
             content: folder.content,
-            isDeletable: folder.isDeletable,
+            kind: folder.kind,
             deletedAt: folder.deletedAt
         )
 
@@ -168,7 +168,7 @@ extension FolderViewModel {
                         name: "개인 폴더 \(index + 1)",
                         createdAt: now.addingTimeInterval(createdOffset),
                         content: [],
-                        isDeletable: true
+                        kind: .custom
                     )
                 }
                 return PreviewData(folders: folders)
@@ -179,11 +179,11 @@ extension FolderViewModel {
             let items: [Folder]
 
             func create(name: String) throws(FolderUseCaseError) -> Folder {
-                Folder(name: name, createdAt: .now, content: [], isDeletable: true)
+                Folder(name: name, createdAt: .now, content: [], kind: .custom)
             }
 
             func createDefault() throws(FolderUseCaseError) -> Folder {
-                Folder(name: "기본 폴더", isDeletable: false)
+                Folder(name: "기본 폴더", kind: .default)
             }
 
             func fetchAll() throws(FolderUseCaseError) -> [Folder] {
@@ -191,7 +191,7 @@ extension FolderViewModel {
             }
 
             func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
-                items.filter(\.isDeletable)
+                items.filter { $0.kind == .custom }
             }
 
             func fetch(by id: UUID) throws(FolderUseCaseError) -> Folder {
@@ -204,7 +204,7 @@ extension FolderViewModel {
             }
 
             func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
-                let snapshot = items.filter(\.isDeletable)
+                let snapshot = items.filter { $0.kind == .custom }
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)
                     continuation.finish()

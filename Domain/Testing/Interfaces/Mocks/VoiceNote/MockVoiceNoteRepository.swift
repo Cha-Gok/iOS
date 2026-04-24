@@ -29,7 +29,7 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var observeRecentCallCount = 0
 
     // Actual Inputs
-    private var actualVoiceRecord: VoiceRecord?
+    private var actualCreatedVoiceNote: VoiceNote?
     private var actualUpdatedVoiceNote: VoiceNote?
     private var actualFetchID: UUID?
     private var actualFetchAllFolderID: UUID?
@@ -229,9 +229,9 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
 
     // Repository Implementations
 
-    public func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteRepositoryError) -> VoiceNote {
+    public func create(_ voiceNote: VoiceNote) throws(VoiceNoteRepositoryError) -> VoiceNote {
         createCallCount += 1
-        actualVoiceRecord = voiceRecord
+        actualCreatedVoiceNote = voiceNote
         switch createResult {
         case .success(let val): return val
         case .failure(let err): throw err

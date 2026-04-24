@@ -12,21 +12,49 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
         self.context = context
     }
 
-    public func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteRepositoryError) -> VoiceNote {
+    public func create(_ voiceNote: VoiceNote) throws(VoiceNoteRepositoryError) -> VoiceNote {
+        let folderRequest = NSFetchRequest<FolderEntity>(entityName: CoreDataEntityName.folder.rawValue)
+        folderRequest.predicate = NSPredicate(format: "id == %@", voiceNote.folderID as CVarArg)
+        folderRequest.fetchLimit = 1
+
+        let folderEntity: FolderEntity
         do {
-            let defaultFolder = try fetchDefaultFolder()
-            let voiceNote = VoiceNote(
-                title: voiceRecord.createdAt.yyyyMMddHHmmssString,
-                createdAt: voiceRecord.createdAt,
-                updatedAt: voiceRecord.createdAt,
-                folderID: defaultFolder.id,
-                voiceRecord: voiceRecord,
-                analysisState: .pending
-            )
-            return try store.create(voiceNote, as: VoiceNoteEntity.self)
+            guard let found = try context.fetch(folderRequest).first else {
+                throw VoiceNoteRepositoryError.defaultFolderNotFound
+            }
+            folderEntity = found
+        } catch let error as VoiceNoteRepositoryError {
+            throw error
         } catch {
+            AppLogger.error(error)
             throw .createFailed
         }
+
+        let recordEntity = VoiceRecordEntity(context: context)
+        recordEntity.id = voiceNote.voiceRecord.id
+        recordEntity.audioFilePath = voiceNote.voiceRecord.audioFilePath
+        recordEntity.duration = voiceNote.voiceRecord.duration
+        recordEntity.createdAt = voiceNote.voiceRecord.createdAt
+
+        let noteEntity = VoiceNoteEntity(context: context)
+        noteEntity.id = voiceNote.id
+        noteEntity.title = voiceNote.title
+        noteEntity.createdAt = voiceNote.createdAt
+        noteEntity.updatedAt = voiceNote.updatedAt
+        noteEntity.deletedAt = voiceNote.deletedAt
+        noteEntity.analysisStateRaw = voiceNote.analysisState.rawValue
+        noteEntity.folder = folderEntity
+        noteEntity.voiceRecord = recordEntity
+        recordEntity.voiceNote = noteEntity
+
+        do {
+            try context.save()
+        } catch {
+            AppLogger.error(error)
+            throw .createFailed
+        }
+
+        return voiceNote
     }
 
     public func update(_ voiceNote: VoiceNote) throws(VoiceNoteRepositoryError) -> VoiceNote {
@@ -47,7 +75,7 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
             throw .fetchAllFailed(folderID: nil)
         }
 
-        guard let defaultFolder = folders.first(where: { !$0.isDeletable }) else {
+        guard let defaultFolder = folders.first(where: { $0.kind == .default }) else {
             throw .defaultFolderNotFound
         }
 
@@ -132,7 +160,7 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
     private func fetchDefaultFolder() throws(VoiceNoteRepositoryError) -> Folder {
         do {
             let folders = try store.fetchAll(FolderEntity.self)
-            guard let defaultFolder = folders.first(where: { !$0.isDeletable }) else {
+            guard let defaultFolder = folders.first(where: { $0.kind == .default }) else {
                 throw VoiceNoteRepositoryError.defaultFolderNotFound
             }
             return defaultFolder

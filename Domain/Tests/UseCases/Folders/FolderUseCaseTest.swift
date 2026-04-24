@@ -17,7 +17,7 @@ extension FolderUseCaseTest {
         let expectedName = "New Folder"
         let expectedFolder = Folder.stub(name: expectedName)
         repository.setCreateResult(.success(expectedFolder))
-        repository.expectCreate(name: expectedName, isDeletable: true, callCount: 1)
+        repository.expectCreate(name: expectedName, kind: .custom, callCount: 1)
 
         // When
         let folder = try sut.create(name: expectedName)
@@ -187,10 +187,10 @@ extension FolderUseCaseTest {
 
         // Given
         let expectedFolders = [
-            Folder.stub(name: "기본 폴더", isDeletable: false),
+            Folder.stub(name: "기본 폴더", kind: .default),
             Folder.stub(name: "휴지통에 있는 폴더", deletedAt: Date()),
-            Folder.stub(name: "Folder 1", isDeletable: true),
-            Folder.stub(name: "Folder 2", isDeletable: true)
+            Folder.stub(name: "Folder 1", kind: .custom),
+            Folder.stub(name: "Folder 2", kind: .custom)
         ]
         repository.setFetchAllResult(.success(expectedFolders))
         repository.expectFetchAll(callCount: 1)
@@ -212,10 +212,10 @@ extension FolderUseCaseTest {
 
         // Given
         let expectedFolders = [
-            Folder.stub(name: "기본 폴더", isDeletable: false),
+            Folder.stub(name: "기본 폴더", kind: .default),
             Folder.stub(name: "휴지통에 있는 폴더", deletedAt: Date()),
-            Folder.stub(name: "Folder 1", isDeletable: true),
-            Folder.stub(name: "Folder 2", isDeletable: true)
+            Folder.stub(name: "Folder 1", kind: .custom),
+            Folder.stub(name: "Folder 2", kind: .custom)
         ]
         repository.setFetchAllResult(.success(expectedFolders))
         repository.expectFetchAll(callCount: 1)
@@ -273,7 +273,7 @@ extension FolderUseCaseTest {
             name: "New Name",
             createdAt: originalFolder.createdAt,
             content: originalFolder.content,
-            isDeletable: originalFolder.isDeletable,
+            kind: originalFolder.kind,
             deletedAt: originalFolder.deletedAt
         )
 

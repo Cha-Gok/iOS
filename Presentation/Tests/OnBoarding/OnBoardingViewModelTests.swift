@@ -135,8 +135,8 @@ final class OnBoardingViewModelTests: XCTestCase {
         sut.viewModel.syncPageState(nextStep: Step.finish.rawValue)
 
         sut.mockCheckFirstLaunchRepo.setReturnValue(true)
-        sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName, isDeletable: false)))
-        sut.mockFolderRepo.expectCreate(name: Policy.defaultFolderName, isDeletable: false, callCount: 1)
+        sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName, kind: .default)))
+        sut.mockFolderRepo.expectCreate(name: Policy.defaultFolderName, kind: .default, callCount: 1)
 
         let expectation = XCTestExpectation(description: "finishOnBoarding 호출")
         sut.mockNavDelegate.finishOnBoardingExpectation = expectation

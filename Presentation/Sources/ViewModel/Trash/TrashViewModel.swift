@@ -267,7 +267,7 @@ extension TrashViewModel {
                                 name: "휴지통 폴더 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
                                 content: [],
-                                isDeletable: true,
+                                kind: .custom,
                                 deletedAt: now.addingTimeInterval(deletedOffset)
                             )
                         )

@@ -12,7 +12,7 @@ public final class FolderEntity: NSManagedObject {
     public var createdAt: Date
 
     @NSManaged
-    public var isDeletable: Bool
+    public var kindRaw: String
 
     @NSManaged
     public var deletedAt: Date?

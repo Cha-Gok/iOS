@@ -7,7 +7,7 @@ public extension Folder {
         name: String = "Stub Folder",
         createdAt: Date = Date(),
         content: [VoiceNote] = [],
-        isDeletable: Bool = true,
+        kind: FolderKind = .custom,
         deletedAt: Date? = nil
     ) -> Folder {
         Folder(
@@ -15,7 +15,7 @@ public extension Folder {
             name: name,
             createdAt: createdAt,
             content: content,
-            isDeletable: isDeletable,
+            kind: kind,
             deletedAt: deletedAt
         )
     }

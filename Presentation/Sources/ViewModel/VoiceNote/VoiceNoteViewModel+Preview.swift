@@ -117,15 +117,15 @@
 
     private struct PreviewFolderUseCase: FolderUseCase {
         func create(name: String) throws(FolderUseCaseError) -> Folder {
-            Folder(name: name, isDeletable: true)
+            Folder(name: name, kind: .custom)
         }
 
         func createDefault() throws(FolderUseCaseError) -> Folder {
-            Folder(name: "기본 폴더", isDeletable: false)
+            Folder(name: "기본 폴더", kind: .default)
         }
 
         func fetchAll() throws(FolderUseCaseError) -> [Folder] {
-            [Folder(name: "기본 폴더", isDeletable: false)]
+            [Folder(name: "기본 폴더", kind: .default)]
         }
 
         func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
@@ -133,7 +133,7 @@
         }
 
         func fetch(by _: UUID) throws(FolderUseCaseError) -> Folder {
-            Folder(name: "기본 폴더", isDeletable: false)
+            Folder(name: "기본 폴더", kind: .default)
         }
 
         func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder {

@@ -28,7 +28,7 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
     private var expectedUpdateCallCount: Int?
 
     private var expectedCreateName: String?
-    private var expectedCreateIsDeletable: Bool?
+    private var expectedCreateKind: FolderKind?
     private var expectedFolderID: UUID?
     private var expectedFetchByID: UUID?
 
@@ -58,9 +58,9 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
 
     // MARK: - Expectations
 
-    public func expectCreate(name: String? = nil, isDeletable: Bool? = nil, callCount: Int) {
+    public func expectCreate(name: String? = nil, kind: FolderKind? = nil, callCount: Int) {
         expectedCreateName = name
-        expectedCreateIsDeletable = isDeletable
+        expectedCreateKind = kind
         expectedCreateCallCount = callCount
     }
 
@@ -97,11 +97,11 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
             )
         }
 
-        if let expectedCreateIsDeletable {
+        if let expectedCreateKind {
             XCTAssertEqual(
-                actualCreatedFolder?.isDeletable,
-                expectedCreateIsDeletable,
-                "생성 삭제 가능 여부 인자가 일치하지 않습니다.",
+                actualCreatedFolder?.kind,
+                expectedCreateKind,
+                "생성 폴더 kind 인자가 일치하지 않습니다.",
                 file: file,
                 line: line
             )

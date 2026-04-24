@@ -41,13 +41,16 @@ public protocol VoiceNoteUseCase: Sendable {
 /// 음성 메모 통합 유스케이스 구현체.
 public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
     private let repository: VoiceNoteRepository
+    private let folderRepository: FolderRepository
     private let analysisService: any VoiceNoteAnalysisService
 
     public init(
         repository: VoiceNoteRepository,
+        folderRepository: FolderRepository,
         analysisService: any VoiceNoteAnalysisService
     ) {
         self.repository = repository
+        self.folderRepository = folderRepository
         self.analysisService = analysisService
     }
 
@@ -76,14 +79,40 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
             throw error
         }
 
+        // 3. 기본 폴더 결정 (어느 폴더에 저장할지는 비즈니스 결정)
+        let defaultFolder: Folder
+        do {
+            let folders = try folderRepository.fetchAll()
+            guard let folder = folders.first(where: { $0.kind == .default }) else {
+                throw VoiceNoteUseCaseError.unknown(VoiceNoteRepositoryError.defaultFolderNotFound)
+            }
+            defaultFolder = folder
+        } catch let error as VoiceNoteUseCaseError {
+            throw error
+        } catch {
+            AppLogger.error(error)
+            throw .unknown(error)
+        }
+
+        // 4. VoiceNote 모델 구성 (제목 등 비즈니스 규칙은 UseCase에서 결정)
+        let voiceNote = VoiceNote(
+            title: voiceRecord.createdAt.yyyyMMddHHmmssString,
+            createdAt: voiceRecord.createdAt,
+            updatedAt: voiceRecord.createdAt,
+            folderID: defaultFolder.id,
+            voiceRecord: voiceRecord,
+            analysisState: .pending
+        )
+
+        // 5. 영속화
         let created: VoiceNote
         do {
-            created = try repository.create(voiceRecord)
+            created = try repository.create(voiceNote)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }
 
-        // 3. 분석 파이프라인 자동 시작 (fire-and-forget)
+        // 6. 분석 파이프라인 자동 시작 (fire-and-forget)
         analysisService.enqueue(voiceNoteID: created.id)
         return created
     }

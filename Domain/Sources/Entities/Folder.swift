@@ -5,7 +5,7 @@ public struct Folder: Sendable, Identifiable, Hashable {
     public let name: String
     public let createdAt: Date
     public let content: [VoiceNote]
-    public let isDeletable: Bool
+    public let kind: FolderKind
     public let deletedAt: Date?
 
     public init(
@@ -13,14 +13,14 @@ public struct Folder: Sendable, Identifiable, Hashable {
         name: String,
         createdAt: Date = Date.now,
         content: [VoiceNote] = [],
-        isDeletable: Bool = true,
+        kind: FolderKind = .custom,
         deletedAt: Date? = nil
     ) {
         self.id = id
         self.name = name
         self.createdAt = createdAt
         self.content = content
-        self.isDeletable = isDeletable
+        self.kind = kind
         self.deletedAt = deletedAt
     }
 }

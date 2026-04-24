@@ -20,7 +20,7 @@
 
             do {
                 let folders = try folderRepository.fetchAll()
-                guard folders.contains(where: { !$0.isDeletable }) else {
+                guard folders.contains(where: { $0.kind == .default }) else {
                     AppLogger.debug("기본 폴더 미존재. 온보딩 이후 다시 시도합니다.")
                     return
                 }
