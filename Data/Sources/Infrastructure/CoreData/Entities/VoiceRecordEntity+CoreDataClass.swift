@@ -2,6 +2,10 @@ import CoreData
 
 @objc(VoiceRecordEntity)
 public final class VoiceRecordEntity: NSManagedObject {
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<VoiceRecordEntity> {
+        NSFetchRequest<VoiceRecordEntity>(entityName: "VoiceRecord")
+    }
+
     @NSManaged
     public var id: UUID
 

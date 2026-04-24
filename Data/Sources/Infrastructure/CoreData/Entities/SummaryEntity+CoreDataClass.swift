@@ -2,6 +2,10 @@ import CoreData
 
 @objc(SummaryEntity)
 public final class SummaryEntity: NSManagedObject {
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<SummaryEntity> {
+        NSFetchRequest<SummaryEntity>(entityName: "Summary")
+    }
+
     @NSManaged
     public var id: UUID
 

@@ -13,7 +13,7 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
     }
 
     public func create(_ voiceNote: VoiceNote) throws(VoiceNoteRepositoryError) -> VoiceNote {
-        let folderRequest = NSFetchRequest<FolderEntity>(entityName: CoreDataEntityName.folder.rawValue)
+        let folderRequest = FolderEntity.fetchRequest()
         folderRequest.predicate = NSPredicate(format: "id == %@", voiceNote.folderID as CVarArg)
         folderRequest.fetchLimit = 1
 
