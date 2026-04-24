@@ -38,5 +38,5 @@ public protocol VoiceNoteRepository: Sendable {
     func restore(id: UUID, fallbackFolderID: UUID) throws(VoiceNoteRepositoryError)
 
     /// 노트를 영구 삭제합니다.
-    func hardDelete(id: UUID) throws(VoiceNoteRepositoryError)
+    func delete(id: UUID) throws(VoiceNoteRepositoryError)
 }

@@ -230,5 +230,5 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
 
     public func restore(id _: UUID, fallbackFolderID _: UUID) throws(VoiceNoteRepositoryError) {}
 
-    public func hardDelete(id _: UUID) throws(VoiceNoteRepositoryError) {}
+    public func delete(id _: UUID) throws(VoiceNoteRepositoryError) {}
 }

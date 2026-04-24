@@ -246,5 +246,5 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
 
     public func restore(id _: UUID) throws(FolderRepositoryError) {}
 
-    public func hardDelete(id _: UUID) throws(FolderRepositoryError) {}
+    public func delete(id _: UUID) throws(FolderRepositoryError) {}
 }

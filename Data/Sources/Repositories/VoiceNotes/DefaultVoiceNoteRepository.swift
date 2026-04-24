@@ -245,7 +245,7 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
-    public func hardDelete(id: UUID) throws(VoiceNoteRepositoryError) {
+    public func delete(id: UUID) throws(VoiceNoteRepositoryError) {
         do {
             guard let entity = try fetchEntity(id: id) else {
                 throw VoiceNoteRepositoryError.fetchFailed(id: id)

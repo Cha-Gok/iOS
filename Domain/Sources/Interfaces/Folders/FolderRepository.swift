@@ -48,5 +48,5 @@ public protocol FolderRepository: Sendable {
     func restore(id: UUID) throws(FolderRepositoryError)
 
     /// 폴더를 영구 삭제합니다. 안의 모든 노트도 cascade로 삭제됩니다.
-    func hardDelete(id: UUID) throws(FolderRepositoryError)
+    func delete(id: UUID) throws(FolderRepositoryError)
 }

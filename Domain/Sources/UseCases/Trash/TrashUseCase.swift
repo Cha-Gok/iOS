@@ -163,7 +163,7 @@ public struct DefaultTrashUseCase: TrashUseCase {
 
     public func hardDeleteNote(id: UUID) throws(TrashUseCaseError) {
         do {
-            try voiceNoteRepository.hardDelete(id: id)
+            try voiceNoteRepository.delete(id: id)
         } catch {
             AppLogger.error(error)
             throw TrashUseCaseError(error)
@@ -172,7 +172,7 @@ public struct DefaultTrashUseCase: TrashUseCase {
 
     public func hardDeleteFolder(id: UUID) throws(TrashUseCaseError) {
         do {
-            try folderRepository.hardDelete(id: id)
+            try folderRepository.delete(id: id)
         } catch {
             AppLogger.error(error)
             throw TrashUseCaseError(error)
@@ -200,7 +200,7 @@ public struct DefaultTrashUseCase: TrashUseCase {
                 $0.deletedAt != nil && $0.kind == .custom
             }
             for folder in deletedFolders {
-                try folderRepository.hardDelete(id: folder.id)
+                try folderRepository.delete(id: folder.id)
             }
         } catch {
             AppLogger.error(error)
@@ -209,7 +209,7 @@ public struct DefaultTrashUseCase: TrashUseCase {
         do {
             let trashedNotes = try voiceNoteRepository.fetchTrashed()
             for note in trashedNotes {
-                try voiceNoteRepository.hardDelete(id: note.id)
+                try voiceNoteRepository.delete(id: note.id)
             }
         } catch {
             AppLogger.error(error)

@@ -130,7 +130,7 @@ public struct DefaultFolderRepository: FolderRepository {
         }
     }
 
-    public func hardDelete(id: UUID) throws(FolderRepositoryError) {
+    public func delete(id: UUID) throws(FolderRepositoryError) {
         do {
             guard let entity = try fetchEntity(id: id) else {
                 throw FolderRepositoryError.notFound
