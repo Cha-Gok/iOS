@@ -16,6 +16,7 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
     private var fetchAllCallCount = 0
     private var fetchByIDCallCount = 0
     private var updateCallCount = 0
+    private var deleteCallCount = 0
 
     // 인자 검증
     private var actualCreatedFolder: Folder?
@@ -27,6 +28,7 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
     private var expectedFetchAllCallCount: Int?
     private var expectedFetchByIDCallCount: Int?
     private var expectedUpdateCallCount: Int?
+    private var expectedDeleteCallCount: Int?
 
     private var expectedCreateName: String?
     private var expectedCreateKind: FolderKind?
@@ -86,6 +88,10 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         expectedUpdateCallCount = callCount
     }
 
+    public func expectDelete(callCount: Int) {
+        expectedDeleteCallCount = callCount
+    }
+
     // MARK: - Verification
 
     public func verify(file: StaticString = #filePath, line: UInt = #line) {
@@ -141,6 +147,12 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         if let expectedID = expectedFolderID {
             XCTAssertEqual(
                 actualFolder?.id, expectedID, "수정 폴더 ID가 일치하지 않습니다.", file: file, line: line
+            )
+        }
+
+        if let expected = expectedDeleteCallCount {
+            XCTAssertEqual(
+                deleteCallCount, expected, "삭제 호출 횟수가 일치하지 않습니다.", file: file, line: line
             )
         }
     }
@@ -246,5 +258,7 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
 
     public func restore(id _: UUID) throws(FolderRepositoryError) {}
 
-    public func delete(id _: UUID) throws(FolderRepositoryError) {}
+    public func delete(id _: UUID) throws(FolderRepositoryError) {
+        deleteCallCount += 1
+    }
 }

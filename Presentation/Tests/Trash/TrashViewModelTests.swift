@@ -29,21 +29,33 @@ final class TrashViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: TrashViewModel
         let mockTrashUseCase: MockTrashUseCase
+        let mockFolderRepo: MockFolderRepository
+        let mockVoiceNoteRepo: MockVoiceNoteRepository
         let mockCoordinator: MockTrashCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
         let mockTrashUseCase = MockTrashUseCase()
+        let mockFolderRepo = MockFolderRepository()
+        let mockVoiceNoteRepo = MockVoiceNoteRepository()
         let mockCoordinator = MockTrashCoordinatorDelegate()
 
         let viewModel = TrashViewModel(
-            trashUseCase: mockTrashUseCase
+            trashUseCase: mockTrashUseCase,
+            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
+            voiceNoteUseCase: DefaultVoiceNoteUseCase(
+                repository: mockVoiceNoteRepo,
+                folderRepository: mockFolderRepo,
+                analysisService: MockVoiceNoteAnalysisService()
+            )
         )
         viewModel.coordinator = mockCoordinator
 
         return SUT(
             viewModel: viewModel,
             mockTrashUseCase: mockTrashUseCase,
+            mockFolderRepo: mockFolderRepo,
+            mockVoiceNoteRepo: mockVoiceNoteRepo,
             mockCoordinator: mockCoordinator
         )
     }
@@ -150,7 +162,7 @@ final class TrashViewModelTests: XCTestCase {
         let folder = Folder(name: "삭제용 폴더")
         let item = WasteBasketItem.folder(obj: folder)
         sut.mockTrashUseCase.setObserveResult(.success(makeStream([item])))
-        sut.mockTrashUseCase.expectHardDeleteFolder(callCount: 1)
+        sut.mockFolderRepo.expectDelete(callCount: 1)
 
         sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -158,16 +170,18 @@ final class TrashViewModelTests: XCTestCase {
         sut.viewModel.delete(item: item)
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.mockTrashUseCase.verify()
+        sut.mockFolderRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty, "단일 삭제 진행 후 항목이 리스트에서 지워져야 합니다.")
     }
 
     func test_restoreItem_단일항목복구() async {
         let sut = makeSUT()
-        let folder = Folder(name: "복구용 폴더")
+        let folder = Folder(name: "복구용 폴더", deletedAt: .now, parentID: UUID())
         let item = WasteBasketItem.folder(obj: folder)
         sut.mockTrashUseCase.setObserveResult(.success(makeStream([item])))
-        sut.mockTrashUseCase.expectRestoreFolder(callCount: 1)
+        sut.mockFolderRepo.setFetchByIDResult(.success(folder))
+        sut.mockFolderRepo.setUpdateResult(.success(folder))
+        sut.mockFolderRepo.expectUpdate(folderID: folder.id, callCount: 1)
 
         sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -175,19 +189,23 @@ final class TrashViewModelTests: XCTestCase {
         sut.viewModel.restore(item: item)
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.mockTrashUseCase.verify()
+        sut.mockFolderRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty, "복원 후 휴지통 목록에서 항목이 제거되어야 합니다.")
     }
 
     func test_cancelRestoreItem_단일항목복원취소() {
         let sut = makeSUT()
         let folder = Folder(name: "복원취소용 폴더")
+        let trash = Folder.stub(kind: .trash)
         let item = WasteBasketItem.folder(obj: folder)
-        sut.mockTrashUseCase.expectMoveToTrash(folderID: folder.id, callCount: 1)
+        sut.mockFolderRepo.setFetchByKindResult(.trash, result: .success([trash]))
+        sut.mockFolderRepo.setFetchByIDResult(.success(folder))
+        sut.mockFolderRepo.setUpdateResult(.success(folder))
+        sut.mockFolderRepo.expectUpdate(folderID: folder.id, callCount: 1)
 
         sut.viewModel.cancelRestore(item: item)
 
-        sut.mockTrashUseCase.verify()
+        sut.mockFolderRepo.verify()
         XCTAssertEqual(sut.viewModel.items.count, 1, "복원 취소 후 항목이 다시 휴지통에 추가되어야 합니다.")
     }
 
@@ -200,10 +218,16 @@ final class TrashViewModelTests: XCTestCase {
             voiceRecord: VoiceRecord(audioFilePath: "test.m4a", duration: 10),
             analysisState: .pending
         )
+        let trash = Folder.stub(kind: .trash)
         let items = [
             WasteBasketItem.folder(obj: folder),
             WasteBasketItem.voiceNote(obj: voiceNote)
         ]
+        sut.mockFolderRepo.setFetchByKindResult(.trash, result: .success([trash]))
+        sut.mockFolderRepo.setFetchByIDResult(.success(folder))
+        sut.mockFolderRepo.setUpdateResult(.success(folder))
+        sut.mockVoiceNoteRepo.setFetchResult(.success(voiceNote))
+        sut.mockVoiceNoteRepo.setUpdateResult(.success(voiceNote))
 
         sut.viewModel.cancelRestore(items: items)
 

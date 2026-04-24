@@ -101,7 +101,9 @@ public final class AppDIContainer {
 
     public func makeTrashViewModel() -> TrashViewModel {
         return TrashViewModel(
-            trashUseCase: trashUseCase
+            trashUseCase: trashUseCase,
+            folderUseCase: folderUseCase,
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 
