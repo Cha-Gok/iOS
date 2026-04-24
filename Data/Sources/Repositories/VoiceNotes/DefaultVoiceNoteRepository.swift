@@ -1,14 +1,15 @@
 import Core
+import CoreData
 import Domain
 import Foundation
 
 /// VoiceNote 통합 리포지토리 구현체.
 @MainActor
 public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
-    private let store: CoreDataLocalDataBase
+    private let context: NSManagedObjectContext
 
-    public init(store: CoreDataLocalDataBase) {
-        self.store = store
+    public init(context: NSManagedObjectContext) {
+        self.context = context
     }
 
     public func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteRepositoryError) -> VoiceNote {

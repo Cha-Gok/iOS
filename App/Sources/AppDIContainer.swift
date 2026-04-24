@@ -18,9 +18,9 @@ public final class AppDIContainer {
     private lazy var languageRepository = DefaultLanguageRepository(store: store)
     private lazy var voiceRecordRepository = DefaultVoiceRecordRepository(storageService: storageService)
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
-    private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
-    private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(store: localDataBase)
-    private lazy var wasteBasketRepository = DefaultWasteBasketRepository(store: localDataBase)
+    private lazy var folderRepository = DefaultFolderRepository(context: localDataBase.container.viewContext)
+    private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(context: localDataBase.container.viewContext)
+    private lazy var wasteBasketRepository = DefaultWasteBasketRepository(context: localDataBase.container.viewContext)
     private lazy var sttRepository = DefaultSTTRepository(
         storageService: storageService,
         languageRepository: languageRepository

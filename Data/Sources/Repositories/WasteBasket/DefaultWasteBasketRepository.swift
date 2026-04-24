@@ -1,4 +1,5 @@
 import Core
+import CoreData
 import Domain
 import Foundation
 
@@ -6,10 +7,10 @@ import Foundation
 /// Soft Delete(`deletedAt` 설정) 및 영구 삭제를 담당합니다.
 @MainActor
 public struct DefaultWasteBasketRepository: WasteBasketRepository {
-    private let store: CoreDataLocalDataBase
+    private let context: NSManagedObjectContext
 
-    public init(store: CoreDataLocalDataBase) {
-        self.store = store
+    public init(context: NSManagedObjectContext) {
+        self.context = context
     }
 
     // MARK: - Fetch
