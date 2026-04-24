@@ -14,6 +14,14 @@ final class SearchHeader: UICollectionReusableView {
         return search
     }()
 
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .point700
+
+        return label
+    }()
+    
     private let searchResultLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -46,6 +54,7 @@ final class SearchHeader: UICollectionReusableView {
 
     private func setup() {
         let spacer = UIView()
+        container.addArrangedSubview(titleLabel)
         container.addArrangedSubview(searchResultLabel)
         container.addArrangedSubview(resultCountLabel)
         container.addArrangedSubview(spacer)
@@ -62,8 +71,10 @@ final class SearchHeader: UICollectionReusableView {
     // MARK: - Configure
 
     func configure(
+        title: String,
         resultCount: Int
     ) {
+        titleLabel.setTypography(text: title, style: .title3)
         resultCountLabel.setTypography(text: String(resultCount), style: .title3)
     }
 }

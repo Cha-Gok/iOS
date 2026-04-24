@@ -71,11 +71,6 @@ public final class SearchViewController: ViewController {
     }
 
     private func setupSearchBar() {
-        searchBar.textField.addAction(UIAction { [weak self] _ in
-            guard let self else { return }
-            vm.search(searchBar.textField.text ?? "")
-        }, for: .editingChanged)
-
         searchBar.textField.delegate = self
 
         searchBar.closeButton.addAction(UIAction { [weak self] _ in
@@ -99,9 +94,7 @@ public final class SearchViewController: ViewController {
         // 셀 등록
         let emptyCellRegistration = CellRegistration { cell, _, _ in
             cell.backgroundConfiguration = .clear()
-            cell.contentConfiguration = EmptyContentConfiguration(
-                message: "검색 가능한 문서가 없습니다.\n지금 첫 기록을 시작해보세요."
-            )
+            cell.contentConfiguration = nil
         }
 
         let emptyResultCellRegistration = CellRegistration { cell, _, _ in
@@ -117,9 +110,26 @@ public final class SearchViewController: ViewController {
             cell.contentConfiguration = UIHostingConfiguration {
                 switch libraryItem {
                 case .folder(let folder):
-                    FolderCardView(folder: folder)
+                    SearchFolderCardView(
+                        fullText: folder.name,
+                        keyword: self.vm.query,
+                        createdAt: folder.createdAt.description,
+                        voiceNoteCount: folder.content.count
+                    ) { [weak self] in
+                        self?.vm.pushFolder(folder)
+                    }
                 case .voiceNote(let voiceNote):
-                    VoiceNoteCardView(voiceNote: voiceNote)
+                    SearchVoiceNoteCardView(
+                        title: voiceNote.title,
+                        keyword: self.vm.query,
+                        timeline: Date.now.voiceNoteDay(
+                            createdAt: voiceNote.createdAt,
+                            updatedAt: voiceNote.updatedAt,
+                            duration: voiceNote.voiceRecord.duration
+                        )
+                    ) { [weak self] in
+                        self?.vm.pushVoiceNote(voiceNote)
+                    }
                 }
             }
             .margins(.all, 0)
@@ -147,7 +157,7 @@ public final class SearchViewController: ViewController {
         let headerRegistration = HeaderRegistration(elementKind: SearchHeader.elementKind) { [weak self] header, _, _ in
             guard let self else { return }
             header.configure(
-                keyword: vm.query,
+                title: vm.type.title,
                 resultCount: vm.filteredItems.count
             )
         }
@@ -194,7 +204,7 @@ extension SearchViewController {
         else { return }
 
         header.configure(
-            keyword: vm.query,
+            title: vm.type.title,
             resultCount: vm.filteredItems.count
         )
     }
@@ -284,12 +294,19 @@ extension SearchViewController {
 extension SearchViewController: UITextFieldDelegate {
     public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
+        vm.search(searchBar.textField.text ?? "")
         return true
     }
 }
 
 #Preview {
+    
     UINavigationController(
-        rootViewController: SearchViewController(vm: SearchViewModel())
+        rootViewController: SearchViewController(
+            vm: SearchViewModel(
+                type: .main,
+                items: []
+            )
+        )
     )
 }

@@ -5,6 +5,10 @@ import Foundation
 public protocol SearchCoordinatorDelegate: AnyObject {
     /// 뒤로 가기
     func pop()
+    /// 폴더 Push
+    func pushMyFolderDetailView(_ folder: Folder)
+    /// 음성 노트 Push
+    func pushVoiceNoteView(voiceNote: VoiceNote)
 }
 
 @MainActor
@@ -13,13 +17,37 @@ public final class SearchViewModel {
     // MARK: - Search State
 
     enum SearchState {
-        case empty // 검색 전
-        case emptyResult // 검색 결과 없음
-        case result // 검색 결과 있음
+        case empty                      // 검색 전
+        case emptyResult                // 검색 결과 없음
+        case result                     // 검색 결과 있음
+    }
+    
+    public enum SearchType {
+        case main                       // 메인
+        case myFolder                   // 폴더 목록
+        case myDetailFolder(String)     // 상세 폴더
+        case trash                      // 휴지통
+        
+        var title: String {
+            switch self {
+            case .main:
+                "전체"
+            case .myFolder:
+                "폴더 목록"
+            case .myDetailFolder(let name):
+                name
+            case .trash:
+                "휴지통"
+            }
+        }
     }
 
     // MARK: - State
 
+    @ObservationIgnored
+    private(set) var items: [LibraryItem]
+    @ObservationIgnored
+    let type: SearchType
     private(set) var searchState: SearchState = .empty
     private(set) var filteredItems: [LibraryItem] = []
     private(set) var query: String = ""
@@ -27,39 +55,10 @@ public final class SearchViewModel {
 
     // MARK: Initialize
 
-    public init() {}
-
-    // MARK: - Data (더미)
-
-    let items: [LibraryItem] = [
-        .folder(Folder(name: "여행 계획", createdAt: .now.addingTimeInterval(-86400), content: [], isDeletable: true)),
-        .folder(Folder(name: "업무 미팅", createdAt: .now.addingTimeInterval(-172_800), content: [], isDeletable: true)),
-        .voiceNote(VoiceNote(
-            title: "아이디어 스케치",
-            createdAt: .now.addingTimeInterval(-3600),
-            updatedAt: .now.addingTimeInterval(-3600),
-            folderID: UUID(),
-            voiceRecord: VoiceRecord(createdAt: .now.addingTimeInterval(-3600), audioFilePath: "", duration: 120),
-            analysisState: .completed
-        )),
-        .voiceNote(VoiceNote(
-            title: "주간 회의록",
-            createdAt: .now.addingTimeInterval(-7200),
-            updatedAt: .now.addingTimeInterval(-7200),
-            folderID: UUID(),
-            voiceRecord: VoiceRecord(createdAt: .now.addingTimeInterval(-7200), audioFilePath: "", duration: 300),
-            analysisState: .completed
-        )),
-        .folder(Folder(name: "개인 프로젝트", createdAt: .now.addingTimeInterval(-259_200), content: [], isDeletable: true)),
-        .voiceNote(VoiceNote(
-            title: "장보기 리스트",
-            createdAt: .now.addingTimeInterval(-10800),
-            updatedAt: .now.addingTimeInterval(-10800),
-            folderID: UUID(),
-            voiceRecord: VoiceRecord(createdAt: .now.addingTimeInterval(-10800), audioFilePath: "", duration: 45),
-            analysisState: .completed
-        ))
-    ]
+    public init(type: SearchType, items: [LibraryItem]) {
+        self.type = type
+        self.items = items
+    }
 
     // MARK: - Action
 
@@ -87,5 +86,15 @@ public final class SearchViewModel {
 
     func clearSearch() {
         coordinator?.pop()
+    }
+    
+    // MARK: - Coordinator
+    
+    func pushFolder(_ folder: Folder) {
+        coordinator?.pushMyFolderDetailView(folder)
+    }
+    
+    func pushVoiceNote(_ voiceNote: VoiceNote) {
+        coordinator?.pushVoiceNoteView(voiceNote: voiceNote)
     }
 }
