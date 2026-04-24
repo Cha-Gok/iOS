@@ -14,14 +14,6 @@ final class SearchHeader: UICollectionReusableView {
         return search
     }()
 
-    private let keywordLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.textColor = .point700
-
-        return label
-    }()
-
     private let searchResultLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -54,10 +46,9 @@ final class SearchHeader: UICollectionReusableView {
 
     private func setup() {
         let spacer = UIView()
-        container.addArrangedSubview(keywordLabel)
         container.addArrangedSubview(searchResultLabel)
         container.addArrangedSubview(resultCountLabel)
-        container.addArrangedSubview(UIView())
+        container.addArrangedSubview(spacer)
         addSubview(container)
 
         NSLayoutConstraint.activate([
@@ -71,10 +62,8 @@ final class SearchHeader: UICollectionReusableView {
     // MARK: - Configure
 
     func configure(
-        keyword: String,
         resultCount: Int
     ) {
-        keywordLabel.setTypography(text: keyword, style: .title3)
         resultCountLabel.setTypography(text: String(resultCount), style: .title3)
     }
 }

@@ -3,25 +3,34 @@ import SwiftUI
 struct SearchFolderCardView: View {
     let fullText: String
     let keyword: String
-    let timeline: String
+    let createdAt: String
+    let voiceNoteCount: Int
     let action: () -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(
-                fullText: fullText,
-                keyword: keyword
-            )
-            .typography(.title3)
-            Text(timeline)
-                .typography(.label)
+        HStack(spacing: 16) {
+            Image(systemName: "folder")
+                .frame(maxWidth: 20, maxHeight: 20)
+            VStack(alignment: .leading, spacing: 12) {
+                Text(
+                    fullText: fullText,
+                    keyword: keyword
+                )
+                .typography(.title3)
+                Text(createdAt)
+                    .typography(.label)
+                    .foregroundStyle(.gray750)
+            }
+            Spacer()
+            Text(String(voiceNoteCount))
+                .typography(.body2)
                 .foregroundStyle(.gray750)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .glassEffect(.clear.tint(.point200.opacity(0.2)), in: .rect(cornerRadius: Constant.cornerRadius))
-        .onTapGesture {
-            action()
-        }
+        .contentShape(.rect(cornerRadius: Constant.cornerRadius))
+        .onTapGesture { action() }
     }
 }
 
@@ -29,7 +38,9 @@ struct SearchFolderCardView: View {
     SearchFolderCardView(
         fullText: "가을 하늘 맑고 푸른데",
         keyword: "맑고",
-        timeline: "2025.02.03 (2026.03.04 수정됨)·2시간 29분",
+        createdAt: Date.now.description,
+        voiceNoteCount: 3,
         action: {},
     )
+    .padding()
 }
