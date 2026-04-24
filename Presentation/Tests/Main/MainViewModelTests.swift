@@ -51,6 +51,13 @@ final class MainViewModelTests: XCTestCase {
         let mockLanguageRepo: MockLanguageRepository
     }
 
+    private func makeStream<T: Sendable>(_ items: T) -> AsyncStream<T> {
+        AsyncStream { continuation in
+            continuation.yield(items)
+            continuation.finish()
+        }
+    }
+
     private func makeSUT() -> SUT {
         let mockVoiceRecordRepo = MockVoiceRecordRepository()
         let mockFolderRepo = MockFolderRepository()
@@ -222,8 +229,8 @@ final class MainViewModelTests: XCTestCase {
         // Given
         let sut = makeSUT()
         let expectedNotes = [VoiceNote.stub(title: "노트1"), VoiceNote.stub(title: "노트2")]
-        sut.mockVoiceNoteRepo.setFetchAllResult(.success(expectedNotes))
-        sut.mockVoiceNoteRepo.expectFetchAllFromDefaultFolder(callCount: 1)
+        sut.mockVoiceNoteRepo.setObserveDefaultFolderResult(.success(makeStream(expectedNotes)))
+        sut.mockVoiceNoteRepo.expectObserveDefaultFolder(callCount: 1)
 
         // When
         sut.viewModel.updateVoiceNoteCategory()
@@ -243,8 +250,8 @@ final class MainViewModelTests: XCTestCase {
         // Given
         let sut = makeSUT()
         let expectedNotes = [VoiceNote.stub(title: "최신1"), VoiceNote.stub(title: "최신2")]
-        sut.mockVoiceNoteRepo.setFetchRecentResult(.success(expectedNotes))
-        sut.mockVoiceNoteRepo.expectFetchRecent(callCount: 1)
+        sut.mockVoiceNoteRepo.setObserveRecentResult(.success(makeStream(expectedNotes)))
+        sut.mockVoiceNoteRepo.expectObserveRecent(callCount: 1)
 
         // When
         sut.viewModel.updateRecentCategory()
@@ -267,8 +274,7 @@ final class MainViewModelTests: XCTestCase {
             Folder(name: "테스트 폴더 2")
         ]
 
-        sut.mockFolderRepo.setFetchAllResult(.success(expectedFolders))
-        sut.mockFolderRepo.expectFetchAll(callCount: 1)
+        sut.mockFolderRepo.setObserveAllResult(.success(makeStream(expectedFolders)))
 
         sut.viewModel.updateMyFolderCategory()
 
@@ -291,8 +297,8 @@ final class MainViewModelTests: XCTestCase {
             WasteBasketItem.voiceNote(obj: VoiceNote.stub(title: "삭제된 노트"))
         ]
 
-        sut.mockWasteBasketRepo.setFetchAllResult(.success(expectedTrash))
-        sut.mockWasteBasketRepo.expectFetchAll(callCount: 1)
+        sut.mockWasteBasketRepo.setObserveResult(.success(makeStream(expectedTrash)))
+        sut.mockWasteBasketRepo.expectObserve(callCount: 1)
 
         sut.viewModel.updateTrashCategory()
 

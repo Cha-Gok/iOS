@@ -202,6 +202,14 @@ extension FolderViewModel {
             func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder {
                 folder
             }
+
+            func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+                let snapshot = items.filter(\.isDeletable)
+                return AsyncStream { continuation in
+                    continuation.yield(snapshot)
+                    continuation.finish()
+                }
+            }
         }
 
         struct PreviewWasteBasketRepository: WasteBasketRepository {
@@ -212,6 +220,13 @@ extension FolderViewModel {
             func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
             func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
                 []
+            }
+
+            func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+                AsyncStream { continuation in
+                    continuation.yield([])
+                    continuation.finish()
+                }
             }
 
             func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}

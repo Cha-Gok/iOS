@@ -129,6 +129,11 @@ public final class MainViewController: ViewController {
         vm.updateTrashCategory()
     }
 
+    override public func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        vm.cancelObservations()
+    }
+
     override public func updateProperties() {
         super.updateProperties()
         let shouldshowLanguageAlert = vm.showLanguageAlert

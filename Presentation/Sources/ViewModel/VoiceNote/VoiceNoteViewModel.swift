@@ -273,8 +273,7 @@ public final class VoiceNoteViewModel {
         voiceNoteObservationTask = Task {
             do {
                 let stream = try voiceNoteUseCase.observe(id: voiceNote.id)
-                // 초기값은 init에서 주입된 voiceNote와 동일하므로 스킵하고, 이후 변경분만 반영한다.
-                for await note in stream.dropFirst() {
+                for await note in stream {
                     let folderChanged = voiceNote.folderID != note.folderID
                     voiceNote = note
                     if folderChanged { fetchFolderName() }

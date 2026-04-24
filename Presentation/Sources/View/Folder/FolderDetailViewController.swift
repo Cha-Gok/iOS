@@ -116,7 +116,12 @@ public final class FolderDetailViewController: CollectionViewController {
 
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        vm.fetchItems()
+        vm.onAppear()
+    }
+
+    override public func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        vm.onDisappear()
     }
 
     override public func updateProperties() {
@@ -368,7 +373,6 @@ private extension FolderDetailViewController {
             case .all, .multiple:
                 // TODO: 이동 로직 실행
                 vm.presentMoveFolder { [weak self] name in
-                    self?.vm.fetchItems()
                     self?.chagokBackgroundView.makeToast(
                         type: .normal,
                         "`\(name)` 폴더로 이동됐어요."

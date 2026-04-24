@@ -128,7 +128,12 @@ public final class TrashViewController: CollectionViewController {
 
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        vm.fetchItems()
+        vm.onAppear()
+    }
+
+    override public func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        vm.onDisappear()
     }
 
     override public func updateProperties() {

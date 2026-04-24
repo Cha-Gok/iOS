@@ -88,6 +88,30 @@
             }
         }
 
+        func observe(folderID: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+            let filtered = items.filter { $0.folderID == folderID }
+            return AsyncStream { continuation in
+                continuation.yield(filtered)
+                continuation.finish()
+            }
+        }
+
+        func observeAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+            let snapshot = items
+            return AsyncStream { continuation in
+                continuation.yield(snapshot)
+                continuation.finish()
+            }
+        }
+
+        func observeRecent(limit: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+            let recent = Array(items.prefix(limit))
+            return AsyncStream { continuation in
+                continuation.yield(recent)
+                continuation.finish()
+            }
+        }
+
         func regenerateSummary(id _: UUID) {}
     }
 
@@ -115,6 +139,13 @@
         func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder {
             folder
         }
+
+        func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+            AsyncStream { continuation in
+                continuation.yield([])
+                continuation.finish()
+            }
+        }
     }
 
     private struct PreviewPlaybackRepository: VoiceRecordPlaybackRepository {
@@ -141,6 +172,13 @@
         func moveAllToWasteBasket(items _: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
         func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
             []
+        }
+
+        func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+            AsyncStream { continuation in
+                continuation.yield([])
+                continuation.finish()
+            }
         }
 
         func restore(item _: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}

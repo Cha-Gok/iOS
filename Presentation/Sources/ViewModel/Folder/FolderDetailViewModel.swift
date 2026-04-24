@@ -30,6 +30,9 @@ public final class FolderDetailViewModel {
 
     public weak var coordinator: FolderDetailCoordinatorDelegate?
 
+    @ObservationIgnored
+    private var observationTask: Task<Void, Never>?
+
     // MARK: - UseCase
 
     private let voiceNoteUseCase: any VoiceNoteUseCase
@@ -123,20 +126,29 @@ extension FolderDetailViewModel {
     }
 }
 
-// MARK: - Fetch
+// MARK: - Lifecycle
 
 extension FolderDetailViewModel {
-    func fetchItems() {
-        Task {
+    func onAppear() {
+        guard observationTask == nil else { return }
+        observationTask = Task { [weak self] in
+            guard let self else { return }
             do {
-                let voiceNotes: [VoiceNote] = try voiceNoteUseCase.fetchAll(folderID: folderID)
-                self.items = voiceNotes.map { .voiceNote($0) }
-                sortItems()
+                let stream = try voiceNoteUseCase.observe(folderID: folderID)
+                for await voiceNotes in stream {
+                    items = voiceNotes.map { .voiceNote($0) }
+                    sortItems()
+                }
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
             }
         }
+    }
+
+    func onDisappear() {
+        observationTask?.cancel()
+        observationTask = nil
     }
 
     private func sortItems() {
@@ -198,7 +210,6 @@ extension FolderDetailViewModel {
                 errorMessage = error.errorDescription
             }
         }
-        fetchItems()
     }
 }
 
@@ -293,6 +304,30 @@ extension FolderDetailViewModel {
                 }
             }
 
+            func observe(folderID: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                let filtered = items.filter { $0.folderID == folderID }
+                return AsyncStream { continuation in
+                    continuation.yield(filtered)
+                    continuation.finish()
+                }
+            }
+
+            func observeAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                let snapshot = items
+                return AsyncStream { continuation in
+                    continuation.yield(snapshot)
+                    continuation.finish()
+                }
+            }
+
+            func observeRecent(limit: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                let recent = Array(items.prefix(limit))
+                return AsyncStream { continuation in
+                    continuation.yield(recent)
+                    continuation.finish()
+                }
+            }
+
             func regenerateSummary(id _: UUID) {}
         }
 
@@ -328,6 +363,14 @@ extension FolderDetailViewModel {
             func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
                 print("[Preview] 휴지통 조회: \(wasteBasket.count)개")
                 return wasteBasket
+            }
+
+            func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+                let snapshot = wasteBasket
+                return AsyncStream { continuation in
+                    continuation.yield(snapshot)
+                    continuation.finish()
+                }
             }
 
             func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {

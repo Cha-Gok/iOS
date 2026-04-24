@@ -48,6 +48,13 @@ final class TrashViewModelTests: XCTestCase {
         )
     }
 
+    private func makeStream(_ items: [WasteBasketItem]) -> AsyncStream<[WasteBasketItem]> {
+        AsyncStream { continuation in
+            continuation.yield(items)
+            continuation.finish()
+        }
+    }
+
     // MARK: - Initial State Tests
 
     func test_초기상태_확인() {
@@ -99,11 +106,11 @@ final class TrashViewModelTests: XCTestCase {
             ))
         ]
 
-        sut.mockRepo.setFetchAllResult(.success(fetchResult))
-        sut.mockRepo.expectFetchAll(callCount: 1)
+        sut.mockRepo.setObserveResult(.success(makeStream(fetchResult)))
+        sut.mockRepo.expectObserve(callCount: 1)
 
         // When
-        sut.viewModel.fetchItems()
+        sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // Then
@@ -120,10 +127,10 @@ final class TrashViewModelTests: XCTestCase {
             .folder(obj: Folder(name: "최근 삭제", deletedAt: now)),
             .folder(obj: Folder(name: "중간 삭제", deletedAt: now.addingTimeInterval(-500)))
         ]
-        sut.mockRepo.setFetchAllResult(.success(items))
+        sut.mockRepo.setObserveResult(.success(makeStream(items)))
 
         // When
-        sut.viewModel.fetchItems()
+        sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // Then
@@ -141,11 +148,11 @@ final class TrashViewModelTests: XCTestCase {
         let fetchResult: [WasteBasketItem] = [
             .folder(obj: Folder(name: "테스트 폴더"))
         ]
-        sut.mockRepo.setFetchAllResult(.success(fetchResult))
+        sut.mockRepo.setObserveResult(.success(makeStream(fetchResult)))
         sut.mockRepo.setDeleteResult(.success(()))
         sut.mockRepo.expectAllClear(callCount: 1)
 
-        sut.viewModel.fetchItems()
+        sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
         XCTAssertEqual(sut.viewModel.items.count, 1)
 
@@ -162,11 +169,11 @@ final class TrashViewModelTests: XCTestCase {
         // Given
         let sut = makeSUT()
         let item = WasteBasketItem.folder(obj: Folder(name: "삭제용 폴더"))
-        sut.mockRepo.setFetchAllResult(.success([item]))
+        sut.mockRepo.setObserveResult(.success(makeStream([item])))
         sut.mockRepo.setDeleteResult(.success(()))
         sut.mockRepo.expectDelete(item: item, callCount: 1)
 
-        sut.viewModel.fetchItems()
+        sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // When
@@ -182,11 +189,11 @@ final class TrashViewModelTests: XCTestCase {
         // Given
         let sut = makeSUT()
         let item = WasteBasketItem.folder(obj: Folder(name: "복구용 폴더"))
-        sut.mockRepo.setFetchAllResult(.success([item]))
+        sut.mockRepo.setObserveResult(.success(makeStream([item])))
         sut.mockRepo.setRestoreResult(.success(()))
         sut.mockRepo.expectRestore(item: item, callCount: 1)
 
-        sut.viewModel.fetchItems()
+        sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // When

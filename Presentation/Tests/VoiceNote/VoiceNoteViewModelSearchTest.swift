@@ -348,6 +348,27 @@ private struct FakeVoiceNoteUseCase: VoiceNoteUseCase {
         }
     }
 
+    func observe(folderID _: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { continuation in
+            continuation.yield([voiceNote])
+            continuation.finish()
+        }
+    }
+
+    func observeAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { continuation in
+            continuation.yield([voiceNote])
+            continuation.finish()
+        }
+    }
+
+    func observeRecent(limit _: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { continuation in
+            continuation.yield([voiceNote])
+            continuation.finish()
+        }
+    }
+
     func regenerateSummary(id _: UUID) {}
 }
 
@@ -375,6 +396,13 @@ private struct FakeFolderUseCase: FolderUseCase {
     func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder {
         folder
     }
+
+    func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+        AsyncStream { continuation in
+            continuation.yield([])
+            continuation.finish()
+        }
+    }
 }
 
 private struct FakeWasteBasketRepository: WasteBasketRepository {
@@ -385,6 +413,13 @@ private struct FakeWasteBasketRepository: WasteBasketRepository {
     func moveAllToWasteBasket(items _: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
     func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
         []
+    }
+
+    func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+        AsyncStream { continuation in
+            continuation.yield([])
+            continuation.finish()
+        }
     }
 
     func restore(item _: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}

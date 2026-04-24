@@ -22,6 +22,9 @@ public final class TrashViewModel {
 
     public weak var coordinator: TrashCoordinatorDelegate?
 
+    @ObservationIgnored
+    private var observationTask: Task<Void, Never>?
+
     // MARK: - UseCase
 
     private let repository: WasteBasketRepository
@@ -96,18 +99,29 @@ extension TrashViewModel {
     }
 }
 
-// MARK: - Fetch
+// MARK: - Lifecycle
 
 extension TrashViewModel {
-    func fetchItems() {
-        do {
-            let wasteBaskets: [WasteBasketItem] = try repository.fetchAll()
-            items = wasteBaskets.map(\.toLibraryItem)
-            sortItems()
-        } catch {
-            AppLogger.error(error)
-            errorMessage = error.localizedDescription
+    func onAppear() {
+        guard observationTask == nil else { return }
+        observationTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let stream = try repository.observe()
+                for await wasteBaskets in stream {
+                    items = wasteBaskets.map(\.toLibraryItem)
+                    sortItems()
+                }
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
+            }
         }
+    }
+
+    func onDisappear() {
+        observationTask?.cancel()
+        observationTask = nil
     }
 
     private func sortItems() {
@@ -213,7 +227,7 @@ extension TrashViewModel {
             let viewModel = TrashViewModel(
                 repository: PreviewWasteBasketRepository(items: previewData.items)
             )
-            viewModel.fetchItems()
+            viewModel.onAppear()
             return viewModel
         }
     }
@@ -268,6 +282,14 @@ extension TrashViewModel {
 
             func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
                 items
+            }
+
+            func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+                let snapshot = items
+                return AsyncStream { continuation in
+                    continuation.yield(snapshot)
+                    continuation.finish()
+                }
             }
 
             func allClear() throws(DeleteWasteBasketRepositoryError) {}
