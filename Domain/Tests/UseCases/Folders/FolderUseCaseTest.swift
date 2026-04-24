@@ -272,7 +272,7 @@ extension FolderUseCaseTest {
             id: originalFolder.id,
             name: "New Name",
             createdAt: originalFolder.createdAt,
-            content: originalFolder.content,
+            voiceNoteIDs: originalFolder.voiceNoteIDs,
             kind: originalFolder.kind,
             deletedAt: originalFolder.deletedAt
         )

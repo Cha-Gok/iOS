@@ -6,6 +6,7 @@
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="kindRaw" attributeType="String" defaultValueString="custom"/>
         <attribute name="name" attributeType="String"/>
+        <attribute name="parentID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <relationship name="voiceNotes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="VoiceNote" inverseName="folder" inverseEntity="VoiceNote"/>
     </entity>
     <entity name="Keyword" representedClassName="KeywordEntity" syncable="YES">
@@ -30,7 +31,6 @@
         <attribute name="analysisStateRaw" attributeType="String" defaultValueString="pending"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="deletedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="deletedWithFolder" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="originalFolderID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="title" attributeType="String"/>

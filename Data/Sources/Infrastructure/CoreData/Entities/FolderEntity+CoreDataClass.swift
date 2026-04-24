@@ -19,6 +19,9 @@ public final class FolderEntity: NSManagedObject {
     public var deletedAt: Date?
 
     @NSManaged
+    public var parentID: UUID?
+
+    @NSManaged
     public var voiceNotes: NSSet?
 }
 
@@ -38,16 +41,21 @@ extension FolderEntity {
         createdAt = model.createdAt
         kindRaw = model.kind.rawValue
         deletedAt = model.deletedAt
+        parentID = model.parentID
     }
 
     func toModel() -> Folder {
-        Folder(
+        let aliveNoteIDs = (voiceNotes as? Set<VoiceNoteEntity>)?
+            .filter { $0.deletedAt == nil }
+            .map(\.id) ?? []
+        return Folder(
             id: id,
             name: name,
             createdAt: createdAt,
-            content: [],
+            voiceNoteIDs: aliveNoteIDs,
             kind: FolderKind(rawValue: kindRaw) ?? .custom,
-            deletedAt: deletedAt
+            deletedAt: deletedAt,
+            parentID: parentID
         )
     }
 }

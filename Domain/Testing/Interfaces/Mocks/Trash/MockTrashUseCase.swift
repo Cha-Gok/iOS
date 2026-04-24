@@ -6,8 +6,6 @@ import XCTest
 public final class MockTrashUseCase: TrashUseCase, @unchecked Sendable {
     // Results
     private var observeResult: Result<AsyncStream<[WasteBasketItem]>, TrashUseCaseError>?
-    private var observeCascadeResult: Result<AsyncStream<[VoiceNote]>, TrashUseCaseError>?
-
     // Call counts
     private var moveNoteCallCount = 0
     private var moveFolderCallCount = 0
@@ -40,10 +38,6 @@ public final class MockTrashUseCase: TrashUseCase, @unchecked Sendable {
 
     public func setObserveResult(_ result: Result<AsyncStream<[WasteBasketItem]>, TrashUseCaseError>) {
         observeResult = result
-    }
-
-    public func setObserveCascadeResult(_ result: Result<AsyncStream<[VoiceNote]>, TrashUseCaseError>) {
-        observeCascadeResult = result
     }
 
     // MARK: - Expectations
@@ -94,15 +88,6 @@ public final class MockTrashUseCase: TrashUseCase, @unchecked Sendable {
 
     public func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
         switch observeResult {
-        case .success(let stream): return stream
-        case .failure(let error): throw error
-        case .none:
-            return AsyncStream { $0.finish() }
-        }
-    }
-
-    public func observeCascadeNotes(folderID _: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]> {
-        switch observeCascadeResult {
         case .success(let stream): return stream
         case .failure(let error): throw error
         case .none:

@@ -324,10 +324,12 @@ extension MainViewModel {
 
                 let folders: [Folder] = (0 ..< 10).map { index in
                     let createdOffset = TimeInterval((index + 1) * 86400) * -1
+                    let prefixCount = (index % 4) + 1
+                    let noteIDs = Array(defaultVoiceNotes.prefix(prefixCount).map(\.id))
                     return Folder(
                         name: "개인 폴더 \(index + 1)",
                         createdAt: now.addingTimeInterval(createdOffset),
-                        content: Array(defaultVoiceNotes.prefix((index % 4) + 1)),
+                        voiceNoteIDs: noteIDs,
                         kind: .custom
                     )
                 }
@@ -355,7 +357,6 @@ extension MainViewModel {
                             obj: Folder(
                                 name: "휴지통 폴더 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
-                                content: [],
                                 kind: .custom,
                                 deletedAt: now.addingTimeInterval(deletedOffset)
                             )
@@ -545,10 +546,6 @@ extension MainViewModel {
                     continuation.yield(snapshot)
                     continuation.finish()
                 }
-            }
-
-            func observeCascadeNotes(folderID _: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]> {
-                AsyncStream { $0.finish() }
             }
 
             func moveToTrash(noteID _: UUID) throws(TrashUseCaseError) {}

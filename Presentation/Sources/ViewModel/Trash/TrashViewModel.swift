@@ -278,7 +278,6 @@ extension TrashViewModel {
                             obj: Folder(
                                 name: "휴지통 폴더 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
-                                content: [],
                                 kind: .custom,
                                 deletedAt: now.addingTimeInterval(deletedOffset)
                             )
@@ -298,10 +297,6 @@ extension TrashViewModel {
                     continuation.yield(snapshot)
                     continuation.finish()
                 }
-            }
-
-            func observeCascadeNotes(folderID _: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]> {
-                AsyncStream { $0.finish() }
             }
 
             func moveToTrash(noteID _: UUID) throws(TrashUseCaseError) {}

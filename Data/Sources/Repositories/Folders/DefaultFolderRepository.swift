@@ -85,14 +85,20 @@ public struct DefaultFolderRepository: FolderRepository {
 
     public func observe(by kind: FolderKind) throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
         let request = FolderEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "kindRaw == %@ AND deletedAt == nil", kind.rawValue)
+        request.predicate = NSPredicate(
+            format: "kindRaw == %@ AND parentID == nil",
+            kind.rawValue
+        )
         request.sortDescriptors = [NSSortDescriptor(keyPath: \FolderEntity.createdAt, ascending: false)]
         return try makeListStream(request: request)
     }
 
     public func observeDeleted() throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
         let request = FolderEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "deletedAt != nil AND kindRaw == %@", FolderKind.custom.rawValue)
+        request.predicate = NSPredicate(
+            format: "parentID != nil AND kindRaw == %@",
+            FolderKind.custom.rawValue
+        )
         request.sortDescriptors = [NSSortDescriptor(keyPath: \FolderEntity.deletedAt, ascending: false)]
         return try makeListStream(request: request)
     }
@@ -102,22 +108,8 @@ public struct DefaultFolderRepository: FolderRepository {
             guard let folderEntity = try fetchEntity(id: id) else {
                 throw FolderRepositoryError.notFound
             }
-            guard let trashFolder = try fetchEntity(id: trashFolderID) else {
-                throw FolderRepositoryError.notFound
-            }
-
-            let now = Date.now
-            folderEntity.deletedAt = now
-
-            // 폴더 안의 살아있는 노트들을 cascade로 휴지통 폴더로 이동
-            let notes = (folderEntity.voiceNotes as? Set<VoiceNoteEntity>) ?? []
-            for note in notes where note.deletedAt == nil {
-                note.originalFolderID = folderEntity.id
-                note.folder = trashFolder
-                note.deletedAt = now
-                note.deletedWithFolder = true
-            }
-
+            folderEntity.parentID = trashFolderID
+            folderEntity.deletedAt = .now
             try context.save()
         } catch {
             AppLogger.error(error)
@@ -130,23 +122,8 @@ public struct DefaultFolderRepository: FolderRepository {
             guard let folderEntity = try fetchEntity(id: id) else {
                 throw FolderRepositoryError.notFound
             }
-
+            folderEntity.parentID = nil
             folderEntity.deletedAt = nil
-
-            // cascade로 같이 들어왔던 노트만 함께 복원 (단독 삭제 노트는 휴지통에 유지)
-            let request = VoiceNoteEntity.fetchRequest()
-            request.predicate = NSPredicate(
-                format: "originalFolderID == %@ AND deletedWithFolder == YES",
-                folderEntity.id as CVarArg
-            )
-            let cascadeNotes = try context.fetch(request)
-            for note in cascadeNotes {
-                note.folder = folderEntity
-                note.deletedAt = nil
-                note.originalFolderID = nil
-                note.deletedWithFolder = false
-            }
-
             try context.save()
         } catch {
             AppLogger.error(error)

@@ -315,10 +315,6 @@ extension FolderDetailViewModel {
                 AsyncStream { $0.finish() }
             }
 
-            func observeCascadeNotes(folderID _: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]> {
-                AsyncStream { $0.finish() }
-            }
-
             func moveToTrash(noteID _: UUID) throws(TrashUseCaseError) {}
             func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
             func restoreNote(id _: UUID) throws(TrashUseCaseError) {}

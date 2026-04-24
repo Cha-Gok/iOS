@@ -173,7 +173,7 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
 
     public func observeRecent(limit: Int) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
         let request = VoiceNoteEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "deletedAt == nil AND folder.deletedAt == nil")
+        request.predicate = NSPredicate(format: "deletedAt == nil AND folder.parentID == nil")
         request.sortDescriptors = [NSSortDescriptor(keyPath: \VoiceNoteEntity.createdAt, ascending: false)]
         request.fetchLimit = limit
         return try makeListStream(request: request) { .fetchRecentFailed }
@@ -181,7 +181,7 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
 
     public func observeTrashed() throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
         let request = VoiceNoteEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "deletedAt != nil AND deletedWithFolder == NO")
+        request.predicate = NSPredicate(format: "deletedAt != nil")
         request.sortDescriptors = [NSSortDescriptor(keyPath: \VoiceNoteEntity.deletedAt, ascending: false)]
         return try makeListStream(request: request) { .fetchRecentFailed }
     }
@@ -189,25 +189,13 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
     public func fetchTrashed() throws(VoiceNoteRepositoryError) -> [VoiceNote] {
         do {
             let request = VoiceNoteEntity.fetchRequest()
-            request.predicate = NSPredicate(format: "deletedAt != nil AND deletedWithFolder == NO")
+            request.predicate = NSPredicate(format: "deletedAt != nil")
             request.sortDescriptors = [NSSortDescriptor(keyPath: \VoiceNoteEntity.deletedAt, ascending: false)]
             return try context.fetch(request).map { $0.toModel() }
         } catch {
             AppLogger.error(error)
             throw .fetchRecentFailed
         }
-    }
-
-    public func observeCascadeDeleted(
-        fromFolderID: UUID
-    ) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
-        let request = VoiceNoteEntity.fetchRequest()
-        request.predicate = NSPredicate(
-            format: "originalFolderID == %@ AND deletedWithFolder == YES",
-            fromFolderID as CVarArg
-        )
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \VoiceNoteEntity.createdAt, ascending: false)]
-        return try makeListStream(request: request) { .fetchAllFailed(folderID: fromFolderID) }
     }
 
     public func moveToTrash(id: UUID, trashFolderID: UUID) throws(VoiceNoteRepositoryError) {
@@ -222,7 +210,6 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
             entity.originalFolderID = entity.folder.id
             entity.folder = trashFolder
             entity.deletedAt = .now
-            entity.deletedWithFolder = false
             try context.save()
         } catch {
             AppLogger.error(error)
@@ -251,7 +238,6 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
             entity.folder = target
             entity.deletedAt = nil
             entity.originalFolderID = nil
-            entity.deletedWithFolder = false
             try context.save()
         } catch {
             AppLogger.error(error)

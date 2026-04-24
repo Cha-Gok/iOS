@@ -164,7 +164,7 @@ final class FolderViewModelTests: XCTestCase {
             id: initialFolder.id,
             name: newName,
             createdAt: initialFolder.createdAt,
-            content: initialFolder.content,
+            voiceNoteIDs: initialFolder.voiceNoteIDs,
             kind: initialFolder.kind,
             deletedAt: initialFolder.deletedAt
         )

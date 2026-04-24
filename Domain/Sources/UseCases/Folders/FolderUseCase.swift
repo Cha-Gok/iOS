@@ -164,7 +164,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
             id: folder.id,
             name: trimName,
             createdAt: folder.createdAt,
-            content: folder.content,
+            voiceNoteIDs: folder.voiceNoteIDs,
             kind: folder.kind,
             deletedAt: folder.deletedAt
         )

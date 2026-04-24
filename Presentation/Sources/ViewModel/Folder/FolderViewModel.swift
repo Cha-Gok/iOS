@@ -104,7 +104,7 @@ extension FolderViewModel {
             id: folder.id,
             name: name,
             createdAt: folder.createdAt,
-            content: folder.content,
+            voiceNoteIDs: folder.voiceNoteIDs,
             kind: folder.kind,
             deletedAt: folder.deletedAt
         )
@@ -167,7 +167,6 @@ extension FolderViewModel {
                     return Folder(
                         name: "개인 폴더 \(index + 1)",
                         createdAt: now.addingTimeInterval(createdOffset),
-                        content: [],
                         kind: .custom
                     )
                 }
@@ -179,7 +178,7 @@ extension FolderViewModel {
             let items: [Folder]
 
             func create(name: String) throws(FolderUseCaseError) -> Folder {
-                Folder(name: name, createdAt: .now, content: [], kind: .custom)
+                Folder(name: name, createdAt: .now, kind: .custom)
             }
 
             func createDefault() throws(FolderUseCaseError) -> Folder {
@@ -228,10 +227,6 @@ extension FolderViewModel {
 
         struct PreviewTrashUseCase: TrashUseCase {
             func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
-                AsyncStream { $0.finish() }
-            }
-
-            func observeCascadeNotes(folderID _: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]> {
                 AsyncStream { $0.finish() }
             }
 

@@ -21,14 +21,12 @@ public protocol VoiceNoteRepository: Sendable {
     /// 최근 생성된 음성 메모 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
     func observeRecent(limit: Int) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]>
 
-    /// 휴지통(deletedAt != nil) 노트 중 단독 삭제(deletedWithFolder == false)된 항목을 관찰합니다.
+    /// 휴지통에 단독 삭제(folderID == trash.id AND deletedAt != nil)된 노트만 관찰합니다.
+    /// 폴더 cascade 삭제 노트는 부모 폴더가 휴지통에 있는 것으로 표현되므로 본 query에 잡히지 않습니다.
     func observeTrashed() throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]>
 
-    /// 휴지통(deletedAt != nil) 노트 중 단독 삭제된 항목의 현재 snapshot을 동기 조회합니다.
+    /// 휴지통에 단독 삭제된 노트의 현재 snapshot을 동기 조회합니다.
     func fetchTrashed() throws(VoiceNoteRepositoryError) -> [VoiceNote]
-
-    /// 특정 폴더에서 cascade 삭제(deletedWithFolder == true)된 노트를 관찰합니다.
-    func observeCascadeDeleted(fromFolderID: UUID) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]>
 
     /// 노트를 휴지통으로 단독 이동합니다.
     /// - Parameters:

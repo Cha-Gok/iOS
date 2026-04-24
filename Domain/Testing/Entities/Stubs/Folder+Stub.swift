@@ -6,7 +6,7 @@ public extension Folder {
         id: UUID = UUID(),
         name: String = "Stub Folder",
         createdAt: Date = Date(),
-        content: [VoiceNote] = [],
+        voiceNoteIDs: [UUID] = [],
         kind: FolderKind = .custom,
         deletedAt: Date? = nil
     ) -> Folder {
@@ -14,7 +14,7 @@ public extension Folder {
             id: id,
             name: name,
             createdAt: createdAt,
-            content: content,
+            voiceNoteIDs: voiceNoteIDs,
             kind: kind,
             deletedAt: deletedAt
         )

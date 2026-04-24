@@ -64,7 +64,7 @@ struct FolderCardView: View {
                 Text(folder.name)
                     .font(Font.custom("Pretendard", size: 16))
                 Spacer()
-                Text(String(folder.content.count))
+                Text(String(folder.voiceNoteIDs.count))
                     .font(Font.custom("Pretendard", size: 16))
                     .multilineTextAlignment(.trailing)
             }

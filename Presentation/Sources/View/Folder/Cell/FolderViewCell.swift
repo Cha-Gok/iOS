@@ -83,7 +83,7 @@ final class FolderViewCell: UITableViewCell {
             prefixImage.image = UIImage(systemName: "folder.fill")
             prefixImage.tintColor = UIColor.gray600
             titleLabel.setTypography(text: folder.name, style: .body2)
-            countLabel.setTypography(text: "\(folder.content.count)", style: .body2)
+            countLabel.setTypography(text: "\(folder.voiceNoteIDs.count)", style: .body2)
         case .voiceNote(let voiceNote):
             prefixImage.image = UIImage(systemName: "waveform")
             prefixImage.tintColor = UIColor.gray600

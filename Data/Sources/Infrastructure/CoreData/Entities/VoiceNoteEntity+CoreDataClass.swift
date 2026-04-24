@@ -22,9 +22,6 @@ public final class VoiceNoteEntity: NSManagedObject {
     public var originalFolderID: UUID?
 
     @NSManaged
-    public var deletedWithFolder: Bool
-
-    @NSManaged
     public var analysisStateRaw: String
 
     @NSManaged
@@ -63,7 +60,6 @@ extension VoiceNoteEntity {
         updatedAt = model.updatedAt
         deletedAt = model.deletedAt
         originalFolderID = model.originalFolderID
-        deletedWithFolder = model.deletedWithFolder
         analysisStateRaw = model.analysisState.rawValue
     }
 
@@ -84,7 +80,6 @@ extension VoiceNoteEntity {
             summary: summary?.toModel(),
             deletedAt: deletedAt,
             originalFolderID: originalFolderID,
-            deletedWithFolder: deletedWithFolder,
             analysisState: state
         )
     }

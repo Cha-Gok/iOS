@@ -7,9 +7,6 @@ public protocol TrashUseCase: Sendable {
     /// 휴지통 항목 목록을 관찰합니다. 삭제된 폴더 + 단독 삭제된 노트가 합쳐서 emit됩니다.
     func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]>
 
-    /// 특정 삭제된 폴더 안의 cascade 삭제 노트를 관찰합니다 (휴지통 폴더 상세).
-    func observeCascadeNotes(folderID: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]>
-
     /// 노트를 휴지통으로 단독 이동합니다.
     func moveToTrash(noteID: UUID) throws(TrashUseCaseError)
 
@@ -101,15 +98,6 @@ public struct DefaultTrashUseCase: TrashUseCase {
                 foldersTask.cancel()
                 notesTask.cancel()
             }
-        }
-    }
-
-    public func observeCascadeNotes(folderID: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]> {
-        do {
-            return try voiceNoteRepository.observeCascadeDeleted(fromFolderID: folderID)
-        } catch {
-            AppLogger.error(error)
-            throw TrashUseCaseError(error)
         }
     }
 

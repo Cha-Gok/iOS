@@ -222,12 +222,6 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
         AsyncStream { $0.finish() }
     }
 
-    public func observeCascadeDeleted(
-        fromFolderID _: UUID
-    ) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
-        AsyncStream { $0.finish() }
-    }
-
     public func fetchTrashed() throws(VoiceNoteRepositoryError) -> [VoiceNote] {
         []
     }
