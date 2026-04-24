@@ -82,7 +82,7 @@ final class KeyPointSkeletonContentView: UIView, UIContentView {
             contentStack.leadingAnchor.constraint(equalTo: leadingAnchor),
             contentStack.trailingAnchor.constraint(equalTo: trailingAnchor),
             contentStack.topAnchor.constraint(equalTo: topAnchor),
-            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor),
+            contentStack.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 
@@ -102,7 +102,7 @@ final class KeyPointSkeletonContentView: UIView, UIContentView {
         let configs = [
             KeyPointSkeletonContentConfiguration(number: 1, beginOffset: 0.0),
             KeyPointSkeletonContentConfiguration(number: 2, beginOffset: 0.2),
-            KeyPointSkeletonContentConfiguration(number: 3, beginOffset: 0.4),
+            KeyPointSkeletonContentConfiguration(number: 3, beginOffset: 0.4)
         ]
 
         let stack = UIStackView(arrangedSubviews: configs.map { $0.makeContentView() })
@@ -118,7 +118,7 @@ final class KeyPointSkeletonContentView: UIView, UIContentView {
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
             stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
-            stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
         ])
 
         return container

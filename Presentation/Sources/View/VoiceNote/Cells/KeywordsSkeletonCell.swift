@@ -62,7 +62,7 @@ final class KeywordsSkeletonContentView: UIView, UIContentView {
                 equalTo: trailingAnchor,
                 constant: -Constant.keywordChipHorizontalPadding
             ),
-            skeletonLine.centerYAnchor.constraint(equalTo: centerYAnchor),
+            skeletonLine.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
     }
 
@@ -80,7 +80,7 @@ final class KeywordsSkeletonContentView: UIView, UIContentView {
     let preview: UIView = {
         let configs = [
             KeywordsSkeletonContentConfiguration(beginOffset: 0.0),
-            KeywordsSkeletonContentConfiguration(beginOffset: 0.2),
+            KeywordsSkeletonContentConfiguration(beginOffset: 0.2)
         ]
 
         let stack = UIStackView(arrangedSubviews: configs.map { $0.makeContentView() })
@@ -96,7 +96,7 @@ final class KeywordsSkeletonContentView: UIView, UIContentView {
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
             stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
-            stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
         ])
 
         return container

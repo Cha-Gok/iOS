@@ -14,7 +14,7 @@ final class SkeletonLineView: UIView {
         gradientLayer.cornerRadius = Constant.skeletonLineHeight / 2
         gradientLayer.colors = [
             UIColor.gray400.cgColor,
-            UIColor.gray900.withAlphaComponent(Constant.skeletonLineTrailingAlpha).cgColor,
+            UIColor.gray900.withAlphaComponent(Constant.skeletonLineTrailingAlpha).cgColor
         ]
     }
 
@@ -73,7 +73,7 @@ final class SkeletonLineView: UIView {
     container.addSubview(stack)
     NSLayoutConstraint.activate([
         stack.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+        stack.centerYAnchor.constraint(equalTo: container.centerYAnchor)
     ])
     return container
 }

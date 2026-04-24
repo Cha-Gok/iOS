@@ -35,6 +35,7 @@ final class VoiceNoteScriptViewController: UIViewController {
         observePlayingParagraph()
         observeEditingMode()
         observeSearchState()
+        observeAnalysisState()
     }
 
     /// 지정한 매치 위치의 스크립트 섹션으로 컬렉션을 스크롤합니다.
@@ -61,7 +62,7 @@ final class VoiceNoteScriptViewController: UIViewController {
 
 private extension VoiceNoteScriptViewController {
     func makeLayout() -> UICollectionViewLayout {
-        UICollectionViewCompositionalLayout { _, environment in
+        UICollectionViewCompositionalLayout { [weak self] _, environment in
             var config = UICollectionLayoutListConfiguration(appearance: .plain)
             config.backgroundColor = .clear
             config.showsSeparators = false
@@ -72,15 +73,25 @@ private extension VoiceNoteScriptViewController {
             for item in section.boundarySupplementaryItems {
                 item.pinToVisibleBounds = false
                 item.edgeSpacing = NSCollectionLayoutEdgeSpacing(
-                    leading: nil, top: .fixed(32),
+                    leading: nil, top: .fixed(22),
                     trailing: nil, bottom: nil
                 )
             }
 
             section.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 0, bottom: 0, trailing: 0)
-            section.interGroupSpacing = 16
+            section.interGroupSpacing = self?.isShowingSkeleton == true ? Constant.scriptCellSpacing : 16
 
             return section
+        }
+    }
+
+    var isShowingSkeleton: Bool {
+        switch viewModel.voiceNote.analysisState {
+        case .pending, .transcribing:
+            return true
+        case .transcribed, .summarizing, .regenerating, .completed,
+             .transcriptionFailed, .summarizationFailed:
+            return false
         }
     }
 }
@@ -121,10 +132,20 @@ private extension VoiceNoteScriptViewController {
             )
         }
 
+        let scriptSkeletonCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
+            guard case .scriptSkeleton(_, let beginOffset) = item else { return }
+            cell.contentConfiguration = ScriptSkeletonContentConfiguration(beginOffset: beginOffset)
+        }
+
         let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
             collectionView: collectionView
         ) { col, indexPath, item in
-            col.dequeueConfiguredReusableCell(using: scriptCellReg, for: indexPath, item: item)
+            switch item {
+            case .script:
+                return col.dequeueConfiguredReusableCell(using: scriptCellReg, for: indexPath, item: item)
+            case .scriptSkeleton:
+                return col.dequeueConfiguredReusableCell(using: scriptSkeletonCellReg, for: indexPath, item: item)
+            }
         }
 
         let headerReg = makeHeaderRegistration()
@@ -146,9 +167,17 @@ private extension VoiceNoteScriptViewController {
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections([.scripts])
-        let scriptItems = viewModel.scriptSections.indices.map { Item.script(index: $0) }
-        snapshot.appendItems(scriptItems, toSection: .scripts)
-        snapshot.reconfigureItems(scriptItems)
+
+        let items: [Item] = if isShowingSkeleton {
+            (0 ..< 30).map { idx in
+                .scriptSkeleton(index: idx, beginOffset: Double(idx % 3) * 0.2)
+            }
+        } else {
+            viewModel.scriptSections.indices.map { Item.script(index: $0) }
+        }
+
+        snapshot.appendItems(items, toSection: .scripts)
+        snapshot.reconfigureItems(items)
         dataSource.apply(snapshot, animatingDifferences: true)
     }
 
@@ -172,6 +201,19 @@ private extension VoiceNoteScriptViewController {
             Task { @MainActor in
                 self.applySnapshot()
                 self.observeTranscriptSections()
+            }
+        }
+    }
+
+    func observeAnalysisState() {
+        withObservationTracking {
+            _ = viewModel.voiceNote.analysisState
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.collectionView.collectionViewLayout.invalidateLayout()
+                self.applySnapshot()
+                self.observeAnalysisState()
             }
         }
     }
@@ -302,5 +344,6 @@ extension VoiceNoteScriptViewController {
 
     enum Item: Hashable {
         case script(index: Int)
+        case scriptSkeleton(index: Int, beginOffset: CFTimeInterval)
     }
 }
