@@ -36,7 +36,7 @@ public final class VoiceNoteViewModel {
     private let voiceNoteUseCase: any VoiceNoteUseCase
     private let folderUseCase: any FolderUseCase
     private let playbackRepository: any VoiceRecordPlaybackRepository
-    private let wasteBasketRepository: any WasteBasketRepository
+    private let trashUseCase: any TrashUseCase
 
     // MARK: - Init
 
@@ -45,13 +45,13 @@ public final class VoiceNoteViewModel {
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
         playbackRepository: any VoiceRecordPlaybackRepository,
-        wasteBasketRepository: any WasteBasketRepository
+        trashUseCase: any TrashUseCase
     ) {
         self.voiceNote = voiceNote
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.playbackRepository = playbackRepository
-        self.wasteBasketRepository = wasteBasketRepository
+        self.trashUseCase = trashUseCase
     }
 
     // MARK: - View Actions
@@ -319,7 +319,7 @@ public final class VoiceNoteViewModel {
     private func moveToWasteBasket() {
         do {
             stop()
-            try wasteBasketRepository.moveToWasteBasket(item: .voiceNote(obj: voiceNote))
+            try trashUseCase.moveToTrash(noteID: voiceNote.id)
             coordinator?.pop()
         } catch {
             errorMessage = error.localizedDescription

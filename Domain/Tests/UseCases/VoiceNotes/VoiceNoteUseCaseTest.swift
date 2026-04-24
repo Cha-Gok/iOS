@@ -8,19 +8,23 @@ final class VoiceNoteUseCaseTest: XCTestCase {
     private struct SUT {
         let useCase: VoiceNoteUseCase
         let repository: MockVoiceNoteRepository
+        let folderRepository: MockFolderRepository
         let analysisService: MockVoiceNoteAnalysisService
     }
 
     private func makeSUT() -> SUT {
         let repository = MockVoiceNoteRepository()
+        let folderRepository = MockFolderRepository()
         let analysisService = MockVoiceNoteAnalysisService()
         let useCase = DefaultVoiceNoteUseCase(
             repository: repository,
+            folderRepository: folderRepository,
             analysisService: analysisService
         )
         return SUT(
             useCase: useCase,
             repository: repository,
+            folderRepository: folderRepository,
             analysisService: analysisService
         )
     }
@@ -32,8 +36,10 @@ extension VoiceNoteUseCaseTest {
     func test_create_정상호출시_리포지토리를호출하고결과를반환한다() throws {
         let sut = makeSUT()
         let voiceRecord = VoiceRecord.stub()
+        let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
         let expectedNote = VoiceNote.stub(voiceRecord: voiceRecord)
 
+        sut.folderRepository.setFetchByKindResult(.default, result: .success(defaultFolder))
         sut.repository.setCreateResult(.success(expectedNote))
         sut.repository.expectCreate(callCount: 1)
         sut.analysisService.expectEnqueue(callCount: 1)
@@ -72,34 +78,6 @@ extension VoiceNoteUseCaseTest {
         let result = try sut.useCase.update(voiceNote)
 
         XCTAssertEqual(result.title, "수정된 제목")
-        sut.repository.verify()
-    }
-}
-
-// MARK: - Fetch
-
-extension VoiceNoteUseCaseTest {
-    func test_fetchAllFromDefaultFolder_호출시_리포지토리를호출한다() throws {
-        let sut = makeSUT()
-        let expected = [VoiceNote.stub()]
-        sut.repository.setFetchAllResult(.success(expected))
-        sut.repository.expectFetchAllFromDefaultFolder(callCount: 1)
-
-        let result = try sut.useCase.fetchAllFromDefaultFolder()
-
-        XCTAssertEqual(result.count, 1)
-        sut.repository.verify()
-    }
-
-    func test_fetchRecent_호출시_리포지토리를호출한다() throws {
-        let sut = makeSUT()
-        let expected = [VoiceNote.stub()]
-        sut.repository.setFetchRecentResult(.success(expected))
-        sut.repository.expectFetchRecent(callCount: 1)
-
-        let result = try sut.useCase.fetchRecent(limit: 5)
-
-        XCTAssertEqual(result.count, 1)
         sut.repository.verify()
     }
 }

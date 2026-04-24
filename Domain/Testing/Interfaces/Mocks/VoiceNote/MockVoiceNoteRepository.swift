@@ -7,11 +7,8 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var createResult: Result<VoiceNote, VoiceNoteRepositoryError>?
     private var updateResult: Result<VoiceNote, VoiceNoteRepositoryError>?
     private var fetchResult: Result<VoiceNote, VoiceNoteRepositoryError>?
-    private var fetchAllResult: Result<[VoiceNote], VoiceNoteRepositoryError>?
-    private var fetchRecentResult: Result<[VoiceNote], VoiceNoteRepositoryError>?
     private var observeResult: Result<AsyncStream<VoiceNote>, VoiceNoteRepositoryError>?
     private var observeFolderResult: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>?
-    private var observeDefaultFolderResult: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>?
     private var observeRecentResult: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>?
 
     public init() {}
@@ -20,20 +17,14 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var createCallCount = 0
     private var updateCallCount = 0
     private var fetchCallCount = 0
-    private var fetchAllFromDefaultFolderCallCount = 0
-    private var fetchAllCallCount = 0
-    private var fetchRecentCallCount = 0
     private var observeCallCount = 0
     private var observeFolderCallCount = 0
-    private var observeDefaultFolderCallCount = 0
     private var observeRecentCallCount = 0
 
     // Actual Inputs
     private var actualCreatedVoiceNote: VoiceNote?
     private var actualUpdatedVoiceNote: VoiceNote?
     private var actualFetchID: UUID?
-    private var actualFetchAllFolderID: UUID?
-    private var actualFetchRecentLimit: Int?
     private var actualObserveFolderID: UUID?
     private var actualObserveRecentLimit: Int?
 
@@ -41,14 +32,9 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var expectedCreateCallCount: Int?
     private var expectedUpdateCallCount: Int?
     private var expectedFetchByIdCallCount: Int?
-    private var expectedDefaultFetchCallCount: Int?
-    private var expectedFetchAllCallCount: Int?
-    private var expectedFetchAllFolderID: UUID?
-    private var expectedFetchRecentCallCount: Int?
     private var expectedObserveCallCount: Int?
     private var expectedObserveFolderCallCount: Int?
     private var expectedObserveFolderID: UUID?
-    private var expectedObserveDefaultFolderCallCount: Int?
     private var expectedObserveRecentCallCount: Int?
     private var expectedObserveRecentLimit: Int?
 
@@ -65,24 +51,12 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
         fetchResult = result
     }
 
-    public func setFetchAllResult(_ result: Result<[VoiceNote], VoiceNoteRepositoryError>) {
-        fetchAllResult = result
-    }
-
-    public func setFetchRecentResult(_ result: Result<[VoiceNote], VoiceNoteRepositoryError>) {
-        fetchRecentResult = result
-    }
-
     public func setObserveResult(_ result: Result<AsyncStream<VoiceNote>, VoiceNoteRepositoryError>) {
         observeResult = result
     }
 
     public func setObserveFolderResult(_ result: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>) {
         observeFolderResult = result
-    }
-
-    public func setObserveDefaultFolderResult(_ result: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>) {
-        observeDefaultFolderResult = result
     }
 
     public func setObserveRecentResult(_ result: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>) {
@@ -102,19 +76,6 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
         expectedFetchByIdCallCount = callCount
     }
 
-    public func expectFetchAllFromDefaultFolder(callCount: Int) {
-        expectedDefaultFetchCallCount = callCount
-    }
-
-    public func expectFetchAll(callCount: Int, folderID: UUID? = nil) {
-        expectedFetchAllCallCount = callCount
-        expectedFetchAllFolderID = folderID
-    }
-
-    public func expectFetchRecent(callCount: Int) {
-        expectedFetchRecentCallCount = callCount
-    }
-
     public func expectObserve(callCount: Int) {
         expectedObserveCallCount = callCount
     }
@@ -122,10 +83,6 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     public func expectObserveFolder(callCount: Int, folderID: UUID? = nil) {
         expectedObserveFolderCallCount = callCount
         expectedObserveFolderID = folderID
-    }
-
-    public func expectObserveDefaultFolder(callCount: Int) {
-        expectedObserveDefaultFolderCallCount = callCount
     }
 
     public func expectObserveRecent(callCount: Int, limit: Int? = nil) {
@@ -155,34 +112,6 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
             file: file,
             line: line
         ) }
-        if let exp = expectedDefaultFetchCallCount { XCTAssertEqual(
-            fetchAllFromDefaultFolderCallCount,
-            exp,
-            "fetchAllFromDefaultFolder 호출 횟수 불일치",
-            file: file,
-            line: line
-        ) }
-        if let exp = expectedFetchAllCallCount { XCTAssertEqual(
-            fetchAllCallCount,
-            exp,
-            "fetchAll(folderID:) 호출 횟수 불일치",
-            file: file,
-            line: line
-        ) }
-        if let expID = expectedFetchAllFolderID { XCTAssertEqual(
-            actualFetchAllFolderID,
-            expID,
-            "fetchAll folderID 불일치",
-            file: file,
-            line: line
-        ) }
-        if let exp = expectedFetchRecentCallCount { XCTAssertEqual(
-            fetchRecentCallCount,
-            exp,
-            "fetchRecent 호출 횟수 불일치",
-            file: file,
-            line: line
-        ) }
         if let exp = expectedObserveCallCount { XCTAssertEqual(
             observeCallCount,
             exp,
@@ -201,13 +130,6 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
             actualObserveFolderID,
             expID,
             "observe folderID 불일치",
-            file: file,
-            line: line
-        ) }
-        if let exp = expectedObserveDefaultFolderCallCount { XCTAssertEqual(
-            observeDefaultFolderCallCount,
-            exp,
-            "observeAllFromDefaultFolder 호출 횟수 불일치",
             file: file,
             line: line
         ) }
@@ -251,27 +173,6 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
-    public func fetchAllFromDefaultFolder() throws(VoiceNoteRepositoryError) -> [VoiceNote] {
-        fetchAllFromDefaultFolderCallCount += 1
-        switch fetchAllResult {
-        case .success(let val): return val
-        case .failure(let err): throw err
-        case .none: XCTFail("fetchAllResult 미설정")
-            throw .unknown(NSError(domain: "Mock", code: -1))
-        }
-    }
-
-    public func fetchAll(folderID: UUID) throws(VoiceNoteRepositoryError) -> [VoiceNote] {
-        fetchAllCallCount += 1
-        actualFetchAllFolderID = folderID
-        switch fetchAllResult {
-        case .success(let val): return val
-        case .failure(let err): throw err
-        case .none: XCTFail("fetchAllResult 미설정")
-            throw .unknown(NSError(domain: "Mock", code: -1))
-        }
-    }
-
     public func fetch(byId id: UUID) throws(VoiceNoteRepositoryError) -> VoiceNote {
         fetchCallCount += 1
         actualFetchID = id
@@ -279,17 +180,6 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
         case .success(let val): return val
         case .failure(let err): throw err
         case .none: XCTFail("fetchResult 미설정")
-            throw .unknown(NSError(domain: "Mock", code: -1))
-        }
-    }
-
-    public func fetchRecent(limit: Int) throws(VoiceNoteRepositoryError) -> [VoiceNote] {
-        fetchRecentCallCount += 1
-        actualFetchRecentLimit = limit
-        switch fetchRecentResult {
-        case .success(let val): return val
-        case .failure(let err): throw err
-        case .none: XCTFail("fetchRecentResult 미설정")
             throw .unknown(NSError(domain: "Mock", code: -1))
         }
     }
@@ -315,16 +205,6 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
-    public func observeAllFromDefaultFolder() throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
-        observeDefaultFolderCallCount += 1
-        switch observeDefaultFolderResult {
-        case .success(let stream): return stream
-        case .failure(let err): throw err
-        case .none: XCTFail("observeDefaultFolderResult 미설정")
-            throw .unknown(NSError(domain: "Mock", code: -1))
-        }
-    }
-
     public func observeRecent(limit: Int) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
         observeRecentCallCount += 1
         actualObserveRecentLimit = limit
@@ -335,4 +215,26 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
             throw .unknown(NSError(domain: "Mock", code: -1))
         }
     }
+
+    // MARK: - Trash operations (no-op defaults; override via test helpers if needed)
+
+    public func observeTrashed() throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { $0.finish() }
+    }
+
+    public func observeCascadeDeleted(
+        fromFolderID _: UUID
+    ) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { $0.finish() }
+    }
+
+    public func fetchTrashed() throws(VoiceNoteRepositoryError) -> [VoiceNote] {
+        []
+    }
+
+    public func moveToTrash(id _: UUID, trashFolderID _: UUID) throws(VoiceNoteRepositoryError) {}
+
+    public func restore(id _: UUID, fallbackFolderID _: UUID) throws(VoiceNoteRepositoryError) {}
+
+    public func hardDelete(id _: UUID) throws(VoiceNoteRepositoryError) {}
 }

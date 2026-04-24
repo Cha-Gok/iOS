@@ -136,7 +136,8 @@ final class OnBoardingViewModelTests: XCTestCase {
 
         sut.mockCheckFirstLaunchRepo.setReturnValue(true)
         sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName, kind: .default)))
-        sut.mockFolderRepo.expectCreate(name: Policy.defaultFolderName, kind: .default, callCount: 1)
+        // 기본 폴더 + 휴지통 폴더 두 번 생성됨
+        sut.mockFolderRepo.expectCreate(callCount: 2)
 
         let expectation = XCTestExpectation(description: "finishOnBoarding 호출")
         sut.mockNavDelegate.finishOnBoardingExpectation = expectation

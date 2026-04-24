@@ -7,8 +7,9 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
     private var createResult: Result<Folder, FolderRepositoryError>?
     private var fetchAllResult: Result<[Folder], FolderRepositoryError>?
     private var fetchByIDResult: Result<Folder, FolderRepositoryError>?
+    private var fetchByKindResults: [FolderKind: Result<Folder, FolderRepositoryError>] = [:]
     private var updateResult: Result<Folder, FolderRepositoryError>?
-    private var observeAllResult: Result<AsyncStream<[Folder]>, FolderRepositoryError>?
+    private var observeByKindResults: [FolderKind: Result<AsyncStream<[Folder]>, FolderRepositoryError>] = [:]
 
     // 호출 검증 Count
     private var createCallCount = 0
@@ -48,12 +49,19 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         fetchByIDResult = result
     }
 
+    public func setFetchByKindResult(_ kind: FolderKind, result: Result<Folder, FolderRepositoryError>) {
+        fetchByKindResults[kind] = result
+    }
+
     public func setUpdateResult(_ result: Result<Folder, FolderRepositoryError>) {
         updateResult = result
     }
 
-    public func setObserveAllResult(_ result: Result<AsyncStream<[Folder]>, FolderRepositoryError>) {
-        observeAllResult = result
+    public func setObserveByKindResult(
+        _ kind: FolderKind,
+        result: Result<AsyncStream<[Folder]>, FolderRepositoryError>
+    ) {
+        observeByKindResults[kind] = result
     }
 
     // MARK: - Expectations
@@ -171,6 +179,19 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         }
     }
 
+    public func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> Folder {
+        switch fetchByKindResults[kind] {
+        case .success(let folder):
+            return folder
+        case .failure(let error):
+            throw error
+        case .none:
+            XCTFail("MockFolderRepository.fetchByKindResults[\(kind)]가 설정되지 않았습니다.")
+            let error = NSError(domain: "MockFolderRepository.fetchByKindResults", code: 0)
+            throw .unknown(error)
+        }
+    }
+
     public func fetchAll() throws(FolderRepositoryError) -> [Folder] {
         fetchAllCallCount += 1
 
@@ -202,16 +223,28 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         }
     }
 
-    public func observeAll() throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
-        switch observeAllResult {
+    public func observe(by kind: FolderKind) throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
+        switch observeByKindResults[kind] {
         case .success(let stream):
             return stream
         case .failure(let error):
             throw error
         case .none:
-            XCTFail("MockFolderRepository.observeAllResult가 설정되지 않았습니다.")
-            let error = NSError(domain: "MockFolderRepository.observeAllResult", code: 0)
+            XCTFail("MockFolderRepository.observeByKindResults[\(kind)]가 설정되지 않았습니다.")
+            let error = NSError(domain: "MockFolderRepository.observeByKindResults", code: 0)
             throw .unknown(error)
         }
     }
+
+    // MARK: - Trash operations (no-op defaults; override via test helpers if needed)
+
+    public func observeDeleted() throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
+        AsyncStream { $0.finish() }
+    }
+
+    public func moveToTrash(id _: UUID, trashFolderID _: UUID) throws(FolderRepositoryError) {}
+
+    public func restore(id _: UUID) throws(FolderRepositoryError) {}
+
+    public func hardDelete(id _: UUID) throws(FolderRepositoryError) {}
 }

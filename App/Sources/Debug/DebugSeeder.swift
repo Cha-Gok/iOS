@@ -253,7 +253,15 @@
                 audioFilePath: audioPath,
                 duration: max(duration, 2.5)
             )
-            let created = try voiceNoteRepository.create(record)
+            let baseNote = VoiceNote(
+                title: spec.title,
+                createdAt: spec.createdAt,
+                updatedAt: spec.createdAt,
+                folderID: spec.folderID,
+                voiceRecord: record,
+                analysisState: spec.analysisState
+            )
+            let created = try voiceNoteRepository.create(baseNote)
 
             let transcript: Transcript? = shouldIncludeTranscript(for: spec.analysisState) && !sections.isEmpty
                 ? Transcript(sections: sections)

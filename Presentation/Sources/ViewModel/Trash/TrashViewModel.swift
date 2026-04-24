@@ -27,14 +27,14 @@ public final class TrashViewModel {
 
     // MARK: - UseCase
 
-    private let repository: WasteBasketRepository
+    private let trashUseCase: any TrashUseCase
 
     // MARK: - Initialize
 
     public init(
-        repository: WasteBasketRepository
+        trashUseCase: any TrashUseCase
     ) {
-        self.repository = repository
+        self.trashUseCase = trashUseCase
     }
 }
 
@@ -107,7 +107,7 @@ extension TrashViewModel {
         observationTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let stream = try repository.observe()
+                let stream = try trashUseCase.observe()
                 for await wasteBaskets in stream {
                     items = wasteBaskets.map(\.toLibraryItem)
                     sortItems()
@@ -138,7 +138,7 @@ extension TrashViewModel {
 extension TrashViewModel {
     func deleteAll() {
         do {
-            try repository.allClear()
+            try trashUseCase.allClear()
             items.removeAll()
             setSelectionMode(.none)
         } catch {
@@ -149,7 +149,7 @@ extension TrashViewModel {
 
     func delete(item: WasteBasketItem) {
         do {
-            try repository.delete(item: item)
+            try trashUseCase.delete(item: item)
             items.removeAll { $0.id == item.id }
             setSelectionMode(.none)
         } catch {
@@ -160,7 +160,7 @@ extension TrashViewModel {
 
     func delete(items deleteItems: [WasteBasketItem]) {
         do {
-            try repository.deleteAll(items: deleteItems)
+            try trashUseCase.deleteAll(items: deleteItems)
             let deleteIDs = Set(deleteItems.map(\.id))
             items.removeAll { deleteIDs.contains($0.id) }
             setSelectionMode(.none)
@@ -176,7 +176,7 @@ extension TrashViewModel {
 extension TrashViewModel {
     func restore(item: WasteBasketItem) {
         do {
-            try repository.restore(item: item)
+            try trashUseCase.restore(item: item)
             items.removeAll { $0.id == item.id }
             setSelectionMode(.none)
         } catch {
@@ -187,7 +187,7 @@ extension TrashViewModel {
 
     func restore(items restoreItems: [WasteBasketItem]) {
         do {
-            try repository.restoreAll(items: restoreItems)
+            try trashUseCase.restoreAll(items: restoreItems)
             let restoreIDs = Set(restoreItems.map(\.id))
             items.removeAll { restoreIDs.contains($0.id) }
             setSelectionMode(.none)
@@ -199,7 +199,12 @@ extension TrashViewModel {
 
     func cancelRestore(item: WasteBasketItem) {
         do {
-            try repository.moveToWasteBasket(item: item)
+            switch item {
+            case .folder(let folder):
+                try trashUseCase.moveToTrash(folderID: folder.id)
+            case .voiceNote(let note):
+                try trashUseCase.moveToTrash(noteID: note.id)
+            }
             items.append(item.toLibraryItem)
             sortItems()
         } catch {
@@ -210,7 +215,14 @@ extension TrashViewModel {
 
     func cancelRestore(items restoreItems: [WasteBasketItem]) {
         do {
-            try repository.moveAllToWasteBasket(items: restoreItems)
+            for item in restoreItems {
+                switch item {
+                case .folder(let folder):
+                    try trashUseCase.moveToTrash(folderID: folder.id)
+                case .voiceNote(let note):
+                    try trashUseCase.moveToTrash(noteID: note.id)
+                }
+            }
             items.append(contentsOf: restoreItems.map(\.toLibraryItem))
             sortItems()
         } catch {
@@ -225,7 +237,7 @@ extension TrashViewModel {
         static func preview() -> TrashViewModel {
             let previewData = PreviewData.make()
             let viewModel = TrashViewModel(
-                repository: PreviewWasteBasketRepository(items: previewData.items)
+                trashUseCase: PreviewTrashUseCase(items: previewData.items)
             )
             viewModel.onAppear()
             return viewModel
@@ -277,14 +289,10 @@ extension TrashViewModel {
             }
         }
 
-        struct PreviewWasteBasketRepository: WasteBasketRepository {
+        struct PreviewTrashUseCase: TrashUseCase {
             let items: [WasteBasketItem]
 
-            func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
-                items
-            }
-
-            func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+            func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
                 let snapshot = items
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)
@@ -292,13 +300,21 @@ extension TrashViewModel {
                 }
             }
 
-            func allClear() throws(DeleteWasteBasketRepositoryError) {}
-            func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {}
-            func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {}
-            func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {}
-            func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
-            func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
-            func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
+            func observeCascadeNotes(folderID _: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]> {
+                AsyncStream { $0.finish() }
+            }
+
+            func moveToTrash(noteID _: UUID) throws(TrashUseCaseError) {}
+            func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
+            func restoreNote(id _: UUID) throws(TrashUseCaseError) {}
+            func restoreFolder(id _: UUID) throws(TrashUseCaseError) {}
+            func restore(item _: WasteBasketItem) throws(TrashUseCaseError) {}
+            func restoreAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func hardDeleteNote(id _: UUID) throws(TrashUseCaseError) {}
+            func hardDeleteFolder(id _: UUID) throws(TrashUseCaseError) {}
+            func delete(item _: WasteBasketItem) throws(TrashUseCaseError) {}
+            func deleteAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func allClear() throws(TrashUseCaseError) {}
         }
     }
 #endif

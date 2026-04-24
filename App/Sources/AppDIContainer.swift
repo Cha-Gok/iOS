@@ -20,7 +20,6 @@ public final class AppDIContainer {
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
     private lazy var folderRepository = DefaultFolderRepository(context: localDataBase.container.viewContext)
     private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(context: localDataBase.container.viewContext)
-    private lazy var wasteBasketRepository = DefaultWasteBasketRepository(context: localDataBase.container.viewContext)
     private lazy var sttRepository = DefaultSTTRepository(
         storageService: storageService,
         languageRepository: languageRepository
@@ -41,6 +40,10 @@ public final class AppDIContainer {
         repository: voiceNoteRepository,
         folderRepository: folderRepository,
         analysisService: voiceNoteAnalysisService
+    )
+    private lazy var trashUseCase = DefaultTrashUseCase(
+        voiceNoteRepository: voiceNoteRepository,
+        folderRepository: folderRepository
     )
 
     public init() throws {
@@ -82,7 +85,7 @@ public final class AppDIContainer {
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
             playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService),
-            wasteBasketRepository: wasteBasketRepository
+            trashUseCase: trashUseCase
         )
     }
 
@@ -91,14 +94,14 @@ public final class AppDIContainer {
             microphoneRepository: voiceRecordRepository,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
-            wasteBasketRepository: wasteBasketRepository,
+            trashUseCase: trashUseCase,
             languageRepository: languageRepository
         )
     }
 
     public func makeTrashViewModel() -> TrashViewModel {
         return TrashViewModel(
-            repository: wasteBasketRepository
+            trashUseCase: trashUseCase
         )
     }
 
@@ -106,7 +109,7 @@ public final class AppDIContainer {
         return FolderViewModel(
             category: category,
             folderUseCase: folderUseCase,
-            wasteBasketRepository: wasteBasketRepository
+            trashUseCase: trashUseCase
         )
     }
 
@@ -115,7 +118,7 @@ public final class AppDIContainer {
             title: folder.name,
             folderID: folder.id,
             voiceNoteUseCase: voiceNoteUseCase,
-            wasteBasketRepository: wasteBasketRepository
+            trashUseCase: trashUseCase
         )
     }
 

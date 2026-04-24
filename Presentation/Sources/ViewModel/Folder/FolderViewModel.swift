@@ -23,18 +23,18 @@ public final class FolderViewModel {
     // MARK: - Dependencies
 
     private let folderUseCase: any FolderUseCase
-    private let wasteBasketRepository: WasteBasketRepository
+    private let trashUseCase: any TrashUseCase
 
     // MARK: - Initialize
 
     public init(
         category: CategoryToggle,
         folderUseCase: any FolderUseCase,
-        wasteBasketRepository: WasteBasketRepository
+        trashUseCase: any TrashUseCase
     ) {
         self.category = category
         self.folderUseCase = folderUseCase
-        self.wasteBasketRepository = wasteBasketRepository
+        self.trashUseCase = trashUseCase
     }
 }
 
@@ -128,7 +128,7 @@ extension FolderViewModel {
 
     func move(folder: Folder) {
         do {
-            try wasteBasketRepository.moveToWasteBasket(item: .folder(obj: folder))
+            try trashUseCase.moveToTrash(folderID: folder.id)
             category.items.removeAll {
                 if case .folder(let obj) = $0 { return obj.id == folder.id }
                 return false
@@ -152,7 +152,7 @@ extension FolderViewModel {
             return FolderViewModel(
                 category: category,
                 folderUseCase: PreviewFolderUseCase(items: previewData.folders),
-                wasteBasketRepository: PreviewWasteBasketRepository()
+                trashUseCase: PreviewTrashUseCase()
             )
         }
     }
@@ -186,8 +186,22 @@ extension FolderViewModel {
                 Folder(name: "기본 폴더", kind: .default)
             }
 
+            func createTrash() throws(FolderUseCaseError) -> Folder {
+                Folder(name: "휴지통", kind: .trash)
+            }
+
             func fetchAll() throws(FolderUseCaseError) -> [Folder] {
                 items
+            }
+
+            func fetchDefault() throws(FolderUseCaseError) -> Folder {
+                guard let folder = items.first(where: { $0.kind == .default }) else { throw .notFound }
+                return folder
+            }
+
+            func fetchTrash() throws(FolderUseCaseError) -> Folder {
+                guard let folder = items.first(where: { $0.kind == .trash }) else { throw .notFound }
+                return folder
             }
 
             func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
@@ -212,25 +226,26 @@ extension FolderViewModel {
             }
         }
 
-        struct PreviewWasteBasketRepository: WasteBasketRepository {
-            func allClear() throws(DeleteWasteBasketRepositoryError) {}
-            func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {}
-            func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {}
-            func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {}
-            func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
-            func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
-                []
+        struct PreviewTrashUseCase: TrashUseCase {
+            func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
+                AsyncStream { $0.finish() }
             }
 
-            func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
-                AsyncStream { continuation in
-                    continuation.yield([])
-                    continuation.finish()
-                }
+            func observeCascadeNotes(folderID _: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]> {
+                AsyncStream { $0.finish() }
             }
 
-            func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
-            func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
+            func moveToTrash(noteID _: UUID) throws(TrashUseCaseError) {}
+            func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
+            func restoreNote(id _: UUID) throws(TrashUseCaseError) {}
+            func restoreFolder(id _: UUID) throws(TrashUseCaseError) {}
+            func restore(item _: WasteBasketItem) throws(TrashUseCaseError) {}
+            func restoreAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func hardDeleteNote(id _: UUID) throws(TrashUseCaseError) {}
+            func hardDeleteFolder(id _: UUID) throws(TrashUseCaseError) {}
+            func delete(item _: WasteBasketItem) throws(TrashUseCaseError) {}
+            func deleteAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func allClear() throws(TrashUseCaseError) {}
         }
     }
 #endif

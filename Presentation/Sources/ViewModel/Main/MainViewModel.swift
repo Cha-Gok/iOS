@@ -54,7 +54,7 @@ public final class MainViewModel {
     let microphoneRepository: VoiceRecordRepository
     let voiceNoteUseCase: any VoiceNoteUseCase
     let folderUseCase: any FolderUseCase
-    let wasteBasketRepository: any WasteBasketRepository
+    let trashUseCase: any TrashUseCase
     let languageRepository: any LanguageRepository
 
     @ObservationIgnored
@@ -73,13 +73,13 @@ public final class MainViewModel {
         microphoneRepository: any VoiceRecordRepository,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
-        wasteBasketRepository: any WasteBasketRepository,
+        trashUseCase: any TrashUseCase,
         languageRepository: any LanguageRepository
     ) {
         self.microphoneRepository = microphoneRepository
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
-        self.wasteBasketRepository = wasteBasketRepository
+        self.trashUseCase = trashUseCase
         self.languageRepository = languageRepository
     }
 }
@@ -171,7 +171,8 @@ extension MainViewModel {
         voiceNoteTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let stream = try voiceNoteUseCase.observeAllFromDefaultFolder()
+                let defaultFolder = try folderUseCase.fetchDefault()
+                let stream = try voiceNoteUseCase.observe(folderID: defaultFolder.id)
                 for await voiceNotes in stream {
                     categoryData[1].items = voiceNotes.map { .voiceNote($0) }
                 }
@@ -205,7 +206,7 @@ extension MainViewModel {
         trashTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let stream = try wasteBasketRepository.observe()
+                let stream = try trashUseCase.observe()
                 for await wasteBasket in stream {
                     categoryData[3].items = wasteBasket.map(\.toLibraryItem)
                 }
@@ -265,7 +266,7 @@ extension MainViewModel {
                     defaultItems: previewData.defaultVoiceNotes
                 ),
                 folderUseCase: PreviewFolderUseCase(items: previewData.folders),
-                wasteBasketRepository: PreviewWasteBasketRepository(items: previewData.wasteBasketItems),
+                trashUseCase: PreviewTrashUseCase(items: previewData.wasteBasketItems),
                 languageRepository: PreviewLanguageRepository()
             )
 
@@ -447,18 +448,6 @@ extension MainViewModel {
                 defaultItems[0]
             }
 
-            func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-                defaultItems
-            }
-
-            func fetchRecent(limit: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-                Array(recentItems.prefix(limit))
-            }
-
-            func fetchAll(folderID: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-                defaultItems.filter { $0.folderID == folderID }
-            }
-
             func fetch(byId id: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote {
                 guard let item = defaultItems.first(where: { $0.id == id }) else {
                     throw .recordNotFound(id)
@@ -485,14 +474,6 @@ extension MainViewModel {
                 }
             }
 
-            func observeAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
-                let snapshot = defaultItems
-                return AsyncStream { continuation in
-                    continuation.yield(snapshot)
-                    continuation.finish()
-                }
-            }
-
             func observeRecent(limit: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
                 let recent = Array(recentItems.prefix(limit))
                 return AsyncStream { continuation in
@@ -515,8 +496,22 @@ extension MainViewModel {
                 items[0]
             }
 
+            func createTrash() throws(FolderUseCaseError) -> Folder {
+                items[0]
+            }
+
             func fetchAll() throws(FolderUseCaseError) -> [Folder] {
                 items
+            }
+
+            func fetchDefault() throws(FolderUseCaseError) -> Folder {
+                guard let folder = items.first(where: { $0.kind == .default }) else { throw .notFound }
+                return folder
+            }
+
+            func fetchTrash() throws(FolderUseCaseError) -> Folder {
+                guard let folder = items.first(where: { $0.kind == .trash }) else { throw .notFound }
+                return folder
             }
 
             func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
@@ -541,14 +536,10 @@ extension MainViewModel {
             }
         }
 
-        struct PreviewWasteBasketRepository: WasteBasketRepository {
+        struct PreviewTrashUseCase: TrashUseCase {
             let items: [WasteBasketItem]
 
-            func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
-                items
-            }
-
-            func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+            func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
                 let snapshot = items
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)
@@ -556,13 +547,21 @@ extension MainViewModel {
                 }
             }
 
-            func allClear() throws(DeleteWasteBasketRepositoryError) {}
-            func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {}
-            func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {}
-            func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {}
-            func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
-            func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
-            func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
+            func observeCascadeNotes(folderID _: UUID) throws(TrashUseCaseError) -> AsyncStream<[VoiceNote]> {
+                AsyncStream { $0.finish() }
+            }
+
+            func moveToTrash(noteID _: UUID) throws(TrashUseCaseError) {}
+            func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
+            func restoreNote(id _: UUID) throws(TrashUseCaseError) {}
+            func restoreFolder(id _: UUID) throws(TrashUseCaseError) {}
+            func restore(item _: WasteBasketItem) throws(TrashUseCaseError) {}
+            func restoreAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func hardDeleteNote(id _: UUID) throws(TrashUseCaseError) {}
+            func hardDeleteFolder(id _: UUID) throws(TrashUseCaseError) {}
+            func delete(item _: WasteBasketItem) throws(TrashUseCaseError) {}
+            func deleteAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func allClear() throws(TrashUseCaseError) {}
         }
 
         struct PreviewLanguageRepository: LanguageRepository {

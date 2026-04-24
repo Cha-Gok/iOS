@@ -24,13 +24,13 @@ final class FolderViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: FolderViewModel
         let mockFolderRepo: MockFolderRepository
-        let mockWasteBasketRepo: MockWasteBasketRepository
+        let mockTrashUseCase: MockTrashUseCase
         let mockCoordinator: MockFolderCoordinatorDelegate
     }
 
     private func makeSUT(initialItems: [Presentation.LibraryItem] = []) -> SUT {
         let mockFolderRepo = MockFolderRepository()
-        let mockWasteBasketRepo = MockWasteBasketRepository()
+        let mockTrashUseCase = MockTrashUseCase()
         let mockCoordinator = MockFolderCoordinatorDelegate()
 
         let initialCategory = CategoryToggle(
@@ -42,14 +42,14 @@ final class FolderViewModelTests: XCTestCase {
         let viewModel = FolderViewModel(
             category: initialCategory,
             folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
-            wasteBasketRepository: mockWasteBasketRepo
+            trashUseCase: mockTrashUseCase
         )
         viewModel.coordinator = mockCoordinator
 
         return SUT(
             viewModel: viewModel,
             mockFolderRepo: mockFolderRepo,
-            mockWasteBasketRepo: mockWasteBasketRepo,
+            mockTrashUseCase: mockTrashUseCase,
             mockCoordinator: mockCoordinator
         )
     }
@@ -146,15 +146,12 @@ final class FolderViewModelTests: XCTestCase {
         let folder = Folder(name: "이동 폴더")
         let sut = makeSUT(initialItems: [.folder(folder)])
 
-        sut.mockWasteBasketRepo.setMoveResult(.success(()))
-        sut.mockWasteBasketRepo.expectMoveToWasteBasket(
-            item: .folder(obj: folder), callCount: 1
-        )
+        sut.mockTrashUseCase.expectMoveToTrash(folderID: folder.id, callCount: 1)
 
         sut.viewModel.move(folder: folder)
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.mockWasteBasketRepo.verify()
+        sut.mockTrashUseCase.verify()
         XCTAssertTrue(sut.viewModel.category.items.isEmpty)
     }
 
