@@ -31,6 +31,39 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
         }
     }
 
+    public func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+        let voiceNoteStream: AsyncStream<[VoiceNote]>
+        let folderStream: AsyncStream<[Folder]>
+        do {
+            voiceNoteStream = try store.observeAll(VoiceNoteEntity.self)
+            folderStream = try store.observeAll(FolderEntity.self)
+        } catch {
+            AppLogger.error(error)
+            throw FetchWasteBasketRepositoryError(error)
+        }
+
+        return AsyncStream { continuation in
+            let voiceNoteTask = Task { @MainActor in
+                for await _ in voiceNoteStream {
+                    if let snapshot = try? fetchAll() {
+                        continuation.yield(snapshot)
+                    }
+                }
+            }
+            let folderTask = Task { @MainActor in
+                for await _ in folderStream {
+                    if let snapshot = try? fetchAll() {
+                        continuation.yield(snapshot)
+                    }
+                }
+            }
+            continuation.onTermination = { _ in
+                voiceNoteTask.cancel()
+                folderTask.cancel()
+            }
+        }
+    }
+
     // MARK: - Delete
 
     public func allClear() throws(DeleteWasteBasketRepositoryError) {

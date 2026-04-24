@@ -33,6 +33,9 @@ public protocol WasteBasketRepository: Sendable {
     /// - Throws: 조회 실패 시
     func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem]
 
+    /// 휴지통 항목을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]>
+
     /// 특정 항목을 휴지통에서 복원합니다. (deletedAt → nil)
     /// - Parameter item: 복원할 휴지통 항목
     /// - Throws: 복원 중 오류 발생 시

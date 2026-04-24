@@ -10,6 +10,9 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var fetchAllResult: Result<[VoiceNote], VoiceNoteRepositoryError>?
     private var fetchRecentResult: Result<[VoiceNote], VoiceNoteRepositoryError>?
     private var observeResult: Result<AsyncStream<VoiceNote>, VoiceNoteRepositoryError>?
+    private var observeFolderResult: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>?
+    private var observeDefaultFolderResult: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>?
+    private var observeRecentResult: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>?
 
     public init() {}
 
@@ -21,6 +24,9 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var fetchAllCallCount = 0
     private var fetchRecentCallCount = 0
     private var observeCallCount = 0
+    private var observeFolderCallCount = 0
+    private var observeDefaultFolderCallCount = 0
+    private var observeRecentCallCount = 0
 
     // Actual Inputs
     private var actualVoiceRecord: VoiceRecord?
@@ -28,6 +34,8 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var actualFetchID: UUID?
     private var actualFetchAllFolderID: UUID?
     private var actualFetchRecentLimit: Int?
+    private var actualObserveFolderID: UUID?
+    private var actualObserveRecentLimit: Int?
 
     // Expected Values
     private var expectedCreateCallCount: Int?
@@ -38,6 +46,11 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var expectedFetchAllFolderID: UUID?
     private var expectedFetchRecentCallCount: Int?
     private var expectedObserveCallCount: Int?
+    private var expectedObserveFolderCallCount: Int?
+    private var expectedObserveFolderID: UUID?
+    private var expectedObserveDefaultFolderCallCount: Int?
+    private var expectedObserveRecentCallCount: Int?
+    private var expectedObserveRecentLimit: Int?
 
     /// Set Results
     public func setCreateResult(_ result: Result<VoiceNote, VoiceNoteRepositoryError>) {
@@ -62,6 +75,18 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
 
     public func setObserveResult(_ result: Result<AsyncStream<VoiceNote>, VoiceNoteRepositoryError>) {
         observeResult = result
+    }
+
+    public func setObserveFolderResult(_ result: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>) {
+        observeFolderResult = result
+    }
+
+    public func setObserveDefaultFolderResult(_ result: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>) {
+        observeDefaultFolderResult = result
+    }
+
+    public func setObserveRecentResult(_ result: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>) {
+        observeRecentResult = result
     }
 
     /// Expect Methods
@@ -92,6 +117,20 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
 
     public func expectObserve(callCount: Int) {
         expectedObserveCallCount = callCount
+    }
+
+    public func expectObserveFolder(callCount: Int, folderID: UUID? = nil) {
+        expectedObserveFolderCallCount = callCount
+        expectedObserveFolderID = folderID
+    }
+
+    public func expectObserveDefaultFolder(callCount: Int) {
+        expectedObserveDefaultFolderCallCount = callCount
+    }
+
+    public func expectObserveRecent(callCount: Int, limit: Int? = nil) {
+        expectedObserveRecentCallCount = callCount
+        expectedObserveRecentLimit = limit
     }
 
     public func verify(file: StaticString = #filePath, line: UInt = #line) {
@@ -148,6 +187,41 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
             observeCallCount,
             exp,
             "observe 호출 횟수 불일치",
+            file: file,
+            line: line
+        ) }
+        if let exp = expectedObserveFolderCallCount { XCTAssertEqual(
+            observeFolderCallCount,
+            exp,
+            "observe(folderID:) 호출 횟수 불일치",
+            file: file,
+            line: line
+        ) }
+        if let expID = expectedObserveFolderID { XCTAssertEqual(
+            actualObserveFolderID,
+            expID,
+            "observe folderID 불일치",
+            file: file,
+            line: line
+        ) }
+        if let exp = expectedObserveDefaultFolderCallCount { XCTAssertEqual(
+            observeDefaultFolderCallCount,
+            exp,
+            "observeAllFromDefaultFolder 호출 횟수 불일치",
+            file: file,
+            line: line
+        ) }
+        if let exp = expectedObserveRecentCallCount { XCTAssertEqual(
+            observeRecentCallCount,
+            exp,
+            "observeRecent 호출 횟수 불일치",
+            file: file,
+            line: line
+        ) }
+        if let expLimit = expectedObserveRecentLimit { XCTAssertEqual(
+            actualObserveRecentLimit,
+            expLimit,
+            "observeRecent limit 불일치",
             file: file,
             line: line
         ) }
@@ -226,6 +300,38 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
         case .success(let stream): return stream
         case .failure(let err): throw err
         case .none: XCTFail("observeResult 미설정")
+            throw .unknown(NSError(domain: "Mock", code: -1))
+        }
+    }
+
+    public func observe(folderID: UUID) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
+        observeFolderCallCount += 1
+        actualObserveFolderID = folderID
+        switch observeFolderResult {
+        case .success(let stream): return stream
+        case .failure(let err): throw err
+        case .none: XCTFail("observeFolderResult 미설정")
+            throw .unknown(NSError(domain: "Mock", code: -1))
+        }
+    }
+
+    public func observeAllFromDefaultFolder() throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
+        observeDefaultFolderCallCount += 1
+        switch observeDefaultFolderResult {
+        case .success(let stream): return stream
+        case .failure(let err): throw err
+        case .none: XCTFail("observeDefaultFolderResult 미설정")
+            throw .unknown(NSError(domain: "Mock", code: -1))
+        }
+    }
+
+    public func observeRecent(limit: Int) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
+        observeRecentCallCount += 1
+        actualObserveRecentLimit = limit
+        switch observeRecentResult {
+        case .success(let stream): return stream
+        case .failure(let err): throw err
+        case .none: XCTFail("observeRecentResult 미설정")
             throw .unknown(NSError(domain: "Mock", code: -1))
         }
     }

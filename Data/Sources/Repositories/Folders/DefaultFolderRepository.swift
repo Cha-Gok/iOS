@@ -46,4 +46,13 @@ public struct DefaultFolderRepository: FolderRepository {
             throw .updateFailed
         }
     }
+
+    public func observeAll() throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
+        do {
+            return try store.observeAll(FolderEntity.self)
+        } catch {
+            AppLogger.error(error)
+            throw .fetchFailed
+        }
+    }
 }

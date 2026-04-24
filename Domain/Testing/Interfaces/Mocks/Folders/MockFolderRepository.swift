@@ -8,6 +8,7 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
     private var fetchAllResult: Result<[Folder], FolderRepositoryError>?
     private var fetchByIDResult: Result<Folder, FolderRepositoryError>?
     private var updateResult: Result<Folder, FolderRepositoryError>?
+    private var observeAllResult: Result<AsyncStream<[Folder]>, FolderRepositoryError>?
 
     // 호출 검증 Count
     private var createCallCount = 0
@@ -49,6 +50,10 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
 
     public func setUpdateResult(_ result: Result<Folder, FolderRepositoryError>) {
         updateResult = result
+    }
+
+    public func setObserveAllResult(_ result: Result<AsyncStream<[Folder]>, FolderRepositoryError>) {
+        observeAllResult = result
     }
 
     // MARK: - Expectations
@@ -193,6 +198,19 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         case .none:
             XCTFail("MockFolderRepository.updateResult가 설정되지 않았습니다.")
             let error = NSError(domain: "MockFolderRepository.updateResult", code: 0)
+            throw .unknown(error)
+        }
+    }
+
+    public func observeAll() throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
+        switch observeAllResult {
+        case .success(let stream):
+            return stream
+        case .failure(let error):
+            throw error
+        case .none:
+            XCTFail("MockFolderRepository.observeAllResult가 설정되지 않았습니다.")
+            let error = NSError(domain: "MockFolderRepository.observeAllResult", code: 0)
             throw .unknown(error)
         }
     }

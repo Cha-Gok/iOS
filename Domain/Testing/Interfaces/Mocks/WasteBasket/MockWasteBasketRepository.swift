@@ -8,10 +8,12 @@ public final class MockWasteBasketRepository: WasteBasketRepository, @unchecked 
     private var deleteResult: Result<Void, DeleteWasteBasketRepositoryError>?
     private var moveResult: Result<Void, MoveWasteBasketRepositoryError>?
     private var fetchAllResult: Result<[WasteBasketItem], FetchWasteBasketRepositoryError>?
+    private var observeResult: Result<AsyncStream<[WasteBasketItem]>, FetchWasteBasketRepositoryError>?
     private var restoreResult: Result<Void, RestoreWasteBasketRepositoryError>?
 
     // 호출 검증 Count
     private var fetchAllCallCount = 0
+    private var observeCallCount = 0
     private var moveToWasteBasketCallCount = 0
     private var moveAllToWasteBasketCallCount = 0
     private var deleteCallCount = 0
@@ -22,6 +24,7 @@ public final class MockWasteBasketRepository: WasteBasketRepository, @unchecked 
 
     // Expected Call Counts
     private var expectedFetchAllCallCount: Int?
+    private var expectedObserveCallCount: Int?
     private var expectedMoveToWasteBasketCallCount: Int?
     private var expectedMoveAllToWasteBasketCallCount: Int?
     private var expectedDeleteCallCount: Int?
@@ -54,6 +57,10 @@ public final class MockWasteBasketRepository: WasteBasketRepository, @unchecked 
         fetchAllResult = result
     }
 
+    public func setObserveResult(_ result: Result<AsyncStream<[WasteBasketItem]>, FetchWasteBasketRepositoryError>) {
+        observeResult = result
+    }
+
     public func setMoveResult(_ result: Result<Void, MoveWasteBasketRepositoryError>) {
         moveResult = result
     }
@@ -70,6 +77,10 @@ public final class MockWasteBasketRepository: WasteBasketRepository, @unchecked 
 
     public func expectFetchAll(callCount: Int) {
         expectedFetchAllCallCount = callCount
+    }
+
+    public func expectObserve(callCount: Int) {
+        expectedObserveCallCount = callCount
     }
 
     public func expectMoveToWasteBasket(item: WasteBasketItem? = nil, callCount: Int) {
@@ -118,6 +129,9 @@ public final class MockWasteBasketRepository: WasteBasketRepository, @unchecked 
     private func verifyFetch(file: StaticString, line: UInt) {
         if let expected = expectedFetchAllCallCount {
             XCTAssertEqual(fetchAllCallCount, expected, "전체 조회 호출 횟수가 일치하지 않습니다.", file: file, line: line)
+        }
+        if let expected = expectedObserveCallCount {
+            XCTAssertEqual(observeCallCount, expected, "관찰 호출 횟수가 일치하지 않습니다.", file: file, line: line)
         }
     }
 
@@ -188,6 +202,21 @@ public final class MockWasteBasketRepository: WasteBasketRepository, @unchecked 
         case .none:
             XCTFail("MockWasteBasketRepository.fetchAllResult 가 설정되지 않았습니다.")
             let error = NSError(domain: "MockWasteBasketRepository.fetchAllResult", code: 0)
+            throw .unknown(error)
+        }
+    }
+
+    public func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+        observeCallCount += 1
+
+        switch observeResult {
+        case .success(let stream):
+            return stream
+        case .failure(let error):
+            throw error
+        case .none:
+            XCTFail("MockWasteBasketRepository.observeResult 가 설정되지 않았습니다.")
+            let error = NSError(domain: "MockWasteBasketRepository.observeResult", code: 0)
             throw .unknown(error)
         }
     }

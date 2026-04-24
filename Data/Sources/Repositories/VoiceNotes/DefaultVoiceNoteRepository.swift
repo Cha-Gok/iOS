@@ -95,6 +95,54 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
+    public func observeAllFromDefaultFolder() throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
+        let defaultFolder = try fetchDefaultFolder()
+        return try observe(folderID: defaultFolder.id)
+    }
+
+    public func observe(folderID: UUID) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
+        let stream: AsyncStream<[VoiceNote]>
+        do {
+            stream = try store.observeAll(VoiceNoteEntity.self)
+        } catch {
+            AppLogger.error(error)
+            throw .fetchAllFailed(folderID: folderID)
+        }
+        return AsyncStream { continuation in
+            let task = Task { @MainActor in
+                for await notes in stream {
+                    continuation.yield(notes.filter { $0.folderID == folderID })
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    public func observeRecent(limit: Int) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
+        let stream: AsyncStream<[VoiceNote]>
+        do {
+            stream = try store.observeAll(VoiceNoteEntity.self)
+        } catch {
+            AppLogger.error(error)
+            throw .fetchRecentFailed
+        }
+        return AsyncStream { continuation in
+            let task = Task { @MainActor in
+                for await notes in stream {
+                    let recent = Array(
+                        notes.filter { $0.deletedAt == nil }
+                            .sorted { $0.createdAt > $1.createdAt }
+                            .prefix(limit)
+                    )
+                    continuation.yield(recent)
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
     private func fetchDefaultFolder() throws(VoiceNoteRepositoryError) -> Folder {
         do {
             let folders = try store.fetchAll(FolderEntity.self)

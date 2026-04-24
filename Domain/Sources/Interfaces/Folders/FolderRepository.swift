@@ -25,4 +25,7 @@ public protocol FolderRepository: Sendable {
     /// - Returns: 업데이트된 폴더 엔티티
     /// - Throws: `FolderRepositoryError.updateFailed`, `.notFound`, `.duplicateName` 등
     func update(_ folder: Folder) throws(FolderRepositoryError) -> Folder
+
+    /// 모든 폴더 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observeAll() throws(FolderRepositoryError) -> AsyncStream<[Folder]>
 }

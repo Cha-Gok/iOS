@@ -136,41 +136,110 @@ public extension CoreDataLocalDataBase {
         }
     }
 
+    func observeAll<MO: ManagedObjectMapping>(
+        _ entity: MO.Type
+    ) throws(CoreDataStorageError) -> AsyncStream<[MO.ModelType]> {
+        let context = container.viewContext
+        let request = NSFetchRequest<MO>(entityName: MO.entityName.rawValue)
+        request.sortDescriptors = MO.sortDescriptors
+
+        let frc = NSFetchedResultsController(
+            fetchRequest: request,
+            managedObjectContext: context,
+            sectionNameKeyPath: nil,
+            cacheName: nil
+        )
+
+        do {
+            try frc.performFetch()
+        } catch {
+            AppLogger.error(error)
+            throw .fetchAllFailed
+        }
+
+        nonisolated(unsafe) let sendableFRC = frc
+
+        return AsyncStream { continuation in
+            let initial = frc.fetchedObjects?.map { $0.toModel() } ?? []
+            continuation.yield(initial)
+
+            let delegate = FRCStreamDelegate {
+                let models = frc.fetchedObjects?.map { $0.toModel() } ?? []
+                continuation.yield(models)
+            }
+            frc.delegate = delegate
+
+            continuation.onTermination = { _ in
+                sendableFRC.delegate = nil
+                _ = delegate
+            }
+        }
+    }
+
     func observe<MO: ManagedObjectMapping>(
         byID id: MO.ModelType.ID,
         as entity: MO.Type
     ) throws(CoreDataStorageError) -> AsyncStream<MO.ModelType> {
         let context = container.viewContext
-        guard let initialEntity = try? MO.find(byID: id, in: context) else {
+        let request = NSFetchRequest<MO>(entityName: MO.entityName.rawValue)
+        request.predicate = MO.identityPredicate(byID: id)
+        request.sortDescriptors = MO.sortDescriptors
+        request.fetchLimit = 1
+
+        let frc = NSFetchedResultsController(
+            fetchRequest: request,
+            managedObjectContext: context,
+            sectionNameKeyPath: nil,
+            cacheName: nil
+        )
+
+        do {
+            try frc.performFetch()
+        } catch {
+            AppLogger.error(error)
             throw .fetchFailed
         }
-        let initial = initialEntity.toModel()
+
+        guard let initialEntity = frc.fetchedObjects?.first else {
+            throw .fetchFailed
+        }
+
+        nonisolated(unsafe) let sendableFRC = frc
 
         return AsyncStream { continuation in
-            continuation.yield(initial)
+            continuation.yield(initialEntity.toModel())
 
-            let task = Task { @MainActor in
-                let notifications = NotificationCenter.default.notifications(
-                    named: NSManagedObjectContext.didSaveObjectsNotification,
-                    object: context
-                )
-                for await notification in notifications {
-                    let changed: Set<NSManagedObject> = [NSUpdatedObjectsKey, NSInsertedObjectsKey]
-                        .compactMap { notification.userInfo?[$0] as? Set<NSManagedObject> }
-                        .reduce(into: []) { $0.formUnion($1) }
-
-                    guard changed.contains(where: { ($0 as? MO)?.toModel().id == id }) else { continue }
-
-                    if let refreshed = try? MO.find(byID: id, in: context) {
-                        continuation.yield(refreshed.toModel())
-                    } else {
-                        continuation.finish()
-                        break
-                    }
+            let delegate = FRCStreamDelegate {
+                if let entity = frc.fetchedObjects?.first {
+                    continuation.yield(entity.toModel())
+                } else {
+                    continuation.finish()
                 }
             }
+            frc.delegate = delegate
 
-            continuation.onTermination = { _ in task.cancel() }
+            continuation.onTermination = { _ in
+                sendableFRC.delegate = nil
+                _ = delegate
+            }
+        }
+    }
+}
+
+// MARK: - FRCStreamDelegate
+
+/// NSFetchedResultsControllerDelegate를 클로저 기반으로 브릿지합니다.
+@MainActor
+private final class FRCStreamDelegate: NSObject, NSFetchedResultsControllerDelegate {
+    private let onChange: @MainActor () -> Void
+
+    init(onChange: @escaping @MainActor () -> Void) {
+        self.onChange = onChange
+    }
+
+    nonisolated func controllerDidChangeContent(_ controller: NSFetchedResultsController<any NSFetchRequestResult>) {
+        MainActor.assumeIsolated {
+            onChange()
         }
     }
 }

@@ -25,6 +25,15 @@ public protocol VoiceNoteUseCase: Sendable {
     /// ID로 음성 메모를 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
     func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote>
 
+    /// 특정 폴더의 음성 메모 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observe(folderID: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]>
+
+    /// 기본 폴더의 음성 메모 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observeAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]>
+
+    /// 최근 생성된 음성 메모 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observeRecent(limit: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]>
+
     /// 완료/실패 상태의 요약을 재생성합니다.
     func regenerateSummary(id: UUID)
 }
@@ -154,6 +163,30 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
     public func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote> {
         do {
             return try repository.observe(id: id)
+        } catch {
+            throw VoiceNoteUseCaseError(error)
+        }
+    }
+
+    public func observe(folderID: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        do {
+            return try repository.observe(folderID: folderID)
+        } catch {
+            throw VoiceNoteUseCaseError(error)
+        }
+    }
+
+    public func observeAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        do {
+            return try repository.observeAllFromDefaultFolder()
+        } catch {
+            throw VoiceNoteUseCaseError(error)
+        }
+    }
+
+    public func observeRecent(limit: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        do {
+            return try repository.observeRecent(limit: limit)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }

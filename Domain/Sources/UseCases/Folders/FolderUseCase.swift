@@ -30,6 +30,9 @@ public protocol FolderUseCase: Sendable {
     /// - Parameter folder: 업데이트할 `Folder` 엔티티
     /// - Returns: 업데이트된 `Folder` 엔티티
     func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder
+
+    /// 개인 폴더 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
 }
 
 public struct DefaultFolderUseCase: FolderUseCase {
@@ -90,6 +93,26 @@ public struct DefaultFolderUseCase: FolderUseCase {
         } catch {
             AppLogger.error(error)
             throw FolderUseCaseError(error)
+        }
+    }
+
+    public func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+        let stream: AsyncStream<[Folder]>
+        do {
+            stream = try repository.observeAll()
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
+        }
+        return AsyncStream { continuation in
+            let task = Task { @MainActor in
+                for await folders in stream {
+                    let deletable = folders.filter { $0.deletedAt == nil && $0.isDeletable }
+                    continuation.yield(deletable)
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
         }
     }
 
