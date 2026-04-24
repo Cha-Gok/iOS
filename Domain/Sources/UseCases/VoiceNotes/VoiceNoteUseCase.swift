@@ -124,19 +124,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         }
 
         // 3. 수정 시각 갱신 및 정보 보정
-        let updatedNote = VoiceNote(
-            id: voiceNote.id,
-            title: trimmedTitle,
-            createdAt: voiceNote.createdAt,
-            updatedAt: Date.now,
-            folderID: voiceNote.folderID,
-            voiceRecord: voiceNote.voiceRecord,
-            keywords: voiceNote.keywords,
-            transcript: voiceNote.transcript,
-            summary: voiceNote.summary,
-            deletedAt: voiceNote.deletedAt,
-            analysisState: voiceNote.analysisState
-        )
+        let updatedNote = voiceNote.copyWith(title: trimmedTitle, updatedAt: .now)
 
         do {
             return try repository.update(updatedNote)
