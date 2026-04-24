@@ -24,6 +24,19 @@ public protocol VoiceNoteUseCase: Sendable {
 
     /// 완료/실패 상태의 요약을 재생성합니다.
     func regenerateSummary(id: UUID)
+
+    /// 노트를 휴지통으로 단독 이동합니다. 원본 폴더 정보는 `originalFolderID`에 보존됩니다.
+    /// - Parameter noteID: 이동할 노트의 UUID
+    func moveToTrash(noteID: UUID) throws(VoiceNoteUseCaseError)
+
+    /// 휴지통에 있는 노트를 복원합니다.
+    /// 원본 폴더가 살아있으면 원본으로, 아니면 기본 폴더로 복원합니다.
+    /// - Parameter noteID: 복원할 노트의 UUID
+    func restore(noteID: UUID) throws(VoiceNoteUseCaseError)
+
+    /// 노트를 영구 삭제합니다.
+    /// - Parameter noteID: 삭제할 노트의 UUID
+    func delete(noteID: UUID) throws(VoiceNoteUseCaseError)
 }
 
 /// 음성 메모 통합 유스케이스 구현체.
@@ -166,5 +179,109 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
 
     public func regenerateSummary(id: UUID) {
         analysisService.regenerate(voiceNoteID: id)
+    }
+
+    // MARK: - Trash
+
+    public func moveToTrash(noteID: UUID) throws(VoiceNoteUseCaseError) {
+        // 1. 휴지통 폴더 resolve
+        let trashFolders: [Folder]
+        do {
+            trashFolders = try folderRepository.fetch(by: .trash)
+        } catch {
+            AppLogger.error(error)
+            throw VoiceNoteUseCaseError(error)
+        }
+        guard let trashFolder = trashFolders.first else {
+            throw .unknown(FolderRepositoryError.notFound)
+        }
+
+        // 2. 노트 fetch
+        let note: VoiceNote
+        do {
+            note = try repository.fetch(byId: noteID)
+        } catch {
+            AppLogger.error(error)
+            throw VoiceNoteUseCaseError(error)
+        }
+
+        // 3. 상태 전이: 원본 폴더 스냅샷 + 휴지통으로 이동
+        var trashed = note
+        trashed.originalFolderID = note.folderID
+        trashed.folderID = trashFolder.id
+        trashed.deletedAt = .now
+
+        do {
+            _ = try repository.update(trashed)
+        } catch {
+            AppLogger.error(error)
+            throw VoiceNoteUseCaseError(error)
+        }
+    }
+
+    public func restore(noteID: UUID) throws(VoiceNoteUseCaseError) {
+        // 1. 노트 fetch
+        let note: VoiceNote
+        do {
+            note = try repository.fetch(byId: noteID)
+        } catch {
+            AppLogger.error(error)
+            throw VoiceNoteUseCaseError(error)
+        }
+
+        // 2. 복원 대상 폴더 결정: 원본이 살아있으면 원본, 아니면 기본 폴더
+        let targetFolderID = try resolveRestoreTargetFolderID(for: note)
+
+        // 3. 상태 전이: 폴더 복귀 + 삭제 흔적 초기화
+        var restored = note
+        restored.folderID = targetFolderID
+        restored.deletedAt = nil
+        restored.originalFolderID = nil
+
+        do {
+            _ = try repository.update(restored)
+        } catch {
+            AppLogger.error(error)
+            throw VoiceNoteUseCaseError(error)
+        }
+    }
+
+    public func delete(noteID: UUID) throws(VoiceNoteUseCaseError) {
+        do {
+            try repository.delete(id: noteID)
+        } catch {
+            AppLogger.error(error)
+            throw VoiceNoteUseCaseError(error)
+        }
+    }
+
+    private func resolveRestoreTargetFolderID(
+        for note: VoiceNote
+    ) throws(VoiceNoteUseCaseError) -> UUID {
+        // 원본 폴더가 지정돼 있고 휴지통에 들어가지 않았다면 원본으로 복원
+        if let originalID = note.originalFolderID {
+            let original: Folder?
+            do {
+                original = try folderRepository.fetch(by: originalID)
+            } catch {
+                original = nil
+            }
+            if let original, original.deletedAt == nil {
+                return original.id
+            }
+        }
+
+        // fallback: 기본 폴더
+        let defaultFolders: [Folder]
+        do {
+            defaultFolders = try folderRepository.fetch(by: .default)
+        } catch {
+            AppLogger.error(error)
+            throw VoiceNoteUseCaseError(error)
+        }
+        guard let defaultFolder = defaultFolders.first else {
+            throw .unknown(FolderRepositoryError.notFound)
+        }
+        return defaultFolder.id
     }
 }

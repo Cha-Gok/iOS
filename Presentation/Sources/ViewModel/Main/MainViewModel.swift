@@ -484,6 +484,10 @@ extension MainViewModel {
             }
 
             func regenerateSummary(id _: UUID) {}
+
+            func moveToTrash(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+            func restore(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+            func delete(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
         }
 
         struct PreviewFolderUseCase: FolderUseCase {
