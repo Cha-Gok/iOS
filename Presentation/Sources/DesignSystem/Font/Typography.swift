@@ -1,4 +1,5 @@
 import UIKit
+import SwiftUI
 
 public enum Typography {
     case header1
@@ -90,5 +91,18 @@ public extension UILabel {
         }
 
         attributedText = NSAttributedString(string: textToUse, attributes: attributes)
+    }
+}
+
+public extension View {
+    /// SwiftUI View에 Typography를 적용합니다.
+    func typography(_ style: Typography) -> some View {
+        let targetLineHeight = style.font.pointSize * style.lineHeightRatio
+        let spacing = targetLineHeight - style.font.lineHeight
+        
+        return self
+            .font(Font(style.font))
+            .tracking(style.letterSpacing)
+            .lineSpacing(max(0, spacing))
     }
 }
