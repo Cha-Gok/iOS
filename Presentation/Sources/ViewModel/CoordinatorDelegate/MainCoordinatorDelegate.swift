@@ -16,5 +16,5 @@ public protocol MainCoordinatorDelegate: AnyObject {
     /// 공용 Pop함수
     func pop()
     /// 검색 화면 Push함수
-    func pushSearchView()
+    func pushSearchView(type: SearchViewModel.SearchType, items: [LibraryItem])
 }
