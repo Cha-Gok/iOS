@@ -233,6 +233,25 @@ public extension Constant {
     static let underlineSegmentedControlTopMargin: CGFloat = 16
 }
 
+// MARK: - SkeletonLineView Constants
+
+public extension Constant {
+    /// SkeletonLineView 높이 (14) — cornerRadius는 이 값의 1/2로 파생
+    static let skeletonLineHeight: CGFloat = 14
+
+    /// SkeletonLineView 그라디언트 끝(투명) alpha
+    static let skeletonLineTrailingAlpha: CGFloat = 0.05
+
+    /// SkeletonLineView scaleX 애니메이션 시작값
+    static let skeletonScaleFrom: CGFloat = 0.1
+
+    /// SkeletonLineView scaleX 애니메이션 끝값
+    static let skeletonScaleTo: CGFloat = 1.0
+
+    /// SkeletonLineView scaleX 애니메이션 편도 주기 (초)
+    static let skeletonAnimationDuration: CFTimeInterval = 1.0
+}
+
 // MARK: - BackgroundView Constants
 
 public extension Constant {

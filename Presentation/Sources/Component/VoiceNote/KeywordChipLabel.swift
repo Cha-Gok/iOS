@@ -1,6 +1,13 @@
 import UIKit
 
 public final class KeywordChipLabel: TypographyLabel {
+    /// 한 줄 텍스트 기준 KeywordChipLabel의 표준 높이.
+    /// (typography line height + vertical padding × 2)
+    public static var standardHeight: CGFloat {
+        Typography.label.font.pointSize * Typography.label.lineHeightRatio
+            + 2 * Constant.keywordChipVerticalPadding
+    }
+
     private let insets = UIEdgeInsets(
         top: Constant.keywordChipVerticalPadding,
         left: Constant.keywordChipHorizontalPadding,

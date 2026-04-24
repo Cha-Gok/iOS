@@ -82,7 +82,7 @@ final class ScriptContentView: UIView, UIContentView {
             timeLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: spacing),
             timeLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
 
-            textView.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: spacing),
+            textView.topAnchor.constraint(equalTo: timeLabel.bottomAnchor),
             textView.leadingAnchor.constraint(equalTo: leadingAnchor),
             textView.trailingAnchor.constraint(equalTo: trailingAnchor),
             textView.bottomAnchor.constraint(equalTo: bottomAnchor)
