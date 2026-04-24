@@ -7,17 +7,8 @@ public protocol VoiceNoteUseCase: Sendable {
     /// 새로운 음성 메모를 생성하고 분석 파이프라인을 시작합니다.
     func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteUseCaseError) -> VoiceNote
 
-    /// 기본 폴더의 모든 음성 메모를 조회합니다.
-    func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote]
-
-    /// 특정 폴더의 모든 음성 메모를 조회합니다.
-    func fetchAll(folderID: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote]
-
     /// 특정 음성 메모를 조회합니다.
     func fetch(byId id: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote
-
-    /// 최근 생성된 음성 메모를 조회합니다.
-    func fetchRecent(limit: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote]
 
     /// 음성 메모 정보를 업데이트합니다.
     func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote
@@ -27,9 +18,6 @@ public protocol VoiceNoteUseCase: Sendable {
 
     /// 특정 폴더의 음성 메모 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
     func observe(folderID: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]>
-
-    /// 기본 폴더의 음성 메모 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
-    func observeAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]>
 
     /// 최근 생성된 음성 메모 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
     func observeRecent(limit: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]>
@@ -82,13 +70,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         // 3. 기본 폴더 결정 (어느 폴더에 저장할지는 비즈니스 결정)
         let defaultFolder: Folder
         do {
-            let folders = try folderRepository.fetchAll()
-            guard let folder = folders.first(where: { $0.kind == .default }) else {
-                throw VoiceNoteUseCaseError.unknown(VoiceNoteRepositoryError.defaultFolderNotFound)
-            }
-            defaultFolder = folder
-        } catch let error as VoiceNoteUseCaseError {
-            throw error
+            defaultFolder = try folderRepository.fetch(by: .default)
         } catch {
             AppLogger.error(error)
             throw .unknown(error)
@@ -119,33 +101,9 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
 
     // MARK: - Fetch
 
-    public func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        do {
-            return try repository.fetchAllFromDefaultFolder()
-        } catch {
-            throw VoiceNoteUseCaseError(error)
-        }
-    }
-
-    public func fetchAll(folderID: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        do {
-            return try repository.fetchAll(folderID: folderID)
-        } catch {
-            throw VoiceNoteUseCaseError(error)
-        }
-    }
-
     public func fetch(byId id: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote {
         do {
             return try repository.fetch(byId: id)
-        } catch {
-            throw VoiceNoteUseCaseError(error)
-        }
-    }
-
-    public func fetchRecent(limit: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        do {
-            return try repository.fetchRecent(limit: limit)
         } catch {
             throw VoiceNoteUseCaseError(error)
         }
@@ -200,14 +158,6 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
     public func observe(folderID: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
         do {
             return try repository.observe(folderID: folderID)
-        } catch {
-            throw VoiceNoteUseCaseError(error)
-        }
-    }
-
-    public func observeAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
-        do {
-            return try repository.observeAllFromDefaultFolder()
         } catch {
             throw VoiceNoteUseCaseError(error)
         }

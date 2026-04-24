@@ -9,13 +9,23 @@ public protocol FolderUseCase: Sendable {
     /// - Returns: 생성된 `Folder` 엔티티
     func create(name: String) throws(FolderUseCaseError) -> Folder
 
-    /// 앱 최초 실행 시 삭제 불가능한 기본 폴더를 생성합니다.
+    /// 앱 최초 실행 시 시스템이 사용하는 기본 폴더를 생성합니다.
     /// - Returns: 생성된 `Folder` 엔티티
     func createDefault() throws(FolderUseCaseError) -> Folder
+
+    /// 앱 최초 실행 시 시스템이 사용하는 휴지통 폴더를 생성합니다.
+    /// - Returns: 생성된 `Folder` 엔티티
+    func createTrash() throws(FolderUseCaseError) -> Folder
 
     /// 삭제되지 않은 모든 폴더 목록을 조회합니다.
     /// - Returns: 조회된 `Folder` 배열
     func fetchAll() throws(FolderUseCaseError) -> [Folder]
+
+    /// 기본 폴더(kind == .default)를 조회합니다.
+    func fetchDefault() throws(FolderUseCaseError) -> Folder
+
+    /// 휴지통 폴더(kind == .trash)를 조회합니다.
+    func fetchTrash() throws(FolderUseCaseError) -> Folder
 
     /// 개인 폴더(kind == .custom) 목록을 조회합니다.
     /// - Returns: 삭제 가능한 `Folder` 배열
@@ -67,6 +77,34 @@ public struct DefaultFolderUseCase: FolderUseCase {
         }
     }
 
+    public func createTrash() throws(FolderUseCaseError) -> Folder {
+        let folder = Folder(name: Policy.trashFolderName, kind: .trash)
+        do {
+            return try repository.create(folder)
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
+        }
+    }
+
+    public func fetchDefault() throws(FolderUseCaseError) -> Folder {
+        do {
+            return try repository.fetch(by: .default)
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
+        }
+    }
+
+    public func fetchTrash() throws(FolderUseCaseError) -> Folder {
+        do {
+            return try repository.fetch(by: .trash)
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
+        }
+    }
+
     public func fetchAll() throws(FolderUseCaseError) -> [Folder] {
         do {
             let folders = try repository.fetchAll()
@@ -99,7 +137,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
     public func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
         let stream: AsyncStream<[Folder]>
         do {
-            stream = try repository.observeAll()
+            stream = try repository.observe(by: .custom)
         } catch {
             AppLogger.error(error)
             throw FolderUseCaseError(error)
@@ -107,7 +145,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
         return AsyncStream { continuation in
             let task = Task { @MainActor in
                 for await folders in stream {
-                    let deletable = folders.filter { $0.deletedAt == nil && $0.kind == .custom }
+                    let deletable = folders.filter { $0.deletedAt == nil }
                     continuation.yield(deletable)
                 }
                 continuation.finish()

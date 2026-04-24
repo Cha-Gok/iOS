@@ -1,11 +1,8 @@
 import CoreData
+import Domain
 
 @objc(FolderEntity)
 public final class FolderEntity: NSManagedObject {
-    @nonobjc public class func fetchRequest() -> NSFetchRequest<FolderEntity> {
-        NSFetchRequest<FolderEntity>(entityName: "Folder")
-    }
-
     @NSManaged
     public var id: UUID
 
@@ -25,21 +22,32 @@ public final class FolderEntity: NSManagedObject {
     public var voiceNotes: NSSet?
 }
 
-public extension FolderEntity {
-    @objc(addVoiceNotesObject:)
-    @NSManaged
-    func addToVoiceNotes(_ value: VoiceNoteEntity)
+extension FolderEntity {
+    static func fetchRequest() -> NSFetchRequest<FolderEntity> {
+        NSFetchRequest<FolderEntity>(entityName: "Folder")
+    }
 
-    @objc(removeVoiceNotesObject:)
-    @NSManaged
-    func removeFromVoiceNotes(_ value: VoiceNoteEntity)
+    convenience init(model: Folder, context: NSManagedObjectContext) {
+        self.init(context: context)
+        update(from: model)
+    }
 
-    @objc(addVoiceNotes:)
-    @NSManaged
-    func addToVoiceNotes(_ values: NSSet)
+    func update(from model: Folder) {
+        id = model.id
+        name = model.name
+        createdAt = model.createdAt
+        kindRaw = model.kind.rawValue
+        deletedAt = model.deletedAt
+    }
 
-    @objc(removeVoiceNotes:)
-    @NSManaged
-    func removeFromVoiceNotes(_ values: NSSet)
+    func toModel() -> Folder {
+        Folder(
+            id: id,
+            name: name,
+            createdAt: createdAt,
+            content: [],
+            kind: FolderKind(rawValue: kindRaw) ?? .custom,
+            deletedAt: deletedAt
+        )
+    }
 }
-

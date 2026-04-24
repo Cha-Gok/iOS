@@ -20,12 +20,33 @@ public protocol FolderRepository: Sendable {
     /// - Throws: `FolderRepositoryError.notFound`, `.fetchFailed` 등
     func fetch(by id: UUID) throws(FolderRepositoryError) -> Folder
 
+    /// 특정 종류의 폴더를 조회합니다. (기본 폴더, 휴지통 등)
+    /// - Parameter kind: 조회할 폴더 종류
+    /// - Returns: 조회된 폴더 엔티티
+    /// - Throws: `FolderRepositoryError.notFound`, `.fetchFailed` 등
+    func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> Folder
+
     /// 폴더 정보를 업데이트합니다. (이름 변경 등)
     /// - Parameter folder: 업데이트할 폴더 엔티티
     /// - Returns: 업데이트된 폴더 엔티티
     /// - Throws: `FolderRepositoryError.updateFailed`, `.notFound`, `.duplicateName` 등
     func update(_ folder: Folder) throws(FolderRepositoryError) -> Folder
 
-    /// 모든 폴더 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
-    func observeAll() throws(FolderRepositoryError) -> AsyncStream<[Folder]>
+    /// 특정 종류의 폴더 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observe(by kind: FolderKind) throws(FolderRepositoryError) -> AsyncStream<[Folder]>
+
+    /// 휴지통에 들어간(deletedAt != nil) 폴더 목록을 관찰합니다.
+    func observeDeleted() throws(FolderRepositoryError) -> AsyncStream<[Folder]>
+
+    /// 폴더를 휴지통으로 이동합니다. 폴더 안의 모든 노트도 cascade로 휴지통 폴더로 이동합니다.
+    /// - Parameters:
+    ///   - id: 이동할 폴더의 UUID
+    ///   - trashFolderID: 휴지통 폴더의 UUID
+    func moveToTrash(id: UUID, trashFolderID: UUID) throws(FolderRepositoryError)
+
+    /// 폴더를 복원합니다. 같이 cascade 삭제됐던 노트들도 함께 복원됩니다.
+    func restore(id: UUID) throws(FolderRepositoryError)
+
+    /// 폴더를 영구 삭제합니다. 안의 모든 노트도 cascade로 삭제됩니다.
+    func hardDelete(id: UUID) throws(FolderRepositoryError)
 }

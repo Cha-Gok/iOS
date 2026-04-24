@@ -22,6 +22,10 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
     public var transcript: Transcript?
     public var summary: Summary?
     public var deletedAt: Date?
+    /// 휴지통에 들어갔을 때 복원 destination이 되는 원본 폴더 ID. 휴지통 외 상태에서는 `nil`.
+    public var originalFolderID: UUID?
+    /// `true`면 부모 폴더가 삭제되며 cascade로 휴지통에 들어왔음을 의미. 단독 삭제는 `false`.
+    public var deletedWithFolder: Bool
     public var analysisState: AnalysisState
 
     public init(
@@ -35,6 +39,8 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
         transcript: Transcript? = nil,
         summary: Summary? = nil,
         deletedAt: Date? = nil,
+        originalFolderID: UUID? = nil,
+        deletedWithFolder: Bool = false,
         analysisState: AnalysisState
     ) {
         self.id = id
@@ -47,6 +53,8 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
         self.transcript = transcript
         self.summary = summary
         self.deletedAt = deletedAt
+        self.originalFolderID = originalFolderID
+        self.deletedWithFolder = deletedWithFolder
         self.analysisState = analysisState
     }
 }
@@ -64,6 +72,8 @@ public extension VoiceNote {
         transcript: Transcript? = nil,
         summary: Summary? = nil,
         deletedAt: Date? = nil,
+        originalFolderID: UUID? = nil,
+        deletedWithFolder: Bool? = nil,
         analysisState: AnalysisState? = nil
     ) -> VoiceNote {
         VoiceNote(
@@ -77,6 +87,8 @@ public extension VoiceNote {
             transcript: transcript ?? self.transcript,
             summary: summary ?? self.summary,
             deletedAt: deletedAt ?? self.deletedAt,
+            originalFolderID: originalFolderID ?? self.originalFolderID,
+            deletedWithFolder: deletedWithFolder ?? self.deletedWithFolder,
             analysisState: analysisState ?? self.analysisState
         )
     }

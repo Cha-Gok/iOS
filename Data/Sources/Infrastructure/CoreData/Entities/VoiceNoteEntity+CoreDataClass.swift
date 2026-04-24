@@ -1,11 +1,8 @@
 import CoreData
+import Domain
 
 @objc(VoiceNoteEntity)
 public final class VoiceNoteEntity: NSManagedObject {
-    @nonobjc public class func fetchRequest() -> NSFetchRequest<VoiceNoteEntity> {
-        NSFetchRequest<VoiceNoteEntity>(entityName: "VoiceNote")
-    }
-
     @NSManaged
     public var id: UUID
 
@@ -22,7 +19,13 @@ public final class VoiceNoteEntity: NSManagedObject {
     public var deletedAt: Date?
 
     @NSManaged
-    public var analysisStateRaw: String?
+    public var originalFolderID: UUID?
+
+    @NSManaged
+    public var deletedWithFolder: Bool
+
+    @NSManaged
+    public var analysisStateRaw: String
 
     @NSManaged
     public var folder: FolderEntity
@@ -40,21 +43,49 @@ public final class VoiceNoteEntity: NSManagedObject {
     public var summary: SummaryEntity?
 }
 
-public extension VoiceNoteEntity {
-    @objc(addKeywordsObject:)
-    @NSManaged
-    func addToKeywords(_ value: KeywordEntity)
+extension VoiceNoteEntity {
+    static func fetchRequest() -> NSFetchRequest<VoiceNoteEntity> {
+        NSFetchRequest<VoiceNoteEntity>(entityName: "VoiceNote")
+    }
 
-    @objc(removeKeywordsObject:)
-    @NSManaged
-    func removeFromKeywords(_ value: KeywordEntity)
+    /// 도메인 모델로부터 새 entity를 생성합니다. (scalar attribute만 set, 관계는 caller가 처리)
+    convenience init(model: VoiceNote, context: NSManagedObjectContext) {
+        self.init(context: context)
+        update(from: model)
+    }
 
-    @objc(addKeywords:)
-    @NSManaged
-    func addToKeywords(_ values: NSSet)
+    /// scalar attribute만 도메인 모델 값으로 업데이트합니다.
+    /// 관계(folder/voiceRecord/keywords/transcript/summary)는 호출자가 직접 set합니다.
+    func update(from model: VoiceNote) {
+        id = model.id
+        title = model.title
+        createdAt = model.createdAt
+        updatedAt = model.updatedAt
+        deletedAt = model.deletedAt
+        originalFolderID = model.originalFolderID
+        deletedWithFolder = model.deletedWithFolder
+        analysisStateRaw = model.analysisState.rawValue
+    }
 
-    @objc(removeKeywords:)
-    @NSManaged
-    func removeFromKeywords(_ values: NSSet)
+    /// entity를 도메인 모델로 변환합니다. 관계는 이미 attached됐다고 가정합니다.
+    func toModel() -> VoiceNote {
+        let keywordModels = (keywords?.allObjects as? [KeywordEntity])?.map { $0.toModel() } ?? []
+        let state = AnalysisState(rawValue: analysisStateRaw) ?? .pending
+
+        return VoiceNote(
+            id: id,
+            title: title,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            folderID: folder.id,
+            voiceRecord: voiceRecord.toModel(),
+            keywords: keywordModels,
+            transcript: transcript?.toModel(),
+            summary: summary?.toModel(),
+            deletedAt: deletedAt,
+            originalFolderID: originalFolderID,
+            deletedWithFolder: deletedWithFolder,
+            analysisState: state
+        )
+    }
 }
-
