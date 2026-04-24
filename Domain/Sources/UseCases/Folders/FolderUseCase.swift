@@ -160,14 +160,8 @@ public struct DefaultFolderUseCase: FolderUseCase {
         guard trimName.count <= Policy.maxNameLength else { throw .invalidLengthName }
         guard trimName != Policy.defaultFolderName else { throw .reservedName }
 
-        let updateFolder = Folder(
-            id: folder.id,
-            name: trimName,
-            createdAt: folder.createdAt,
-            voiceNoteIDs: folder.voiceNoteIDs,
-            kind: folder.kind,
-            deletedAt: folder.deletedAt
-        )
+        var updateFolder = folder
+        updateFolder.name = trimName
         do {
             return try repository.update(updateFolder)
         } catch {
