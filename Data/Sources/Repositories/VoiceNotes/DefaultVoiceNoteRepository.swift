@@ -55,8 +55,10 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
 
     public func fetchAll(folderID: UUID) throws(VoiceNoteRepositoryError) -> [VoiceNote] {
         do {
-            return try store.fetchAll(VoiceNoteEntity.self)
-                .filter { $0.folderID == folderID }
+            return try store.fetch(
+                VoiceNoteEntity.self,
+                where: NSPredicate(format: "folder.id == %@", folderID as CVarArg)
+            )
         } catch {
             AppLogger.error(error)
             throw .fetchAllFailed(folderID: folderID)
@@ -74,11 +76,11 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
 
     public func fetchRecent(limit: Int) throws(VoiceNoteRepositoryError) -> [VoiceNote] {
         do {
-            let notes = try store.fetchAll(VoiceNoteEntity.self)
-            return Array(
-                notes.filter { $0.deletedAt == nil }
-                    .sorted { $0.createdAt > $1.createdAt }
-                    .prefix(limit)
+            return try store.fetch(
+                VoiceNoteEntity.self,
+                where: NSPredicate(format: "deletedAt == nil"),
+                sortedBy: [NSSortDescriptor(keyPath: \VoiceNoteEntity.createdAt, ascending: false)],
+                limit: limit
             )
         } catch {
             AppLogger.error(error)
@@ -101,45 +103,28 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
     }
 
     public func observe(folderID: UUID) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
-        let stream: AsyncStream<[VoiceNote]>
         do {
-            stream = try store.observeAll(VoiceNoteEntity.self)
+            return try store.observeAll(
+                VoiceNoteEntity.self,
+                where: NSPredicate(format: "folder.id == %@", folderID as CVarArg)
+            )
         } catch {
             AppLogger.error(error)
             throw .fetchAllFailed(folderID: folderID)
         }
-        return AsyncStream { continuation in
-            let task = Task { @MainActor in
-                for await notes in stream {
-                    continuation.yield(notes.filter { $0.folderID == folderID })
-                }
-                continuation.finish()
-            }
-            continuation.onTermination = { _ in task.cancel() }
-        }
     }
 
     public func observeRecent(limit: Int) throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
-        let stream: AsyncStream<[VoiceNote]>
         do {
-            stream = try store.observeAll(VoiceNoteEntity.self)
+            return try store.observeAll(
+                VoiceNoteEntity.self,
+                where: NSPredicate(format: "deletedAt == nil"),
+                sortedBy: [NSSortDescriptor(keyPath: \VoiceNoteEntity.createdAt, ascending: false)],
+                limit: limit
+            )
         } catch {
             AppLogger.error(error)
             throw .fetchRecentFailed
-        }
-        return AsyncStream { continuation in
-            let task = Task { @MainActor in
-                for await notes in stream {
-                    let recent = Array(
-                        notes.filter { $0.deletedAt == nil }
-                            .sorted { $0.createdAt > $1.createdAt }
-                            .prefix(limit)
-                    )
-                    continuation.yield(recent)
-                }
-                continuation.finish()
-            }
-            continuation.onTermination = { _ in task.cancel() }
         }
     }
 

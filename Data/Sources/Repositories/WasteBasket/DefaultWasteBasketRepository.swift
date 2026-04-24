@@ -15,13 +15,12 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
     // MARK: - Fetch
 
     public func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
+        let deletedPredicate = NSPredicate(format: "deletedAt != nil")
         do {
-            let voiceNoteItems = try store.fetchAll(VoiceNoteEntity.self)
-                .filter { $0.deletedAt != nil }
+            let voiceNoteItems = try store.fetch(VoiceNoteEntity.self, where: deletedPredicate)
                 .map { WasteBasketItem.voiceNote(obj: $0) }
 
-            let folderItems = try store.fetchAll(FolderEntity.self)
-                .filter { $0.deletedAt != nil }
+            let folderItems = try store.fetch(FolderEntity.self, where: deletedPredicate)
                 .map { WasteBasketItem.folder(obj: $0) }
 
             return voiceNoteItems + folderItems
@@ -32,29 +31,35 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
     }
 
     public func observe() throws(FetchWasteBasketRepositoryError) -> AsyncStream<[WasteBasketItem]> {
+        let deletedPredicate = NSPredicate(format: "deletedAt != nil")
         let voiceNoteStream: AsyncStream<[VoiceNote]>
         let folderStream: AsyncStream<[Folder]>
         do {
-            voiceNoteStream = try store.observeAll(VoiceNoteEntity.self)
-            folderStream = try store.observeAll(FolderEntity.self)
+            voiceNoteStream = try store.observeAll(VoiceNoteEntity.self, where: deletedPredicate)
+            folderStream = try store.observeAll(FolderEntity.self, where: deletedPredicate)
         } catch {
             AppLogger.error(error)
             throw FetchWasteBasketRepositoryError(error)
         }
 
         return AsyncStream { continuation in
+            var latestVoiceNotes: [VoiceNote] = []
+            var latestFolders: [Folder] = []
+
             let voiceNoteTask = Task { @MainActor in
-                for await _ in voiceNoteStream {
-                    if let snapshot = try? fetchAll() {
-                        continuation.yield(snapshot)
-                    }
+                for await notes in voiceNoteStream {
+                    latestVoiceNotes = notes
+                    let items = latestVoiceNotes.map { WasteBasketItem.voiceNote(obj: $0) }
+                        + latestFolders.map { WasteBasketItem.folder(obj: $0) }
+                    continuation.yield(items)
                 }
             }
             let folderTask = Task { @MainActor in
-                for await _ in folderStream {
-                    if let snapshot = try? fetchAll() {
-                        continuation.yield(snapshot)
-                    }
+                for await folders in folderStream {
+                    latestFolders = folders
+                    let items = latestVoiceNotes.map { WasteBasketItem.voiceNote(obj: $0) }
+                        + latestFolders.map { WasteBasketItem.folder(obj: $0) }
+                    continuation.yield(items)
                 }
             }
             continuation.onTermination = { _ in
@@ -67,15 +72,14 @@ public struct DefaultWasteBasketRepository: WasteBasketRepository {
     // MARK: - Delete
 
     public func allClear() throws(DeleteWasteBasketRepositoryError) {
+        let deletedPredicate = NSPredicate(format: "deletedAt != nil")
         do {
-            let voiceNotes = try store.fetchAll(VoiceNoteEntity.self)
-                .filter { $0.deletedAt != nil }
+            let voiceNotes = try store.fetch(VoiceNoteEntity.self, where: deletedPredicate)
             for voiceNote in voiceNotes {
                 _ = try store.delete(byID: voiceNote.id, as: VoiceNoteEntity.self)
             }
 
-            let folders = try store.fetchAll(FolderEntity.self)
-                .filter { $0.deletedAt != nil }
+            let folders = try store.fetch(FolderEntity.self, where: deletedPredicate)
             for folder in folders {
                 _ = try store.delete(byID: folder.id, as: FolderEntity.self)
             }

@@ -7,22 +7,7 @@ private let dataScheme = Scheme.scheme(
     buildAction: .buildAction(
         targets: [.target("Data")],
         findImplicitDependencies: true
-    ),
-    testAction: .targets([
-        .testableTarget(target: .target("DataTests"), parallelization: .disabled)
-    ])
-)
-
-private let dataTestsScheme = Scheme.scheme(
-    name: "DataTests",
-    shared: true,
-    buildAction: .buildAction(
-        targets: [.target("DataTests")],
-        findImplicitDependencies: true
-    ),
-    testAction: .targets([
-        .testableTarget(target: .target("DataTests"), parallelization: .disabled)
-    ])
+    )
 )
 
 private let dataTarget = Target.target(
@@ -40,20 +25,6 @@ private let dataTarget = Target.target(
     ]
 )
 
-private let dataTestsTarget = Target.target(
-    name: "DataTests",
-    destinations: .iOS,
-    product: .unitTests,
-    bundleId: "\(bundleId).DataTests",
-    deploymentTargets: deploymentTargets,
-    infoPlist: .default,
-    sources: ["Tests/**/*.swift"],
-    dependencies: [
-        .target(name: "Data"),
-        .project(target: "DomainTesting", path: "../Domain")
-    ]
-)
-
 let project = Project(
     name: "Data",
     options: .options(
@@ -62,11 +33,9 @@ let project = Project(
     ),
     settings: settings,
     targets: [
-        dataTarget,
-        dataTestsTarget
+        dataTarget
     ],
     schemes: [
-        dataScheme,
-        dataTestsScheme
+        dataScheme
     ]
 )
