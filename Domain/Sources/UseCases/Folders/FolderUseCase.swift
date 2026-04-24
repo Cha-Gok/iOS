@@ -43,6 +43,18 @@ public protocol FolderUseCase: Sendable {
 
     /// 개인 폴더 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
     func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
+
+    /// 폴더를 휴지통으로 이동합니다. 안의 노트는 부모 폴더가 휴지통에 있는 형태로 cascade 표현됩니다.
+    /// - Parameter folderID: 이동할 폴더의 UUID
+    func moveToTrash(folderID: UUID) throws(FolderUseCaseError)
+
+    /// 휴지통에 있는 폴더를 복원합니다. cascade로 함께 이동됐던 노트도 자연스럽게 복원됩니다.
+    /// - Parameter folderID: 복원할 폴더의 UUID
+    func restore(folderID: UUID) throws(FolderUseCaseError)
+
+    /// 폴더를 영구 삭제합니다. 안의 모든 노트도 cascade로 삭제됩니다.
+    /// - Parameter folderID: 삭제할 폴더의 UUID
+    func delete(folderID: UUID) throws(FolderUseCaseError)
 }
 
 public struct DefaultFolderUseCase: FolderUseCase {
@@ -170,6 +182,59 @@ public struct DefaultFolderUseCase: FolderUseCase {
         updateFolder.name = trimName
         do {
             return try repository.update(updateFolder)
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
+        }
+    }
+
+    public func moveToTrash(folderID: UUID) throws(FolderUseCaseError) {
+        let trash = try fetchTrash()
+
+        let folder: Folder
+        do {
+            folder = try repository.fetch(by: folderID)
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
+        }
+
+        var trashed = folder
+        trashed.parentID = trash.id
+        trashed.deletedAt = .now
+
+        do {
+            _ = try repository.update(trashed)
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
+        }
+    }
+
+    public func restore(folderID: UUID) throws(FolderUseCaseError) {
+        let folder: Folder
+        do {
+            folder = try repository.fetch(by: folderID)
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
+        }
+
+        var restored = folder
+        restored.parentID = nil
+        restored.deletedAt = nil
+
+        do {
+            _ = try repository.update(restored)
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
+        }
+    }
+
+    public func delete(folderID: UUID) throws(FolderUseCaseError) {
+        do {
+            try repository.delete(id: folderID)
         } catch {
             AppLogger.error(error)
             throw FolderUseCaseError(error)

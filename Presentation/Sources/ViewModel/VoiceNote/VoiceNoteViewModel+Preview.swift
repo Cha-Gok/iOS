@@ -138,6 +138,10 @@
                 continuation.finish()
             }
         }
+
+        func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}
+        func restore(folderID _: UUID) throws(FolderUseCaseError) {}
+        func delete(folderID _: UUID) throws(FolderUseCaseError) {}
     }
 
     private struct PreviewPlaybackRepository: VoiceRecordPlaybackRepository {

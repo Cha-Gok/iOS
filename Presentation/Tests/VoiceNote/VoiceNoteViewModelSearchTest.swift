@@ -396,5 +396,9 @@ private struct FakeFolderUseCase: FolderUseCase {
             continuation.finish()
         }
     }
+
+    func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}
+    func restore(folderID _: UUID) throws(FolderUseCaseError) {}
+    func delete(folderID _: UUID) throws(FolderUseCaseError) {}
 }
 

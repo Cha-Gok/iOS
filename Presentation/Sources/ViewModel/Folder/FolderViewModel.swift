@@ -223,6 +223,10 @@ extension FolderViewModel {
                     continuation.finish()
                 }
             }
+
+            func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}
+            func restore(folderID _: UUID) throws(FolderUseCaseError) {}
+            func delete(folderID _: UUID) throws(FolderUseCaseError) {}
         }
 
         struct PreviewTrashUseCase: TrashUseCase {
