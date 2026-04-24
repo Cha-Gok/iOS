@@ -20,11 +20,11 @@ public protocol FolderRepository: Sendable {
     /// - Throws: `FolderRepositoryError.notFound`, `.fetchFailed` 등
     func fetch(by id: UUID) throws(FolderRepositoryError) -> Folder
 
-    /// 특정 종류의 폴더를 조회합니다. (기본 폴더, 휴지통 등)
+    /// 특정 종류의 폴더 목록을 조회합니다. (기본 폴더, 휴지통, 커스텀 등)
     /// - Parameter kind: 조회할 폴더 종류
-    /// - Returns: 조회된 폴더 엔티티
-    /// - Throws: `FolderRepositoryError.notFound`, `.fetchFailed` 등
-    func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> Folder
+    /// - Returns: 해당 종류의 폴더 목록. 결과가 없으면 빈 배열
+    /// - Throws: `FolderRepositoryError.fetchFailed` 등
+    func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> [Folder]
 
     /// 폴더 정보를 업데이트합니다. (이름 변경 등)
     /// - Parameter folder: 업데이트할 폴더 엔티티

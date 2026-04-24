@@ -220,20 +220,30 @@ public struct DefaultTrashUseCase: TrashUseCase {
     // MARK: - Helpers
 
     private func fetchTrashFolder() throws(TrashUseCaseError) -> Folder {
+        let folders: [Folder]
         do {
-            return try folderRepository.fetch(by: .trash)
+            folders = try folderRepository.fetch(by: .trash)
         } catch {
             AppLogger.error(error)
             throw TrashUseCaseError(error)
         }
+        guard let folder = folders.first else {
+            throw TrashUseCaseError(FolderRepositoryError.notFound)
+        }
+        return folder
     }
 
     private func fetchDefaultFolder() throws(TrashUseCaseError) -> Folder {
+        let folders: [Folder]
         do {
-            return try folderRepository.fetch(by: .default)
+            folders = try folderRepository.fetch(by: .default)
         } catch {
             AppLogger.error(error)
             throw TrashUseCaseError(error)
         }
+        guard let folder = folders.first else {
+            throw TrashUseCaseError(FolderRepositoryError.notFound)
+        }
+        return folder
     }
 }

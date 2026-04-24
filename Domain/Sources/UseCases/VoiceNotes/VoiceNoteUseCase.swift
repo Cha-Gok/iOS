@@ -68,12 +68,15 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         }
 
         // 3. 기본 폴더 결정 (어느 폴더에 저장할지는 비즈니스 결정)
-        let defaultFolder: Folder
+        let defaultFolders: [Folder]
         do {
-            defaultFolder = try folderRepository.fetch(by: .default)
+            defaultFolders = try folderRepository.fetch(by: .default)
         } catch {
             AppLogger.error(error)
             throw .unknown(error)
+        }
+        guard let defaultFolder = defaultFolders.first else {
+            throw .unknown(FolderRepositoryError.notFound)
         }
 
         // 4. VoiceNote 모델 구성 (제목 등 비즈니스 규칙은 UseCase에서 결정)

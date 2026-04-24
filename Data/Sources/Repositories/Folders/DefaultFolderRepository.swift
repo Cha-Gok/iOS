@@ -51,15 +51,14 @@ public struct DefaultFolderRepository: FolderRepository {
         }
     }
 
-    public func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> Folder {
+    public func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> [Folder] {
         do {
             let request = FolderEntity.fetchRequest()
             request.predicate = NSPredicate(format: "kindRaw == %@", kind.rawValue)
-            request.fetchLimit = 1
-            guard let entity = try context.fetch(request).first else {
-                throw FolderRepositoryError.notFound
-            }
-            return entity.toModel()
+            request.sortDescriptors = [
+                NSSortDescriptor(keyPath: \FolderEntity.createdAt, ascending: false)
+            ]
+            return try context.fetch(request).map { $0.toModel() }
         } catch {
             AppLogger.error(error)
             throw .fetchFailed

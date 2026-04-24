@@ -7,7 +7,7 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
     private var createResult: Result<Folder, FolderRepositoryError>?
     private var fetchAllResult: Result<[Folder], FolderRepositoryError>?
     private var fetchByIDResult: Result<Folder, FolderRepositoryError>?
-    private var fetchByKindResults: [FolderKind: Result<Folder, FolderRepositoryError>] = [:]
+    private var fetchByKindResults: [FolderKind: Result<[Folder], FolderRepositoryError>] = [:]
     private var updateResult: Result<Folder, FolderRepositoryError>?
     private var observeByKindResults: [FolderKind: Result<AsyncStream<[Folder]>, FolderRepositoryError>] = [:]
 
@@ -49,7 +49,7 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         fetchByIDResult = result
     }
 
-    public func setFetchByKindResult(_ kind: FolderKind, result: Result<Folder, FolderRepositoryError>) {
+    public func setFetchByKindResult(_ kind: FolderKind, result: Result<[Folder], FolderRepositoryError>) {
         fetchByKindResults[kind] = result
     }
 
@@ -179,10 +179,10 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         }
     }
 
-    public func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> Folder {
+    public func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> [Folder] {
         switch fetchByKindResults[kind] {
-        case .success(let folder):
-            return folder
+        case .success(let folders):
+            return folders
         case .failure(let error):
             throw error
         case .none:

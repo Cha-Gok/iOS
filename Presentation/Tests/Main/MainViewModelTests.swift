@@ -231,7 +231,7 @@ final class MainViewModelTests: XCTestCase {
         let sut = makeSUT()
         let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
         let expectedNotes = [VoiceNote.stub(title: "노트1"), VoiceNote.stub(title: "노트2")]
-        sut.mockFolderRepo.setFetchByKindResult(.default, result: .success(defaultFolder))
+        sut.mockFolderRepo.setFetchByKindResult(.default, result: .success([defaultFolder]))
         sut.mockVoiceNoteRepo.setObserveFolderResult(.success(makeStream(expectedNotes)))
         sut.mockVoiceNoteRepo.expectObserveFolder(callCount: 1, folderID: defaultFolder.id)
 

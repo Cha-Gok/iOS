@@ -39,7 +39,7 @@ extension VoiceNoteUseCaseTest {
         let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
         let expectedNote = VoiceNote.stub(voiceRecord: voiceRecord)
 
-        sut.folderRepository.setFetchByKindResult(.default, result: .success(defaultFolder))
+        sut.folderRepository.setFetchByKindResult(.default, result: .success([defaultFolder]))
         sut.repository.setCreateResult(.success(expectedNote))
         sut.repository.expectCreate(callCount: 1)
         sut.analysisService.expectEnqueue(callCount: 1)

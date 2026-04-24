@@ -292,7 +292,7 @@ extension RecordingViewModelTests {
         let voiceNoteStub = VoiceNote.stub(voiceRecord: voiceRecordStub)
         let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
         await sut.repository.setFinishResult(.success(voiceRecordStub))
-        sut.folderRepository.setFetchByKindResult(.default, result: .success(defaultFolder))
+        sut.folderRepository.setFetchByKindResult(.default, result: .success([defaultFolder]))
         sut.voiceNoteRepository.setCreateResult(.success(voiceNoteStub))
 
         // When
@@ -323,7 +323,7 @@ extension RecordingViewModelTests {
         let sut = makeSUT()
         let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
         await sut.repository.setFinishResult(.success(.stub()))
-        sut.folderRepository.setFetchByKindResult(.default, result: .success(defaultFolder))
+        sut.folderRepository.setFetchByKindResult(.default, result: .success([defaultFolder]))
         sut.voiceNoteRepository.setCreateResult(.failure(.createFailed))
 
         // When

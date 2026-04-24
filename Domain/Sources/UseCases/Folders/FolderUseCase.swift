@@ -88,21 +88,27 @@ public struct DefaultFolderUseCase: FolderUseCase {
     }
 
     public func fetchDefault() throws(FolderUseCaseError) -> Folder {
+        let folders: [Folder]
         do {
-            return try repository.fetch(by: .default)
+            folders = try repository.fetch(by: .default)
         } catch {
             AppLogger.error(error)
             throw FolderUseCaseError(error)
         }
+        guard let folder = folders.first else { throw .notFound }
+        return folder
     }
 
     public func fetchTrash() throws(FolderUseCaseError) -> Folder {
+        let folders: [Folder]
         do {
-            return try repository.fetch(by: .trash)
+            folders = try repository.fetch(by: .trash)
         } catch {
             AppLogger.error(error)
             throw FolderUseCaseError(error)
         }
+        guard let folder = folders.first else { throw .notFound }
+        return folder
     }
 
     public func fetchAll() throws(FolderUseCaseError) -> [Folder] {
