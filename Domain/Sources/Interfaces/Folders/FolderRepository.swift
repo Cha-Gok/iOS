@@ -36,7 +36,7 @@ public protocol FolderRepository: Sendable {
     func observe(by kind: FolderKind) throws(FolderRepositoryError) -> AsyncStream<[Folder]>
 
     /// 휴지통에 들어간(deletedAt != nil) 폴더 목록을 관찰합니다.
-    func observeDeleted() throws(FolderRepositoryError) -> AsyncStream<[Folder]>
+    func observeTrashed() throws(FolderRepositoryError) -> AsyncStream<[Folder]>
 
     /// 폴더를 영구 삭제합니다. 안의 모든 노트도 cascade로 삭제됩니다.
     func delete(id: UUID) throws(FolderRepositoryError)

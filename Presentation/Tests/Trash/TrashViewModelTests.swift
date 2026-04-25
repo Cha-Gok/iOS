@@ -68,7 +68,7 @@ final class TrashViewModelTests: XCTestCase {
             case .voiceNote(let note): notes.append(note)
             }
         }
-        sut.mockFolderRepo.setObserveDeletedResult(.success(makeStream(folders)))
+        sut.mockFolderRepo.setObserveTrashedResult(.success(makeStream(folders)))
         sut.mockVoiceNoteRepo.setObserveTrashedResult(.success(makeStream(notes)))
     }
 

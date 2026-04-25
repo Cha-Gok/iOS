@@ -397,14 +397,14 @@ private struct FakeFolderUseCase: FolderUseCase {
         folder
     }
 
-    func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+    func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
         AsyncStream { continuation in
             continuation.yield([])
             continuation.finish()
         }
     }
 
-    func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+    func observeTrashed() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
         AsyncStream { $0.finish() }
     }
 

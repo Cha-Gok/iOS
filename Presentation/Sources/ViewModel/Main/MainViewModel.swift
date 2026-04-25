@@ -193,7 +193,7 @@ extension MainViewModel {
         myFolderTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let stream = try folderUseCase.observeDeletableFolders()
+                let stream = try folderUseCase.observeDeletable()
                 for await folders in stream {
                     categoryData[2].items = folders.map { ContentItem.folder($0) }
                 }
@@ -208,7 +208,7 @@ extension MainViewModel {
     func updateTrashCategory() {
         guard trashFoldersTask == nil, trashNotesTask == nil else { return }
         do {
-            let foldersStream = try folderUseCase.observeDeleted()
+            let foldersStream = try folderUseCase.observeTrashed()
             let notesStream = try voiceNoteUseCase.observeTrashed()
             trashFoldersTask = Task { [weak self] in
                 for await folders in foldersStream {
@@ -573,7 +573,7 @@ extension MainViewModel {
                 folder
             }
 
-            func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+            func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
                 let snapshot = items.filter { $0.kind == .custom }
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)
@@ -581,7 +581,7 @@ extension MainViewModel {
                 }
             }
 
-            func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+            func observeTrashed() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
                 let snapshot = trashedItems
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)

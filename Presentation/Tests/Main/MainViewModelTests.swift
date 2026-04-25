@@ -294,7 +294,7 @@ final class MainViewModelTests: XCTestCase {
         let sut = makeSUT()
         let trashedNote = VoiceNote.stub(title: "삭제된 노트")
 
-        sut.mockFolderRepo.setObserveDeletedResult(.success(makeStream([])))
+        sut.mockFolderRepo.setObserveTrashedResult(.success(makeStream([])))
         sut.mockVoiceNoteRepo.setObserveTrashedResult(.success(makeStream([trashedNote])))
 
         sut.viewModel.updateTrashCategory()

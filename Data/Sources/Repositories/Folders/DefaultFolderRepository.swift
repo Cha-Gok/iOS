@@ -92,7 +92,7 @@ public struct DefaultFolderRepository: FolderRepository {
         return try makeListStream(request: request)
     }
 
-    public func observeDeleted() throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
+    public func observeTrashed() throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
         let request = FolderEntity.fetchRequest()
         request.predicate = NSPredicate(
             format: "parentID != nil AND kindRaw == %@",

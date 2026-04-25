@@ -42,10 +42,10 @@ public protocol FolderUseCase: Sendable {
     func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder
 
     /// 개인 폴더 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
-    func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
+    func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
 
     /// 휴지통에 있는(삭제된) 폴더 목록을 관찰합니다.
-    func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
+    func observeTrashed() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
 
     /// 폴더를 휴지통으로 이동합니다. 안의 노트는 부모 폴더가 휴지통에 있는 형태로 cascade 표현됩니다.
     /// - Parameter folderID: 이동할 폴더의 UUID
@@ -155,7 +155,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
         }
     }
 
-    public func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+    public func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
         // Repository observe(by: .custom)의 predicate가 parentID == nil 조건을 포함하므로
         // 휴지통 이동된 폴더(parentID = trash.id)는 emit에서 자동 제외됨 → 추가 filter 불필요
         do {
@@ -166,9 +166,9 @@ public struct DefaultFolderUseCase: FolderUseCase {
         }
     }
 
-    public func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+    public func observeTrashed() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
         do {
-            return try repository.observeDeleted()
+            return try repository.observeTrashed()
         } catch {
             AppLogger.error(error)
             throw FolderUseCaseError(error)

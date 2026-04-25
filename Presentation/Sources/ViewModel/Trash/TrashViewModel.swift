@@ -115,7 +115,7 @@ extension TrashViewModel {
     func onAppear() {
         guard foldersObservationTask == nil, notesObservationTask == nil else { return }
         do {
-            let foldersStream = try folderUseCase.observeDeleted()
+            let foldersStream = try folderUseCase.observeTrashed()
             let notesStream = try voiceNoteUseCase.observeTrashed()
             foldersObservationTask = Task { [weak self] in
                 for await folders in foldersStream {
@@ -383,11 +383,11 @@ extension TrashViewModel {
                 folder
             }
 
-            func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+            func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
                 AsyncStream { $0.finish() }
             }
 
-            func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+            func observeTrashed() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
                 let snapshot = trashedFolders
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)
