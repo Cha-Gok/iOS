@@ -30,14 +30,14 @@ final class FolderDetailViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: FolderDetailViewModel
         let mockVoiceNoteRepo: MockVoiceNoteRepository
-        let mockWasteBasketRepo: MockWasteBasketRepository
+        let mockFolderRepo: MockFolderRepository
         let mockCoordinator: MockFolderDetailCoordinatorDelegate
         let testFolderID: UUID
     }
 
     private func makeSUT(title: String = "상세 폴더", folderID: UUID = UUID()) -> SUT {
         let mockVoiceNoteRepo = MockVoiceNoteRepository()
-        let mockWasteBasketRepo = MockWasteBasketRepository()
+        let mockFolderRepo = MockFolderRepository()
         let mockCoordinator = MockFolderDetailCoordinatorDelegate()
 
         let viewModel = FolderDetailViewModel(
@@ -45,19 +45,26 @@ final class FolderDetailViewModelTests: XCTestCase {
             folderID: folderID,
             voiceNoteUseCase: DefaultVoiceNoteUseCase(
                 repository: mockVoiceNoteRepo,
+                folderRepository: mockFolderRepo,
                 analysisService: MockVoiceNoteAnalysisService()
-            ),
-            wasteBasketRepository: mockWasteBasketRepo
+            )
         )
         viewModel.coordinator = mockCoordinator
 
         return SUT(
             viewModel: viewModel,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
-            mockWasteBasketRepo: mockWasteBasketRepo,
+            mockFolderRepo: mockFolderRepo,
             mockCoordinator: mockCoordinator,
             testFolderID: folderID
         )
+    }
+
+    private func makeStream(_ items: [VoiceNote]) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { continuation in
+            continuation.yield(items)
+            continuation.finish()
+        }
     }
 
     // MARK: - Initial State Tests
@@ -144,10 +151,10 @@ final class FolderDetailViewModelTests: XCTestCase {
             VoiceNote.stub(title: "노트2")
         ]
 
-        sut.mockVoiceNoteRepo.setFetchAllResult(.success(expectedNotes))
-        sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
+        sut.mockVoiceNoteRepo.setObserveFolderResult(.success(makeStream(expectedNotes)))
+        sut.mockVoiceNoteRepo.expectObserveFolder(callCount: 1, folderID: sut.testFolderID)
 
-        sut.viewModel.fetchItems()
+        sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         sut.mockVoiceNoteRepo.verify()
@@ -200,10 +207,10 @@ final class FolderDetailViewModelTests: XCTestCase {
             updatedAt: Date().addingTimeInterval(-1000) // update 기준으로는 더 이전
         )
 
-        sut.mockVoiceNoteRepo.setFetchAllResult(.success([olderNote, newerNote]))
-        sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
+        sut.mockVoiceNoteRepo.setObserveFolderResult(.success(makeStream([olderNote, newerNote])))
+        sut.mockVoiceNoteRepo.expectObserveFolder(callCount: 1, folderID: sut.testFolderID)
 
-        sut.viewModel.fetchItems()
+        sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         // 기본은 생성일 순(createdAt 내림차순)
@@ -221,40 +228,25 @@ final class FolderDetailViewModelTests: XCTestCase {
     func test_move_호출시_아이템제거및_선택모드해제() async {
         let sut = makeSUT()
         let note = VoiceNote.stub(title: "삭제할 노트")
+        let trash = Folder.stub(kind: .trash)
 
-        sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
-        sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
-        sut.viewModel.fetchItems()
+        sut.mockVoiceNoteRepo.setObserveFolderResult(.success(makeStream([note])))
+        sut.mockVoiceNoteRepo.expectObserveFolder(callCount: 1, folderID: sut.testFolderID)
+        sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
         sut.viewModel.selectItem(note)
 
-        sut.mockWasteBasketRepo.setMoveResult(.success(()))
-        sut.mockWasteBasketRepo.expectMoveAllToWasteBasket(callCount: 1)
+        sut.mockFolderRepo.setFetchByKindResult(.trash, result: .success([trash]))
+        sut.mockVoiceNoteRepo.setFetchResult(.success(note))
+        sut.mockVoiceNoteRepo.setUpdateResult(.success(note))
+        sut.mockVoiceNoteRepo.expectUpdate(callCount: 1)
 
         sut.viewModel.move()
 
-        sut.mockWasteBasketRepo.verify()
+        sut.mockVoiceNoteRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty)
         XCTAssertEqual(sut.viewModel.select, .none)
         XCTAssertTrue(sut.viewModel.selectedItems.isEmpty)
-    }
-
-    func test_restore_호출시_복원후_fetch재호출() async {
-        let sut = makeSUT()
-        let note = VoiceNote.stub(title: "복원할 노트")
-
-        sut.mockWasteBasketRepo.setRestoreResult(.success(()))
-        sut.mockWasteBasketRepo.expectRestore(callCount: 1)
-
-        sut.mockVoiceNoteRepo.setFetchAllResult(.success([note]))
-        sut.mockVoiceNoteRepo.expectFetchAll(callCount: 1, folderID: sut.testFolderID)
-
-        sut.viewModel.restore(items: [note])
-        try? await Task.sleep(nanoseconds: 300_000_000)
-
-        sut.mockWasteBasketRepo.verify()
-        sut.mockVoiceNoteRepo.verify()
-        XCTAssertEqual(sut.viewModel.items.count, 1)
     }
 }

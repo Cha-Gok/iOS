@@ -19,6 +19,9 @@ public enum Policy {
     /// 온보딩 완료 시 자동 생성되는 기본 폴더 이름
     public static let defaultFolderName: String = "기본 폴더"
 
+    /// 온보딩 완료 시 자동 생성되는 휴지통 폴더 이름
+    public static let trashFolderName: String = "휴지통"
+
     /// 녹음 PCM 버퍼 스트림의 최대 대기 개수 (초과 시 최신값 유지)
     public static let audioBufferStreamBufferLimit: Int = 8
 

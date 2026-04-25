@@ -46,16 +46,21 @@ final class MainViewModelTests: XCTestCase {
         let mockVoiceRecordRepo: MockVoiceRecordRepository
         let mockFolderRepo: MockFolderRepository
         let mockVoiceNoteRepo: MockVoiceNoteRepository
-        let mockWasteBasketRepo: MockWasteBasketRepository
         let mockCoordinator: MockMainCoordinatorDelegate
         let mockLanguageRepo: MockLanguageRepository
+    }
+
+    private func makeStream<T: Sendable>(_ items: T) -> AsyncStream<T> {
+        AsyncStream { continuation in
+            continuation.yield(items)
+            continuation.finish()
+        }
     }
 
     private func makeSUT() -> SUT {
         let mockVoiceRecordRepo = MockVoiceRecordRepository()
         let mockFolderRepo = MockFolderRepository()
         let mockVoiceNoteRepo = MockVoiceNoteRepository()
-        let mockWasteBasketRepo = MockWasteBasketRepository()
         let mockCoordinator = MockMainCoordinatorDelegate()
         let mockLanguageRepo = MockLanguageRepository()
 
@@ -63,10 +68,10 @@ final class MainViewModelTests: XCTestCase {
             microphoneRepository: mockVoiceRecordRepo,
             voiceNoteUseCase: DefaultVoiceNoteUseCase(
                 repository: mockVoiceNoteRepo,
+                folderRepository: mockFolderRepo,
                 analysisService: MockVoiceNoteAnalysisService()
             ),
             folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
-            wasteBasketRepository: mockWasteBasketRepo,
             languageRepository: mockLanguageRepo
         )
         viewModel.mainCoordinator = mockCoordinator
@@ -76,7 +81,6 @@ final class MainViewModelTests: XCTestCase {
             mockVoiceRecordRepo: mockVoiceRecordRepo,
             mockFolderRepo: mockFolderRepo,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
-            mockWasteBasketRepo: mockWasteBasketRepo,
             mockCoordinator: mockCoordinator,
             mockLanguageRepo: mockLanguageRepo
         )
@@ -221,9 +225,11 @@ final class MainViewModelTests: XCTestCase {
     func test_updateVoiceNoteCategory_호출시_기본폴더보이스노트로드확인() async {
         // Given
         let sut = makeSUT()
+        let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
         let expectedNotes = [VoiceNote.stub(title: "노트1"), VoiceNote.stub(title: "노트2")]
-        sut.mockVoiceNoteRepo.setFetchAllResult(.success(expectedNotes))
-        sut.mockVoiceNoteRepo.expectFetchAllFromDefaultFolder(callCount: 1)
+        sut.mockFolderRepo.setFetchByKindResult(.default, result: .success([defaultFolder]))
+        sut.mockVoiceNoteRepo.setObserveFolderResult(.success(makeStream(expectedNotes)))
+        sut.mockVoiceNoteRepo.expectObserveFolder(callCount: 1, folderID: defaultFolder.id)
 
         // When
         sut.viewModel.updateVoiceNoteCategory()
@@ -243,8 +249,8 @@ final class MainViewModelTests: XCTestCase {
         // Given
         let sut = makeSUT()
         let expectedNotes = [VoiceNote.stub(title: "최신1"), VoiceNote.stub(title: "최신2")]
-        sut.mockVoiceNoteRepo.setFetchRecentResult(.success(expectedNotes))
-        sut.mockVoiceNoteRepo.expectFetchRecent(callCount: 1)
+        sut.mockVoiceNoteRepo.setObserveRecentResult(.success(makeStream(expectedNotes)))
+        sut.mockVoiceNoteRepo.expectObserveRecent(callCount: 1)
 
         // When
         sut.viewModel.updateRecentCategory()
@@ -263,12 +269,11 @@ final class MainViewModelTests: XCTestCase {
     func test_updateMyFolderCategory_호출시_데이터로드확인() async {
         let sut = makeSUT()
         let expectedFolders = [
-            Folder(name: "테스트 폴더 1"),
-            Folder(name: "테스트 폴더 2")
+            Folder(name: "테스트 폴더 1", kind: .custom),
+            Folder(name: "테스트 폴더 2", kind: .custom)
         ]
 
-        sut.mockFolderRepo.setFetchAllResult(.success(expectedFolders))
-        sut.mockFolderRepo.expectFetchAll(callCount: 1)
+        sut.mockFolderRepo.setObserveByKindResult(.custom, result: .success(makeStream(expectedFolders)))
 
         sut.viewModel.updateMyFolderCategory()
 
@@ -287,18 +292,15 @@ final class MainViewModelTests: XCTestCase {
 
     func test_updateTrashCategory_호출시_데이터로드확인() async {
         let sut = makeSUT()
-        let expectedTrash = [
-            WasteBasketItem.voiceNote(obj: VoiceNote.stub(title: "삭제된 노트"))
-        ]
+        let trashedNote = VoiceNote.stub(title: "삭제된 노트")
 
-        sut.mockWasteBasketRepo.setFetchAllResult(.success(expectedTrash))
-        sut.mockWasteBasketRepo.expectFetchAll(callCount: 1)
+        sut.mockFolderRepo.setObserveTrashedResult(.success(makeStream([])))
+        sut.mockVoiceNoteRepo.setObserveTrashedResult(.success(makeStream([trashedNote])))
 
         sut.viewModel.updateTrashCategory()
 
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        // Mock은 이미 verify되었음을 가정하거나 직접 체크
         XCTAssertEqual(sut.viewModel.categoryData[3].items.count, 1)
         if case .voiceNote(let note) = sut.viewModel.categoryData[3].items[0] {
             XCTAssertEqual(note.title, "삭제된 노트")

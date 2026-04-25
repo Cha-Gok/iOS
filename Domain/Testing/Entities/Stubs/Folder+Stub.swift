@@ -6,16 +6,16 @@ public extension Folder {
         id: UUID = UUID(),
         name: String = "Stub Folder",
         createdAt: Date = Date(),
-        content: [VoiceNote] = [],
-        isDeletable: Bool = true,
+        voiceNoteIDs: [UUID] = [],
+        kind: FolderKind = .custom,
         deletedAt: Date? = nil
     ) -> Folder {
         Folder(
             id: id,
             name: name,
             createdAt: createdAt,
-            content: content,
-            isDeletable: isDeletable,
+            voiceNoteIDs: voiceNoteIDs,
+            kind: kind,
             deletedAt: deletedAt
         )
     }

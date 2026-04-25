@@ -13,32 +13,26 @@ public final class KeywordEntity: NSManagedObject {
     public var voiceNote: VoiceNoteEntity
 }
 
-extension KeywordEntity: ManagedObjectMapping {
-    public typealias ModelType = Keyword
-
-    public convenience init(model: ModelType, context: NSManagedObjectContext) throws {
-        self.init(context: context)
-        try insert(from: model)
+extension KeywordEntity {
+    static func fetchRequest() -> NSFetchRequest<KeywordEntity> {
+        NSFetchRequest<KeywordEntity>(entityName: "Keyword")
     }
 
-    public func toModel() -> ModelType {
+    convenience init(model: Keyword, context: NSManagedObjectContext) {
+        self.init(context: context)
+        update(from: model)
+    }
+
+    func update(from model: Keyword) {
+        id = model.id
+        word = model.word
+    }
+
+    func toModel() -> Keyword {
         Keyword(
             id: id,
             noteID: voiceNote.id,
             word: word
         )
-    }
-
-    public func insert(from model: ModelType) throws {
-        id = model.id
-        word = model.word
-    }
-
-    public static var entityName: CoreDataEntityName {
-        .keyword
-    }
-
-    public static var sortDescriptors: [NSSortDescriptor] {
-        [NSSortDescriptor(keyPath: \KeywordEntity.word, ascending: true)]
     }
 }

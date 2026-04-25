@@ -12,16 +12,6 @@ public enum VoiceNoteRepositoryError: LocalizedError, Sendable {
     case cancelled
     case unknown(Error)
 
-    public init(_ error: Error) {
-        if let repoError = error as? VoiceNoteRepositoryError {
-            self = repoError
-        } else if (error as NSError).domain == NSURLErrorDomain, (error as NSError).code == NSURLErrorCancelled {
-            self = .cancelled
-        } else {
-            self = .unknown(error)
-        }
-    }
-
     public var errorDescription: String? {
         switch self {
         case .createFailed:

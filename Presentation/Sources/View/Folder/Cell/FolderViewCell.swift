@@ -77,13 +77,13 @@ final class FolderViewCell: UITableViewCell {
 
     // MARK: - Helper
 
-    func configure(with item: LibraryItem) {
+    func configure(with item: ContentItem) {
         switch item {
         case .folder(let folder):
             prefixImage.image = UIImage(systemName: "folder.fill")
             prefixImage.tintColor = UIColor.gray600
             titleLabel.setTypography(text: folder.name, style: .body2)
-            countLabel.setTypography(text: "\(folder.content.count)", style: .body2)
+            countLabel.setTypography(text: "\(folder.voiceNoteIDs.count)", style: .body2)
         case .voiceNote(let voiceNote):
             prefixImage.image = UIImage(systemName: "waveform")
             prefixImage.tintColor = UIColor.gray600

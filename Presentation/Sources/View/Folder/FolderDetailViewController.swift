@@ -7,8 +7,8 @@ public final class FolderDetailViewController: CollectionViewController {
         case main
     }
 
-    typealias DataSource = UICollectionViewDiffableDataSource<Section, LibraryItem>
-    typealias SnapShot = NSDiffableDataSourceSnapshot<Section, LibraryItem>
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, ContentItem>
+    typealias SnapShot = NSDiffableDataSourceSnapshot<Section, ContentItem>
 
     private var dataSource: DataSource?
 
@@ -116,7 +116,12 @@ public final class FolderDetailViewController: CollectionViewController {
 
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        vm.fetchItems()
+        vm.onAppear()
+    }
+
+    override public func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        vm.onDisappear()
     }
 
     override public func updateProperties() {
@@ -202,7 +207,7 @@ public final class FolderDetailViewController: CollectionViewController {
         let cellRegistration = UICollectionView.CellRegistration { [weak self] (
             cell: UICollectionViewListCell,
             indexPath: IndexPath,
-            itemIdentifier: LibraryItem
+            itemIdentifier: ContentItem
         ) in
             guard let self else { return }
             var backgroundConfig = UIBackgroundConfiguration.listCell()
@@ -368,7 +373,6 @@ private extension FolderDetailViewController {
             case .all, .multiple:
                 // TODO: 이동 로직 실행
                 vm.presentMoveFolder { [weak self] name in
-                    self?.vm.fetchItems()
                     self?.chagokBackgroundView.makeToast(
                         type: .normal,
                         "`\(name)` 폴더로 이동됐어요."

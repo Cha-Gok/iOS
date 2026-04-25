@@ -18,9 +18,8 @@ public final class AppDIContainer {
     private lazy var languageRepository = DefaultLanguageRepository(store: store)
     private lazy var voiceRecordRepository = DefaultVoiceRecordRepository(storageService: storageService)
     private lazy var checkFirstLaunchRepository = DefaultCheckFirstLaunchRepository(store: store)
-    private lazy var folderRepository = DefaultFolderRepository(store: localDataBase)
-    private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(store: localDataBase)
-    private lazy var wasteBasketRepository = DefaultWasteBasketRepository(store: localDataBase)
+    private lazy var folderRepository = DefaultFolderRepository(context: localDataBase.container.viewContext)
+    private lazy var voiceNoteRepository = DefaultVoiceNoteRepository(context: localDataBase.container.viewContext)
     private lazy var sttRepository = DefaultSTTRepository(
         storageService: storageService,
         languageRepository: languageRepository
@@ -39,9 +38,9 @@ public final class AppDIContainer {
     private lazy var folderUseCase = DefaultFolderUseCase(repository: folderRepository)
     private lazy var voiceNoteUseCase = DefaultVoiceNoteUseCase(
         repository: voiceNoteRepository,
+        folderRepository: folderRepository,
         analysisService: voiceNoteAnalysisService
     )
-
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
     }
@@ -80,8 +79,7 @@ public final class AppDIContainer {
             voiceNote: voiceNote,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
-            playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService),
-            wasteBasketRepository: wasteBasketRepository
+            playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService)
         )
     }
 
@@ -90,22 +88,21 @@ public final class AppDIContainer {
             microphoneRepository: voiceRecordRepository,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
-            wasteBasketRepository: wasteBasketRepository,
             languageRepository: languageRepository
         )
     }
 
     public func makeTrashViewModel() -> TrashViewModel {
         return TrashViewModel(
-            repository: wasteBasketRepository
+            folderUseCase: folderUseCase,
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 
     public func makeMyFolderViewModel(_ category: CategoryToggle) -> FolderViewModel {
         return FolderViewModel(
             category: category,
-            folderUseCase: folderUseCase,
-            wasteBasketRepository: wasteBasketRepository
+            folderUseCase: folderUseCase
         )
     }
 
@@ -113,8 +110,7 @@ public final class AppDIContainer {
         return FolderDetailViewModel(
             title: folder.name,
             folderID: folder.id,
-            voiceNoteUseCase: voiceNoteUseCase,
-            wasteBasketRepository: wasteBasketRepository
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 

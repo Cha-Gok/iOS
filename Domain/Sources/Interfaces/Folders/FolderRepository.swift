@@ -20,9 +20,24 @@ public protocol FolderRepository: Sendable {
     /// - Throws: `FolderRepositoryError.notFound`, `.fetchFailed` 등
     func fetch(by id: UUID) throws(FolderRepositoryError) -> Folder
 
+    /// 특정 종류의 폴더 목록을 조회합니다. (기본 폴더, 휴지통, 커스텀 등)
+    /// - Parameter kind: 조회할 폴더 종류
+    /// - Returns: 해당 종류의 폴더 목록. 결과가 없으면 빈 배열
+    /// - Throws: `FolderRepositoryError.fetchFailed` 등
+    func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> [Folder]
+
     /// 폴더 정보를 업데이트합니다. (이름 변경 등)
     /// - Parameter folder: 업데이트할 폴더 엔티티
     /// - Returns: 업데이트된 폴더 엔티티
     /// - Throws: `FolderRepositoryError.updateFailed`, `.notFound`, `.duplicateName` 등
     func update(_ folder: Folder) throws(FolderRepositoryError) -> Folder
+
+    /// 특정 종류의 폴더 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
+    func observe(by kind: FolderKind) throws(FolderRepositoryError) -> AsyncStream<[Folder]>
+
+    /// 휴지통에 들어간(deletedAt != nil) 폴더 목록을 관찰합니다.
+    func observeTrashed() throws(FolderRepositoryError) -> AsyncStream<[Folder]>
+
+    /// 폴더를 영구 삭제합니다. 안의 모든 노트도 cascade로 삭제됩니다.
+    func delete(id: UUID) throws(FolderRepositoryError)
 }

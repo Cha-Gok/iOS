@@ -1,4 +1,5 @@
 import Core
+import Domain
 import SwiftUI
 import UIKit
 
@@ -6,7 +7,7 @@ public final class MainViewController: ViewController {
     // MARK: - Type
 
     typealias CategoryHeaderRegistration = UICollectionView.SupplementaryRegistration<MainCategoryHeaderView>
-    typealias ListCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, LibraryItem>
+    typealias ListCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, ContentItem>
     typealias EmptyCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, MainCellItem>
     typealias SectionHeaderRegistration = UICollectionView.SupplementaryRegistration<MainSectionHeaderView>
     typealias DataSource = UICollectionViewDiffableDataSource<MainSection, MainCellItem>
@@ -127,6 +128,11 @@ public final class MainViewController: ViewController {
         vm.updateVoiceNoteCategory()
         vm.updateMyFolderCategory()
         vm.updateTrashCategory()
+    }
+
+    override public func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        vm.cancelObservations()
     }
 
     override public func updateProperties() {
@@ -362,7 +368,7 @@ extension MainViewController {
         )
     }
 
-    private func group(for item: LibraryItem, now: Date = .now) -> MainListDateGroup {
+    private func group(for item: ContentItem, now: Date = .now) -> MainListDateGroup {
         let calendar = Calendar.current
         let date = item.createdAt
 
@@ -379,7 +385,7 @@ extension MainViewController {
         return .older
     }
 
-    private func groupedItems(_ items: [LibraryItem]) -> [(section: MainSection, items: [MainCellItem])] {
+    private func groupedItems(_ items: [ContentItem]) -> [(section: MainSection, items: [MainCellItem])] {
         let grouped = Dictionary(grouping: items) { group(for: $0) }
 
         return MainListDateGroup.allCases.compactMap { group in

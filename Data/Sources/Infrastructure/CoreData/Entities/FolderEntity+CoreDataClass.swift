@@ -13,80 +13,49 @@ public final class FolderEntity: NSManagedObject {
     public var createdAt: Date
 
     @NSManaged
-    public var isDeletable: Bool
+    public var kindRaw: String
 
     @NSManaged
     public var deletedAt: Date?
 
     @NSManaged
+    public var parentID: UUID?
+
+    @NSManaged
     public var voiceNotes: NSSet?
 }
 
-public extension FolderEntity {
-    @objc(addVoiceNotesObject:)
-    @NSManaged
-    func addToVoiceNotes(_ value: VoiceNoteEntity)
-
-    @objc(removeVoiceNotesObject:)
-    @NSManaged
-    func removeFromVoiceNotes(_ value: VoiceNoteEntity)
-
-    @objc(addVoiceNotes:)
-    @NSManaged
-    func addToVoiceNotes(_ values: NSSet)
-
-    @objc(removeVoiceNotes:)
-    @NSManaged
-    func removeFromVoiceNotes(_ values: NSSet)
-}
-
-extension FolderEntity: ManagedObjectMapping {
-    public typealias ModelType = Folder
-
-    public convenience init(model: ModelType, context: NSManagedObjectContext) throws {
-        self.init(context: context)
-        try insert(from: model)
+extension FolderEntity {
+    static func fetchRequest() -> NSFetchRequest<FolderEntity> {
+        NSFetchRequest<FolderEntity>(entityName: "Folder")
     }
 
-    public func toModel() -> ModelType {
-        let voiceNoteModels = (voiceNotes?.allObjects as? [VoiceNoteEntity])?.map { $0.toModel() } ?? []
+    convenience init(model: Folder, context: NSManagedObjectContext) {
+        self.init(context: context)
+        update(from: model)
+    }
+
+    func update(from model: Folder) {
+        id = model.id
+        name = model.name
+        createdAt = model.createdAt
+        kindRaw = model.kind.rawValue
+        deletedAt = model.deletedAt
+        parentID = model.parentID
+    }
+
+    func toModel() -> Folder {
+        let aliveNoteIDs = (voiceNotes as? Set<VoiceNoteEntity>)?
+            .filter { $0.deletedAt == nil }
+            .map(\.id) ?? []
         return Folder(
             id: id,
             name: name,
             createdAt: createdAt,
-            content: voiceNoteModels,
-            isDeletable: isDeletable,
-            deletedAt: deletedAt
+            voiceNoteIDs: aliveNoteIDs,
+            kind: FolderKind(rawValue: kindRaw) ?? .custom,
+            deletedAt: deletedAt,
+            parentID: parentID
         )
-    }
-
-    public func insert(from model: ModelType) throws {
-        id = model.id
-        name = model.name
-        createdAt = model.createdAt
-        isDeletable = model.isDeletable
-        deletedAt = model.deletedAt
-    }
-
-    /// Folder의 스칼라 속성만 비교하여 변경된 경우에만 수정합니다.
-    /// voiceNotes 관계는 VoiceNote 쪽에서 folder를 직접 관리하므로 여기서 건드리지 않습니다.
-    public func update(from model: ModelType) throws {
-        if name == model.name,
-           isDeletable == model.isDeletable,
-           deletedAt == model.deletedAt
-        {
-            return
-        }
-        name = model.name
-        isDeletable = model.isDeletable
-        deletedAt = model.deletedAt
-    }
-
-    public static var entityName: CoreDataEntityName {
-        .folder
-    }
-
-    public static var sortDescriptors: [NSSortDescriptor] {
-        [NSSortDescriptor(keyPath: \FolderEntity.createdAt, ascending: false)]
     }
 }

@@ -16,33 +16,27 @@ public final class SummaryEntity: NSManagedObject {
     public var voiceNote: VoiceNoteEntity
 }
 
-extension SummaryEntity: ManagedObjectMapping {
-    public typealias ModelType = Summary
+extension SummaryEntity {
+    static func fetchRequest() -> NSFetchRequest<SummaryEntity> {
+        NSFetchRequest<SummaryEntity>(entityName: "Summary")
+    }
 
-    public convenience init(model: ModelType, context: NSManagedObjectContext) throws {
+    convenience init(model: Summary, context: NSManagedObjectContext) {
         self.init(context: context)
-        try insert(from: model)
+        update(from: model)
     }
 
-    public func toModel() -> ModelType {
-        Summary(
-            id: id,
-            createdAt: createdAt,
-            text: text
-        )
-    }
-
-    public func insert(from model: ModelType) throws {
+    func update(from model: Summary) {
         id = model.id
         text = model.text
         createdAt = model.createdAt
     }
 
-    public static var entityName: CoreDataEntityName {
-        .summary
-    }
-
-    public static var sortDescriptors: [NSSortDescriptor] {
-        [NSSortDescriptor(keyPath: \SummaryEntity.createdAt, ascending: true)]
+    func toModel() -> Summary {
+        Summary(
+            id: id,
+            createdAt: createdAt,
+            text: text
+        )
     }
 }

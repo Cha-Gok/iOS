@@ -24,13 +24,11 @@ final class FolderViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: FolderViewModel
         let mockFolderRepo: MockFolderRepository
-        let mockWasteBasketRepo: MockWasteBasketRepository
         let mockCoordinator: MockFolderCoordinatorDelegate
     }
 
-    private func makeSUT(initialItems: [Presentation.LibraryItem] = []) -> SUT {
+    private func makeSUT(initialItems: [ContentItem] = []) -> SUT {
         let mockFolderRepo = MockFolderRepository()
-        let mockWasteBasketRepo = MockWasteBasketRepository()
         let mockCoordinator = MockFolderCoordinatorDelegate()
 
         let initialCategory = CategoryToggle(
@@ -41,15 +39,13 @@ final class FolderViewModelTests: XCTestCase {
 
         let viewModel = FolderViewModel(
             category: initialCategory,
-            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
-            wasteBasketRepository: mockWasteBasketRepo
+            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo)
         )
         viewModel.coordinator = mockCoordinator
 
         return SUT(
             viewModel: viewModel,
             mockFolderRepo: mockFolderRepo,
-            mockWasteBasketRepo: mockWasteBasketRepo,
             mockCoordinator: mockCoordinator
         )
     }
@@ -126,9 +122,9 @@ final class FolderViewModelTests: XCTestCase {
     func test_fetchAll_정상로드() async {
         let sut = makeSUT()
         let expectedFolders = [
-            Folder(name: "새 폴더 1", isDeletable: true),
-            Folder(name: "기본 폴더", isDeletable: false), // isDeletable = false는 제외되어야 함
-            Folder(name: "새 폴더 2", isDeletable: true)
+            Folder(name: "새 폴더 1", kind: .custom),
+            Folder(name: "기본 폴더", kind: .default), // isDeletable = false는 제외되어야 함
+            Folder(name: "새 폴더 2", kind: .custom)
         ]
 
         sut.mockFolderRepo.setFetchAllResult(.success(expectedFolders))
@@ -144,31 +140,32 @@ final class FolderViewModelTests: XCTestCase {
 
     func test_move_성공시_리스트에서제거() async {
         let folder = Folder(name: "이동 폴더")
+        let trash = Folder.stub(kind: .trash)
         let sut = makeSUT(initialItems: [.folder(folder)])
 
-        sut.mockWasteBasketRepo.setMoveResult(.success(()))
-        sut.mockWasteBasketRepo.expectMoveToWasteBasket(
-            item: .folder(obj: folder), callCount: 1
-        )
+        sut.mockFolderRepo.setFetchByKindResult(.trash, result: .success([trash]))
+        sut.mockFolderRepo.setFetchByIDResult(.success(folder))
+        sut.mockFolderRepo.setUpdateResult(.success(folder))
+        sut.mockFolderRepo.expectUpdate(folderID: folder.id, callCount: 1)
 
         sut.viewModel.move(folder: folder)
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.mockWasteBasketRepo.verify()
+        sut.mockFolderRepo.verify()
         XCTAssertTrue(sut.viewModel.category.items.isEmpty)
     }
 
     func test_update_성공시_리스트항목교체() async {
         let initialFolder = Folder(id: UUID(), name: "원본 폴더")
-        let sut = makeSUT(initialItems: [Presentation.LibraryItem.folder(initialFolder)])
+        let sut = makeSUT(initialItems: [ContentItem.folder(initialFolder)])
 
         let newName = "수정된 폴더"
         let updatedFolder = Folder(
             id: initialFolder.id,
             name: newName,
             createdAt: initialFolder.createdAt,
-            content: initialFolder.content,
-            isDeletable: initialFolder.isDeletable,
+            voiceNoteIDs: initialFolder.voiceNoteIDs,
+            kind: initialFolder.kind,
             deletedAt: initialFolder.deletedAt
         )
 

@@ -20,7 +20,7 @@
 
             do {
                 let folders = try folderRepository.fetchAll()
-                guard folders.contains(where: { !$0.isDeletable }) else {
+                guard folders.contains(where: { $0.kind == .default }) else {
                     AppLogger.debug("기본 폴더 미존재. 온보딩 이후 다시 시도합니다.")
                     return
                 }
@@ -253,7 +253,15 @@
                 audioFilePath: audioPath,
                 duration: max(duration, 2.5)
             )
-            let created = try voiceNoteRepository.create(record)
+            let baseNote = VoiceNote(
+                title: spec.title,
+                createdAt: spec.createdAt,
+                updatedAt: spec.createdAt,
+                folderID: spec.folderID,
+                voiceRecord: record,
+                analysisState: spec.analysisState
+            )
+            let created = try voiceNoteRepository.create(baseNote)
 
             let transcript: Transcript? = shouldIncludeTranscript(for: spec.analysisState) && !sections.isEmpty
                 ? Transcript(sections: sections)

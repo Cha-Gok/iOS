@@ -19,7 +19,10 @@ public final class VoiceNoteEntity: NSManagedObject {
     public var deletedAt: Date?
 
     @NSManaged
-    public var analysisStateRaw: String?
+    public var originalFolderID: UUID?
+
+    @NSManaged
+    public var analysisStateRaw: String
 
     @NSManaged
     public var folder: FolderEntity
@@ -37,39 +40,33 @@ public final class VoiceNoteEntity: NSManagedObject {
     public var summary: SummaryEntity?
 }
 
-public extension VoiceNoteEntity {
-    @objc(addKeywordsObject:)
-    @NSManaged
-    func addToKeywords(_ value: KeywordEntity)
-
-    @objc(removeKeywordsObject:)
-    @NSManaged
-    func removeFromKeywords(_ value: KeywordEntity)
-
-    @objc(addKeywords:)
-    @NSManaged
-    func addToKeywords(_ values: NSSet)
-
-    @objc(removeKeywords:)
-    @NSManaged
-    func removeFromKeywords(_ values: NSSet)
-}
-
-extension VoiceNoteEntity: ManagedObjectMapping {
-    public typealias ModelType = VoiceNote
-
-    public convenience init(model: VoiceNote, context: NSManagedObjectContext) throws {
-        self.init(context: context)
-        try insert(from: model)
+extension VoiceNoteEntity {
+    static func fetchRequest() -> NSFetchRequest<VoiceNoteEntity> {
+        NSFetchRequest<VoiceNoteEntity>(entityName: "VoiceNote")
     }
 
-    public func toModel() -> VoiceNote {
-        // 엔티티의 연관 관계를 개별적으로 도메인 모델로 변환
-        let keys = (keywords as? Set<KeywordEntity> ?? []).map { $0.toModel() }
-        let t = transcript?.toModel()
-        let s = summary?.toModel()
-        // nil이면 VoiceNote.init이 summary/transcript로 상태를 파생 (기존 레코드 호환)
-        let state = analysisStateRaw.flatMap(AnalysisState.init(rawValue:))
+    /// 도메인 모델로부터 새 entity를 생성합니다. (scalar attribute만 set, 관계는 caller가 처리)
+    convenience init(model: VoiceNote, context: NSManagedObjectContext) {
+        self.init(context: context)
+        update(from: model)
+    }
+
+    /// scalar attribute만 도메인 모델 값으로 업데이트합니다.
+    /// 관계(folder/voiceRecord/keywords/transcript/summary)는 호출자가 직접 set합니다.
+    func update(from model: VoiceNote) {
+        id = model.id
+        title = model.title
+        createdAt = model.createdAt
+        updatedAt = model.updatedAt
+        deletedAt = model.deletedAt
+        originalFolderID = model.originalFolderID
+        analysisStateRaw = model.analysisState.rawValue
+    }
+
+    /// entity를 도메인 모델로 변환합니다. 관계는 이미 attached됐다고 가정합니다.
+    func toModel() -> VoiceNote {
+        let keywordModels = (keywords?.allObjects as? [KeywordEntity])?.map { $0.toModel() } ?? []
+        let state = AnalysisState(rawValue: analysisStateRaw) ?? .pending
 
         return VoiceNote(
             id: id,
@@ -78,145 +75,12 @@ extension VoiceNoteEntity: ManagedObjectMapping {
             updatedAt: updatedAt,
             folderID: folder.id,
             voiceRecord: voiceRecord.toModel(),
-            keywords: keys,
-            transcript: t,
-            summary: s,
+            keywords: keywordModels,
+            transcript: transcript?.toModel(),
+            summary: summary?.toModel(),
             deletedAt: deletedAt,
-            analysisState: state ?? Self.deriveAnalysisState(transcript: t, summary: s)
+            originalFolderID: originalFolderID,
+            analysisState: state
         )
-    }
-
-    public func insert(from model: VoiceNote) throws {
-        id = model.id
-        title = model.title
-        createdAt = model.createdAt
-        updatedAt = model.updatedAt
-        deletedAt = model.deletedAt
-        analysisStateRaw = model.analysisState.rawValue
-
-        guard let context = managedObjectContext else { return }
-
-        // 1. Folder Relationship (필수 — folderID에 해당하는 폴더는 반드시 존재)
-        if let existingFolder = try? FolderEntity.find(byID: model.folderID, in: context) {
-            folder = existingFolder
-        } else {
-            throw CoreDataStorageError.relationNotFound("Folder(\(model.folderID))")
-        }
-
-        // 2. VoiceRecord (위임)
-        let record = try VoiceRecordEntity(model: model.voiceRecord, context: context)
-        record.voiceNote = self
-        voiceRecord = record
-
-        // 3. Transcript (위임)
-        if let t = model.transcript {
-            let tEntity = try TranscriptEntity(model: t, context: context)
-            tEntity.voiceNote = self
-            transcript = tEntity
-        }
-
-        // 4. Summary (위임)
-        if let s = model.summary {
-            let sEntity = try SummaryEntity(model: s, context: context)
-            sEntity.voiceNote = self
-            summary = sEntity
-        }
-
-        // 5. Keywords (위임)
-        var keywordEntities: [KeywordEntity] = []
-        for keywordModel in model.keywords {
-            let keywordEntity = try KeywordEntity(model: keywordModel, context: context)
-            keywordEntity.voiceNote = self
-            keywordEntities.append(keywordEntity)
-        }
-        keywords = NSSet(array: keywordEntities)
-    }
-
-    public func update(from model: VoiceNote) throws {
-        // 1. 전체 데이터가 동일하면 즉시 종료 (최적화)
-        if toModel() == model { return }
-
-        // 2. 기본 필드 수정
-        title = model.title
-        updatedAt = model.updatedAt
-        deletedAt = model.deletedAt
-        analysisStateRaw = model.analysisState.rawValue
-
-        guard let context = managedObjectContext else { return }
-
-        // 3. Folder 관계 (변경 시에만)
-        if folder.id != model.folderID {
-            if let newFolder = try? FolderEntity.find(byID: model.folderID, in: context) {
-                folder = newFolder
-            } else {
-                throw CoreDataStorageError.relationNotFound("Folder(\(model.folderID))")
-            }
-        }
-
-        // --- 비즈니스 시나리오 순서: Transcript 생성 후 Summary/Keywords 생성 ---
-
-        // 4. Transcript 업데이트
-        if let tModel = model.transcript {
-            if let tEntity = transcript {
-                try tEntity.update(from: tModel)
-            } else {
-                let tEntity = try TranscriptEntity(model: tModel, context: context)
-                tEntity.voiceNote = self
-                transcript = tEntity
-            }
-        } else if let oldT = transcript {
-            context.delete(oldT)
-            transcript = nil
-        }
-
-        // 5. Summary 업데이트
-        if let sModel = model.summary {
-            if let sEntity = summary {
-                try sEntity.update(from: sModel)
-            } else {
-                let sEntity = try SummaryEntity(model: sModel, context: context)
-                sEntity.voiceNote = self
-                summary = sEntity
-            }
-        } else if let oldS = summary {
-            context.delete(oldS)
-            summary = nil
-        }
-
-        // 6. Keywords 업데이트 (위임 위주 Diff)
-        let currentKeywords = (keywords as? Set<KeywordEntity>) ?? []
-        let newWordSet = Set(model.keywords.map(\.word))
-
-        // (1) 삭제 처리
-        for entity in currentKeywords {
-            if !newWordSet.contains(entity.word) {
-                context.delete(entity)
-            }
-        }
-
-        // (2) 추가 처리 (자식 객체 스스로 매핑하도록 위임)
-        let currentWordSet = Set(currentKeywords.map(\.word))
-        for keywordModel in model.keywords {
-            if !currentWordSet.contains(keywordModel.word) {
-                let newKeyword = try KeywordEntity(model: keywordModel, context: context)
-                newKeyword.voiceNote = self
-                addToKeywords(newKeyword)
-            }
-        }
-    }
-
-    public static var entityName: CoreDataEntityName {
-        .voiceNote
-    }
-
-    public static var sortDescriptors: [NSSortDescriptor] {
-        [NSSortDescriptor(keyPath: \VoiceNoteEntity.updatedAt, ascending: false)]
-    }
-
-    /// analysisStateRaw가 nil인 기존 레코드 호환용: transcript/summary 존재 여부로 상태를 파생합니다.
-    private static func deriveAnalysisState(transcript: Transcript?, summary: Summary?) -> AnalysisState {
-        if summary != nil { return .completed }
-        if transcript != nil { return .transcribed }
-        return .pending
     }
 }

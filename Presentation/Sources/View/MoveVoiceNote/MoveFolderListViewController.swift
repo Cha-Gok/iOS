@@ -112,7 +112,7 @@ public final class MoveFolderListViewController: UIViewController, Alertable {
                 let isSelected = viewModel.state.selectedFolder?.id == item.id
                 cell.contentConfiguration = FolderCellContentConfiguration(
                     title: item.name,
-                    number: item.content.count,
+                    number: item.voiceNoteIDs.count,
                     isSelected: isSelected
                 )
             }

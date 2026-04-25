@@ -47,8 +47,7 @@ final class VoiceNoteViewModelSearchTest: XCTestCase {
             voiceNote: voiceNote,
             voiceNoteUseCase: FakeVoiceNoteUseCase(voiceNote: voiceNote),
             folderUseCase: FakeFolderUseCase(),
-            playbackRepository: playbackRepository,
-            wasteBasketRepository: FakeWasteBasketRepository()
+            playbackRepository: playbackRepository
         )
 
         return SUT(viewModel: viewModel, playbackRepository: playbackRepository)
@@ -321,20 +320,8 @@ private struct FakeVoiceNoteUseCase: VoiceNoteUseCase {
         VoiceNote.stub(voiceRecord: voiceRecord)
     }
 
-    func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        [voiceNote]
-    }
-
-    func fetchAll(folderID _: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        [voiceNote]
-    }
-
     func fetch(byId _: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote {
         voiceNote
-    }
-
-    func fetchRecent(limit _: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-        [voiceNote]
     }
 
     func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote {
@@ -348,20 +335,54 @@ private struct FakeVoiceNoteUseCase: VoiceNoteUseCase {
         }
     }
 
+    func observe(folderID _: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { continuation in
+            continuation.yield([voiceNote])
+            continuation.finish()
+        }
+    }
+
+    func observeRecent(limit _: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { continuation in
+            continuation.yield([voiceNote])
+            continuation.finish()
+        }
+    }
+
+    func observeTrashed() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { $0.finish() }
+    }
+
     func regenerateSummary(id _: UUID) {}
+
+    func moveToTrash(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+    func restore(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+    func delete(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
 }
 
 private struct FakeFolderUseCase: FolderUseCase {
     func create(name: String) throws(FolderUseCaseError) -> Folder {
-        Folder(name: name, isDeletable: true)
+        Folder(name: name, kind: .custom)
     }
 
     func createDefault() throws(FolderUseCaseError) -> Folder {
-        Folder(name: "기본 폴더", isDeletable: false)
+        Folder(name: "기본 폴더", kind: .default)
+    }
+
+    func createTrash() throws(FolderUseCaseError) -> Folder {
+        Folder(name: "휴지통", kind: .trash)
     }
 
     func fetchAll() throws(FolderUseCaseError) -> [Folder] {
-        [Folder(name: "기본 폴더", isDeletable: false)]
+        [Folder(name: "기본 폴더", kind: .default)]
+    }
+
+    func fetchDefault() throws(FolderUseCaseError) -> Folder {
+        Folder(name: "기본 폴더", kind: .default)
+    }
+
+    func fetchTrash() throws(FolderUseCaseError) -> Folder {
+        Folder(name: "휴지통", kind: .trash)
     }
 
     func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
@@ -369,24 +390,25 @@ private struct FakeFolderUseCase: FolderUseCase {
     }
 
     func fetch(by _: UUID) throws(FolderUseCaseError) -> Folder {
-        Folder(name: "기본 폴더", isDeletable: false)
+        Folder(name: "기본 폴더", kind: .default)
     }
 
     func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder {
         folder
     }
-}
 
-private struct FakeWasteBasketRepository: WasteBasketRepository {
-    func allClear() throws(DeleteWasteBasketRepositoryError) {}
-    func delete(item _: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {}
-    func deleteAll(items _: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {}
-    func moveToWasteBasket(item _: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {}
-    func moveAllToWasteBasket(items _: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
-    func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
-        []
+    func observeCustom() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+        AsyncStream { continuation in
+            continuation.yield([])
+            continuation.finish()
+        }
     }
 
-    func restore(item _: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
-    func restoreAll(items _: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
+    func observeTrashed() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+        AsyncStream { $0.finish() }
+    }
+
+    func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}
+    func restore(folderID _: UUID) throws(FolderUseCaseError) {}
+    func delete(folderID _: UUID) throws(FolderUseCaseError) {}
 }

@@ -25,18 +25,21 @@ final class RecordingViewModelTests: XCTestCase {
         let viewModel: RecordingViewModel
         let repository: MockVoiceRecordRepository
         let voiceNoteRepository: MockVoiceNoteRepository
+        let folderRepository: MockFolderRepository
         let coordinator: MockRecordingCoordinator
     }
 
     private func makeSUT() -> SUT {
         let repository = MockVoiceRecordRepository()
         let voiceNoteRepository = MockVoiceNoteRepository()
+        let folderRepository = MockFolderRepository()
         let coordinator = MockRecordingCoordinator()
 
         let viewModel = RecordingViewModel(
             repository: repository,
             voiceNoteUseCase: DefaultVoiceNoteUseCase(
                 repository: voiceNoteRepository,
+                folderRepository: folderRepository,
                 analysisService: MockVoiceNoteAnalysisService()
             )
         )
@@ -46,6 +49,7 @@ final class RecordingViewModelTests: XCTestCase {
             viewModel: viewModel,
             repository: repository,
             voiceNoteRepository: voiceNoteRepository,
+            folderRepository: folderRepository,
             coordinator: coordinator
         )
     }
@@ -286,7 +290,9 @@ extension RecordingViewModelTests {
         let sut = makeSUT()
         let voiceRecordStub = VoiceRecord.stub()
         let voiceNoteStub = VoiceNote.stub(voiceRecord: voiceRecordStub)
+        let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
         await sut.repository.setFinishResult(.success(voiceRecordStub))
+        sut.folderRepository.setFetchByKindResult(.default, result: .success([defaultFolder]))
         sut.voiceNoteRepository.setCreateResult(.success(voiceNoteStub))
 
         // When
@@ -315,7 +321,9 @@ extension RecordingViewModelTests {
     func test_finishButtonTapped_보이스노트생성실패시_coordinator를호출하지않고errorMessage를설정한다() async {
         // Given
         let sut = makeSUT()
+        let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
         await sut.repository.setFinishResult(.success(.stub()))
+        sut.folderRepository.setFetchByKindResult(.default, result: .success([defaultFolder]))
         sut.voiceNoteRepository.setCreateResult(.failure(.createFailed))
 
         // When

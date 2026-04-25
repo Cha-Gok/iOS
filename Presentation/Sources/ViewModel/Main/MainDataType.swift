@@ -22,32 +22,13 @@ public enum MainListDateGroup: Int, Hashable, Sendable, CaseIterable {
     }
 }
 
-public enum LibraryItem: Hashable, Sendable {
-    case folder(Folder)
-    case voiceNote(VoiceNote)
-
-    public var id: UUID {
-        switch self {
-        case .folder(let folder): return folder.id
-        case .voiceNote(let voiceNote): return voiceNote.id
-        }
-    }
-
-    public var deletedAt: Date? {
-        switch self {
-        case .folder(let folder): return folder.deletedAt
-        case .voiceNote(let voiceNote): return voiceNote.deletedAt
-        }
-    }
-}
-
 public struct CategoryToggle: Hashable, Sendable {
     public let id: UUID = UUID()
     public let imageName: String
     public let title: String
-    public var items: [LibraryItem]
+    public var items: [ContentItem]
 
-    public init(imageName: String, title: String, items: [LibraryItem]) {
+    public init(imageName: String, title: String, items: [ContentItem]) {
         self.imageName = imageName
         self.title = title
         self.items = items
@@ -64,6 +45,6 @@ public struct CategoryToggle: Hashable, Sendable {
 }
 
 public enum MainCellItem: Hashable, Sendable {
-    case list(LibraryItem)
+    case list(ContentItem)
     case emptyList
 }

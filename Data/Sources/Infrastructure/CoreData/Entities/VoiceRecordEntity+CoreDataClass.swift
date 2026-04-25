@@ -19,35 +19,29 @@ public final class VoiceRecordEntity: NSManagedObject {
     public var voiceNote: VoiceNoteEntity
 }
 
-extension VoiceRecordEntity: ManagedObjectMapping {
-    public typealias ModelType = VoiceRecord
+extension VoiceRecordEntity {
+    static func fetchRequest() -> NSFetchRequest<VoiceRecordEntity> {
+        NSFetchRequest<VoiceRecordEntity>(entityName: "VoiceRecord")
+    }
 
-    public convenience init(model: ModelType, context: NSManagedObjectContext) throws {
+    convenience init(model: VoiceRecord, context: NSManagedObjectContext) {
         self.init(context: context)
-        try insert(from: model)
+        update(from: model)
     }
 
-    public func toModel() -> ModelType {
-        VoiceRecord(
-            id: id,
-            createdAt: createdAt,
-            audioFilePath: audioFilePath,
-            duration: duration
-        )
-    }
-
-    public func insert(from model: ModelType) throws {
+    func update(from model: VoiceRecord) {
         id = model.id
         audioFilePath = model.audioFilePath
         duration = model.duration
         createdAt = model.createdAt
     }
 
-    public static var entityName: CoreDataEntityName {
-        .voiceRecord
-    }
-
-    public static var sortDescriptors: [NSSortDescriptor] {
-        [NSSortDescriptor(keyPath: \VoiceRecordEntity.createdAt, ascending: true)]
+    func toModel() -> VoiceRecord {
+        VoiceRecord(
+            id: id,
+            createdAt: createdAt,
+            audioFilePath: audioFilePath,
+            duration: duration
+        )
     }
 }

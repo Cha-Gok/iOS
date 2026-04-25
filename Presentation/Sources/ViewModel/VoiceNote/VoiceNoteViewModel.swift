@@ -36,7 +36,6 @@ public final class VoiceNoteViewModel {
     private let voiceNoteUseCase: any VoiceNoteUseCase
     private let folderUseCase: any FolderUseCase
     private let playbackRepository: any VoiceRecordPlaybackRepository
-    private let wasteBasketRepository: any WasteBasketRepository
 
     // MARK: - Init
 
@@ -44,14 +43,12 @@ public final class VoiceNoteViewModel {
         voiceNote: VoiceNote,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
-        playbackRepository: any VoiceRecordPlaybackRepository,
-        wasteBasketRepository: any WasteBasketRepository
+        playbackRepository: any VoiceRecordPlaybackRepository
     ) {
         self.voiceNote = voiceNote
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.playbackRepository = playbackRepository
-        self.wasteBasketRepository = wasteBasketRepository
     }
 
     // MARK: - View Actions
@@ -273,8 +270,7 @@ public final class VoiceNoteViewModel {
         voiceNoteObservationTask = Task {
             do {
                 let stream = try voiceNoteUseCase.observe(id: voiceNote.id)
-                // 초기값은 init에서 주입된 voiceNote와 동일하므로 스킵하고, 이후 변경분만 반영한다.
-                for await note in stream.dropFirst() {
+                for await note in stream {
                     let folderChanged = voiceNote.folderID != note.folderID
                     voiceNote = note
                     if folderChanged { fetchFolderName() }
@@ -320,7 +316,7 @@ public final class VoiceNoteViewModel {
     private func moveToWasteBasket() {
         do {
             stop()
-            try wasteBasketRepository.moveToWasteBasket(item: .voiceNote(obj: voiceNote))
+            try voiceNoteUseCase.moveToTrash(noteID: voiceNote.id)
             coordinator?.pop()
         } catch {
             errorMessage = error.localizedDescription

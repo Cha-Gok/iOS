@@ -21,7 +21,7 @@ public final class FolderDetailViewModel {
 
     let title: String
     let folderID: UUID
-    private(set) var items: [LibraryItem] = []
+    private(set) var items: [ContentItem] = []
     private(set) var errorMessage: String?
     private(set) var order: Order = .createdAt
     private(set) var select: SelectionMode = .none
@@ -30,23 +30,23 @@ public final class FolderDetailViewModel {
 
     public weak var coordinator: FolderDetailCoordinatorDelegate?
 
+    @ObservationIgnored
+    private var observationTask: Task<Void, Never>?
+
     // MARK: - UseCase
 
     private let voiceNoteUseCase: any VoiceNoteUseCase
-    private let wasteBasketRepository: any WasteBasketRepository
 
     // MARK: - Initialize
 
     public init(
         title: String,
         folderID: UUID,
-        voiceNoteUseCase: any VoiceNoteUseCase,
-        wasteBasketRepository: any WasteBasketRepository
+        voiceNoteUseCase: any VoiceNoteUseCase
     ) {
         self.title = title
         self.folderID = folderID
         self.voiceNoteUseCase = voiceNoteUseCase
-        self.wasteBasketRepository = wasteBasketRepository
         sortItems()
     }
 }
@@ -123,20 +123,29 @@ extension FolderDetailViewModel {
     }
 }
 
-// MARK: - Fetch
+// MARK: - Lifecycle
 
 extension FolderDetailViewModel {
-    func fetchItems() {
-        Task {
+    func onAppear() {
+        guard observationTask == nil else { return }
+        observationTask = Task { [weak self] in
+            guard let self else { return }
             do {
-                let voiceNotes: [VoiceNote] = try voiceNoteUseCase.fetchAll(folderID: folderID)
-                self.items = voiceNotes.map { .voiceNote($0) }
-                sortItems()
+                let stream = try voiceNoteUseCase.observe(folderID: folderID)
+                for await voiceNotes in stream {
+                    items = voiceNotes.map { .voiceNote($0) }
+                    sortItems()
+                }
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
             }
         }
+    }
+
+    func onDisappear() {
+        observationTask?.cancel()
+        observationTask = nil
     }
 
     private func sortItems() {
@@ -168,10 +177,10 @@ extension FolderDetailViewModel {
 extension FolderDetailViewModel {
     func move() {
         guard !selectedItems.isEmpty else { return }
-        let wasteBasketItems: [WasteBasketItem] = selectedItems.map { .voiceNote(obj: $0) }
         do {
-            try wasteBasketRepository.moveAllToWasteBasket(items: wasteBasketItems)
-            // 성공 시, 로컬 items에서 제거하여 UI에 즉시 반영
+            for note in selectedItems {
+                try voiceNoteUseCase.moveToTrash(noteID: note.id)
+            }
             let selectedIDs = Set(selectedItems.map(\.id))
             items.removeAll { item in
                 if case .voiceNote(let v) = item { return selectedIDs.contains(v.id) }
@@ -190,15 +199,13 @@ extension FolderDetailViewModel {
 extension FolderDetailViewModel {
     func restore(items: [VoiceNote]) {
         for item in items {
-            let wasteBasket: WasteBasketItem = .voiceNote(obj: item)
             do {
-                try wasteBasketRepository.restore(item: wasteBasket)
+                try voiceNoteUseCase.restore(noteID: item.id)
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.errorDescription
             }
         }
-        fetchItems()
     }
 }
 
@@ -213,8 +220,7 @@ extension FolderDetailViewModel {
             return FolderDetailViewModel(
                 title: title,
                 folderID: folderID,
-                voiceNoteUseCase: PreviewVoiceNoteUseCase(items: previewData.items),
-                wasteBasketRepository: PreviewWasteBasketRepository()
+                voiceNoteUseCase: PreviewVoiceNoteUseCase(items: previewData.items)
             )
         }
     }
@@ -260,23 +266,11 @@ extension FolderDetailViewModel {
                 )
             }
 
-            func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-                items
-            }
-
-            func fetchAll(folderID: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-                items.filter { $0.folderID == folderID }
-            }
-
             func fetch(byId id: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote {
                 guard let item = items.first(where: { $0.id == id }) else {
                     throw .recordNotFound(id)
                 }
                 return item
-            }
-
-            func fetchRecent(limit: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-                Array(items.prefix(limit))
             }
 
             func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote {
@@ -293,53 +287,31 @@ extension FolderDetailViewModel {
                 }
             }
 
+            func observe(folderID: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                let filtered = items.filter { $0.folderID == folderID }
+                return AsyncStream { continuation in
+                    continuation.yield(filtered)
+                    continuation.finish()
+                }
+            }
+
+            func observeRecent(limit: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                let recent = Array(items.prefix(limit))
+                return AsyncStream { continuation in
+                    continuation.yield(recent)
+                    continuation.finish()
+                }
+            }
+
+            func observeTrashed() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                AsyncStream { $0.finish() }
+            }
+
             func regenerateSummary(id _: UUID) {}
-        }
 
-        final class PreviewWasteBasketRepository: WasteBasketRepository {
-            private var wasteBasket: [WasteBasketItem] = []
-
-            func allClear() throws(DeleteWasteBasketRepositoryError) {
-                wasteBasket.removeAll()
-                print("[Preview] 휴지통 비우기 완료")
-            }
-
-            func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {
-                wasteBasket.removeAll { $0 == item }
-                print("[Preview] 영구 삭제: \(item)")
-            }
-
-            func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {
-                let itemSet = Set(items)
-                wasteBasket.removeAll { itemSet.contains($0) }
-                print("[Preview] 영구 삭제: \(items.count)개")
-            }
-
-            func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {
-                wasteBasket.append(item)
-                print("[Preview] 휴지통 이동: \(item)")
-            }
-
-            func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {
-                wasteBasket.append(contentsOf: items)
-                print("[Preview] 휴지통 이동: \(items.count)개 (현재 휴지통: \(wasteBasket.count)개)")
-            }
-
-            func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
-                print("[Preview] 휴지통 조회: \(wasteBasket.count)개")
-                return wasteBasket
-            }
-
-            func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {
-                wasteBasket.removeAll { $0 == item }
-                print("[Preview] 복원: \(item)")
-            }
-
-            func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {
-                let itemSet = Set(items)
-                wasteBasket.removeAll { itemSet.contains($0) }
-                print("[Preview] 복원: \(items.count)개")
-            }
+            func moveToTrash(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+            func restore(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+            func delete(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
         }
     }
 

@@ -54,8 +54,23 @@ public final class MainViewModel {
     let microphoneRepository: VoiceRecordRepository
     let voiceNoteUseCase: any VoiceNoteUseCase
     let folderUseCase: any FolderUseCase
-    let wasteBasketRepository: any WasteBasketRepository
     let languageRepository: any LanguageRepository
+
+    @ObservationIgnored
+    private var recentTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var voiceNoteTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var myFolderTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var trashFoldersTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var trashNotesTask: Task<Void, Never>?
+
+    @ObservationIgnored
+    private var trashedFolders: [Folder] = []
+    @ObservationIgnored
+    private var trashedNotes: [VoiceNote] = []
 
     // TODO: 화면 전환
     public weak var mainCoordinator: MainCoordinatorDelegate?
@@ -64,13 +79,11 @@ public final class MainViewModel {
         microphoneRepository: any VoiceRecordRepository,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
-        wasteBasketRepository: any WasteBasketRepository,
         languageRepository: any LanguageRepository
     ) {
         self.microphoneRepository = microphoneRepository
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
-        self.wasteBasketRepository = wasteBasketRepository
         self.languageRepository = languageRepository
     }
 }
@@ -139,55 +152,106 @@ extension MainViewModel {
 // MARK: - Update CategoryData
 
 extension MainViewModel {
-    /// 최근 기록(전체 폴더 최신 5개) 업데이트 함수
+    /// 최근 기록(전체 폴더 최신 5개) 관찰 시작
     func updateRecentCategory() {
-        do {
-            let voiceNotes: [VoiceNote] = try voiceNoteUseCase
-                .fetchRecent(limit: Policy.recentVoiceNoteLimit)
-            let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
-            categoryData[0].items = items
-        } catch {
-            AppLogger.error(error)
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    /// 기본 폴더(음성 노트) 업데이트 함수
-    func updateVoiceNoteCategory() {
-        do {
-            let voiceNotes: [VoiceNote] = try voiceNoteUseCase.fetchAllFromDefaultFolder()
-            let items: [LibraryItem] = voiceNotes.map { .voiceNote($0) }
-            categoryData[1].items = items
-        } catch {
-            AppLogger.error(error)
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    /// 폴더 영속성 업데이트 함수
-    func updateMyFolderCategory() {
-        do {
-            let folders: [Folder] = try folderUseCase.fetchDeletableFolders()
-            let items: [LibraryItem] = folders.map { folder in
-                LibraryItem.folder(folder)
+        guard recentTask == nil else { return }
+        recentTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let stream = try voiceNoteUseCase.observeRecent(limit: Policy.recentVoiceNoteLimit)
+                for await voiceNotes in stream {
+                    categoryData[0].items = voiceNotes.map { .voiceNote($0) }
+                }
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
             }
-            categoryData[2].items = items
+        }
+    }
+
+    /// 기본 폴더(음성 노트) 관찰 시작
+    func updateVoiceNoteCategory() {
+        guard voiceNoteTask == nil else { return }
+        voiceNoteTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let defaultFolder = try folderUseCase.fetchDefault()
+                let stream = try voiceNoteUseCase.observe(folderID: defaultFolder.id)
+                for await voiceNotes in stream {
+                    categoryData[1].items = voiceNotes.map { .voiceNote($0) }
+                }
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    /// 개인 폴더 관찰 시작
+    func updateMyFolderCategory() {
+        guard myFolderTask == nil else { return }
+        myFolderTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let stream = try folderUseCase.observeCustom()
+                for await folders in stream {
+                    categoryData[2].items = folders.map { ContentItem.folder($0) }
+                }
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    /// 휴지통 관찰 시작 — 삭제된 폴더 + 단독 trashed 노트 stream을 합쳐 emit
+    func updateTrashCategory() {
+        guard trashFoldersTask == nil, trashNotesTask == nil else { return }
+        do {
+            let foldersStream = try folderUseCase.observeTrashed()
+            let notesStream = try voiceNoteUseCase.observeTrashed()
+            trashFoldersTask = Task { [weak self] in
+                for await folders in foldersStream {
+                    self?.applyTrashedFolders(folders)
+                }
+            }
+            trashNotesTask = Task { [weak self] in
+                for await notes in notesStream {
+                    self?.applyTrashedNotes(notes)
+                }
+            }
         } catch {
             AppLogger.error(error)
             errorMessage = error.localizedDescription
         }
     }
 
-    /// 휴지통 영속성 업데이트 함수
-    func updateTrashCategory() {
-        do {
-            let wasteBasket: [WasteBasketItem] = try wasteBasketRepository.fetchAll()
-            let items: [LibraryItem] = wasteBasket.map(\.toLibraryItem)
-            categoryData[3].items = items
-        } catch {
-            AppLogger.error(error)
-            errorMessage = error.localizedDescription
-        }
+    private func applyTrashedFolders(_ folders: [Folder]) {
+        trashedFolders = folders
+        refreshTrashCategory()
+    }
+
+    private func applyTrashedNotes(_ notes: [VoiceNote]) {
+        trashedNotes = notes
+        refreshTrashCategory()
+    }
+
+    private func refreshTrashCategory() {
+        categoryData[3].items = trashedFolders.map(ContentItem.folder) + trashedNotes.map(ContentItem.voiceNote)
+    }
+
+    /// 관찰 중인 모든 카테고리 stream을 취소합니다.
+    func cancelObservations() {
+        recentTask?.cancel()
+        recentTask = nil
+        voiceNoteTask?.cancel()
+        voiceNoteTask = nil
+        myFolderTask?.cancel()
+        myFolderTask = nil
+        trashFoldersTask?.cancel()
+        trashFoldersTask = nil
+        trashNotesTask?.cancel()
+        trashNotesTask = nil
     }
 }
 
@@ -224,17 +288,21 @@ extension MainViewModel {
                 microphoneRepository: PreviewMicrophoneRepository(),
                 voiceNoteUseCase: PreviewVoiceNoteUseCase(
                     recentItems: previewData.recentVoiceNotes,
-                    defaultItems: previewData.defaultVoiceNotes
+                    defaultItems: previewData.defaultVoiceNotes,
+                    trashedItems: previewData.trashedNotes
                 ),
-                folderUseCase: PreviewFolderUseCase(items: previewData.folders),
-                wasteBasketRepository: PreviewWasteBasketRepository(items: previewData.wasteBasketItems),
+                folderUseCase: PreviewFolderUseCase(
+                    items: previewData.folders,
+                    trashedItems: previewData.trashedFolders
+                ),
                 languageRepository: PreviewLanguageRepository()
             )
 
-            viewModel.categoryData[0].items = previewData.recentVoiceNotes.map(LibraryItem.voiceNote)
-            viewModel.categoryData[1].items = previewData.defaultVoiceNotes.map(LibraryItem.voiceNote)
-            viewModel.categoryData[2].items = previewData.folders.map(LibraryItem.folder)
-            viewModel.categoryData[3].items = previewData.wasteBasketItems.map(\.toLibraryItem)
+            viewModel.categoryData[0].items = previewData.recentVoiceNotes.map(ContentItem.voiceNote)
+            viewModel.categoryData[1].items = previewData.defaultVoiceNotes.map(ContentItem.voiceNote)
+            viewModel.categoryData[2].items = previewData.folders.map(ContentItem.folder)
+            viewModel.categoryData[3].items = previewData.trashedFolders.map(ContentItem.folder)
+                + previewData.trashedNotes.map(ContentItem.voiceNote)
             viewModel.selectedCategoryIndex = max(0, min(selectedCategoryIndex, viewModel.categoryData.count - 1))
 
             return viewModel
@@ -246,7 +314,8 @@ extension MainViewModel {
             let recentVoiceNotes: [VoiceNote]
             let defaultVoiceNotes: [VoiceNote]
             let folders: [Folder]
-            let wasteBasketItems: [WasteBasketItem]
+            let trashedFolders: [Folder]
+            let trashedNotes: [VoiceNote]
 
             static func make(now: Date = .now) -> Self {
                 let defaultFolderID = UUID()
@@ -285,21 +354,24 @@ extension MainViewModel {
 
                 let folders: [Folder] = (0 ..< 10).map { index in
                     let createdOffset = TimeInterval((index + 1) * 86400) * -1
+                    let prefixCount = (index % 4) + 1
+                    let noteIDs = Array(defaultVoiceNotes.prefix(prefixCount).map(\.id))
                     return Folder(
                         name: "개인 폴더 \(index + 1)",
                         createdAt: now.addingTimeInterval(createdOffset),
-                        content: Array(defaultVoiceNotes.prefix((index % 4) + 1)),
-                        isDeletable: true
+                        voiceNoteIDs: noteIDs,
+                        kind: .custom
                     )
                 }
 
-                let wasteBasketItems: [WasteBasketItem] = (0 ..< 10).map { index in
+                var trashedFolders: [Folder] = []
+                var trashedNotes: [VoiceNote] = []
+                for index in 0 ..< 10 {
                     if index.isMultiple(of: 2) {
                         let createdOffset = TimeInterval((index + 2) * 43200) * -1
                         let updatedOffset = TimeInterval((index + 1) * 21600) * -1
-
-                        return .voiceNote(
-                            obj: Self.makeVoiceNote(
+                        trashedNotes.append(
+                            Self.makeVoiceNote(
                                 title: "휴지통 메모 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
                                 updatedAt: now.addingTimeInterval(updatedOffset),
@@ -311,13 +383,11 @@ extension MainViewModel {
                     } else {
                         let createdOffset = TimeInterval((index + 1) * 64800) * -1
                         let deletedOffset = TimeInterval((index + 1) * 10800) * -1
-
-                        return .folder(
-                            obj: Folder(
+                        trashedFolders.append(
+                            Folder(
                                 name: "휴지통 폴더 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
-                                content: [],
-                                isDeletable: true,
+                                kind: .custom,
                                 deletedAt: now.addingTimeInterval(deletedOffset)
                             )
                         )
@@ -328,7 +398,8 @@ extension MainViewModel {
                     recentVoiceNotes: recentVoiceNotes,
                     defaultVoiceNotes: defaultVoiceNotes,
                     folders: folders,
-                    wasteBasketItems: wasteBasketItems
+                    trashedFolders: trashedFolders,
+                    trashedNotes: trashedNotes
                 )
             }
 
@@ -404,21 +475,10 @@ extension MainViewModel {
         struct PreviewVoiceNoteUseCase: VoiceNoteUseCase {
             let recentItems: [VoiceNote]
             let defaultItems: [VoiceNote]
+            let trashedItems: [VoiceNote]
 
             func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteUseCaseError) -> VoiceNote {
                 defaultItems[0]
-            }
-
-            func fetchAllFromDefaultFolder() throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-                defaultItems
-            }
-
-            func fetchRecent(limit: Int) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-                Array(recentItems.prefix(limit))
-            }
-
-            func fetchAll(folderID: UUID) throws(VoiceNoteUseCaseError) -> [VoiceNote] {
-                defaultItems.filter { $0.folderID == folderID }
             }
 
             func fetch(byId id: UUID) throws(VoiceNoteUseCaseError) -> VoiceNote {
@@ -439,11 +499,40 @@ extension MainViewModel {
                 return AsyncStream { $0.yield(item) }
             }
 
+            func observe(folderID: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                let filtered = defaultItems.filter { $0.folderID == folderID }
+                return AsyncStream { continuation in
+                    continuation.yield(filtered)
+                    continuation.finish()
+                }
+            }
+
+            func observeRecent(limit: Int) throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                let recent = Array(recentItems.prefix(limit))
+                return AsyncStream { continuation in
+                    continuation.yield(recent)
+                    continuation.finish()
+                }
+            }
+
+            func observeTrashed() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                let snapshot = trashedItems
+                return AsyncStream { continuation in
+                    continuation.yield(snapshot)
+                    continuation.finish()
+                }
+            }
+
             func regenerateSummary(id _: UUID) {}
+
+            func moveToTrash(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+            func restore(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+            func delete(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
         }
 
         struct PreviewFolderUseCase: FolderUseCase {
             let items: [Folder]
+            let trashedItems: [Folder]
 
             func create(name: String) throws(FolderUseCaseError) -> Folder {
                 items[0]
@@ -453,12 +542,26 @@ extension MainViewModel {
                 items[0]
             }
 
+            func createTrash() throws(FolderUseCaseError) -> Folder {
+                items[0]
+            }
+
             func fetchAll() throws(FolderUseCaseError) -> [Folder] {
                 items
             }
 
+            func fetchDefault() throws(FolderUseCaseError) -> Folder {
+                guard let folder = items.first(where: { $0.kind == .default }) else { throw .notFound }
+                return folder
+            }
+
+            func fetchTrash() throws(FolderUseCaseError) -> Folder {
+                guard let folder = items.first(where: { $0.kind == .trash }) else { throw .notFound }
+                return folder
+            }
+
             func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
-                items.filter(\.isDeletable)
+                items.filter { $0.kind == .custom }
             }
 
             func fetch(by id: UUID) throws(FolderUseCaseError) -> Folder {
@@ -469,22 +572,26 @@ extension MainViewModel {
             func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder {
                 folder
             }
-        }
 
-        struct PreviewWasteBasketRepository: WasteBasketRepository {
-            let items: [WasteBasketItem]
-
-            func fetchAll() throws(FetchWasteBasketRepositoryError) -> [WasteBasketItem] {
-                items
+            func observeCustom() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+                let snapshot = items.filter { $0.kind == .custom }
+                return AsyncStream { continuation in
+                    continuation.yield(snapshot)
+                    continuation.finish()
+                }
             }
 
-            func allClear() throws(DeleteWasteBasketRepositoryError) {}
-            func delete(item: WasteBasketItem) throws(DeleteWasteBasketRepositoryError) {}
-            func deleteAll(items: [WasteBasketItem]) throws(DeleteWasteBasketRepositoryError) {}
-            func moveToWasteBasket(item: WasteBasketItem) throws(MoveWasteBasketRepositoryError) {}
-            func moveAllToWasteBasket(items: [WasteBasketItem]) throws(MoveWasteBasketRepositoryError) {}
-            func restore(item: WasteBasketItem) throws(RestoreWasteBasketRepositoryError) {}
-            func restoreAll(items: [WasteBasketItem]) throws(RestoreWasteBasketRepositoryError) {}
+            func observeTrashed() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+                let snapshot = trashedItems
+                return AsyncStream { continuation in
+                    continuation.yield(snapshot)
+                    continuation.finish()
+                }
+            }
+
+            func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}
+            func restore(folderID _: UUID) throws(FolderUseCaseError) {}
+            func delete(folderID _: UUID) throws(FolderUseCaseError) {}
         }
 
         struct PreviewLanguageRepository: LanguageRepository {
