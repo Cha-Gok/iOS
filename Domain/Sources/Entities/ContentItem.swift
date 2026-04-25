@@ -18,7 +18,7 @@ public enum ContentItem: Hashable, Sendable {
         }
     }
 
-    // 폴더는 updatedAt 개념이 없어 createdAt을 대리값으로 사용합니다.
+    /// 폴더는 updatedAt 개념이 없어 createdAt을 대리값으로 사용합니다.
     public var updatedAt: Date {
         switch self {
         case .folder(let folder): return folder.createdAt

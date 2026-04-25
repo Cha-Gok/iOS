@@ -359,7 +359,10 @@ extension TrashViewModel {
                 Folder(name: "휴지통", kind: .trash)
             }
 
-            func fetchAll() throws(FolderUseCaseError) -> [Folder] { [] }
+            func fetchAll() throws(FolderUseCaseError) -> [Folder] {
+                []
+            }
+
             func fetchDefault() throws(FolderUseCaseError) -> Folder {
                 Folder(name: "기본 폴더", kind: .default)
             }
@@ -368,12 +371,17 @@ extension TrashViewModel {
                 Folder(name: "휴지통", kind: .trash)
             }
 
-            func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] { [] }
+            func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] {
+                []
+            }
+
             func fetch(by _: UUID) throws(FolderUseCaseError) -> Folder {
                 Folder(name: "기본 폴더", kind: .default)
             }
 
-            func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder { folder }
+            func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder {
+                folder
+            }
 
             func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
                 AsyncStream { $0.finish() }
@@ -403,7 +411,9 @@ extension TrashViewModel {
                 throw .recordNotFound(id)
             }
 
-            func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote { voiceNote }
+            func update(_ voiceNote: VoiceNote) throws(VoiceNoteUseCaseError) -> VoiceNote {
+                voiceNote
+            }
 
             func observe(id: UUID) throws(VoiceNoteUseCaseError) -> AsyncStream<VoiceNote> {
                 AsyncStream { $0.finish() }

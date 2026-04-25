@@ -412,4 +412,3 @@ private struct FakeFolderUseCase: FolderUseCase {
     func restore(folderID _: UUID) throws(FolderUseCaseError) {}
     func delete(folderID _: UUID) throws(FolderUseCaseError) {}
 }
-
