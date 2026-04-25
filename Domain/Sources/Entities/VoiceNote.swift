@@ -74,6 +74,12 @@ public struct VoiceNote: Sendable, Identifiable, Hashable {
 }
 
 public extension VoiceNote {
+    /// 요약 생성 이후 스크립트가 수정되어 요약이 최신 상태가 아닌지 여부.
+    var isSummaryOutdated: Bool {
+        guard let summary, let transcript else { return false }
+        return summary.createdAt < transcript.updatedAt
+    }
+
     /// 일부 필드를 변경한 복사본을 반환합니다.
     ///
     /// 각 파라미터에 `nil`을 전달하거나 생략하면 기존 값을 유지합니다.

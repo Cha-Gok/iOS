@@ -250,6 +250,15 @@ public extension Constant {
 
     /// SkeletonLineView scaleX 애니메이션 편도 주기 (초)
     static let skeletonAnimationDuration: CFTimeInterval = 1.0
+
+    /// 스켈레톤 핵심 포인트 개수 (3)
+    static let skeletonKeyPointCount: Int = 3
+
+    /// 스켈레톤 키워드 개수 (2)
+    static let skeletonKeywordCount: Int = 2
+
+    /// 스켈레톤 항목 간 애니메이션 시작 오프셋 간격 (0.2초)
+    static let skeletonStaggerOffset: Double = 0.2
 }
 
 // MARK: - BackgroundView Constants

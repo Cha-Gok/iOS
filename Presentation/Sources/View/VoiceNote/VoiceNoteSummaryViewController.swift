@@ -113,35 +113,22 @@ private extension VoiceNoteSummaryViewController {
         let keyPointCellReg = UICollectionView
             .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, indexPath, item in
                 guard case let .keyPoint(number, text) = item else { return }
-                let focusedRange: NSRange? = {
-                    guard let match = self?.viewModel.currentMatch,
-                          case let .keyPoint(idx) = match.location,
-                          idx == indexPath.item else { return nil }
-                    return match.range
-                }()
                 cell.contentConfiguration = KeyPointContentConfiguration(
                     number: number,
                     text: text,
-                    searchQuery: self?.viewModel.searchQuery ?? "",
-                    currentMatchRange: focusedRange
+                    highlightRanges: self?.viewModel.highlightRanges(in: text) ?? [],
+                    focusedRange: self?.viewModel.focusedKeyPointRange(at: indexPath.item)
                 )
             }
 
         let keywordsCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
-            let focusedKeywordIndex: Int?
-            let focusedRange: NSRange?
-            if let match = self?.viewModel.currentMatch, case let .keyword(idx) = match.location {
-                focusedKeywordIndex = idx
-                focusedRange = match.range
-            } else {
-                focusedKeywordIndex = nil
-                focusedRange = nil
-            }
+            let keywords = self?.viewModel.keywords ?? []
+            let keywordMatch = self?.viewModel.focusedKeywordMatch()
             cell.contentConfiguration = KeywordsContentConfiguration(
-                keywords: self?.viewModel.keywords ?? [],
-                searchQuery: self?.viewModel.searchQuery ?? "",
-                focusedKeywordIndex: focusedKeywordIndex,
-                focusedRange: focusedRange
+                keywords: keywords,
+                keywordHighlightRanges: keywords.map { self?.viewModel.highlightRanges(in: $0) ?? [] },
+                focusedKeywordIndex: keywordMatch?.index,
+                focusedRange: keywordMatch?.range
             )
         }
 
@@ -235,11 +222,11 @@ private extension VoiceNoteSummaryViewController {
         let keyPointItems: [Item]
         let keywordItems: [Item]
         if isShowingSkeleton {
-            keyPointItems = (0 ..< 3).map { idx in
-                .keyPointSkeleton(number: idx + 1, beginOffset: Double(idx) * 0.2)
+            keyPointItems = (0 ..< Constant.skeletonKeyPointCount).map {
+                .keyPointSkeleton(number: $0 + 1, beginOffset: Double($0) * Constant.skeletonStaggerOffset)
             }
-            keywordItems = (0 ..< 2).map { idx in
-                .keywordsSkeleton(beginOffset: Double(idx) * 0.2)
+            keywordItems = (0 ..< Constant.skeletonKeywordCount).map {
+                .keywordsSkeleton(beginOffset: Double($0) * Constant.skeletonStaggerOffset)
             }
         } else {
             keyPointItems = viewModel.keyPoints.map { Item.keyPoint(number: $0.number, text: $0.text) }
@@ -264,12 +251,7 @@ private extension VoiceNoteSummaryViewController {
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                switch self.viewModel.voiceNote.analysisState {
-                case .completed, .pending, .regenerating, .summarizing, .transcribed, .transcribing:
-                    self.applySnapshot()
-                case .summarizationFailed, .transcriptionFailed:
-                    break
-                }
+                self.applySnapshot()
                 self.observeAnalysisState()
             }
         }

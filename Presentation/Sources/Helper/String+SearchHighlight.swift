@@ -33,10 +33,27 @@ extension String {
         focusedRange: NSRange? = nil,
         focusedHighlightBackgroundColor: UIColor? = nil
     ) -> NSAttributedString {
-        let attributed = NSMutableAttributedString(string: self, attributes: baseAttributes)
-        guard !query.isEmpty else { return attributed }
+        highlighted(
+            ranges: ranges(of: query),
+            baseAttributes: baseAttributes,
+            highlightBackgroundColor: highlightBackgroundColor,
+            focusedRange: focusedRange,
+            focusedHighlightBackgroundColor: focusedHighlightBackgroundColor
+        )
+    }
 
-        for range in ranges(of: query) {
+    /// 미리 계산된 `ranges`에 형광펜 스타일의 배경 하이라이트를 적용한 `NSAttributedString`을 반환합니다.
+    func highlighted(
+        ranges: [NSRange],
+        baseAttributes: [NSAttributedString.Key: Any],
+        highlightBackgroundColor: UIColor,
+        focusedRange: NSRange? = nil,
+        focusedHighlightBackgroundColor: UIColor? = nil
+    ) -> NSAttributedString {
+        let attributed = NSMutableAttributedString(string: self, attributes: baseAttributes)
+        guard !ranges.isEmpty else { return attributed }
+
+        for range in ranges {
             attributed.addAttribute(.backgroundColor, value: highlightBackgroundColor, range: range)
             attributed.addAttribute(.foregroundColor, value: UIColor.gray950, range: range)
         }
