@@ -1,34 +1,25 @@
 import Observation
 import UIKit
 
-final class VoiceNoteScriptViewController: UIViewController {
+final class VoiceNoteScriptViewController: UICollectionViewController {
     private let viewModel: VoiceNoteViewModel
-
-    private lazy var collectionView: UICollectionView = {
-        let cv = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
-        cv.backgroundColor = .clear
-        cv.showsVerticalScrollIndicator = false
-        cv.keyboardDismissMode = .interactive
-        cv.delegate = self
-        return cv
-    }()
 
     private lazy var dataSource = makeDataSource()
 
     init(viewModel: VoiceNoteViewModel) {
         self.viewModel = viewModel
-        super.init(nibName: nil, bundle: nil)
+        super.init(collectionViewLayout: Self.makeLayout(viewModel: viewModel))
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .clear
-        setupLayout()
+        collectionView.backgroundColor = .clear
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.keyboardDismissMode = .interactive
+
         applySnapshot()
         registerKeyboardObservers()
         observeTranscriptSections()
@@ -45,24 +36,13 @@ final class VoiceNoteScriptViewController: UIViewController {
         guard dataSource.itemIdentifier(for: indexPath) != nil else { return }
         collectionView.scrollToItem(at: indexPath, at: .centeredVertically, animated: true)
     }
-
-    private func setupLayout() {
-        view.addSubview(collectionView)
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-    }
 }
 
 // MARK: - Layout
 
 private extension VoiceNoteScriptViewController {
-    func makeLayout() -> UICollectionViewLayout {
-        UICollectionViewCompositionalLayout { [weak self] _, environment in
+    static func makeLayout(viewModel: VoiceNoteViewModel) -> UICollectionViewLayout {
+        UICollectionViewCompositionalLayout { _, environment in
             var config = UICollectionLayoutListConfiguration(appearance: .plain)
             config.backgroundColor = .clear
             config.showsSeparators = false
@@ -76,15 +56,29 @@ private extension VoiceNoteScriptViewController {
                     leading: nil, top: .fixed(22),
                     trailing: nil, bottom: nil
                 )
+                item.contentInsets = NSDirectionalEdgeInsets(
+                    top: 0, leading: 20, bottom: 0, trailing: 20
+                )
             }
 
-            section.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 0, bottom: 0, trailing: 0)
-            section.interGroupSpacing = self?.isShowingSkeleton == true ? Constant.scriptCellSpacing : 16
+            let isShowingSkeleton: Bool = switch viewModel.voiceNote.analysisState {
+            case .pending, .transcribing: true
+            default: false
+            }
+
+            section.contentInsets = NSDirectionalEdgeInsets(
+                top: 12, leading: 20, bottom: 0, trailing: 20
+            )
+            section.interGroupSpacing = isShowingSkeleton ? Constant.scriptCellSpacing : 16
 
             return section
         }
     }
+}
 
+// MARK: - DataSource
+
+private extension VoiceNoteScriptViewController {
     var isShowingSkeleton: Bool {
         switch viewModel.voiceNote.analysisState {
         case .pending, .transcribing:
@@ -94,11 +88,7 @@ private extension VoiceNoteScriptViewController {
             return false
         }
     }
-}
 
-// MARK: - DataSource
-
-private extension VoiceNoteScriptViewController {
     func makeDataSource() -> UICollectionViewDiffableDataSource<Section, Item> {
         let scriptCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
             guard let self, case .script(let index) = item else { return }
@@ -106,7 +96,7 @@ private extension VoiceNoteScriptViewController {
             let isHighlighted = viewModel.playingSectionIndex == index
 
             let focusedRange: NSRange? = {
-                guard let match = viewModel.currentMatch,
+                guard let match = self.viewModel.currentMatch,
                       case .script(let sectionIndex) = match.location,
                       sectionIndex == index else { return nil }
                 return match.range
@@ -120,8 +110,8 @@ private extension VoiceNoteScriptViewController {
                 isEditing: viewModel.editingMode == .script,
                 searchQuery: viewModel.searchQuery,
                 currentMatchRange: focusedRange,
-                onTextEdited: { [weak self] sIdx, text in
-                    self?.viewModel.updateScriptSection(sectionIndex: sIdx, text: text)
+                onTextEdited: { [weak self] sectionIndex, text in
+                    self?.viewModel.updateScriptSection(sectionIndex: sectionIndex, text: text)
                 },
                 onTextHeightChanged: { [weak self] in
                     guard let self else { return }
@@ -139,18 +129,20 @@ private extension VoiceNoteScriptViewController {
 
         let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
             collectionView: collectionView
-        ) { col, indexPath, item in
+        ) { collectionView, indexPath, item in
             switch item {
             case .script:
-                return col.dequeueConfiguredReusableCell(using: scriptCellReg, for: indexPath, item: item)
+                return collectionView.dequeueConfiguredReusableCell(using: scriptCellReg, for: indexPath, item: item)
             case .scriptSkeleton:
-                return col.dequeueConfiguredReusableCell(using: scriptSkeletonCellReg, for: indexPath, item: item)
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: scriptSkeletonCellReg, for: indexPath, item: item
+                )
             }
         }
 
         let headerReg = makeHeaderRegistration()
-        dataSource.supplementaryViewProvider = { col, _, indexPath in
-            col.dequeueConfiguredReusableSupplementary(using: headerReg, for: indexPath)
+        dataSource.supplementaryViewProvider = { collectionView, _, indexPath in
+            collectionView.dequeueConfiguredReusableSupplementary(using: headerReg, for: indexPath)
         }
 
         return dataSource
@@ -282,7 +274,7 @@ extension VoiceNoteScriptViewController {
         guard let userInfo = notification.userInfo,
               let frameValue = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
         let keyboardFrame = view.convert(frameValue.cgRectValue, from: nil)
-        let overlap = max(0, collectionView.frame.maxY - keyboardFrame.minY)
+        let overlap = max(0, collectionView.bounds.maxY - keyboardFrame.minY)
         applyKeyboardInset(overlap, userInfo: userInfo)
         scrollActiveResponderVisible()
     }
@@ -322,12 +314,18 @@ private extension UIView {
 
 // MARK: - UICollectionViewDelegate
 
-extension VoiceNoteScriptViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+extension VoiceNoteScriptViewController {
+    override func collectionView(
+        _ collectionView: UICollectionView,
+        shouldSelectItemAt indexPath: IndexPath
+    ) -> Bool {
         viewModel.editingMode != .script && !viewModel.searchMode
     }
 
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    override func collectionView(
+        _ collectionView: UICollectionView,
+        didSelectItemAt indexPath: IndexPath
+    ) {
         defer { collectionView.deselectItem(at: indexPath, animated: false) }
         guard case .script(let index) = dataSource.itemIdentifier(for: indexPath) else { return }
         let timestamp = viewModel.scriptSections[index].timestamp
