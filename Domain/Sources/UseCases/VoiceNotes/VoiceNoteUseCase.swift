@@ -110,6 +110,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         do {
             created = try repository.create(voiceNote)
         } catch {
+            AppLogger.error(error)
             throw VoiceNoteUseCaseError(error)
         }
 
@@ -124,6 +125,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         do {
             return try repository.fetch(byId: id)
         } catch {
+            AppLogger.error(error)
             throw VoiceNoteUseCaseError(error)
         }
     }
@@ -148,6 +150,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         do {
             return try repository.update(updatedNote)
         } catch {
+            AppLogger.error(error)
             throw VoiceNoteUseCaseError(error)
         }
     }
@@ -158,6 +161,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         do {
             return try repository.observe(id: id)
         } catch {
+            AppLogger.error(error)
             throw VoiceNoteUseCaseError(error)
         }
     }
@@ -166,6 +170,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         do {
             return try repository.observe(folderID: folderID)
         } catch {
+            AppLogger.error(error)
             throw VoiceNoteUseCaseError(error)
         }
     }
@@ -174,6 +179,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         do {
             return try repository.observeRecent(limit: limit)
         } catch {
+            AppLogger.error(error)
             throw VoiceNoteUseCaseError(error)
         }
     }
@@ -182,6 +188,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
         do {
             return try repository.observeTrashed()
         } catch {
+            AppLogger.error(error)
             throw VoiceNoteUseCaseError(error)
         }
     }
@@ -271,14 +278,20 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
     ) throws(VoiceNoteUseCaseError) -> UUID {
         // 원본 폴더가 지정돼 있고 휴지통에 들어가지 않았다면 원본으로 복원
         if let originalID = note.originalFolderID {
-            let original: Folder?
             do {
-                original = try folderRepository.fetch(by: originalID)
+                let original = try folderRepository.fetch(by: originalID)
+                if original.deletedAt == nil {
+                    return original.id
+                }
             } catch {
-                original = nil
-            }
-            if let original, original.deletedAt == nil {
-                return original.id
+                // 원본 폴더가 영구 삭제된 정상 경로(notFound)는 fallback 진행,
+                // 그 외 시스템 에러(DB 연결 실패 등)는 묻지 않고 그대로 전파
+                if case .notFound = error {
+                    // fallback으로 진행
+                } else {
+                    AppLogger.error(error)
+                    throw VoiceNoteUseCaseError(error)
+                }
             }
         }
 
