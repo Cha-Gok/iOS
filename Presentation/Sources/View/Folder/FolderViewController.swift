@@ -8,8 +8,8 @@ public final class FolderViewController: CollectionViewController {
         case main
     }
 
-    typealias DataSource = UICollectionViewDiffableDataSource<Section, LibraryItem>
-    typealias SnapShot = NSDiffableDataSourceSnapshot<Section, LibraryItem>
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, ContentItem>
+    typealias SnapShot = NSDiffableDataSourceSnapshot<Section, ContentItem>
     private let vm: FolderViewModel
     private var dataSource: DataSource!
     private var listConfiguration: UICollectionLayoutListConfiguration = .init(appearance: .plain)
@@ -254,7 +254,7 @@ extension FolderViewController {
 extension FolderViewController {
     private func setupDataSource() {
         let cellRegistraint = UICollectionView
-            .CellRegistration<UICollectionViewCell, LibraryItem> { cell, indexPath, item in
+            .CellRegistration<UICollectionViewCell, ContentItem> { cell, indexPath, item in
                 cell.backgroundConfiguration = .clear()
                 cell.contentConfiguration = UIHostingConfiguration {
                     switch item {
@@ -334,7 +334,7 @@ public extension FolderViewController {
         // 클릭한 셀의 데이터를 가져옵니다.
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
 
-        // LibraryItem이 folder 모델일 경우 상세 화면으로 이동합니다.
+        // ContentItem이 folder 모델일 경우 상세 화면으로 이동합니다.
         if case .folder(let folder) = item {
             vm.pushDetail(folder)
         }

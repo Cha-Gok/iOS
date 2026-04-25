@@ -5,7 +5,7 @@ import XCTest
 @MainActor
 public final class MockTrashUseCase: TrashUseCase, @unchecked Sendable {
     // Results
-    private var observeResult: Result<AsyncStream<[WasteBasketItem]>, TrashUseCaseError>?
+    private var observeResult: Result<AsyncStream<[ContentItem]>, TrashUseCaseError>?
     // Call counts
     private var moveNoteCallCount = 0
     private var moveFolderCallCount = 0
@@ -36,7 +36,7 @@ public final class MockTrashUseCase: TrashUseCase, @unchecked Sendable {
 
     // MARK: - Setup
 
-    public func setObserveResult(_ result: Result<AsyncStream<[WasteBasketItem]>, TrashUseCaseError>) {
+    public func setObserveResult(_ result: Result<AsyncStream<[ContentItem]>, TrashUseCaseError>) {
         observeResult = result
     }
 
@@ -86,7 +86,7 @@ public final class MockTrashUseCase: TrashUseCase, @unchecked Sendable {
 
     // MARK: - TrashUseCase
 
-    public func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
+    public func observe() throws(TrashUseCaseError) -> AsyncStream<[ContentItem]> {
         switch observeResult {
         case .success(let stream): return stream
         case .failure(let error): throw error
@@ -115,14 +115,14 @@ public final class MockTrashUseCase: TrashUseCase, @unchecked Sendable {
         lastRestoredFolderID = id
     }
 
-    public func restore(item: WasteBasketItem) throws(TrashUseCaseError) {
+    public func restore(item: ContentItem) throws(TrashUseCaseError) {
         switch item {
         case .folder(let folder): try restoreFolder(id: folder.id)
         case .voiceNote(let note): try restoreNote(id: note.id)
         }
     }
 
-    public func restoreAll(items: [WasteBasketItem]) throws(TrashUseCaseError) {
+    public func restoreAll(items: [ContentItem]) throws(TrashUseCaseError) {
         for item in items { try restore(item: item) }
     }
 
@@ -136,14 +136,14 @@ public final class MockTrashUseCase: TrashUseCase, @unchecked Sendable {
         lastHardDeletedFolderID = id
     }
 
-    public func delete(item: WasteBasketItem) throws(TrashUseCaseError) {
+    public func delete(item: ContentItem) throws(TrashUseCaseError) {
         switch item {
         case .folder(let folder): try hardDeleteFolder(id: folder.id)
         case .voiceNote(let note): try hardDeleteNote(id: note.id)
         }
     }
 
-    public func deleteAll(items: [WasteBasketItem]) throws(TrashUseCaseError) {
+    public func deleteAll(items: [ContentItem]) throws(TrashUseCaseError) {
         for item in items { try delete(item: item) }
     }
 

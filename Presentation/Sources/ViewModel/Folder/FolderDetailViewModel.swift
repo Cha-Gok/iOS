@@ -21,7 +21,7 @@ public final class FolderDetailViewModel {
 
     let title: String
     let folderID: UUID
-    private(set) var items: [LibraryItem] = []
+    private(set) var items: [ContentItem] = []
     private(set) var errorMessage: String?
     private(set) var order: Order = .createdAt
     private(set) var select: SelectionMode = .none
@@ -315,7 +315,7 @@ extension FolderDetailViewModel {
         }
 
         struct PreviewTrashUseCase: TrashUseCase {
-            func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
+            func observe() throws(TrashUseCaseError) -> AsyncStream<[ContentItem]> {
                 AsyncStream { $0.finish() }
             }
 
@@ -323,12 +323,12 @@ extension FolderDetailViewModel {
             func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
             func restoreNote(id _: UUID) throws(TrashUseCaseError) {}
             func restoreFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func restore(item _: WasteBasketItem) throws(TrashUseCaseError) {}
-            func restoreAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func restore(item _: ContentItem) throws(TrashUseCaseError) {}
+            func restoreAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
             func hardDeleteNote(id _: UUID) throws(TrashUseCaseError) {}
             func hardDeleteFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func delete(item _: WasteBasketItem) throws(TrashUseCaseError) {}
-            func deleteAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func delete(item _: ContentItem) throws(TrashUseCaseError) {}
+            func deleteAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
             func allClear() throws(TrashUseCaseError) {}
         }
     }

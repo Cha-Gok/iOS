@@ -5,7 +5,7 @@ import Foundation
 @MainActor
 public protocol TrashUseCase: Sendable {
     /// 휴지통 항목 목록을 관찰합니다. 삭제된 폴더 + 단독 삭제된 노트가 합쳐서 emit됩니다.
-    func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]>
+    func observe() throws(TrashUseCaseError) -> AsyncStream<[ContentItem]>
 
     /// 노트를 휴지통으로 단독 이동합니다.
     func moveToTrash(noteID: UUID) throws(TrashUseCaseError)
@@ -20,10 +20,10 @@ public protocol TrashUseCase: Sendable {
     func restoreFolder(id: UUID) throws(TrashUseCaseError)
 
     /// 휴지통 항목을 복원합니다.
-    func restore(item: WasteBasketItem) throws(TrashUseCaseError)
+    func restore(item: ContentItem) throws(TrashUseCaseError)
 
     /// 여러 항목을 복원합니다.
-    func restoreAll(items: [WasteBasketItem]) throws(TrashUseCaseError)
+    func restoreAll(items: [ContentItem]) throws(TrashUseCaseError)
 
     /// 노트를 영구 삭제합니다.
     func hardDeleteNote(id: UUID) throws(TrashUseCaseError)
@@ -32,10 +32,10 @@ public protocol TrashUseCase: Sendable {
     func hardDeleteFolder(id: UUID) throws(TrashUseCaseError)
 
     /// 항목을 영구 삭제합니다.
-    func delete(item: WasteBasketItem) throws(TrashUseCaseError)
+    func delete(item: ContentItem) throws(TrashUseCaseError)
 
     /// 여러 항목을 영구 삭제합니다.
-    func deleteAll(items: [WasteBasketItem]) throws(TrashUseCaseError)
+    func deleteAll(items: [ContentItem]) throws(TrashUseCaseError)
 
     /// 휴지통 안의 모든 항목을 영구 삭제합니다.
     func allClear() throws(TrashUseCaseError)
@@ -55,7 +55,7 @@ public struct DefaultTrashUseCase: TrashUseCase {
 
     // MARK: - Observe
 
-    public func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
+    public func observe() throws(TrashUseCaseError) -> AsyncStream<[ContentItem]> {
         let foldersStream: AsyncStream<[Folder]>
         let notesStream: AsyncStream<[VoiceNote]>
         do {
@@ -77,8 +77,8 @@ public struct DefaultTrashUseCase: TrashUseCase {
             var latestNotes: [VoiceNote] = []
 
             let emit: @MainActor () -> Void = {
-                let folderItems = latestFolders.map { WasteBasketItem.folder(obj: $0) }
-                let noteItems = latestNotes.map { WasteBasketItem.voiceNote(obj: $0) }
+                let folderItems = latestFolders.map { ContentItem.folder($0) }
+                let noteItems = latestNotes.map { ContentItem.voiceNote($0) }
                 continuation.yield(folderItems + noteItems)
             }
 
@@ -144,7 +144,7 @@ public struct DefaultTrashUseCase: TrashUseCase {
         }
     }
 
-    public func restore(item: WasteBasketItem) throws(TrashUseCaseError) {
+    public func restore(item: ContentItem) throws(TrashUseCaseError) {
         switch item {
         case .folder(let folder):
             try restoreFolder(id: folder.id)
@@ -153,7 +153,7 @@ public struct DefaultTrashUseCase: TrashUseCase {
         }
     }
 
-    public func restoreAll(items: [WasteBasketItem]) throws(TrashUseCaseError) {
+    public func restoreAll(items: [ContentItem]) throws(TrashUseCaseError) {
         for item in items {
             try restore(item: item)
         }
@@ -179,7 +179,7 @@ public struct DefaultTrashUseCase: TrashUseCase {
         }
     }
 
-    public func delete(item: WasteBasketItem) throws(TrashUseCaseError) {
+    public func delete(item: ContentItem) throws(TrashUseCaseError) {
         switch item {
         case .folder(let folder):
             try hardDeleteFolder(id: folder.id)
@@ -188,7 +188,7 @@ public struct DefaultTrashUseCase: TrashUseCase {
         }
     }
 
-    public func deleteAll(items: [WasteBasketItem]) throws(TrashUseCaseError) {
+    public func deleteAll(items: [ContentItem]) throws(TrashUseCaseError) {
         for item in items {
             try delete(item: item)
         }

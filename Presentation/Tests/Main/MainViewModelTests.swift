@@ -297,7 +297,7 @@ final class MainViewModelTests: XCTestCase {
     func test_updateTrashCategory_호출시_데이터로드확인() async {
         let sut = makeSUT()
         let expectedTrash = [
-            WasteBasketItem.voiceNote(obj: VoiceNote.stub(title: "삭제된 노트"))
+            ContentItem.voiceNote(VoiceNote.stub(title: "삭제된 노트"))
         ]
 
         sut.mockTrashUseCase.setObserveResult(.success(makeStream(expectedTrash)))

@@ -7,8 +7,8 @@ public final class TrashViewController: CollectionViewController {
         case main
     }
 
-    typealias DataSource = UICollectionViewDiffableDataSource<Section, LibraryItem>
-    typealias SnapShot = NSDiffableDataSourceSnapshot<Section, LibraryItem>
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, ContentItem>
+    typealias SnapShot = NSDiffableDataSourceSnapshot<Section, ContentItem>
 
     private var dataSource: DataSource?
 
@@ -174,7 +174,7 @@ public final class TrashViewController: CollectionViewController {
         let cellRegistration = UICollectionView.CellRegistration { [weak self] (
             cell: UICollectionViewListCell,
             indexPath: IndexPath,
-            itemIdentifier: LibraryItem
+            itemIdentifier: ContentItem
         ) in
             guard let self else { return }
             var backgroundConfig = UIBackgroundConfiguration.listCell()
@@ -186,13 +186,13 @@ public final class TrashViewController: CollectionViewController {
                 cell.contentConfiguration = UIHostingConfiguration {
                     TrashFolderCardView(
                         select: vm.select,
-                        isSelected: vm.selectedItems.contains(.folder(obj: folder)),
+                        isSelected: vm.selectedItems.contains(.folder(folder)),
                         folder: folder
                     ) { [weak self] data, state in
                         if state {
-                            self?.vm.selectItem(.folder(obj: data))
+                            self?.vm.selectItem(.folder(data))
                         } else {
-                            self?.vm.deselectItem(.folder(obj: data))
+                            self?.vm.deselectItem(.folder(data))
                         }
                     } completeAction: { [weak self] in
                         self?.vm.pushDetailFolder(folder)
@@ -203,13 +203,13 @@ public final class TrashViewController: CollectionViewController {
                 cell.contentConfiguration = UIHostingConfiguration {
                     TrashVoiceNoteCardView(
                         select: vm.select,
-                        isSelected: vm.selectedItems.contains(.voiceNote(obj: voiceNote)),
+                        isSelected: vm.selectedItems.contains(.voiceNote(voiceNote)),
                         voiceNote: voiceNote
                     ) { [weak self] data, state in
                         if state {
-                            self?.vm.selectItem(.voiceNote(obj: data))
+                            self?.vm.selectItem(.voiceNote(data))
                         } else {
-                            self?.vm.deselectItem(.voiceNote(obj: data))
+                            self?.vm.deselectItem(.voiceNote(data))
                         }
                     } completeAction: { [weak self] in
                         self?.vm.pushVoiceNote(voiceNote)
@@ -300,7 +300,7 @@ extension TrashViewController {
 // MARK: - Helper Method
 
 private extension TrashViewController {
-    func selectedItemsForBulkAction() -> [WasteBasketItem]? {
+    func selectedItemsForBulkAction() -> [ContentItem]? {
         switch vm.select {
         case .none:
             return nil

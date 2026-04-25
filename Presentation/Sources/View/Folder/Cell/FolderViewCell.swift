@@ -77,7 +77,7 @@ final class FolderViewCell: UITableViewCell {
 
     // MARK: - Helper
 
-    func configure(with item: LibraryItem) {
+    func configure(with item: ContentItem) {
         switch item {
         case .folder(let folder):
             prefixImage.image = UIImage(systemName: "folder.fill")

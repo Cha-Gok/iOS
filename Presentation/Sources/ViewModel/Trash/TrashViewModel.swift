@@ -14,10 +14,10 @@ public protocol TrashCoordinatorDelegate: AnyObject {
 public final class TrashViewModel {
     // MARK: - State
 
-    private(set) var items: [LibraryItem] = []
+    private(set) var items: [ContentItem] = []
     private(set) var errorMessage: String?
     private(set) var select: SelectionMode = .none
-    private(set) var selectedItems: [WasteBasketItem] = []
+    private(set) var selectedItems: [ContentItem] = []
     private(set) var showTrashAlert: Bool = false
 
     public weak var coordinator: TrashCoordinatorDelegate?
@@ -60,9 +60,9 @@ extension TrashViewModel {
         selectedItems = items.compactMap {
             switch $0 {
             case .folder(let folder):
-                return .folder(obj: folder)
+                return .folder(folder)
             case .voiceNote(let voiceNote):
-                return .voiceNote(obj: voiceNote)
+                return .voiceNote(voiceNote)
             }
         }
     }
@@ -95,12 +95,12 @@ extension TrashViewModel {
         coordinator?.pushMyFolderDetailView(folder)
     }
 
-    func selectItem(_ item: WasteBasketItem) {
+    func selectItem(_ item: ContentItem) {
         if select == .none { setSelectionMode(.multiple) }
         selectedItems.append(item)
     }
 
-    func deselectItem(_ item: WasteBasketItem) {
+    func deselectItem(_ item: ContentItem) {
         selectedItems.removeAll { $0.id == item.id }
     }
 }
@@ -115,7 +115,7 @@ extension TrashViewModel {
             do {
                 let stream = try trashUseCase.observe()
                 for await wasteBaskets in stream {
-                    items = wasteBaskets.map(\.toLibraryItem)
+                    items = wasteBaskets
                     sortItems()
                 }
             } catch {
@@ -153,7 +153,7 @@ extension TrashViewModel {
         }
     }
 
-    func delete(item: WasteBasketItem) {
+    func delete(item: ContentItem) {
         do {
             try deleteOne(item)
             items.removeAll { $0.id == item.id }
@@ -164,7 +164,7 @@ extension TrashViewModel {
         }
     }
 
-    func delete(items deleteItems: [WasteBasketItem]) {
+    func delete(items deleteItems: [ContentItem]) {
         do {
             for item in deleteItems {
                 try deleteOne(item)
@@ -178,7 +178,7 @@ extension TrashViewModel {
         }
     }
 
-    private func deleteOne(_ item: WasteBasketItem) throws {
+    private func deleteOne(_ item: ContentItem) throws {
         switch item {
         case .folder(let folder):
             try folderUseCase.delete(folderID: folder.id)
@@ -191,7 +191,7 @@ extension TrashViewModel {
 // MARK: - Restore
 
 extension TrashViewModel {
-    func restore(item: WasteBasketItem) {
+    func restore(item: ContentItem) {
         do {
             try restoreOne(item)
             items.removeAll { $0.id == item.id }
@@ -202,7 +202,7 @@ extension TrashViewModel {
         }
     }
 
-    func restore(items restoreItems: [WasteBasketItem]) {
+    func restore(items restoreItems: [ContentItem]) {
         do {
             for item in restoreItems {
                 try restoreOne(item)
@@ -216,10 +216,10 @@ extension TrashViewModel {
         }
     }
 
-    func cancelRestore(item: WasteBasketItem) {
+    func cancelRestore(item: ContentItem) {
         do {
             try moveToTrashOne(item)
-            items.append(item.toLibraryItem)
+            items.append(item)
             sortItems()
         } catch {
             AppLogger.error(error)
@@ -227,12 +227,12 @@ extension TrashViewModel {
         }
     }
 
-    func cancelRestore(items restoreItems: [WasteBasketItem]) {
+    func cancelRestore(items restoreItems: [ContentItem]) {
         do {
             for item in restoreItems {
                 try moveToTrashOne(item)
             }
-            items.append(contentsOf: restoreItems.map(\.toLibraryItem))
+            items.append(contentsOf: restoreItems)
             sortItems()
         } catch {
             AppLogger.error(error)
@@ -240,7 +240,7 @@ extension TrashViewModel {
         }
     }
 
-    private func restoreOne(_ item: WasteBasketItem) throws {
+    private func restoreOne(_ item: ContentItem) throws {
         switch item {
         case .folder(let folder):
             try folderUseCase.restore(folderID: folder.id)
@@ -249,7 +249,7 @@ extension TrashViewModel {
         }
     }
 
-    private func moveToTrashOne(_ item: WasteBasketItem) throws {
+    private func moveToTrashOne(_ item: ContentItem) throws {
         switch item {
         case .folder(let folder):
             try folderUseCase.moveToTrash(folderID: folder.id)
@@ -275,16 +275,16 @@ extension TrashViewModel {
 
     private extension TrashViewModel {
         struct PreviewData {
-            let items: [WasteBasketItem]
+            let items: [ContentItem]
 
             static func make(now: Date = .now) -> Self {
-                let items: [WasteBasketItem] = (0 ..< 10).map { index in
+                let items: [ContentItem] = (0 ..< 10).map { index in
                     if index.isMultiple(of: 2) {
                         let createdOffset = TimeInterval((index + 2) * 43200) * -1
                         let updatedOffset = TimeInterval((index + 1) * 21600) * -1
 
                         return .voiceNote(
-                            obj: VoiceNote(
+                            VoiceNote(
                                 title: "휴지통 메모 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
                                 updatedAt: now.addingTimeInterval(updatedOffset),
@@ -304,7 +304,7 @@ extension TrashViewModel {
                         let deletedOffset = TimeInterval((index + 1) * 10800) * -1
 
                         return .folder(
-                            obj: Folder(
+                            Folder(
                                 name: "휴지통 폴더 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
                                 kind: .custom,
@@ -385,9 +385,9 @@ extension TrashViewModel {
         }
 
         struct PreviewTrashUseCase: TrashUseCase {
-            let items: [WasteBasketItem]
+            let items: [ContentItem]
 
-            func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
+            func observe() throws(TrashUseCaseError) -> AsyncStream<[ContentItem]> {
                 let snapshot = items
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)
@@ -399,12 +399,12 @@ extension TrashViewModel {
             func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
             func restoreNote(id _: UUID) throws(TrashUseCaseError) {}
             func restoreFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func restore(item _: WasteBasketItem) throws(TrashUseCaseError) {}
-            func restoreAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func restore(item _: ContentItem) throws(TrashUseCaseError) {}
+            func restoreAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
             func hardDeleteNote(id _: UUID) throws(TrashUseCaseError) {}
             func hardDeleteFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func delete(item _: WasteBasketItem) throws(TrashUseCaseError) {}
-            func deleteAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func delete(item _: ContentItem) throws(TrashUseCaseError) {}
+            func deleteAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
             func allClear() throws(TrashUseCaseError) {}
         }
     }

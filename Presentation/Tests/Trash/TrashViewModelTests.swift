@@ -60,7 +60,7 @@ final class TrashViewModelTests: XCTestCase {
         )
     }
 
-    private func makeStream(_ items: [WasteBasketItem]) -> AsyncStream<[WasteBasketItem]> {
+    private func makeStream(_ items: [ContentItem]) -> AsyncStream<[ContentItem]> {
         AsyncStream { continuation in
             continuation.yield(items)
             continuation.finish()
@@ -99,9 +99,9 @@ final class TrashViewModelTests: XCTestCase {
 
     func test_fetchItems_정상적으로_가져오기() async {
         let sut = makeSUT()
-        let fetchResult: [WasteBasketItem] = [
-            .folder(obj: Folder(name: "테스트 폴더")),
-            .voiceNote(obj: VoiceNote(
+        let fetchResult: [ContentItem] = [
+            .folder(Folder(name: "테스트 폴더")),
+            .voiceNote(VoiceNote(
                 title: "테스트 노트",
                 folderID: UUID(),
                 voiceRecord: VoiceRecord(audioFilePath: "VoiceRecords/null.m4a", duration: 10),
@@ -120,10 +120,10 @@ final class TrashViewModelTests: XCTestCase {
     func test_fetchItems_정렬_확인() async {
         let sut = makeSUT()
         let now = Date()
-        let items: [WasteBasketItem] = [
-            .folder(obj: Folder(name: "오래된 삭제", deletedAt: now.addingTimeInterval(-1000))),
-            .folder(obj: Folder(name: "최근 삭제", deletedAt: now)),
-            .folder(obj: Folder(name: "중간 삭제", deletedAt: now.addingTimeInterval(-500)))
+        let items: [ContentItem] = [
+            .folder(Folder(name: "오래된 삭제", deletedAt: now.addingTimeInterval(-1000))),
+            .folder(Folder(name: "최근 삭제", deletedAt: now)),
+            .folder(Folder(name: "중간 삭제", deletedAt: now.addingTimeInterval(-500)))
         ]
         sut.mockTrashUseCase.setObserveResult(.success(makeStream(items)))
 
@@ -140,8 +140,8 @@ final class TrashViewModelTests: XCTestCase {
 
     func test_deleteAll_정상수행() async {
         let sut = makeSUT()
-        let fetchResult: [WasteBasketItem] = [
-            .folder(obj: Folder(name: "테스트 폴더"))
+        let fetchResult: [ContentItem] = [
+            .folder(Folder(name: "테스트 폴더"))
         ]
         sut.mockTrashUseCase.setObserveResult(.success(makeStream(fetchResult)))
         sut.mockTrashUseCase.expectAllClear(callCount: 1)
@@ -160,7 +160,7 @@ final class TrashViewModelTests: XCTestCase {
     func test_deleteItem_단일항목삭제() async {
         let sut = makeSUT()
         let folder = Folder(name: "삭제용 폴더")
-        let item = WasteBasketItem.folder(obj: folder)
+        let item = ContentItem.folder(folder)
         sut.mockTrashUseCase.setObserveResult(.success(makeStream([item])))
         sut.mockFolderRepo.expectDelete(callCount: 1)
 
@@ -177,7 +177,7 @@ final class TrashViewModelTests: XCTestCase {
     func test_restoreItem_단일항목복구() async {
         let sut = makeSUT()
         let folder = Folder(name: "복구용 폴더", deletedAt: .now, parentID: UUID())
-        let item = WasteBasketItem.folder(obj: folder)
+        let item = ContentItem.folder(folder)
         sut.mockTrashUseCase.setObserveResult(.success(makeStream([item])))
         sut.mockFolderRepo.setFetchByIDResult(.success(folder))
         sut.mockFolderRepo.setUpdateResult(.success(folder))
@@ -197,7 +197,7 @@ final class TrashViewModelTests: XCTestCase {
         let sut = makeSUT()
         let folder = Folder(name: "복원취소용 폴더")
         let trash = Folder.stub(kind: .trash)
-        let item = WasteBasketItem.folder(obj: folder)
+        let item = ContentItem.folder(folder)
         sut.mockFolderRepo.setFetchByKindResult(.trash, result: .success([trash]))
         sut.mockFolderRepo.setFetchByIDResult(.success(folder))
         sut.mockFolderRepo.setUpdateResult(.success(folder))
@@ -220,8 +220,8 @@ final class TrashViewModelTests: XCTestCase {
         )
         let trash = Folder.stub(kind: .trash)
         let items = [
-            WasteBasketItem.folder(obj: folder),
-            WasteBasketItem.voiceNote(obj: voiceNote)
+            ContentItem.folder(folder),
+            ContentItem.voiceNote(voiceNote)
         ]
         sut.mockFolderRepo.setFetchByKindResult(.trash, result: .success([trash]))
         sut.mockFolderRepo.setFetchByIDResult(.success(folder))

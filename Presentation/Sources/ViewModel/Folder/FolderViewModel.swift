@@ -90,7 +90,7 @@ extension FolderViewModel {
     func fetchAll() {
         do {
             let folders: [Folder] = try folderUseCase.fetchDeletableFolders()
-            let items: [LibraryItem] = folders.map { .folder($0) }
+            let items: [ContentItem] = folders.map { .folder($0) }
             category.items = items
         } catch {
             AppLogger.error(error)
@@ -146,7 +146,7 @@ extension FolderViewModel {
             let category = CategoryToggle(
                 imageName: "folder",
                 title: "개인 폴더",
-                items: previewData.folders.map(LibraryItem.folder)
+                items: previewData.folders.map(ContentItem.folder)
             )
 
             return FolderViewModel(
@@ -230,7 +230,7 @@ extension FolderViewModel {
         }
 
         struct PreviewTrashUseCase: TrashUseCase {
-            func observe() throws(TrashUseCaseError) -> AsyncStream<[WasteBasketItem]> {
+            func observe() throws(TrashUseCaseError) -> AsyncStream<[ContentItem]> {
                 AsyncStream { $0.finish() }
             }
 
@@ -238,12 +238,12 @@ extension FolderViewModel {
             func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
             func restoreNote(id _: UUID) throws(TrashUseCaseError) {}
             func restoreFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func restore(item _: WasteBasketItem) throws(TrashUseCaseError) {}
-            func restoreAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func restore(item _: ContentItem) throws(TrashUseCaseError) {}
+            func restoreAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
             func hardDeleteNote(id _: UUID) throws(TrashUseCaseError) {}
             func hardDeleteFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func delete(item _: WasteBasketItem) throws(TrashUseCaseError) {}
-            func deleteAll(items _: [WasteBasketItem]) throws(TrashUseCaseError) {}
+            func delete(item _: ContentItem) throws(TrashUseCaseError) {}
+            func deleteAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
             func allClear() throws(TrashUseCaseError) {}
         }
     }
