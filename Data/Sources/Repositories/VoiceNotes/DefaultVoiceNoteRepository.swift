@@ -186,65 +186,6 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
         return try makeListStream(request: request) { .fetchRecentFailed }
     }
 
-    public func fetchTrashed() throws(VoiceNoteRepositoryError) -> [VoiceNote] {
-        do {
-            let request = VoiceNoteEntity.fetchRequest()
-            request.predicate = NSPredicate(format: "deletedAt != nil")
-            request.sortDescriptors = [NSSortDescriptor(keyPath: \VoiceNoteEntity.deletedAt, ascending: false)]
-            return try context.fetch(request).map { $0.toModel() }
-        } catch {
-            AppLogger.error(error)
-            throw .fetchRecentFailed
-        }
-    }
-
-    public func moveToTrash(id: UUID, trashFolderID: UUID) throws(VoiceNoteRepositoryError) {
-        do {
-            guard let entity = try fetchEntity(id: id) else {
-                throw VoiceNoteRepositoryError.fetchFailed(id: id)
-            }
-            guard let trashFolder = try fetchFolderEntity(id: trashFolderID) else {
-                throw VoiceNoteRepositoryError.defaultFolderNotFound
-            }
-
-            entity.originalFolderID = entity.folder.id
-            entity.folder = trashFolder
-            entity.deletedAt = .now
-            try context.save()
-        } catch {
-            AppLogger.error(error)
-            throw .updateFailed
-        }
-    }
-
-    public func restore(id: UUID, fallbackFolderID: UUID) throws(VoiceNoteRepositoryError) {
-        do {
-            guard let entity = try fetchEntity(id: id) else {
-                throw VoiceNoteRepositoryError.fetchFailed(id: id)
-            }
-            let target: FolderEntity = try {
-                if let originalID = entity.originalFolderID,
-                   let original = try fetchFolderEntity(id: originalID),
-                   original.deletedAt == nil
-                {
-                    return original
-                }
-                guard let fallback = try fetchFolderEntity(id: fallbackFolderID) else {
-                    throw VoiceNoteRepositoryError.defaultFolderNotFound
-                }
-                return fallback
-            }()
-
-            entity.folder = target
-            entity.deletedAt = nil
-            entity.originalFolderID = nil
-            try context.save()
-        } catch {
-            AppLogger.error(error)
-            throw .updateFailed
-        }
-    }
-
     public func delete(id: UUID) throws(VoiceNoteRepositoryError) {
         do {
             guard let entity = try fetchEntity(id: id) else {
@@ -260,13 +201,6 @@ public struct DefaultVoiceNoteRepository: VoiceNoteRepository {
 
     private func fetchEntity(id: UUID) throws -> VoiceNoteEntity? {
         let request = VoiceNoteEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-        request.fetchLimit = 1
-        return try context.fetch(request).first
-    }
-
-    private func fetchFolderEntity(id: UUID) throws -> FolderEntity? {
-        let request = FolderEntity.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         request.fetchLimit = 1
         return try context.fetch(request).first

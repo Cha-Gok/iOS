@@ -38,15 +38,6 @@ public protocol FolderRepository: Sendable {
     /// 휴지통에 들어간(deletedAt != nil) 폴더 목록을 관찰합니다.
     func observeDeleted() throws(FolderRepositoryError) -> AsyncStream<[Folder]>
 
-    /// 폴더를 휴지통으로 이동합니다. 폴더 안의 모든 노트도 cascade로 휴지통 폴더로 이동합니다.
-    /// - Parameters:
-    ///   - id: 이동할 폴더의 UUID
-    ///   - trashFolderID: 휴지통 폴더의 UUID
-    func moveToTrash(id: UUID, trashFolderID: UUID) throws(FolderRepositoryError)
-
-    /// 폴더를 복원합니다. 같이 cascade 삭제됐던 노트들도 함께 복원됩니다.
-    func restore(id: UUID) throws(FolderRepositoryError)
-
     /// 폴더를 영구 삭제합니다. 안의 모든 노트도 cascade로 삭제됩니다.
     func delete(id: UUID) throws(FolderRepositoryError)
 }

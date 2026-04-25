@@ -263,10 +263,6 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         }
     }
 
-    public func moveToTrash(id _: UUID, trashFolderID _: UUID) throws(FolderRepositoryError) {}
-
-    public func restore(id _: UUID) throws(FolderRepositoryError) {}
-
     public func delete(id _: UUID) throws(FolderRepositoryError) {
         deleteCallCount += 1
     }

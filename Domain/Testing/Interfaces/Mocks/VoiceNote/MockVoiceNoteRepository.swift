@@ -232,14 +232,6 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
         }
     }
 
-    public func fetchTrashed() throws(VoiceNoteRepositoryError) -> [VoiceNote] {
-        []
-    }
-
-    public func moveToTrash(id _: UUID, trashFolderID _: UUID) throws(VoiceNoteRepositoryError) {}
-
-    public func restore(id _: UUID, fallbackFolderID _: UUID) throws(VoiceNoteRepositoryError) {}
-
     public func delete(id _: UUID) throws(VoiceNoteRepositoryError) {
         deleteCallCount += 1
     }

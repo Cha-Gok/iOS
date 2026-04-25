@@ -102,34 +102,6 @@ public struct DefaultFolderRepository: FolderRepository {
         return try makeListStream(request: request)
     }
 
-    public func moveToTrash(id: UUID, trashFolderID: UUID) throws(FolderRepositoryError) {
-        do {
-            guard let folderEntity = try fetchEntity(id: id) else {
-                throw FolderRepositoryError.notFound
-            }
-            folderEntity.parentID = trashFolderID
-            folderEntity.deletedAt = .now
-            try context.save()
-        } catch {
-            AppLogger.error(error)
-            throw .updateFailed
-        }
-    }
-
-    public func restore(id: UUID) throws(FolderRepositoryError) {
-        do {
-            guard let folderEntity = try fetchEntity(id: id) else {
-                throw FolderRepositoryError.notFound
-            }
-            folderEntity.parentID = nil
-            folderEntity.deletedAt = nil
-            try context.save()
-        } catch {
-            AppLogger.error(error)
-            throw .updateFailed
-        }
-    }
-
     public func delete(id: UUID) throws(FolderRepositoryError) {
         do {
             guard let entity = try fetchEntity(id: id) else {
