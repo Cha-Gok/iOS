@@ -26,6 +26,10 @@ final class UnderlineSegmentedControl: UIControl {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override var intrinsicContentSize: CGSize {
+        CGSize(width: UIView.noIntrinsicMetric, height: Constant.underlineSegmentedControlHeight)
+    }
+
     // MARK: - Setup
 
     private func setupButtons(items: [String]) {

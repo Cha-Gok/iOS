@@ -48,6 +48,7 @@
 --disable redundantFileprivate
 --disable unusedArguments
 --disable redundantLet
+--disable wrapFunctionBodies
 
 # [줄바꿈 및 인자 관리]
 --wrap-arguments before-first

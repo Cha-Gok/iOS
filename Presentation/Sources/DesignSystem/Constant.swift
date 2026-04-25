@@ -282,3 +282,16 @@ public extension Constant {
     /// 두 번째 타원 Bottom Offset (100)
     static let ellipseSecondBottomOffset: CGFloat = 100
 }
+
+// MARK: - VoiceNote Layout Constants
+
+public extension Constant {
+    /// BottomFadeView 높이 (192)
+    static let voiceNoteBottomFadeHeight: CGFloat = 192
+
+    /// MatchAccessoryBar 좌우 수평 마진 (20)
+    static let matchAccessoryBarHorizontalMargin: CGFloat = 20
+
+    /// MatchAccessoryBar 키보드 상단 간격 (8)
+    static let matchAccessoryBarKeyboardSpacing: CGFloat = 8
+}
