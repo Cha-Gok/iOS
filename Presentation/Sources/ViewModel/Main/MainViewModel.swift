@@ -193,7 +193,7 @@ extension MainViewModel {
         myFolderTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let stream = try folderUseCase.observeDeletable()
+                let stream = try folderUseCase.observeCustom()
                 for await folders in stream {
                     categoryData[2].items = folders.map { ContentItem.folder($0) }
                 }
@@ -573,7 +573,7 @@ extension MainViewModel {
                 folder
             }
 
-            func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+            func observeCustom() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
                 let snapshot = items.filter { $0.kind == .custom }
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)

@@ -42,7 +42,7 @@ public protocol FolderUseCase: Sendable {
     func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder
 
     /// 개인 폴더 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
-    func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
+    func observeCustom() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
 
     /// 휴지통에 있는(삭제된) 폴더 목록을 관찰합니다.
     func observeTrashed() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
@@ -155,7 +155,7 @@ public struct DefaultFolderUseCase: FolderUseCase {
         }
     }
 
-    public func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+    public func observeCustom() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
         // Repository observe(by: .custom)의 predicate가 parentID == nil 조건을 포함하므로
         // 휴지통 이동된 폴더(parentID = trash.id)는 emit에서 자동 제외됨 → 추가 filter 불필요
         do {

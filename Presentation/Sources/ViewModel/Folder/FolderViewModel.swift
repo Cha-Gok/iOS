@@ -212,7 +212,7 @@ extension FolderViewModel {
                 folder
             }
 
-            func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+            func observeCustom() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
                 let snapshot = items.filter { $0.kind == .custom }
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)

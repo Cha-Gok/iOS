@@ -383,7 +383,7 @@ extension TrashViewModel {
                 folder
             }
 
-            func observeDeletable() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+            func observeCustom() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
                 AsyncStream { $0.finish() }
             }
 
