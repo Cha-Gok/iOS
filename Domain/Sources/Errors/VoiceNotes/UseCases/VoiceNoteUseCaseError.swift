@@ -25,21 +25,31 @@ public enum VoiceNoteUseCaseError: LocalizedError, Sendable {
     /// Audio Analysis (from AudioToSummary)
     case analysisFailed(Error)
 
-    public init(_ error: Error) {
-        if let useCaseError = error as? VoiceNoteUseCaseError {
-            self = useCaseError
-        } else if let repoError = error as? VoiceNoteRepositoryError {
-            switch repoError {
-            case .cancelled: self = .cancelled
-            case .recordNotFound(let id): self = .recordNotFound(id)
-            case .createFailed: self = .createFailed(repoError)
-            case .updateFailed: self = .updateFailed(repoError)
-            default: self = .fetchFailed(repoError)
-            }
-        } else if (error as NSError).domain == NSURLErrorDomain, (error as NSError).code == NSURLErrorCancelled {
+    public init(_ error: VoiceNoteRepositoryError) {
+        switch error {
+        case .cancelled:
             self = .cancelled
-        } else {
+        case .recordNotFound(let id):
+            self = .recordNotFound(id)
+        case .createFailed:
+            self = .createFailed(error)
+        case .updateFailed:
+            self = .updateFailed(error)
+        case .fetchFailed, .fetchAllFailed, .fetchRecentFailed, .defaultFolderNotFound:
+            self = .fetchFailed(error)
+        case .unknown(let underlying):
+            self = .unknown(underlying)
+        }
+    }
+
+    public init(_ error: FolderRepositoryError) {
+        switch error {
+        case .cancelled:
+            self = .cancelled
+        case .notFound, .duplicateName, .createFailed, .fetchFailed, .updateFailed:
             self = .unknown(error)
+        case .unknown(let underlying):
+            self = .unknown(underlying)
         }
     }
 
@@ -62,7 +72,7 @@ public enum VoiceNoteUseCaseError: LocalizedError, Sendable {
         case .recordNotFound:
             return "해당 음성 메모를 찾을 수 없습니다."
         case .analysisFailed(let error):
-            return "심성 분석에 실패했습니다: \(error.localizedDescription)"
+            return "음성 분석에 실패했습니다: \(error.localizedDescription)"
         case .unknown(let error):
             return error.localizedDescription
         }
