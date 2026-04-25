@@ -295,3 +295,28 @@ public extension Constant {
     /// MatchAccessoryBar 키보드 상단 간격 (8)
     static let matchAccessoryBarKeyboardSpacing: CGFloat = 8
 }
+
+// MARK: - SummarySection Layout Constants
+
+public extension Constant {
+    /// SummarySection 좌우 여백 (20)
+    static let summarySectionHorizontalInset: CGFloat = 20
+
+    /// SummarySection metadata 셀 상단 여백 (24)
+    static let summarySectionMetadataTopInset: CGFloat = 24
+
+    /// SummarySection keyPoints 헤더 상단 여백 (26)
+    static let summarySectionKeyPointsHeaderTop: CGFloat = 26
+
+    /// SummarySection keyPoints 셀 상단 여백 (16)
+    static let summarySectionKeyPointsTopInset: CGFloat = 16
+
+    /// SummarySection keyPoints 셀 간 간격 (6)
+    static let summarySectionKeyPointsGroupSpacing: CGFloat = 6
+
+    /// SummarySection keywords 헤더 상단 여백 (32)
+    static let summarySectionKeywordsHeaderTop: CGFloat = 32
+
+    /// SummarySection keywords 셀 상단 여백 (12)
+    static let summarySectionKeywordsTopInset: CGFloat = 12
+}

@@ -1,44 +1,35 @@
 import Observation
 import UIKit
 
-final class VoiceNoteSummaryViewController: UIViewController {
+final class VoiceNoteSummaryViewController: UICollectionViewController {
     private let viewModel: VoiceNoteViewModel
-
-    private lazy var collectionView: UICollectionView = {
-        let cv = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
-        cv.backgroundColor = .clear
-        cv.showsVerticalScrollIndicator = false
-        cv.keyboardDismissMode = .interactive
-        return cv
-    }()
 
     private lazy var dataSource = makeDataSource()
 
     init(viewModel: VoiceNoteViewModel) {
         self.viewModel = viewModel
-        super.init(nibName: nil, bundle: nil)
+        super.init(collectionViewLayout: Self.makeLayout())
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .clear
-        setupLayout()
+        collectionView.backgroundColor = .clear
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.keyboardDismissMode = .interactive
+
         applySnapshot()
         observeAnalysisState()
         observeSearchQuery()
         observeCurrentMatch()
     }
 
-    /// 지정한 매치 위치로 컬렉션을 스크롤합니다.
     func scrollToMatch(_ match: VoiceNoteSearchMatch) {
         let indexPath: IndexPath
         switch match.location {
-        case .keyPoint(let index):
+        case let .keyPoint(index):
             indexPath = IndexPath(item: index, section: Section.keyPoints.rawValue)
         case .keyword:
             indexPath = IndexPath(item: 0, section: Section.keywords.rawValue)
@@ -48,23 +39,12 @@ final class VoiceNoteSummaryViewController: UIViewController {
         guard dataSource.itemIdentifier(for: indexPath) != nil else { return }
         collectionView.scrollToItem(at: indexPath, at: .centeredVertically, animated: true)
     }
-
-    private func setupLayout() {
-        view.addSubview(collectionView)
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-    }
 }
 
 // MARK: - Layout
 
 private extension VoiceNoteSummaryViewController {
-    func makeLayout() -> UICollectionViewLayout {
+    static func makeLayout() -> UICollectionViewLayout {
         UICollectionViewCompositionalLayout { sectionIndex, environment in
             let sectionType = Section(rawValue: sectionIndex)
 
@@ -76,8 +56,8 @@ private extension VoiceNoteSummaryViewController {
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
 
             let headerTop: CGFloat = switch sectionType {
-            case .keyPoints: 26
-            case .keywords: 32
+            case .keyPoints: Constant.summarySectionKeyPointsHeaderTop
+            case .keywords: Constant.summarySectionKeywordsHeaderTop
             default: 0
             }
             for item in section.boundarySupplementaryItems {
@@ -86,18 +66,29 @@ private extension VoiceNoteSummaryViewController {
                     leading: nil, top: .fixed(headerTop),
                     trailing: nil, bottom: nil
                 )
+                item.contentInsets = NSDirectionalEdgeInsets(
+                    top: 0,
+                    leading: Constant.summarySectionHorizontalInset,
+                    bottom: 0,
+                    trailing: Constant.summarySectionHorizontalInset
+                )
             }
 
             let cellTop: CGFloat = switch sectionType {
-            case .metadata: 24
-            case .keyPoints: 16
-            case .keywords: 12
+            case .metadata: Constant.summarySectionMetadataTopInset
+            case .keyPoints: Constant.summarySectionKeyPointsTopInset
+            case .keywords: Constant.summarySectionKeywordsTopInset
             default: 0
             }
-            section.contentInsets = NSDirectionalEdgeInsets(top: cellTop, leading: 0, bottom: 0, trailing: 0)
+            section.contentInsets = NSDirectionalEdgeInsets(
+                top: cellTop,
+                leading: Constant.summarySectionHorizontalInset,
+                bottom: 0,
+                trailing: Constant.summarySectionHorizontalInset
+            )
 
             section.interGroupSpacing = switch sectionType {
-            case .keyPoints: 6
+            case .keyPoints: Constant.summarySectionKeyPointsGroupSpacing
             case .keywords: Constant.keywordChipLineSpacing
             default: 0
             }
@@ -121,10 +112,10 @@ private extension VoiceNoteSummaryViewController {
 
         let keyPointCellReg = UICollectionView
             .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, indexPath, item in
-                guard case .keyPoint(let number, let text) = item else { return }
+                guard case let .keyPoint(number, text) = item else { return }
                 let focusedRange: NSRange? = {
                     guard let match = self?.viewModel.currentMatch,
-                          case .keyPoint(let idx) = match.location,
+                          case let .keyPoint(idx) = match.location,
                           idx == indexPath.item else { return nil }
                     return match.range
                 }()
@@ -139,7 +130,7 @@ private extension VoiceNoteSummaryViewController {
         let keywordsCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, _ in
             let focusedKeywordIndex: Int?
             let focusedRange: NSRange?
-            if let match = self?.viewModel.currentMatch, case .keyword(let idx) = match.location {
+            if let match = self?.viewModel.currentMatch, case let .keyword(idx) = match.location {
                 focusedKeywordIndex = idx
                 focusedRange = match.range
             } else {
@@ -155,7 +146,7 @@ private extension VoiceNoteSummaryViewController {
         }
 
         let keyPointSkeletonCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case .keyPointSkeleton(let number, let beginOffset) = item else { return }
+            guard case let .keyPointSkeleton(number, beginOffset) = item else { return }
             cell.contentConfiguration = KeyPointSkeletonContentConfiguration(
                 number: number,
                 beginOffset: beginOffset
@@ -163,30 +154,34 @@ private extension VoiceNoteSummaryViewController {
         }
 
         let keywordsSkeletonCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case .keywordsSkeleton(let beginOffset) = item else { return }
+            guard case let .keywordsSkeleton(beginOffset) = item else { return }
             cell.contentConfiguration = KeywordsSkeletonContentConfiguration(beginOffset: beginOffset)
         }
 
         let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
             collectionView: collectionView
-        ) { col, indexPath, item in
+        ) { collectionView, indexPath, item in
             switch item {
             case .metadata:
-                return col.dequeueConfiguredReusableCell(using: metadataCellReg, for: indexPath, item: item)
+                return collectionView.dequeueConfiguredReusableCell(using: metadataCellReg, for: indexPath, item: item)
             case .keyPoint:
-                return col.dequeueConfiguredReusableCell(using: keyPointCellReg, for: indexPath, item: item)
+                return collectionView.dequeueConfiguredReusableCell(using: keyPointCellReg, for: indexPath, item: item)
             case .keywords:
-                return col.dequeueConfiguredReusableCell(using: keywordsCellReg, for: indexPath, item: item)
+                return collectionView.dequeueConfiguredReusableCell(using: keywordsCellReg, for: indexPath, item: item)
             case .keyPointSkeleton:
-                return col.dequeueConfiguredReusableCell(using: keyPointSkeletonCellReg, for: indexPath, item: item)
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: keyPointSkeletonCellReg, for: indexPath, item: item
+                )
             case .keywordsSkeleton:
-                return col.dequeueConfiguredReusableCell(using: keywordsSkeletonCellReg, for: indexPath, item: item)
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: keywordsSkeletonCellReg, for: indexPath, item: item
+                )
             }
         }
 
         let headerReg = makeHeaderRegistration()
-        dataSource.supplementaryViewProvider = { col, _, indexPath in
-            col.dequeueConfiguredReusableSupplementary(using: headerReg, for: indexPath)
+        dataSource.supplementaryViewProvider = { collectionView, _, indexPath in
+            collectionView.dequeueConfiguredReusableSupplementary(using: headerReg, for: indexPath)
         }
 
         return dataSource
@@ -214,7 +209,7 @@ private extension VoiceNoteSummaryViewController {
     var regenerationChipState: RegenerationChip.State? {
         switch viewModel.voiceNote.analysisState {
         // 첫 분석 중에는 요약 섹션이 비어 있어 칩을 숨긴다.
-        case .pending, .transcribing, .transcriptionFailed, .transcribed, .summarizing: return nil
+        case .pending, .summarizing, .transcribed, .transcribing, .transcriptionFailed: return nil
         case .regenerating: return .loading
         case .completed: return viewModel.isSummaryOutdated ? .outdated : .idle
         case .summarizationFailed: return .idle
@@ -223,9 +218,9 @@ private extension VoiceNoteSummaryViewController {
 
     var isShowingSkeleton: Bool {
         switch viewModel.voiceNote.analysisState {
-        case .pending, .transcribing, .transcribed, .summarizing, .regenerating:
+        case .pending, .regenerating, .summarizing, .transcribed, .transcribing:
             return true
-        case .completed, .transcriptionFailed, .summarizationFailed:
+        case .completed, .summarizationFailed, .transcriptionFailed:
             return false
         }
     }
@@ -270,9 +265,9 @@ private extension VoiceNoteSummaryViewController {
             guard let self else { return }
             Task { @MainActor in
                 switch self.viewModel.voiceNote.analysisState {
-                case .pending, .transcribing, .transcribed, .summarizing, .regenerating, .completed:
+                case .completed, .pending, .regenerating, .summarizing, .transcribed, .transcribing:
                     self.applySnapshot()
-                case .transcriptionFailed, .summarizationFailed:
+                case .summarizationFailed, .transcriptionFailed:
                     break
                 }
                 self.observeAnalysisState()
