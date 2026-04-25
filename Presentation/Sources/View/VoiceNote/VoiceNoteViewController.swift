@@ -43,6 +43,12 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     private let contentBottomGuide = UILayoutGuide()
     private lazy var contentBottomToPlayerTop = contentBottomGuide.topAnchor.constraint(equalTo: playerView.topAnchor)
     private lazy var contentBottomToViewBottom = contentBottomGuide.topAnchor.constraint(equalTo: view.bottomAnchor)
+    private lazy var pageTopToSegmentBottom = pageViewController.view.topAnchor.constraint(
+        equalTo: segmentedControl.bottomAnchor
+    )
+    private lazy var pageTopToSafeArea = pageViewController.view.topAnchor.constraint(
+        equalTo: view.safeAreaLayoutGuide.topAnchor
+    )
 
     // MARK: - Init
 
@@ -103,7 +109,6 @@ private extension VoiceNoteViewController {
             segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor),
 
-            pageViewController.view.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
             pageViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             pageViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             pageViewController.view.bottomAnchor.constraint(equalTo: contentBottomGuide.topAnchor),
@@ -140,6 +145,7 @@ private extension VoiceNoteViewController {
             ),
         ])
 
+        pageTopToSegmentBottom.isActive = true
         contentBottomToPlayerTop.isActive = true
     }
 
@@ -290,7 +296,21 @@ private extension VoiceNoteViewController {
     }
 
     func applyEditingMode() {
+        let isScriptEditing = viewModel.editingMode == .script
+
         dimOverlayView.isHidden = viewModel.editingMode != .title
+        segmentedControl.isHidden = isScriptEditing
+        playerView.isHidden = isScriptEditing || viewModel.searchMode
+        bottomFadeView.isHidden = isScriptEditing
+
+        pageTopToSegmentBottom.isActive = !isScriptEditing
+        pageTopToSafeArea.isActive = isScriptEditing
+
+        if !viewModel.searchMode {
+            contentBottomToPlayerTop.isActive = !isScriptEditing
+            contentBottomToViewBottom.isActive = isScriptEditing
+        }
+
         navigationBar.apply(
             to: navigationItem,
             title: viewModel.title,
@@ -320,10 +340,11 @@ private extension VoiceNoteViewController {
         )
 
         if didToggle {
-            playerView.isHidden = isSearching
+            let isScriptEditing = viewModel.editingMode == .script
+            playerView.isHidden = isSearching || isScriptEditing
             matchAccessoryBar.isHidden = !isSearching
-            contentBottomToPlayerTop.isActive = !isSearching
-            contentBottomToViewBottom.isActive = isSearching
+            contentBottomToPlayerTop.isActive = !isSearching && !isScriptEditing
+            contentBottomToViewBottom.isActive = isSearching || isScriptEditing
         }
 
         if let match = viewModel.currentMatch {
@@ -361,7 +382,8 @@ extension VoiceNoteViewController: UIPageViewControllerDataSource, UIPageViewCon
         _ pageViewController: UIPageViewController,
         viewControllerBefore viewController: UIViewController
     ) -> UIViewController? {
-        guard let idx = pages.firstIndex(of: viewController), idx > 0 else { return nil }
+        guard viewModel.editingMode == nil,
+              let idx = pages.firstIndex(of: viewController), idx > 0 else { return nil }
         return pages[idx - 1]
     }
 
@@ -369,7 +391,8 @@ extension VoiceNoteViewController: UIPageViewControllerDataSource, UIPageViewCon
         _ pageViewController: UIPageViewController,
         viewControllerAfter viewController: UIViewController
     ) -> UIViewController? {
-        guard let idx = pages.firstIndex(of: viewController), idx < pages.count - 1 else { return nil }
+        guard viewModel.editingMode == nil,
+              let idx = pages.firstIndex(of: viewController), idx < pages.count - 1 else { return nil }
         return pages[idx + 1]
     }
 
