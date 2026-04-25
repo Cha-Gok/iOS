@@ -28,20 +28,17 @@ final class TrashViewModelTests: XCTestCase {
 
     private struct SUT {
         let viewModel: TrashViewModel
-        let mockTrashUseCase: MockTrashUseCase
         let mockFolderRepo: MockFolderRepository
         let mockVoiceNoteRepo: MockVoiceNoteRepository
         let mockCoordinator: MockTrashCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
-        let mockTrashUseCase = MockTrashUseCase()
         let mockFolderRepo = MockFolderRepository()
         let mockVoiceNoteRepo = MockVoiceNoteRepository()
         let mockCoordinator = MockTrashCoordinatorDelegate()
 
         let viewModel = TrashViewModel(
-            trashUseCase: mockTrashUseCase,
             folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
             voiceNoteUseCase: DefaultVoiceNoteUseCase(
                 repository: mockVoiceNoteRepo,
@@ -53,16 +50,31 @@ final class TrashViewModelTests: XCTestCase {
 
         return SUT(
             viewModel: viewModel,
-            mockTrashUseCase: mockTrashUseCase,
             mockFolderRepo: mockFolderRepo,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
             mockCoordinator: mockCoordinator
         )
     }
 
-    private func makeStream(_ items: [ContentItem]) -> AsyncStream<[ContentItem]> {
+    private func setTrashStreams(
+        _ sut: SUT,
+        items: [ContentItem]
+    ) {
+        var folders: [Folder] = []
+        var notes: [VoiceNote] = []
+        for item in items {
+            switch item {
+            case .folder(let folder): folders.append(folder)
+            case .voiceNote(let note): notes.append(note)
+            }
+        }
+        sut.mockFolderRepo.setObserveDeletedResult(.success(makeStream(folders)))
+        sut.mockVoiceNoteRepo.setObserveTrashedResult(.success(makeStream(notes)))
+    }
+
+    private func makeStream<T: Sendable>(_ value: T) -> AsyncStream<T> {
         AsyncStream { continuation in
-            continuation.yield(items)
+            continuation.yield(value)
             continuation.finish()
         }
     }
@@ -109,7 +121,7 @@ final class TrashViewModelTests: XCTestCase {
             ))
         ]
 
-        sut.mockTrashUseCase.setObserveResult(.success(makeStream(fetchResult)))
+        setTrashStreams(sut, items: fetchResult)
 
         sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -125,7 +137,7 @@ final class TrashViewModelTests: XCTestCase {
             .folder(Folder(name: "최근 삭제", deletedAt: now)),
             .folder(Folder(name: "중간 삭제", deletedAt: now.addingTimeInterval(-500)))
         ]
-        sut.mockTrashUseCase.setObserveResult(.success(makeStream(items)))
+        setTrashStreams(sut, items: items)
 
         sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -143,8 +155,8 @@ final class TrashViewModelTests: XCTestCase {
         let fetchResult: [ContentItem] = [
             .folder(Folder(name: "테스트 폴더"))
         ]
-        sut.mockTrashUseCase.setObserveResult(.success(makeStream(fetchResult)))
-        sut.mockTrashUseCase.expectAllClear(callCount: 1)
+        setTrashStreams(sut, items: fetchResult)
+        sut.mockFolderRepo.expectDelete(callCount: 1)
 
         sut.viewModel.onAppear()
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -153,7 +165,7 @@ final class TrashViewModelTests: XCTestCase {
         sut.viewModel.deleteAll()
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.mockTrashUseCase.verify()
+        sut.mockFolderRepo.verify()
         XCTAssertTrue(sut.viewModel.items.isEmpty, "전체 삭제 진행 후 items 배열이 비워져야 합니다.")
     }
 
@@ -161,7 +173,7 @@ final class TrashViewModelTests: XCTestCase {
         let sut = makeSUT()
         let folder = Folder(name: "삭제용 폴더")
         let item = ContentItem.folder(folder)
-        sut.mockTrashUseCase.setObserveResult(.success(makeStream([item])))
+        setTrashStreams(sut, items: [item])
         sut.mockFolderRepo.expectDelete(callCount: 1)
 
         sut.viewModel.onAppear()
@@ -178,7 +190,7 @@ final class TrashViewModelTests: XCTestCase {
         let sut = makeSUT()
         let folder = Folder(name: "복구용 폴더", deletedAt: .now, parentID: UUID())
         let item = ContentItem.folder(folder)
-        sut.mockTrashUseCase.setObserveResult(.success(makeStream([item])))
+        setTrashStreams(sut, items: [item])
         sut.mockFolderRepo.setFetchByIDResult(.success(folder))
         sut.mockFolderRepo.setUpdateResult(.success(folder))
         sut.mockFolderRepo.expectUpdate(folderID: folder.id, callCount: 1)

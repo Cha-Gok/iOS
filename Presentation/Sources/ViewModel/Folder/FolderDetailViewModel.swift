@@ -36,20 +36,17 @@ public final class FolderDetailViewModel {
     // MARK: - UseCase
 
     private let voiceNoteUseCase: any VoiceNoteUseCase
-    private let trashUseCase: any TrashUseCase
 
     // MARK: - Initialize
 
     public init(
         title: String,
         folderID: UUID,
-        voiceNoteUseCase: any VoiceNoteUseCase,
-        trashUseCase: any TrashUseCase
+        voiceNoteUseCase: any VoiceNoteUseCase
     ) {
         self.title = title
         self.folderID = folderID
         self.voiceNoteUseCase = voiceNoteUseCase
-        self.trashUseCase = trashUseCase
         sortItems()
     }
 }
@@ -223,8 +220,7 @@ extension FolderDetailViewModel {
             return FolderDetailViewModel(
                 title: title,
                 folderID: folderID,
-                voiceNoteUseCase: PreviewVoiceNoteUseCase(items: previewData.items),
-                trashUseCase: PreviewTrashUseCase()
+                voiceNoteUseCase: PreviewVoiceNoteUseCase(items: previewData.items)
             )
         }
     }
@@ -307,29 +303,15 @@ extension FolderDetailViewModel {
                 }
             }
 
+            func observeTrashed() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                AsyncStream { $0.finish() }
+            }
+
             func regenerateSummary(id _: UUID) {}
 
             func moveToTrash(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
             func restore(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
             func delete(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
-        }
-
-        struct PreviewTrashUseCase: TrashUseCase {
-            func observe() throws(TrashUseCaseError) -> AsyncStream<[ContentItem]> {
-                AsyncStream { $0.finish() }
-            }
-
-            func moveToTrash(noteID _: UUID) throws(TrashUseCaseError) {}
-            func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
-            func restoreNote(id _: UUID) throws(TrashUseCaseError) {}
-            func restoreFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func restore(item _: ContentItem) throws(TrashUseCaseError) {}
-            func restoreAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
-            func hardDeleteNote(id _: UUID) throws(TrashUseCaseError) {}
-            func hardDeleteFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func delete(item _: ContentItem) throws(TrashUseCaseError) {}
-            func deleteAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
-            func allClear() throws(TrashUseCaseError) {}
         }
     }
 

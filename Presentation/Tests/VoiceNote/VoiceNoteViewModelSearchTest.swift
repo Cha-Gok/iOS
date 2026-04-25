@@ -47,8 +47,7 @@ final class VoiceNoteViewModelSearchTest: XCTestCase {
             voiceNote: voiceNote,
             voiceNoteUseCase: FakeVoiceNoteUseCase(voiceNote: voiceNote),
             folderUseCase: FakeFolderUseCase(),
-            playbackRepository: playbackRepository,
-            trashUseCase: MockTrashUseCase()
+            playbackRepository: playbackRepository
         )
 
         return SUT(viewModel: viewModel, playbackRepository: playbackRepository)
@@ -350,6 +349,10 @@ private struct FakeVoiceNoteUseCase: VoiceNoteUseCase {
         }
     }
 
+    func observeTrashed() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+        AsyncStream { $0.finish() }
+    }
+
     func regenerateSummary(id _: UUID) {}
 
     func moveToTrash(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
@@ -399,6 +402,10 @@ private struct FakeFolderUseCase: FolderUseCase {
             continuation.yield([])
             continuation.finish()
         }
+    }
+
+    func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+        AsyncStream { $0.finish() }
     }
 
     func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}

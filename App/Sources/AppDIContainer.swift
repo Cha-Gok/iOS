@@ -41,11 +41,6 @@ public final class AppDIContainer {
         folderRepository: folderRepository,
         analysisService: voiceNoteAnalysisService
     )
-    private lazy var trashUseCase = DefaultTrashUseCase(
-        voiceNoteRepository: voiceNoteRepository,
-        folderRepository: folderRepository
-    )
-
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
     }
@@ -84,8 +79,7 @@ public final class AppDIContainer {
             voiceNote: voiceNote,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
-            playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService),
-            trashUseCase: trashUseCase
+            playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService)
         )
     }
 
@@ -94,14 +88,12 @@ public final class AppDIContainer {
             microphoneRepository: voiceRecordRepository,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
-            trashUseCase: trashUseCase,
             languageRepository: languageRepository
         )
     }
 
     public func makeTrashViewModel() -> TrashViewModel {
         return TrashViewModel(
-            trashUseCase: trashUseCase,
             folderUseCase: folderUseCase,
             voiceNoteUseCase: voiceNoteUseCase
         )
@@ -110,8 +102,7 @@ public final class AppDIContainer {
     public func makeMyFolderViewModel(_ category: CategoryToggle) -> FolderViewModel {
         return FolderViewModel(
             category: category,
-            folderUseCase: folderUseCase,
-            trashUseCase: trashUseCase
+            folderUseCase: folderUseCase
         )
     }
 
@@ -119,8 +110,7 @@ public final class AppDIContainer {
         return FolderDetailViewModel(
             title: folder.name,
             folderID: folder.id,
-            voiceNoteUseCase: voiceNoteUseCase,
-            trashUseCase: trashUseCase
+            voiceNoteUseCase: voiceNoteUseCase
         )
     }
 

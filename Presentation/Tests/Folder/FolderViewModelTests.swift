@@ -24,13 +24,11 @@ final class FolderViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: FolderViewModel
         let mockFolderRepo: MockFolderRepository
-        let mockTrashUseCase: MockTrashUseCase
         let mockCoordinator: MockFolderCoordinatorDelegate
     }
 
-    private func makeSUT(initialItems: [Presentation.ContentItem] = []) -> SUT {
+    private func makeSUT(initialItems: [ContentItem] = []) -> SUT {
         let mockFolderRepo = MockFolderRepository()
-        let mockTrashUseCase = MockTrashUseCase()
         let mockCoordinator = MockFolderCoordinatorDelegate()
 
         let initialCategory = CategoryToggle(
@@ -41,15 +39,13 @@ final class FolderViewModelTests: XCTestCase {
 
         let viewModel = FolderViewModel(
             category: initialCategory,
-            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
-            trashUseCase: mockTrashUseCase
+            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo)
         )
         viewModel.coordinator = mockCoordinator
 
         return SUT(
             viewModel: viewModel,
             mockFolderRepo: mockFolderRepo,
-            mockTrashUseCase: mockTrashUseCase,
             mockCoordinator: mockCoordinator
         )
     }
@@ -161,7 +157,7 @@ final class FolderViewModelTests: XCTestCase {
 
     func test_update_성공시_리스트항목교체() async {
         let initialFolder = Folder(id: UUID(), name: "원본 폴더")
-        let sut = makeSUT(initialItems: [Presentation.ContentItem.folder(initialFolder)])
+        let sut = makeSUT(initialItems: [ContentItem.folder(initialFolder)])
 
         let newName = "수정된 폴더"
         let updatedFolder = Folder(

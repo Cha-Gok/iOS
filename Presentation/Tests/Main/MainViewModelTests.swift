@@ -46,7 +46,6 @@ final class MainViewModelTests: XCTestCase {
         let mockVoiceRecordRepo: MockVoiceRecordRepository
         let mockFolderRepo: MockFolderRepository
         let mockVoiceNoteRepo: MockVoiceNoteRepository
-        let mockTrashUseCase: MockTrashUseCase
         let mockCoordinator: MockMainCoordinatorDelegate
         let mockLanguageRepo: MockLanguageRepository
     }
@@ -62,7 +61,6 @@ final class MainViewModelTests: XCTestCase {
         let mockVoiceRecordRepo = MockVoiceRecordRepository()
         let mockFolderRepo = MockFolderRepository()
         let mockVoiceNoteRepo = MockVoiceNoteRepository()
-        let mockTrashUseCase = MockTrashUseCase()
         let mockCoordinator = MockMainCoordinatorDelegate()
         let mockLanguageRepo = MockLanguageRepository()
 
@@ -74,7 +72,6 @@ final class MainViewModelTests: XCTestCase {
                 analysisService: MockVoiceNoteAnalysisService()
             ),
             folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
-            trashUseCase: mockTrashUseCase,
             languageRepository: mockLanguageRepo
         )
         viewModel.mainCoordinator = mockCoordinator
@@ -84,7 +81,6 @@ final class MainViewModelTests: XCTestCase {
             mockVoiceRecordRepo: mockVoiceRecordRepo,
             mockFolderRepo: mockFolderRepo,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
-            mockTrashUseCase: mockTrashUseCase,
             mockCoordinator: mockCoordinator,
             mockLanguageRepo: mockLanguageRepo
         )
@@ -296,17 +292,15 @@ final class MainViewModelTests: XCTestCase {
 
     func test_updateTrashCategory_호출시_데이터로드확인() async {
         let sut = makeSUT()
-        let expectedTrash = [
-            ContentItem.voiceNote(VoiceNote.stub(title: "삭제된 노트"))
-        ]
+        let trashedNote = VoiceNote.stub(title: "삭제된 노트")
 
-        sut.mockTrashUseCase.setObserveResult(.success(makeStream(expectedTrash)))
+        sut.mockFolderRepo.setObserveDeletedResult(.success(makeStream([])))
+        sut.mockVoiceNoteRepo.setObserveTrashedResult(.success(makeStream([trashedNote])))
 
         sut.viewModel.updateTrashCategory()
 
         try? await Task.sleep(nanoseconds: 300_000_000)
 
-        // Mock은 이미 verify되었음을 가정하거나 직접 체크
         XCTAssertEqual(sut.viewModel.categoryData[3].items.count, 1)
         if case .voiceNote(let note) = sut.viewModel.categoryData[3].items[0] {
             XCTAssertEqual(note.title, "삭제된 노트")

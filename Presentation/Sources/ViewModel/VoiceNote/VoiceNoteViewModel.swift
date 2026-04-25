@@ -36,7 +36,6 @@ public final class VoiceNoteViewModel {
     private let voiceNoteUseCase: any VoiceNoteUseCase
     private let folderUseCase: any FolderUseCase
     private let playbackRepository: any VoiceRecordPlaybackRepository
-    private let trashUseCase: any TrashUseCase
 
     // MARK: - Init
 
@@ -44,14 +43,12 @@ public final class VoiceNoteViewModel {
         voiceNote: VoiceNote,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
-        playbackRepository: any VoiceRecordPlaybackRepository,
-        trashUseCase: any TrashUseCase
+        playbackRepository: any VoiceRecordPlaybackRepository
     ) {
         self.voiceNote = voiceNote
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.playbackRepository = playbackRepository
-        self.trashUseCase = trashUseCase
     }
 
     // MARK: - View Actions

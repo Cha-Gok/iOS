@@ -23,22 +23,26 @@ public final class TrashViewModel {
     public weak var coordinator: TrashCoordinatorDelegate?
 
     @ObservationIgnored
-    private var observationTask: Task<Void, Never>?
+    private var foldersObservationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var notesObservationTask: Task<Void, Never>?
+
+    @ObservationIgnored
+    private var trashedFolders: [Folder] = []
+    @ObservationIgnored
+    private var trashedNotes: [VoiceNote] = []
 
     // MARK: - UseCase
 
-    private let trashUseCase: any TrashUseCase
     private let folderUseCase: any FolderUseCase
     private let voiceNoteUseCase: any VoiceNoteUseCase
 
     // MARK: - Initialize
 
     public init(
-        trashUseCase: any TrashUseCase,
         folderUseCase: any FolderUseCase,
         voiceNoteUseCase: any VoiceNoteUseCase
     ) {
-        self.trashUseCase = trashUseCase
         self.folderUseCase = folderUseCase
         self.voiceNoteUseCase = voiceNoteUseCase
     }
@@ -109,25 +113,46 @@ extension TrashViewModel {
 
 extension TrashViewModel {
     func onAppear() {
-        guard observationTask == nil else { return }
-        observationTask = Task { [weak self] in
-            guard let self else { return }
-            do {
-                let stream = try trashUseCase.observe()
-                for await wasteBaskets in stream {
-                    items = wasteBaskets
-                    sortItems()
+        guard foldersObservationTask == nil, notesObservationTask == nil else { return }
+        do {
+            let foldersStream = try folderUseCase.observeDeleted()
+            let notesStream = try voiceNoteUseCase.observeTrashed()
+            foldersObservationTask = Task { [weak self] in
+                for await folders in foldersStream {
+                    self?.applyTrashedFolders(folders)
                 }
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
             }
+            notesObservationTask = Task { [weak self] in
+                for await notes in notesStream {
+                    self?.applyTrashedNotes(notes)
+                }
+            }
+        } catch {
+            AppLogger.error(error)
+            errorMessage = error.localizedDescription
         }
     }
 
     func onDisappear() {
-        observationTask?.cancel()
-        observationTask = nil
+        foldersObservationTask?.cancel()
+        foldersObservationTask = nil
+        notesObservationTask?.cancel()
+        notesObservationTask = nil
+    }
+
+    private func applyTrashedFolders(_ folders: [Folder]) {
+        trashedFolders = folders
+        refreshItems()
+    }
+
+    private func applyTrashedNotes(_ notes: [VoiceNote]) {
+        trashedNotes = notes
+        refreshItems()
+    }
+
+    private func refreshItems() {
+        items = trashedFolders.map(ContentItem.folder) + trashedNotes.map(ContentItem.voiceNote)
+        sortItems()
     }
 
     private func sortItems() {
@@ -144,7 +169,9 @@ extension TrashViewModel {
 extension TrashViewModel {
     func deleteAll() {
         do {
-            try trashUseCase.allClear()
+            for item in items {
+                try deleteOne(item)
+            }
             items.removeAll()
             setSelectionMode(.none)
         } catch {
@@ -264,9 +291,8 @@ extension TrashViewModel {
         static func preview() -> TrashViewModel {
             let previewData = PreviewData.make()
             let viewModel = TrashViewModel(
-                trashUseCase: PreviewTrashUseCase(items: previewData.items),
-                folderUseCase: PreviewFolderUseCase(),
-                voiceNoteUseCase: PreviewVoiceNoteUseCase()
+                folderUseCase: PreviewFolderUseCase(trashedFolders: previewData.folders),
+                voiceNoteUseCase: PreviewVoiceNoteUseCase(trashedNotes: previewData.notes)
             )
             viewModel.onAppear()
             return viewModel
@@ -275,15 +301,17 @@ extension TrashViewModel {
 
     private extension TrashViewModel {
         struct PreviewData {
-            let items: [ContentItem]
+            let folders: [Folder]
+            let notes: [VoiceNote]
 
             static func make(now: Date = .now) -> Self {
-                let items: [ContentItem] = (0 ..< 10).map { index in
+                var folders: [Folder] = []
+                var notes: [VoiceNote] = []
+                for index in 0 ..< 10 {
                     if index.isMultiple(of: 2) {
                         let createdOffset = TimeInterval((index + 2) * 43200) * -1
                         let updatedOffset = TimeInterval((index + 1) * 21600) * -1
-
-                        return .voiceNote(
+                        notes.append(
                             VoiceNote(
                                 title: "휴지통 메모 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
@@ -302,8 +330,7 @@ extension TrashViewModel {
                     } else {
                         let createdOffset = TimeInterval((index + 1) * 64800) * -1
                         let deletedOffset = TimeInterval((index + 1) * 10800) * -1
-
-                        return .folder(
+                        folders.append(
                             Folder(
                                 name: "휴지통 폴더 \(index + 1)",
                                 createdAt: now.addingTimeInterval(createdOffset),
@@ -313,11 +340,13 @@ extension TrashViewModel {
                         )
                     }
                 }
-                return PreviewData(items: items)
+                return PreviewData(folders: folders, notes: notes)
             }
         }
 
         struct PreviewFolderUseCase: FolderUseCase {
+            let trashedFolders: [Folder]
+
             func create(name: String) throws(FolderUseCaseError) -> Folder {
                 Folder(name: name, kind: .custom)
             }
@@ -350,12 +379,22 @@ extension TrashViewModel {
                 AsyncStream { $0.finish() }
             }
 
+            func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+                let snapshot = trashedFolders
+                return AsyncStream { continuation in
+                    continuation.yield(snapshot)
+                    continuation.finish()
+                }
+            }
+
             func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}
             func restore(folderID _: UUID) throws(FolderUseCaseError) {}
             func delete(folderID _: UUID) throws(FolderUseCaseError) {}
         }
 
         struct PreviewVoiceNoteUseCase: VoiceNoteUseCase {
+            let trashedNotes: [VoiceNote]
+
             func create(_ voiceRecord: VoiceRecord) throws(VoiceNoteUseCaseError) -> VoiceNote {
                 VoiceNote(title: "미리보기", folderID: UUID(), voiceRecord: voiceRecord, analysisState: .pending)
             }
@@ -378,34 +417,18 @@ extension TrashViewModel {
                 AsyncStream { $0.finish() }
             }
 
-            func regenerateSummary(id _: UUID) {}
-            func moveToTrash(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
-            func restore(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
-            func delete(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
-        }
-
-        struct PreviewTrashUseCase: TrashUseCase {
-            let items: [ContentItem]
-
-            func observe() throws(TrashUseCaseError) -> AsyncStream<[ContentItem]> {
-                let snapshot = items
+            func observeTrashed() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+                let snapshot = trashedNotes
                 return AsyncStream { continuation in
                     continuation.yield(snapshot)
                     continuation.finish()
                 }
             }
 
-            func moveToTrash(noteID _: UUID) throws(TrashUseCaseError) {}
-            func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
-            func restoreNote(id _: UUID) throws(TrashUseCaseError) {}
-            func restoreFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func restore(item _: ContentItem) throws(TrashUseCaseError) {}
-            func restoreAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
-            func hardDeleteNote(id _: UUID) throws(TrashUseCaseError) {}
-            func hardDeleteFolder(id _: UUID) throws(TrashUseCaseError) {}
-            func delete(item _: ContentItem) throws(TrashUseCaseError) {}
-            func deleteAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
-            func allClear() throws(TrashUseCaseError) {}
+            func regenerateSummary(id _: UUID) {}
+            func moveToTrash(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+            func restore(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
+            func delete(noteID _: UUID) throws(VoiceNoteUseCaseError) {}
         }
     }
 #endif

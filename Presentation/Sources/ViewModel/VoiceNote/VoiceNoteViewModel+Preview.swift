@@ -41,8 +41,7 @@
                 voiceNote: voiceNote,
                 voiceNoteUseCase: PreviewVoiceNoteUseCase(items: [voiceNote]),
                 folderUseCase: PreviewFolderUseCase(),
-                playbackRepository: PreviewPlaybackRepository(),
-                trashUseCase: PreviewTrashUseCase()
+                playbackRepository: PreviewPlaybackRepository()
             )
         }
     }
@@ -90,6 +89,10 @@
                 continuation.yield(recent)
                 continuation.finish()
             }
+        }
+
+        func observeTrashed() throws(VoiceNoteUseCaseError) -> AsyncStream<[VoiceNote]> {
+            AsyncStream { $0.finish() }
         }
 
         func regenerateSummary(id _: UUID) {}
@@ -143,6 +146,10 @@
             }
         }
 
+        func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+            AsyncStream { $0.finish() }
+        }
+
         func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}
         func restore(folderID _: UUID) throws(FolderUseCaseError) {}
         func delete(folderID _: UUID) throws(FolderUseCaseError) {}
@@ -164,21 +171,4 @@
         func stop() throws(VoiceRecordPlaybackRepositoryError) {}
     }
 
-    private struct PreviewTrashUseCase: TrashUseCase {
-        func observe() throws(TrashUseCaseError) -> AsyncStream<[ContentItem]> {
-            AsyncStream { $0.finish() }
-        }
-
-        func moveToTrash(noteID _: UUID) throws(TrashUseCaseError) {}
-        func moveToTrash(folderID _: UUID) throws(TrashUseCaseError) {}
-        func restoreNote(id _: UUID) throws(TrashUseCaseError) {}
-        func restoreFolder(id _: UUID) throws(TrashUseCaseError) {}
-        func restore(item _: ContentItem) throws(TrashUseCaseError) {}
-        func restoreAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
-        func hardDeleteNote(id _: UUID) throws(TrashUseCaseError) {}
-        func hardDeleteFolder(id _: UUID) throws(TrashUseCaseError) {}
-        func delete(item _: ContentItem) throws(TrashUseCaseError) {}
-        func deleteAll(items _: [ContentItem]) throws(TrashUseCaseError) {}
-        func allClear() throws(TrashUseCaseError) {}
-    }
 #endif

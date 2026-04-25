@@ -31,7 +31,6 @@ final class FolderDetailViewModelTests: XCTestCase {
         let viewModel: FolderDetailViewModel
         let mockVoiceNoteRepo: MockVoiceNoteRepository
         let mockFolderRepo: MockFolderRepository
-        let mockTrashUseCase: MockTrashUseCase
         let mockCoordinator: MockFolderDetailCoordinatorDelegate
         let testFolderID: UUID
     }
@@ -39,7 +38,6 @@ final class FolderDetailViewModelTests: XCTestCase {
     private func makeSUT(title: String = "상세 폴더", folderID: UUID = UUID()) -> SUT {
         let mockVoiceNoteRepo = MockVoiceNoteRepository()
         let mockFolderRepo = MockFolderRepository()
-        let mockTrashUseCase = MockTrashUseCase()
         let mockCoordinator = MockFolderDetailCoordinatorDelegate()
 
         let viewModel = FolderDetailViewModel(
@@ -49,8 +47,7 @@ final class FolderDetailViewModelTests: XCTestCase {
                 repository: mockVoiceNoteRepo,
                 folderRepository: mockFolderRepo,
                 analysisService: MockVoiceNoteAnalysisService()
-            ),
-            trashUseCase: mockTrashUseCase
+            )
         )
         viewModel.coordinator = mockCoordinator
 
@@ -58,7 +55,6 @@ final class FolderDetailViewModelTests: XCTestCase {
             viewModel: viewModel,
             mockVoiceNoteRepo: mockVoiceNoteRepo,
             mockFolderRepo: mockFolderRepo,
-            mockTrashUseCase: mockTrashUseCase,
             mockCoordinator: mockCoordinator,
             testFolderID: folderID
         )
