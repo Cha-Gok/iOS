@@ -10,6 +10,8 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     private var observeResult: Result<AsyncStream<VoiceNote>, VoiceNoteRepositoryError>?
     private var observeFolderResult: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>?
     private var observeRecentResult: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>?
+    private var observeTrashedResult: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>?
+    private var deleteCallCount = 0
 
     public init() {}
 
@@ -61,6 +63,10 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
 
     public func setObserveRecentResult(_ result: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>) {
         observeRecentResult = result
+    }
+
+    public func setObserveTrashedResult(_ result: Result<AsyncStream<[VoiceNote]>, VoiceNoteRepositoryError>) {
+        observeTrashedResult = result
     }
 
     /// Expect Methods
@@ -219,7 +225,11 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
     // MARK: - Trash operations (no-op defaults; override via test helpers if needed)
 
     public func observeTrashed() throws(VoiceNoteRepositoryError) -> AsyncStream<[VoiceNote]> {
-        AsyncStream { $0.finish() }
+        switch observeTrashedResult {
+        case .success(let stream): return stream
+        case .failure(let error): throw error
+        case .none: return AsyncStream { $0.finish() }
+        }
     }
 
     public func fetchTrashed() throws(VoiceNoteRepositoryError) -> [VoiceNote] {
@@ -230,5 +240,7 @@ public final class MockVoiceNoteRepository: VoiceNoteRepository {
 
     public func restore(id _: UUID, fallbackFolderID _: UUID) throws(VoiceNoteRepositoryError) {}
 
-    public func delete(id _: UUID) throws(VoiceNoteRepositoryError) {}
+    public func delete(id _: UUID) throws(VoiceNoteRepositoryError) {
+        deleteCallCount += 1
+    }
 }

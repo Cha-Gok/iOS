@@ -10,6 +10,7 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
     private var fetchByKindResults: [FolderKind: Result<[Folder], FolderRepositoryError>] = [:]
     private var updateResult: Result<Folder, FolderRepositoryError>?
     private var observeByKindResults: [FolderKind: Result<AsyncStream<[Folder]>, FolderRepositoryError>] = [:]
+    private var observeDeletedResult: Result<AsyncStream<[Folder]>, FolderRepositoryError>?
 
     // 호출 검증 Count
     private var createCallCount = 0
@@ -64,6 +65,10 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
         result: Result<AsyncStream<[Folder]>, FolderRepositoryError>
     ) {
         observeByKindResults[kind] = result
+    }
+
+    public func setObserveDeletedResult(_ result: Result<AsyncStream<[Folder]>, FolderRepositoryError>) {
+        observeDeletedResult = result
     }
 
     // MARK: - Expectations
@@ -251,7 +256,11 @@ public final class MockFolderRepository: FolderRepository, @unchecked Sendable {
     // MARK: - Trash operations (no-op defaults; override via test helpers if needed)
 
     public func observeDeleted() throws(FolderRepositoryError) -> AsyncStream<[Folder]> {
-        AsyncStream { $0.finish() }
+        switch observeDeletedResult {
+        case .success(let stream): return stream
+        case .failure(let error): throw error
+        case .none: return AsyncStream { $0.finish() }
+        }
     }
 
     public func moveToTrash(id _: UUID, trashFolderID _: UUID) throws(FolderRepositoryError) {}

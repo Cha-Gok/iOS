@@ -44,6 +44,9 @@ public protocol FolderUseCase: Sendable {
     /// 개인 폴더 목록을 관찰합니다. 첫 emit은 현재 상태이며, 이후 변경 시 재emit됩니다.
     func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
 
+    /// 휴지통에 있는(삭제된) 폴더 목록을 관찰합니다.
+    func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]>
+
     /// 폴더를 휴지통으로 이동합니다. 안의 노트는 부모 폴더가 휴지통에 있는 형태로 cascade 표현됩니다.
     /// - Parameter folderID: 이동할 폴더의 UUID
     func moveToTrash(folderID: UUID) throws(FolderUseCaseError)
@@ -169,6 +172,15 @@ public struct DefaultFolderUseCase: FolderUseCase {
                 continuation.finish()
             }
             continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    public func observeDeleted() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
+        do {
+            return try repository.observeDeleted()
+        } catch {
+            AppLogger.error(error)
+            throw FolderUseCaseError(error)
         }
     }
 
