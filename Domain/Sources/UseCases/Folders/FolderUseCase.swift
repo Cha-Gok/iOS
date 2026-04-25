@@ -156,22 +156,13 @@ public struct DefaultFolderUseCase: FolderUseCase {
     }
 
     public func observeDeletableFolders() throws(FolderUseCaseError) -> AsyncStream<[Folder]> {
-        let stream: AsyncStream<[Folder]>
+        // Repository observe(by: .custom)의 predicate가 parentID == nil 조건을 포함하므로
+        // 휴지통 이동된 폴더(parentID = trash.id)는 emit에서 자동 제외됨 → 추가 filter 불필요
         do {
-            stream = try repository.observe(by: .custom)
+            return try repository.observe(by: .custom)
         } catch {
             AppLogger.error(error)
             throw FolderUseCaseError(error)
-        }
-        return AsyncStream { continuation in
-            let task = Task { @MainActor in
-                for await folders in stream {
-                    let deletable = folders.filter { $0.deletedAt == nil }
-                    continuation.yield(deletable)
-                }
-                continuation.finish()
-            }
-            continuation.onTermination = { _ in task.cancel() }
         }
     }
 
