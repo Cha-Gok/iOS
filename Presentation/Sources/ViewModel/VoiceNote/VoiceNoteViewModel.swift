@@ -182,7 +182,9 @@ public final class VoiceNoteViewModel {
             return
         }
 
-        let updatedNote = voiceNote.copyWith(title: trimmedTitle)
+        var updatedNote = voiceNote
+        updatedNote.title = trimmedTitle
+        updatedNote.updatedAt = .now
 
         do {
             _ = try voiceNoteUseCase.update(updatedNote)
@@ -199,7 +201,9 @@ public final class VoiceNoteViewModel {
             return
         }
 
-        let updatedNote = voiceNote.copyWith(transcript: updatedTranscript)
+        var updatedNote = voiceNote
+        updatedNote.transcript = updatedTranscript
+        updatedNote.updatedAt = .now
 
         do {
             voiceNote = try voiceNoteUseCase.update(updatedNote)

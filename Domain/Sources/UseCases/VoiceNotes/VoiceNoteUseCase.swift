@@ -144,8 +144,10 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
             throw .invalidLengthTitle
         }
 
-        // 3. 수정 시각 갱신 및 정보 보정
-        let updatedNote = voiceNote.copyWith(title: trimmedTitle, updatedAt: .now)
+        // 3. 수정 시각 갱신
+        var updatedNote = voiceNote
+        updatedNote.title = trimmedTitle
+        updatedNote.updatedAt = .now
 
         do {
             return try repository.update(updatedNote)
