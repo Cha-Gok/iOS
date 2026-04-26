@@ -144,7 +144,6 @@ final class TextFieldView: UIView {
 
     private func setup() {
         translatesAutoresizingMaskIntoConstraints = false
-        backgroundColor = .point200.withAlphaComponent(0.2)
         layer.cornerRadius = Constant.cornerRadius
         layer.borderColor = UIColor.gray600.cgColor
         layer.borderWidth = Constant.borderWidth

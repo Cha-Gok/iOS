@@ -147,6 +147,25 @@ extension MainViewModel {
     func presentRecodingView() {
         mainCoordinator?.presentRecodingView()
     }
+
+    func pushSearchView() {
+        var uniqueItems: [ContentItem] = []
+        var seenIDs: Set<UUID> = []
+
+        let searchableCategories = categoryData.prefix(3)
+
+        for item in searchableCategories.flatMap(\.items) {
+            if !seenIDs.contains(item.id) {
+                seenIDs.insert(item.id)
+                uniqueItems.append(item)
+            }
+        }
+
+        mainCoordinator?.pushSearchView(
+            type: .main,
+            items: uniqueItems
+        )
+    }
 }
 
 // MARK: - Update CategoryData

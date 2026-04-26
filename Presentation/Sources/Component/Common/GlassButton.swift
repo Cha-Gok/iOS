@@ -108,7 +108,7 @@ extension GlassButton {
             case .resource:
                 config.image = UIImage(named: image.imageName)
             case .system:
-                config.image = UIImage(systemName: image.imageName)
+                config.image = UIImage(systemName: image.imageName, withConfiguration: image.configuration)
             }
         }
 
@@ -265,6 +265,13 @@ extension GlassButton {
     struct ImageAsset {
         let imageName: String
         let type: GlassImageType
+        let configuration: UIImage.SymbolConfiguration?
+
+        init(imageName: String, type: GlassImageType, configuration: UIImage.SymbolConfiguration? = nil) {
+            self.imageName = imageName
+            self.type = type
+            self.configuration = configuration
+        }
     }
 
     enum GlassImageType {

@@ -68,6 +68,14 @@ extension MainCoordinator: MainCoordinatorDelegate {
         presenter.pushViewController(voiceNoteVC, animated: true)
     }
 
+    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem]) {
+        let searchVM = dependencyContainer.makeSearchViewModel(type: type, items: items)
+        searchVM.coordinator = self
+        let searchVC = SearchViewController(vm: searchVM)
+
+        presenter.pushViewController(searchVC, animated: true)
+    }
+
     // TODO: Present
 
     func presentRecodingView() {
@@ -115,6 +123,10 @@ extension MainCoordinator: VoiceNoteCoordinatorDelegate {
         presentMoveFolder(voiceNotes: [voiceNote], onComplete: onComplete, topDetentStyle: .belowSegmentControl)
     }
 }
+
+// MARK: - SearchCoordinatorDelegate
+
+extension MainCoordinator: SearchCoordinatorDelegate {}
 
 // MARK: - Helpers
 

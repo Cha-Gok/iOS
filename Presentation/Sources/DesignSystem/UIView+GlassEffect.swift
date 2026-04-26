@@ -11,8 +11,8 @@ extension UIView {
         glassEffect.isInteractive = false
         glassEffect.tintColor = tintColor
         let visualEffectView = UIVisualEffectView(effect: glassEffect)
+        visualEffectView.cornerConfiguration = .corners(radius: .fixed(cornerRadius))
         visualEffectView.translatesAutoresizingMaskIntoConstraints = false
-        visualEffectView.layer.cornerRadius = cornerRadius
         addSubview(visualEffectView)
         NSLayoutConstraint.activate([
             visualEffectView.topAnchor.constraint(equalTo: topAnchor),

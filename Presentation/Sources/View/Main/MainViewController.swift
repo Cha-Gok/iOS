@@ -54,10 +54,15 @@ public final class MainViewController: ViewController {
     private lazy var termsofServiceAction: UIAction = UIAction(title: "약관 보기") { [weak self] _ in
     }
 
-    private let searchItem: UIBarButtonItem = .init(
-        image: UIImage(systemName: "magnifyingglass"),
-        menu: nil
-    )
+    private lazy var searchItem: UIBarButtonItem = {
+        let search = UIBarButtonItem()
+        search.image = UIImage(systemName: "magnifyingglass")
+        search.menu = nil
+        search.primaryAction = UIAction { [weak self] _ in
+            self?.vm.pushSearchView()
+        }
+        return search
+    }()
 
     private lazy var settingItem: UIBarButtonItem = .init(
         image: UIImage(systemName: "gearshape"),
@@ -241,7 +246,9 @@ public final class MainViewController: ViewController {
 
         let emptyRegistration = EmptyCellRegistration { cell, _, _ in
             cell.backgroundConfiguration = .clear()
-            cell.contentConfiguration = MainEmptyContentConfiguration()
+            cell.contentConfiguration = EmptyContentConfiguration(
+                message: "아직 녹음된 기록이 없습니다.\n녹음 버튼을 눌러 첫 기록을 시작해보세요."
+            )
         }
 
         let categoryHeaderRegistration = CategoryHeaderRegistration(

@@ -48,6 +48,7 @@ final class LanguagePickerAlert: UIView {
         self.languagePicker = languagePicker
         self.primaryButton = primaryButton
         super.init(frame: frame)
+        applyGlassEffect(tintColor: .point200.withAlphaComponent(0.2))
         setup()
         setupButton()
         childSetup()

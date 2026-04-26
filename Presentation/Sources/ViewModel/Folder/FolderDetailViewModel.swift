@@ -4,9 +4,14 @@ import Foundation
 
 @MainActor
 public protocol FolderDetailCoordinatorDelegate: AnyObject {
+    /// 뒤로 가기
     func pop()
+    /// 음성 노트 가기
     func pushVoiceNoteView(voiceNote: VoiceNote)
+    /// 폴더 이동 Sheet
     func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?)
+    /// 검색 화면 Push함수
+    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem])
 }
 
 @MainActor
@@ -95,6 +100,11 @@ extension FolderDetailViewModel {
     func presentMoveFolder(dismiss: @escaping (String) -> Void) {
         guard !selectedItems.isEmpty else { return }
         coordinator?.presentFolderList(with: selectedItems, onComplete: dismiss)
+    }
+
+    /// 검색화면 이동
+    func pushSearch() {
+        coordinator?.pushSearchView(type: .myDetailFolder(title), items: items)
     }
 
     /// 전체 선택

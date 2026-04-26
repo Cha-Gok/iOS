@@ -344,7 +344,7 @@ private extension TrashViewController {
             guard let self else { return }
             switch vm.select {
             case .none:
-                print("검색 버튼 탭됨")
+                vm.pushSearch()
             case .multiple, .all:
                 guard let selectedItems = selectedItemsForBulkAction() else {
                     return

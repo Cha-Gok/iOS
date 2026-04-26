@@ -8,11 +8,14 @@ final class MockMainCoordinatorDelegate: MainCoordinatorDelegate {
     var pushTrashViewCalled = false
     var pushMyFolderViewCalled = false
     var pushVoiceNoteViewCalled = false
+    var pushSearchViewCalled = false
     var presentRecodingViewCalled = false
     var popCalled = false
 
     var pushedCategory: CategoryToggle?
     var pushedVoiceNote: VoiceNote?
+    var pushedSearchType: SearchViewModel.SearchType?
+    var pushedSearchItems: [ContentItem] = []
 
     func pushTrashView() {
         pushTrashViewCalled = true
@@ -30,6 +33,12 @@ final class MockMainCoordinatorDelegate: MainCoordinatorDelegate {
 
     func presentRecodingView() {
         presentRecodingViewCalled = true
+    }
+
+    func pushSearchView(type: Presentation.SearchViewModel.SearchType, items: [Domain.ContentItem]) {
+        pushSearchViewCalled = true
+        pushedSearchType = type
+        pushedSearchItems = items
     }
 
     func pop() {
@@ -134,6 +143,44 @@ final class MainViewModelTests: XCTestCase {
 
         XCTAssertTrue(sut.mockCoordinator.pushVoiceNoteViewCalled)
         XCTAssertEqual(sut.mockCoordinator.pushedVoiceNote?.id, note.id)
+    }
+
+    func test_pushSearchView_호출시_화면전환() async {
+        // Given
+        let sut = makeSUT()
+        let note = VoiceNote.stub(title: "검색용 노트")
+        let folder = Folder(name: "검색용 폴더", kind: .custom)
+
+        // Mock 데이터 설정
+        sut.mockVoiceNoteRepo.setObserveRecentResult(.success(makeStream([note])))
+        sut.mockFolderRepo.setObserveByKindResult(.custom, result: .success(makeStream([folder])))
+
+        // ViewModel 데이터 업데이트
+        sut.viewModel.updateRecentCategory()
+        sut.viewModel.updateMyFolderCategory()
+
+        // 비동기 업데이트 대기
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        // When
+        sut.viewModel.pushSearchView()
+
+        // Then
+        XCTAssertTrue(sut.mockCoordinator.pushSearchViewCalled)
+        XCTAssertEqual(sut.mockCoordinator.pushedSearchType, .main)
+        XCTAssertEqual(sut.mockCoordinator.pushedSearchItems.count, 2)
+
+        let hasNote = sut.mockCoordinator.pushedSearchItems.contains { item in
+            if case .voiceNote(let n) = item { return n.id == note.id }
+            return false
+        }
+        let hasFolder = sut.mockCoordinator.pushedSearchItems.contains { item in
+            if case .folder(let f) = item { return f.id == folder.id }
+            return false
+        }
+
+        XCTAssertTrue(hasNote)
+        XCTAssertTrue(hasFolder)
     }
 
     func test_didScroll_상태변경() {
