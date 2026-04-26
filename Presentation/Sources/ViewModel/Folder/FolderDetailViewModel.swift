@@ -101,7 +101,7 @@ extension FolderDetailViewModel {
         guard !selectedItems.isEmpty else { return }
         coordinator?.presentFolderList(with: selectedItems, onComplete: dismiss)
     }
-    
+
     /// 검색화면 이동
     func pushSearch() {
         coordinator?.pushSearchView(type: .myDetailFolder(title), items: items)

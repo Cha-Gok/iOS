@@ -71,7 +71,7 @@ extension FolderViewModel {
     func pushDetail(_ folder: Folder) {
         coordinator?.pushMyFolderDetailView(folder)
     }
-    
+
     func pushSearch() {
         coordinator?.pushSearchView(type: .myFolder, items: category.items)
     }

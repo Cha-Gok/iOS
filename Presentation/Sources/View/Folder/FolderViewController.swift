@@ -21,13 +21,13 @@ public final class FolderViewController: CollectionViewController {
         selectedItem: .init(title: " \(vm.category.title)", imageName: "chevron.left"),
         attributedString: Typography.title1.textAttributes
     )
-    
+
     private lazy var searchButton: NavigationItemButton = .init(
         normalItem: .init(imageName: "magnifyingglass"),
         selectedItem: .init(imageName: "magnifyingglass"),
         attributedString: Typography.title1.textAttributes
     )
-    
+
     private lazy var addButton: NavigationItemButton = .init(
         normalItem: .init(imageName: "folder.badge.plus"),
         selectedItem: .init(imageName: "folder.badge.plus"),
@@ -155,7 +155,7 @@ public final class FolderViewController: CollectionViewController {
                 self?.vm.pushSearch()
             }, for: .touchUpInside
         )
-        
+
         addButton.addAction(
             UIAction { [weak self] _ in
                 self?.vm.openTextField()

@@ -1,5 +1,5 @@
-import UIKit
 import SwiftUI
+import UIKit
 
 public enum Typography {
     case header1
@@ -99,9 +99,8 @@ public extension View {
     func typography(_ style: Typography) -> some View {
         let targetLineHeight = style.font.pointSize * style.lineHeightRatio
         let spacing = targetLineHeight - style.font.lineHeight
-        
-        return self
-            .font(Font(style.font))
+
+        return font(Font(style.font))
             .tracking(style.letterSpacing)
             .lineSpacing(max(0, spacing))
     }

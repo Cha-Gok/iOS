@@ -103,7 +103,7 @@ extension TrashViewModel {
     func pushDetailFolder(_ folder: Folder) {
         coordinator?.pushMyFolderDetailView(folder)
     }
-    
+
     func pushSearch() {
         coordinator?.pushSearchView(type: .trash, items: items)
     }

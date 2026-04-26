@@ -21,7 +21,7 @@ final class SearchHeader: UICollectionReusableView {
 
         return label
     }()
-    
+
     private let searchResultLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false

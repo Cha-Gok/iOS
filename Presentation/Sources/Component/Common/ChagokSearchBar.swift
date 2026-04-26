@@ -59,7 +59,7 @@ final class ChagokSearchBar: UIView {
                     UIColor.gray300,
                     UIColor.gray900
                 ]),
-                width: 1,
+                width: 1
             ),
             image: .init(imageName: "xmark", type: .system, configuration: .init(pointSize: 12)),
             backgroundColor: .color(.point100.withAlphaComponent(0.2)),

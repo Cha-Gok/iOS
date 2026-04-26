@@ -34,7 +34,7 @@ final class MockMainCoordinatorDelegate: MainCoordinatorDelegate {
     func presentRecodingView() {
         presentRecodingViewCalled = true
     }
-    
+
     func pushSearchView(type: Presentation.SearchViewModel.SearchType, items: [Domain.ContentItem]) {
         pushSearchViewCalled = true
         pushedSearchType = type

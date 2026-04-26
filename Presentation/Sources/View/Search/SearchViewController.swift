@@ -1,6 +1,6 @@
+import Domain
 import SwiftUI
 import UIKit
-import Domain
 
 public final class SearchViewController: ViewController {
     // MARK: - Type
@@ -276,7 +276,7 @@ extension SearchViewController {
             alignment: .top
         )
         header.pinToVisibleBounds = true
-        header.zIndex = 1_000
+        header.zIndex = 1000
         return header
     }
 
@@ -301,7 +301,6 @@ extension SearchViewController: UITextFieldDelegate {
 }
 
 #Preview {
-    
     UINavigationController(
         rootViewController: SearchViewController(
             vm: SearchViewModel(

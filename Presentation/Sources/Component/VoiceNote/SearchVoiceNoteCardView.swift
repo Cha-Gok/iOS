@@ -1,12 +1,12 @@
-import SwiftUI
 import Domain
+import SwiftUI
 
 struct SearchVoiceNoteCardView: View {
     let title: String
     let keyword: String
     let timeline: String
     let action: () -> Void
-    
+
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: "microphone")
@@ -30,8 +30,6 @@ struct SearchVoiceNoteCardView: View {
         .contentShape(.rect(cornerRadius: Constant.cornerRadius))
         .onTapGesture { action() }
     }
-    
-    
 }
 
 #Preview {

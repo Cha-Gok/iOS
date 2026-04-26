@@ -6,7 +6,7 @@ struct SearchFolderCardView: View {
     let createdAt: String
     let voiceNoteCount: Int
     let action: () -> Void
-    
+
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: "folder")
@@ -40,7 +40,7 @@ struct SearchFolderCardView: View {
         keyword: "맑고",
         createdAt: Date.now.description,
         voiceNoteCount: 3,
-        action: {},
+        action: {}
     )
     .padding()
 }

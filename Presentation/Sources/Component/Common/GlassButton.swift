@@ -266,7 +266,7 @@ extension GlassButton {
         let imageName: String
         let type: GlassImageType
         let configuration: UIImage.SymbolConfiguration?
-        
+
         init(imageName: String, type: GlassImageType, configuration: UIImage.SymbolConfiguration? = nil) {
             self.imageName = imageName
             self.type = type
