@@ -4,8 +4,12 @@ import Foundation
 
 @MainActor
 public protocol FolderCoordinatorDelegate: AnyObject {
+    /// 뒤로 가기
     func pop()
+    /// 폴더 상세 Push
     func pushMyFolderDetailView(_ folder: Folder)
+    /// 검색 화면 Push함수
+    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem])
 }
 
 @MainActor
@@ -66,6 +70,10 @@ extension FolderViewModel {
 
     func pushDetail(_ folder: Folder) {
         coordinator?.pushMyFolderDetailView(folder)
+    }
+    
+    func pushSearch() {
+        coordinator?.pushSearchView(type: .myFolder, items: category.items)
     }
 }
 

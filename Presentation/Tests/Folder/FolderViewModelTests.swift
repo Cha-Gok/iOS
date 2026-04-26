@@ -7,6 +7,9 @@ import XCTest
 final class MockFolderCoordinatorDelegate: FolderCoordinatorDelegate {
     var popCalled = false
     var pushedFolder: Folder?
+    var pushSearchViewCalled = false
+    var pushedSearchType: SearchViewModel.SearchType?
+    var pushedSearchItems: [ContentItem] = []
 
     func pop() {
         popCalled = true
@@ -14,6 +17,12 @@ final class MockFolderCoordinatorDelegate: FolderCoordinatorDelegate {
 
     func pushMyFolderDetailView(_ folder: Folder) {
         pushedFolder = folder
+    }
+
+    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem]) {
+        pushSearchViewCalled = true
+        pushedSearchType = type
+        pushedSearchItems = items
     }
 }
 
@@ -77,6 +86,17 @@ final class FolderViewModelTests: XCTestCase {
         sut.viewModel.pushDetail(folder)
 
         XCTAssertEqual(sut.mockCoordinator.pushedFolder?.id, folder.id)
+    }
+
+    func test_pushSearch_호출시_화면전환() {
+        let folder = Folder(name: "개인 폴더")
+        let sut = makeSUT(initialItems: [.folder(folder)])
+
+        sut.viewModel.pushSearch()
+
+        XCTAssertTrue(sut.mockCoordinator.pushSearchViewCalled)
+        XCTAssertEqual(sut.mockCoordinator.pushedSearchType, .myFolder)
+        XCTAssertEqual(sut.mockCoordinator.pushedSearchItems.count, 1)
     }
 
     func test_openTextFieldView_호출시_상태변경() {

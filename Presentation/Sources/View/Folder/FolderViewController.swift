@@ -21,7 +21,13 @@ public final class FolderViewController: CollectionViewController {
         selectedItem: .init(title: " \(vm.category.title)", imageName: "chevron.left"),
         attributedString: Typography.title1.textAttributes
     )
-
+    
+    private lazy var searchButton: NavigationItemButton = .init(
+        normalItem: .init(imageName: "magnifyingglass"),
+        selectedItem: .init(imageName: "magnifyingglass"),
+        attributedString: Typography.title1.textAttributes
+    )
+    
     private lazy var addButton: NavigationItemButton = .init(
         normalItem: .init(imageName: "folder.badge.plus"),
         selectedItem: .init(imageName: "folder.badge.plus"),
@@ -144,15 +150,22 @@ public final class FolderViewController: CollectionViewController {
         let leftItem = UIBarButtonItem(customView: backButton)
         navigationItem.leftBarButtonItem = leftItem
 
+        searchButton.addAction(
+            UIAction { [weak self] _ in
+                self?.vm.pushSearch()
+            }, for: .touchUpInside
+        )
+        
         addButton.addAction(
             UIAction { [weak self] _ in
                 self?.vm.openTextField()
             }, for: .touchUpInside
         )
-        let rightItem = UIBarButtonItem(customView: addButton)
-        navigationItem.rightBarButtonItem = rightItem
+        let rightSearchItem = UIBarButtonItem(customView: searchButton)
+        let rightAddItem = UIBarButtonItem(customView: addButton)
+        navigationItem.rightBarButtonItems = [rightAddItem, rightSearchItem]
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
-        navigationItem.rightBarButtonItem?.hidesSharedBackground = true
+        navigationItem.rightBarButtonItems?.forEach { $0.hidesSharedBackground = true }
     }
 
     /// 오른쪽 Swipe 액션을 제어하는 함수
