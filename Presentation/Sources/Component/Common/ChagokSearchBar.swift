@@ -80,7 +80,7 @@ final class ChagokSearchBar: UIView {
     }
 
     override var intrinsicContentSize: CGSize {
-        CGSize(width: UIView.layoutFittingExpandedSize.width, height: 46)
+        CGSize(width: UIView.layoutFittingExpandedSize.width, height: 44)
     }
 
     // MARK: - Setup
@@ -96,7 +96,7 @@ final class ChagokSearchBar: UIView {
         }
 
         NSLayoutConstraint.activate([
-            heightAnchor.constraint(equalToConstant: 46),
+            heightAnchor.constraint(equalToConstant: 44),
 
             searchContainer.topAnchor.constraint(equalTo: topAnchor),
             searchContainer.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -105,8 +105,8 @@ final class ChagokSearchBar: UIView {
 
             closeButton.topAnchor.constraint(equalTo: topAnchor),
             closeButton.trailingAnchor.constraint(equalTo: trailingAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 46),
-            closeButton.heightAnchor.constraint(equalToConstant: 46),
+            closeButton.widthAnchor.constraint(equalToConstant: 44),
+            closeButton.heightAnchor.constraint(equalToConstant: 44),
 
             iconView.leadingAnchor.constraint(equalTo: searchContainer.contentView.leadingAnchor, constant: 16),
             iconView.centerYAnchor.constraint(equalTo: searchContainer.contentView.centerYAnchor),
