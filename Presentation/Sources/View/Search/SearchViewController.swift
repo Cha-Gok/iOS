@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import Domain
 
 public final class SearchViewController: ViewController {
     // MARK: - Type
@@ -13,7 +14,7 @@ public final class SearchViewController: ViewController {
     enum Item: Hashable {
         case empty
         case emptyResult
-        case result(LibraryItem)
+        case result(ContentItem)
     }
 
     typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
@@ -105,16 +106,16 @@ public final class SearchViewController: ViewController {
         }
 
         let resultCellRegistration = CellRegistration { cell, _, item in
-            guard case .result(let libraryItem) = item else { return }
+            guard case .result(let item) = item else { return }
             cell.backgroundConfiguration = .clear()
             cell.contentConfiguration = UIHostingConfiguration {
-                switch libraryItem {
+                switch item {
                 case .folder(let folder):
                     SearchFolderCardView(
                         fullText: folder.name,
                         keyword: self.vm.query,
                         createdAt: folder.createdAt.description,
-                        voiceNoteCount: folder.content.count
+                        voiceNoteCount: folder.voiceNoteIDs.count
                     ) { [weak self] in
                         self?.vm.pushFolder(folder)
                     }

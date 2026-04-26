@@ -45,17 +45,17 @@ public final class SearchViewModel {
     // MARK: - State
 
     @ObservationIgnored
-    private(set) var items: [LibraryItem]
+    private(set) var items: [ContentItem]
     @ObservationIgnored
     let type: SearchType
     private(set) var searchState: SearchState = .empty
-    private(set) var filteredItems: [LibraryItem] = []
+    private(set) var filteredItems: [ContentItem] = []
     private(set) var query: String = ""
     public weak var coordinator: SearchCoordinatorDelegate?
 
     // MARK: Initialize
 
-    public init(type: SearchType, items: [LibraryItem]) {
+    public init(type: SearchType, items: [ContentItem]) {
         self.type = type
         self.items = items
     }

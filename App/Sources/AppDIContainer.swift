@@ -130,7 +130,7 @@ public final class AppDIContainer {
         return NewFolderViewModel(folderUseCase: folderUseCase)
     }
 
-    public func makeSearchViewModel(type: SearchViewModel.SearchType, items: [Presentation.LibraryItem]) -> SearchViewModel {
+    public func makeSearchViewModel(type: SearchViewModel.SearchType, items: [ContentItem]) -> SearchViewModel {
         return SearchViewModel(type: type, items: items)
     }
 

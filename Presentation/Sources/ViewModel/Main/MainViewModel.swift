@@ -149,7 +149,7 @@ extension MainViewModel {
     }
 
     func pushSearchView() {
-        var uniqueItems: [LibraryItem] = []
+        var uniqueItems: [ContentItem] = []
         var seenIDs: Set<UUID> = []
 
         let searchableCategories = categoryData.prefix(3)
