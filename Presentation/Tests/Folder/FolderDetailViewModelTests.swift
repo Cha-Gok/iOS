@@ -7,6 +7,9 @@ import XCTest
 final class MockFolderDetailCoordinatorDelegate: FolderDetailCoordinatorDelegate {
     var popCalled = false
     var pushedVoiceNote: VoiceNote?
+    var pushSearchViewCalled = false
+    var pushedSearchType: SearchViewModel.SearchType?
+    var pushedSearchItems: [ContentItem] = []
 
     var presentFolderListCalled = false
 
@@ -20,6 +23,12 @@ final class MockFolderDetailCoordinatorDelegate: FolderDetailCoordinatorDelegate
 
     func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?) {
         presentFolderListCalled = true
+    }
+
+    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem]) {
+        pushSearchViewCalled = true
+        pushedSearchType = type
+        pushedSearchItems = items
     }
 }
 
@@ -96,6 +105,25 @@ final class FolderDetailViewModelTests: XCTestCase {
         sut.viewModel.pushVoiceNote(voiceNote: note)
 
         XCTAssertEqual(sut.mockCoordinator.pushedVoiceNote?.id, note.id)
+    }
+
+    func test_pushSearch_호출시_화면전환() async {
+        let sut = makeSUT(title: "상세 폴더")
+        let note = VoiceNote.stub(title: "검색용 노트")
+
+        sut.mockVoiceNoteRepo.setObserveFolderResult(.success(makeStream([note])))
+        sut.viewModel.onAppear()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.viewModel.pushSearch()
+
+        XCTAssertTrue(sut.mockCoordinator.pushSearchViewCalled)
+        if case .myDetailFolder(let title) = sut.mockCoordinator.pushedSearchType {
+            XCTAssertEqual(title, "상세 폴더")
+        } else {
+            XCTFail("Wrong search type")
+        }
+        XCTAssertEqual(sut.mockCoordinator.pushedSearchItems.count, 1)
     }
 
     func test_presentMoveFolder_버튼탭시_선택항목존재하면_시트오픈() {

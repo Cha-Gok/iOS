@@ -355,7 +355,7 @@ private extension FolderDetailViewController {
             switch vm.select {
             case .none:
                 // TODO: 더 보기 로직 실행 ( 실행 X )
-                print("더 보기 버튼 탭됨")
+                break
             case .multiple, .all:
                 // TODO: 삭제 로직 실행
                 vm.openAlertView()
@@ -369,7 +369,7 @@ private extension FolderDetailViewController {
             switch vm.select {
             case .none:
                 // TODO: 검색 로직 실행
-                print("검색 버튼 탭됨")
+                vm.pushSearch()
             case .all, .multiple:
                 // TODO: 이동 로직 실행
                 vm.presentMoveFolder { [weak self] name in
