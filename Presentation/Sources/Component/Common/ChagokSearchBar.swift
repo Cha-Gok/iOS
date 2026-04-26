@@ -14,8 +14,16 @@ final class ChagokSearchBar: UIView {
             effect.isInteractive = true
             view.effect = effect
         }
-        view.layer.borderWidth = 1
-        view.layer.borderColor = UIColor.gray600.cgColor
+        view.setGradientBorder(
+            colors: [
+                UIColor.gray900,
+                UIColor.gray300
+            ],
+            width: 1,
+            cornerRadius: Constant.cornerRadius,
+            startPoint: CGPoint(x: 0, y: 0),
+            endPoint: CGPoint(x: 1, y: 1)
+        )
         return view
     }()
 
@@ -41,13 +49,23 @@ final class ChagokSearchBar: UIView {
         return field
     }()
 
-    let closeButton: UIButton = {
-        var config = UIButton.Configuration.prominentClearGlass()
-        config.image = UIImage(systemName: "xmark", withConfiguration: UIImage.SymbolConfiguration(pointSize: 12))
-        config.baseForegroundColor = .white
-        config.baseBackgroundColor = .point100.withAlphaComponent(0.2)
-        config.contentInsets = .zero
-        return UIButton(configuration: config)
+    let closeButton: GlassButton = {
+        let btn = GlassButton()
+        btn.configure(
+            "",
+            typography: .body1,
+            border: .init(
+                color: .gradient([
+                    UIColor.gray300,
+                    UIColor.gray900
+                ]),
+                width: 1,
+            ),
+            image: .init(imageName: "xmark", type: .system, configuration: .init(pointSize: 12)),
+            backgroundColor: .color(.point100.withAlphaComponent(0.2)),
+            foregroundColor: .white
+        )
+        return btn
     }()
 
     // MARK: - Initialize
