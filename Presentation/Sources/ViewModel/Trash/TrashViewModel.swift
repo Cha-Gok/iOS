@@ -4,9 +4,14 @@ import Foundation
 
 @MainActor
 public protocol TrashCoordinatorDelegate: AnyObject {
+    /// 뒤로가기
     func pop()
+    /// 음성 노트 Push
     func pushVoiceNoteView(voiceNote: VoiceNote)
+    /// 상세 폴더 Push
     func pushMyFolderDetailView(_ folder: Folder)
+    /// 검색 화면 Push함수
+    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem])
 }
 
 @MainActor
@@ -97,6 +102,10 @@ extension TrashViewModel {
 
     func pushDetailFolder(_ folder: Folder) {
         coordinator?.pushMyFolderDetailView(folder)
+    }
+    
+    func pushSearch() {
+        coordinator?.pushSearchView(type: .trash, items: items)
     }
 
     func selectItem(_ item: ContentItem) {

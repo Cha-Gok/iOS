@@ -8,6 +8,9 @@ final class MockTrashCoordinatorDelegate: TrashCoordinatorDelegate {
     var popCalled = false
     var pushedVoiceNote: VoiceNote?
     var pushedFolder: Folder?
+    var pushSearchViewCalled = false
+    var pushedSearchType: SearchViewModel.SearchType?
+    var pushedSearchItems: [ContentItem] = []
 
     func pop() {
         popCalled = true
@@ -19,6 +22,12 @@ final class MockTrashCoordinatorDelegate: TrashCoordinatorDelegate {
 
     func pushMyFolderDetailView(_ folder: Folder) {
         pushedFolder = folder
+    }
+
+    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem]) {
+        pushSearchViewCalled = true
+        pushedSearchType = type
+        pushedSearchItems = items
     }
 }
 
@@ -105,6 +114,21 @@ final class TrashViewModelTests: XCTestCase {
         sut.viewModel.didTapBack()
 
         XCTAssertTrue(sut.mockCoordinator.popCalled, "뒤로가기 시 pop이 정상 호출되어야 합니다.")
+    }
+
+    func test_pushSearch_호출시_화면전환() async {
+        let sut = makeSUT()
+        let folder = Folder(name: "삭제된 폴더")
+        setTrashStreams(sut, items: [.folder(folder)])
+
+        sut.viewModel.onAppear()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.viewModel.pushSearch()
+
+        XCTAssertTrue(sut.mockCoordinator.pushSearchViewCalled)
+        XCTAssertEqual(sut.mockCoordinator.pushedSearchType, .trash)
+        XCTAssertEqual(sut.mockCoordinator.pushedSearchItems.count, 1)
     }
 
     // MARK: - Update & Fetch Tests
