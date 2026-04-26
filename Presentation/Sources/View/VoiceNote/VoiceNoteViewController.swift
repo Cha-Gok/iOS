@@ -197,10 +197,10 @@ private extension VoiceNoteViewController {
     }
 
     func setupTabBar() {
-        segmentedControl.addAction(UIAction { [weak self] _ in
-            guard let self, let page = Page(rawValue: segmentedControl.selectedSegmentIndex) else { return }
+        segmentedControl.onSegmentSelected = { [weak self] index in
+            guard let self, let page = Page(rawValue: index) else { return }
             viewModel.updateCurrentPage(page)
-        }, for: .valueChanged)
+        }
     }
 
     func setupPlayerView() {
