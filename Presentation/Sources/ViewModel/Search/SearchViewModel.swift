@@ -22,7 +22,7 @@ public final class SearchViewModel {
         case result                     // 검색 결과 있음
     }
     
-    public enum SearchType {
+    public enum SearchType: Equatable {
         case main                       // 메인
         case myFolder                   // 폴더 목록
         case myDetailFolder(String)     // 상세 폴더
