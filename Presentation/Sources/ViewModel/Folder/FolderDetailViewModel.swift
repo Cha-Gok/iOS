@@ -202,7 +202,7 @@ extension FolderDetailViewModel {
             errorMessage = error.errorDescription
         }
     }
-    
+
     func move(id: VoiceNote.ID) {
         do {
             try voiceNoteUseCase.moveToTrash(noteID: id)

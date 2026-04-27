@@ -31,7 +31,7 @@ extension DateFormattingTests {
         let result = now.voiceNoteDay(createdAt: createdAt, updatedAt: updatedAt, duration: 720)
 
         // Then
-        XCTAssertEqual(result, "방금 전 · 12분")
+        XCTAssertEqual(result, "방금 전 · 12분 (4월 13일 수정됨)")
     }
 
     func test_5분전_음성메모일자문구생성시_분전으로표시된다() {
@@ -44,7 +44,7 @@ extension DateFormattingTests {
         let result = now.voiceNoteDay(createdAt: createdAt, updatedAt: updatedAt, duration: 150)
 
         // Then
-        XCTAssertEqual(result, "5분 전 · 2분 30초")
+        XCTAssertEqual(result, "5분 전 · 2분 30초 (4월 13일 수정됨)")
     }
 
     func test_1시간전_상세날짜문구생성시_수정일기준시간전으로표시된다() {

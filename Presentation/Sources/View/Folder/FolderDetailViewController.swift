@@ -145,9 +145,8 @@ public final class FolderDetailViewController: CollectionViewController {
             $0.hidesSharedBackground = true
         }
     }
-    
+
     private func setupSwipeAction() {
-        
         listConfiguration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
             self?.trailingAction(indexPath: indexPath)
         }

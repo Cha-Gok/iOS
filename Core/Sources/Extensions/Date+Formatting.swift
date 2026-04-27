@@ -24,7 +24,7 @@ public extension Date {
     }
 
     func voiceNoteDay(createdAt: Date, updatedAt: Date, duration: Double) -> String {
-        let dateText = voiceNoteDateText(createdAt: createdAt, updatedAt: createdAt)
+        let dateText = voiceNoteDateText(createdAt: createdAt, updatedAt: updatedAt)
         let durationText = duration.koreanDurationString
 
         if Int(createdAt.timeIntervalSince1970) != Int(updatedAt.timeIntervalSince1970) {
