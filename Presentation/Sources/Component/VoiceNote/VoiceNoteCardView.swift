@@ -67,19 +67,37 @@ struct VoiceNoteCardView: View {
         )
         Group {
             Text(voiceNote.title)
+                .typography(.title2)
                 .foregroundStyle(.gray950)
-                .font(.system(size: 18))
-                .lineSpacing(1.3)
             Text(time)
+                .typography(.body2)
                 .foregroundStyle(.gray800)
-                .font(.body)
-                .font(.system(size: 16))
-                .lineSpacing(1.5)
-                .tracking(-0.03)
-            Text("요약 필요")
-                .font(.system(size: 15))
-                .lineSpacing(1.3)
-                .tracking(-0.03)
+            analysisText(binding: voiceNote.analysisState.bindingValue)
+        }
+    }
+}
+
+// MARK: - Helper
+
+extension VoiceNoteCardView {
+    /// 분석 상태에 따른 텍스트 뷰 (요약 중, 요약 실패, 요약 완료
+    @ViewBuilder
+    func analysisText(binding: AnalysisState.BindingKey) -> some View {
+        switch binding {
+        case .progress, .failed:
+            Text(binding.currentText)
+                .typography(.label)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 12)
+                .overlay(
+                    Capsule()
+                        .stroke(Color.gray500, lineWidth: 1)
+                )
+                .background(.gray200, in: .capsule)
+                .foregroundStyle(.gray750)
+        case .success:
+            Text(binding.currentText)
+                .typography(.label)
                 .padding(.vertical, 4)
                 .padding(.horizontal, 12)
                 .overlay(
@@ -92,6 +110,7 @@ struct VoiceNoteCardView: View {
     }
 }
 
+/// ViewModifier 확장
 extension View {
     func editVoiceNoteCardStyle(isSelected: Bool) -> some View {
         modifier(
@@ -102,8 +121,14 @@ extension View {
     }
 }
 
+/// 음성 노트 선택 모드 스타일 정의
 struct EditVoiceNoteCardModifier: ViewModifier {
     let isSelected: Bool
+    private let cornerRadius: CGFloat = 20
+
+    private var borderColor: Color {
+        isSelected ? .point900 : .gray500
+    }
 
     func body(content: Content) -> some View {
         content

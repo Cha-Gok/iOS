@@ -9,6 +9,34 @@ public enum AnalysisState: String, Sendable, Hashable {
     case regenerating
     case completed
     case summarizationFailed
+
+    public enum BindingKey {
+        case progress
+        case success
+        case failed
+
+        public var currentText: String {
+            switch self {
+            case .progress:
+                "진행 중"
+            case .success:
+                "요약 완료"
+            case .failed:
+                "요약 실패"
+            }
+        }
+    }
+
+    public var bindingValue: BindingKey {
+        switch self {
+        case .pending, .transcribing, .transcribed, .regenerating, .summarizing:
+            .progress
+        case .completed:
+            .success
+        case .transcriptionFailed, .summarizationFailed:
+            .failed
+        }
+    }
 }
 
 public struct VoiceNote: Sendable, Identifiable, Hashable {
