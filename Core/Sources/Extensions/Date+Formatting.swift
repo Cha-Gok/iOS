@@ -26,6 +26,12 @@ public extension Date {
     func voiceNoteDay(createdAt: Date, updatedAt: Date, duration: Double) -> String {
         let dateText = voiceNoteDateText(createdAt: createdAt, updatedAt: updatedAt)
         let durationText = duration.koreanDurationString
+
+        if Int(createdAt.timeIntervalSince1970) != Int(updatedAt.timeIntervalSince1970) {
+            let updateText = updatedAt.toString(format: "M월 d일")
+            return "\(dateText) · \(durationText) (\(updateText) 수정됨)"
+        }
+
         return "\(dateText) · \(durationText)"
     }
 }

@@ -310,18 +310,18 @@ public extension FolderViewController {
     private func trailingAction(indexPath: IndexPath) -> UISwipeActionsConfiguration {
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return .init() }
 
-        let deleteAction = UIContextualAction(style: .destructive, title: "삭제") {
+        let deleteAction = UIContextualAction(style: .destructive, title: nil) {
             [weak self] _, _, completion in
             if case .folder(let folder) = item {
                 self?.vm.move(folder: folder)
                 // Swipe 종료 애니메이션과 목록 갱신 타이밍이 어긋나면 셀이 튕겨 보일 수 있어 즉시 반영합니다.
-                self?.updateDataSource(animated: false)
+                self?.updateDataSource(animated: true)
             }
             completion(true)
         }
         deleteAction.image = UIImage(systemName: "trash.fill")
 
-        let editAction = UIContextualAction(style: .normal, title: "수정") {
+        let editAction = UIContextualAction(style: .normal, title: nil) {
             [weak self] _, _, completion in
             if case .folder(let folder) = item {
                 self?.vm.openTextField(for: folder)

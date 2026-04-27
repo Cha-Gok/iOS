@@ -9,6 +9,23 @@ public enum AnalysisState: String, Sendable, Hashable {
     case regenerating
     case completed
     case summarizationFailed
+
+    public enum BindingKey {
+        case progress
+        case success
+        case failed
+    }
+
+    public var bindingValue: BindingKey {
+        switch self {
+        case .pending, .transcribing, .transcribed, .regenerating, .summarizing:
+            .progress
+        case .completed:
+            .success
+        case .transcriptionFailed, .summarizationFailed:
+            .failed
+        }
+    }
 }
 
 public struct VoiceNote: Sendable, Identifiable, Hashable {

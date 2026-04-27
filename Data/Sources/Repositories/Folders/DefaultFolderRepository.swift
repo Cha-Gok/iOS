@@ -37,18 +37,22 @@ public struct DefaultFolderRepository: FolderRepository {
     }
 
     public func fetch(by id: UUID) throws(FolderRepositoryError) -> Folder {
+        let request = FolderEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        let result: [FolderEntity]
         do {
-            let request = FolderEntity.fetchRequest()
-            request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-            request.fetchLimit = 1
-            guard let entity = try context.fetch(request).first else {
-                throw FolderRepositoryError.notFound
-            }
-            return entity.toModel()
+            result = try context.fetch(request)
         } catch {
             AppLogger.error(error)
             throw .fetchFailed
         }
+
+        guard let entity = result.first else {
+            throw .notFound
+        }
+        return entity.toModel()
     }
 
     public func fetch(by kind: FolderKind) throws(FolderRepositoryError) -> [Folder] {

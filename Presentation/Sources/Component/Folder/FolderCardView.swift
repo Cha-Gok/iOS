@@ -62,10 +62,10 @@ struct FolderCardView: View {
             Group {
                 Image(systemName: "folder")
                 Text(folder.name)
-                    .font(Font.custom("Pretendard", size: 16))
+                    .typography(.body2)
                 Spacer()
                 Text(String(folder.voiceNoteIDs.count))
-                    .font(Font.custom("Pretendard", size: 16))
+                    .typography(.body2)
                     .multilineTextAlignment(.trailing)
             }
             .foregroundColor(.gray800)

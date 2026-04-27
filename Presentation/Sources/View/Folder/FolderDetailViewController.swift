@@ -9,8 +9,8 @@ public final class FolderDetailViewController: CollectionViewController {
 
     typealias DataSource = UICollectionViewDiffableDataSource<Section, ContentItem>
     typealias SnapShot = NSDiffableDataSourceSnapshot<Section, ContentItem>
-
-    private var dataSource: DataSource?
+    private var listConfiguration: UICollectionLayoutListConfiguration = .init(appearance: .plain)
+    private var dataSource: DataSource!
 
     // MARK: - Component
 
@@ -81,20 +81,9 @@ public final class FolderDetailViewController: CollectionViewController {
 
     public init(vm: FolderDetailViewModel) {
         self.vm = vm
-        let layout = UICollectionViewCompositionalLayout { sectionIndex, layoutEnvironment in
-            var listConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
-            listConfiguration.headerMode = .none
-            listConfiguration.showsSeparators = false
-            listConfiguration.backgroundColor = .clear
-            let section = NSCollectionLayoutSection.list(
-                using: listConfiguration,
-                layoutEnvironment: layoutEnvironment
-            )
-            section.contentInsets = .init(top: 12, leading: 20, bottom: 20, trailing: 20)
-            section.interGroupSpacing = 8
-            return section
-        }
-
+        listConfiguration.backgroundColor = .clear
+        listConfiguration.showsSeparators = false
+        let layout = UICollectionViewCompositionalLayout.list(using: listConfiguration)
         super.init(collectionViewLayout: layout)
     }
 
@@ -108,6 +97,7 @@ public final class FolderDetailViewController: CollectionViewController {
         super.viewDidLoad()
         collectionView.allowsSelection = false
         setupNavigation()
+        setupSwipeAction()
         setupRemoveAlert()
         setupDataSource()
         updateDataSource()
@@ -154,6 +144,24 @@ public final class FolderDetailViewController: CollectionViewController {
         navigationItem.rightBarButtonItems?.forEach {
             $0.hidesSharedBackground = true
         }
+    }
+
+    private func setupSwipeAction() {
+        listConfiguration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
+            self?.trailingAction(indexPath: indexPath)
+        }
+
+        // List 레이아웃을 사용하되, 섹션 설정을 통해 간격을 조정합니다.
+        let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, layoutEnvironment in
+            guard let self else { return nil }
+            let config = listConfiguration
+            // 개별 셀의 높이가 카드에 딱 맞게 설정되도록 여백 제거
+            let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: layoutEnvironment)
+            section.interGroupSpacing = 8
+            section.contentInsets = .init(top: 12, leading: 20, bottom: 20, trailing: 20)
+            return section
+        }
+        collectionView.setCollectionViewLayout(layout, animated: false)
     }
 
     private func setupRightBarButtonMenu() {
@@ -388,6 +396,29 @@ private extension FolderDetailViewController {
         backButton.isUserInteractionEnabled = !isPresented
         moreAndActionButton.isUserInteractionEnabled = !isPresented
         searchAndMoveButton.isUserInteractionEnabled = !isPresented
+    }
+}
+
+// MARK: - Swipe Action Delegate
+
+public extension FolderDetailViewController {
+    private func trailingAction(indexPath: IndexPath) -> UISwipeActionsConfiguration {
+        guard let item = dataSource.itemIdentifier(for: indexPath) else { return .init() }
+
+        let deleteAction = UIContextualAction(style: .destructive, title: nil) {
+            [weak self] _, _, completion in
+            if case .voiceNote(let voiceNote) = item {
+                self?.vm.move(id: voiceNote.id)
+                // Swipe 종료 애니메이션과 목록 갱신 타이밍이 어긋나면 셀이 튕겨 보일 수 있어 즉시 반영합니다.
+                self?.updateDataSource()
+            }
+            completion(true)
+        }
+        deleteAction.image = UIImage(systemName: "trash.fill")
+
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
+        configuration.performsFirstActionWithFullSwipe = false
+        return configuration
     }
 }
 
