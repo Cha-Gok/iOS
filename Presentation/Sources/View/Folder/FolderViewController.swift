@@ -315,7 +315,7 @@ public extension FolderViewController {
             if case .folder(let folder) = item {
                 self?.vm.move(folder: folder)
                 // Swipe 종료 애니메이션과 목록 갱신 타이밍이 어긋나면 셀이 튕겨 보일 수 있어 즉시 반영합니다.
-                self?.updateDataSource(animated: false)
+                self?.updateDataSource(animated: true)
             }
             completion(true)
         }
