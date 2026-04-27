@@ -410,7 +410,7 @@ public extension FolderDetailViewController {
             if case .voiceNote(let voiceNote) = item {
                 self?.vm.move(id: voiceNote.id)
                 // Swipe 종료 애니메이션과 목록 갱신 타이밍이 어긋나면 셀이 튕겨 보일 수 있어 즉시 반영합니다.
-                self?.updateDataSource(reconfigure: true)
+                self?.updateDataSource()
             }
             completion(true)
         }
