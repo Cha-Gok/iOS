@@ -83,9 +83,20 @@ extension VoiceNoteCardView {
     /// 분석 상태에 따른 텍스트 뷰 (요약 중, 요약 실패, 요약 완료
     @ViewBuilder
     func analysisText(binding: AnalysisState.BindingKey) -> some View {
+        var currentText: String {
+            switch binding {
+            case .progress:
+                "요약 중"
+            case .success:
+                "요약 성공"
+            case .failed:
+                "요약 실패"
+            }
+        }
+
         switch binding {
         case .progress, .failed:
-            Text(binding.currentText)
+            Text(currentText)
                 .typography(.label)
                 .padding(.vertical, 4)
                 .padding(.horizontal, 12)
@@ -96,7 +107,7 @@ extension VoiceNoteCardView {
                 .background(.gray200, in: .capsule)
                 .foregroundStyle(.gray750)
         case .success:
-            Text(binding.currentText)
+            Text(currentText)
                 .typography(.label)
                 .padding(.vertical, 4)
                 .padding(.horizontal, 12)

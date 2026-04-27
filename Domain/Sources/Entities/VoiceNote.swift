@@ -14,17 +14,6 @@ public enum AnalysisState: String, Sendable, Hashable {
         case progress
         case success
         case failed
-
-        public var currentText: String {
-            switch self {
-            case .progress:
-                "진행 중"
-            case .success:
-                "요약 완료"
-            case .failed:
-                "요약 실패"
-            }
-        }
     }
 
     public var bindingValue: BindingKey {
