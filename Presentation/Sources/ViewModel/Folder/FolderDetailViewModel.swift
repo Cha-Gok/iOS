@@ -202,6 +202,18 @@ extension FolderDetailViewModel {
             errorMessage = error.errorDescription
         }
     }
+    
+    func move(id: VoiceNote.ID) {
+        do {
+            try voiceNoteUseCase.moveToTrash(noteID: id)
+            items.removeAll {
+                if case .voiceNote(let obj) = $0 { return obj.id == id }
+                return false
+            }
+        } catch {
+            AppLogger.error(error)
+        }
+    }
 }
 
 // MARK: - Restore (휴지통 이동 복구)
