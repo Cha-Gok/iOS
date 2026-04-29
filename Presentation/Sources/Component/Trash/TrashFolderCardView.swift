@@ -57,15 +57,23 @@ struct TrashFolderCardView: View {
         .padding(.trailing)
     }
 
+    @ViewBuilder
     private var cardContent: some View {
-        HStack(spacing: 8) {
-            Group {
-                Image(systemName: "folder")
+        let time: String = Date.now.trashFolderText(
+            deletedAt: folder.deletedAt,
+            count: folder.voiceNoteIDs.count
+        )
+
+        HStack(spacing: 16) {
+            Image(systemName: "folder")
+                .frame(width: 20, height: 20)
+            VStack(alignment: .leading, spacing: 6) {
                 Text(folder.name)
-                    .font(Font.custom("Pretendard", size: 16))
-                Spacer()
+                    .typography(.title2)
+                    .foregroundStyle(.gray900)
+                Text(time)
+                    .foregroundColor(.gray800)
             }
-            .foregroundColor(.gray800)
         }
     }
 }

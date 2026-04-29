@@ -320,6 +320,8 @@ extension TrashViewModel {
                     if index.isMultiple(of: 2) {
                         let createdOffset = TimeInterval((index + 2) * 43200) * -1
                         let updatedOffset = TimeInterval((index + 1) * 21600) * -1
+                        let deletedOffset = TimeInterval((index + 1) * 10800) * -1
+
                         notes.append(
                             VoiceNote(
                                 title: "휴지통 메모 \(index + 1)",
@@ -333,6 +335,7 @@ extension TrashViewModel {
                                 ),
                                 transcript: nil,
                                 summary: nil,
+                                deletedAt: now.addingTimeInterval(deletedOffset),
                                 analysisState: .pending
                             )
                         )

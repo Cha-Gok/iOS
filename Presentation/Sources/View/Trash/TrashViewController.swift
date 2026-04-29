@@ -119,6 +119,7 @@ public final class TrashViewController: CollectionViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         collectionView.allowsSelection = false
+        collectionView.showsVerticalScrollIndicator = false
         setupNavigation()
         setupDataSource()
         updateDataSource()
