@@ -128,7 +128,6 @@ final class MainCategoryContentView: UIView, UIContentView {
     func setSelectedState(_ isSelected: Bool, totalCount: Int) {
         UIView.animate(withDuration: 0.2) {
             self.container.layer.borderColor = isSelected ? UIColor.point900.cgColor : UIColor.gray600.cgColor
-            self.container.layer.borderWidth = isSelected ? 2.0 : 1.0
             self.countView.setTypography(text: String(totalCount), style: isSelected ? .title3 : .label)
             self.titleLabel.textColor = isSelected ? UIColor.gray950 : UIColor.gray600
             self.imageView.tintColor = isSelected ? UIColor.gray950 : UIColor.gray600
