@@ -114,7 +114,7 @@ public final class SearchViewController: ViewController {
                     SearchFolderCardView(
                         fullText: folder.name,
                         keyword: self.vm.query,
-                        createdAt: folder.createdAt.description,
+                        createdAt: folder.createdAt.searchFolderText(),
                         voiceNoteCount: folder.voiceNoteIDs.count
                     ) { [weak self] in
                         self?.vm.pushFolder(folder)
@@ -123,10 +123,11 @@ public final class SearchViewController: ViewController {
                     SearchVoiceNoteCardView(
                         title: voiceNote.title,
                         keyword: self.vm.query,
-                        timeline: Date.now.voiceNoteDay(
+                        timeline: Date.now.searchVoiceNoteDay(
                             createdAt: voiceNote.createdAt,
                             updatedAt: voiceNote.updatedAt,
-                            duration: voiceNote.voiceRecord.duration
+                            duration: voiceNote.voiceRecord.duration,
+                            folderName: self.vm.parentFolder(id: voiceNote.folderID)
                         )
                     ) { [weak self] in
                         self?.vm.pushVoiceNote(voiceNote)
@@ -303,10 +304,7 @@ extension SearchViewController: UITextFieldDelegate {
 #Preview {
     UINavigationController(
         rootViewController: SearchViewController(
-            vm: SearchViewModel(
-                type: .main,
-                items: []
-            )
+            vm: .preview()
         )
     )
 }
