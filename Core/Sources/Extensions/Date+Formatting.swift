@@ -18,43 +18,18 @@ public extension Date {
         return formatter.string(from: self)
     }
 
-    func voiceNoteDateText(createdAt: Date, updatedAt: Date) -> String {
-        let referenceDate = max(createdAt, updatedAt)
-        return Self.voiceNoteDateText(referenceDate: referenceDate, now: self)
-    }
-
-    func voiceNoteDay(createdAt: Date, updatedAt: Date, duration: Double) -> String {
-        let dateText = voiceNoteDateText(createdAt: createdAt, updatedAt: updatedAt)
-        let durationText = duration.koreanDurationString
-
-        if Int(createdAt.timeIntervalSince1970) != Int(updatedAt.timeIntervalSince1970) {
-            let updateText = updatedAt.toString(format: "M월 d일")
-            return "\(dateText) · \(durationText) (\(updateText) 수정됨)"
-        }
-
-        return "\(dateText) · \(durationText)"
-    }
-}
-
-// MARK: VoiceNote 시간 표기 확장
-
-private extension Date {
-    static func voiceNoteDateText(referenceDate: Date, now: Date) -> String {
-        var calendar = Calendar.current
-        calendar.locale = Locale(identifier: "ko_KR")
-
+    static func relativeDateText(referenceDate: Date, now: Date) -> String {
         let elapsed = now.timeIntervalSince(referenceDate)
-        if elapsed >= 0, calendar.isDate(referenceDate, equalTo: now, toGranularity: .day) {
-            if elapsed < 60 { return "방금 전" }
-            if elapsed < 3600 { return "\(Int(elapsed / 60))분 전" }
-            return "\(Int(elapsed / 3600))시간 전"
+        if elapsed < 0 {
+            return referenceDate.toString(format: "M월 d일 a h:mm")
         }
 
-        let oneYearAgo = calendar.date(byAdding: .year, value: -1, to: now) ?? now.addingTimeInterval(-31_536_000)
-        if referenceDate < oneYearAgo {
-            return referenceDate.toString(format: "yyyy.MM.dd")
-        }
+        if elapsed < 60 { return "방금 전" }
+        if elapsed < 3600 { return "\(Int(elapsed / 60))분 전" }
+        if elapsed < 86400 { return "\(Int(elapsed / 3600))시간 전" }
+        if elapsed < 2_592_000 { return "\(Int(elapsed / 86400))일 전" }
+        if elapsed < 31_536_000 { return "\(Int(elapsed / 2_592_000))개월 전" }
 
-        return referenceDate.toString(format: "M월 d일 a h:mm")
+        return referenceDate.toString(format: "yyyy.MM.dd")
     }
 }
