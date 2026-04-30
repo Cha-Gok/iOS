@@ -1,42 +1,65 @@
+import Domain
 import Foundation
 
 @MainActor
 public protocol ChaGokAlertCoordinatorDelegate: AnyObject {
     /// Open Alert
-    func present(environment: ChaGokAlertViewModel.AlertEnvironment)
-    /// Close Alert
-    func dismiss()
+    func presentAlert(
+        environment: ChaGokAlertViewModel.AlertEnvironment,
+        delegate: ChaGokAlertButtonTappedDelegate?
+    )
+}
+
+public extension ChaGokAlertCoordinatorDelegate {
+    func presentAlert(environment: ChaGokAlertViewModel.AlertEnvironment) {
+        presentAlert(environment: environment, delegate: nil)
+    }
 }
 
 @MainActor
-@objc public protocol ChaGokAlertButtonTappedDelegate: AnyObject {
-    // recordingCancel Action
-    @objc optional func recordingCancelCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
-    @objc optional func recordingCancelPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
+@objc
+public protocol ChaGokAlertButtonTappedDelegate: AnyObject {
+    /// recordingCancel Action
+    @objc
+    optional func recordingCancelCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func recordingCancelPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
 
-    // recordingComplete Action
-    @objc optional func recordingCompleteCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
-    @objc optional func recordingCompletePrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
+    /// recordingComplete Action
+    @objc
+    optional func recordingCompleteCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func recordingCompletePrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
 
-    // languageSelect Action
-    @objc optional func languageSelectCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
-    @objc optional func languageSelectPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
+    /// languageSelect Action
+    @objc
+    optional func languageSelectCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func languageSelectPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
 
-    // createFolder Action
-    @objc optional func createFolderCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
-    @objc optional func createFolderPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
+    /// createFolder Action
+    @objc
+    optional func createFolderCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func createFolderPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
 
-    // updateFolder Action
-    @objc optional func updateFolderCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
-    @objc optional func updateFolderPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
+    /// updateFolder Action
+    @objc
+    optional func updateFolderCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func updateFolderPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
 
-    // moveTrash Action
-    @objc optional func moveTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
-    @objc optional func moveTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
+    /// moveTrash Action
+    @objc
+    optional func moveTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func moveTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
 
-    // none Action
-    @objc optional func noneCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
-    @objc optional func nonePrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
+    /// none Action
+    @objc
+    optional func noneCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func nonePrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
 }
 
 @MainActor
@@ -44,17 +67,18 @@ public protocol ChaGokAlertCoordinatorDelegate: AnyObject {
 public final class ChaGokAlertViewModel {
     private(set) var environment: AlertEnvironment
     private(set) var state: AlertState
+    private(set) var selectedLanguage: Language?
 
     public init(environment: AlertEnvironment = .none) {
         self.environment = environment
-        self.state = environment.state
+        state = environment.state
     }
 
     public convenience init(state: AlertState) {
         self.init(environment: .none)
         self.state = state
     }
-    
+
     @ObservationIgnored
     public var header: Header {
         state.header
@@ -64,16 +88,13 @@ public final class ChaGokAlertViewModel {
     public var style: BodyStyle {
         state.bodyStyle
     }
-    
-    weak var coordinator: ChaGokAlertCoordinatorDelegate?
+
+    public weak var coordinator: ChaGokAlertCoordinatorDelegate?
 }
 
 // MARK: - Action
+
 extension ChaGokAlertViewModel {
-    func dismiss() {
-        coordinator?.dismiss()
-    }
-    
     public func update(environment: AlertEnvironment) {
         self.environment = environment
         state = environment.state
@@ -116,12 +137,15 @@ extension ChaGokAlertViewModel {
             delegate?.nonePrimaryButtonTapped?(alertVC)
         }
     }
+
+    func setSelectedLanguage(_ language: Language) {
+        selectedLanguage = language
+    }
 }
 
 // MARK: - Alert Model
 
 public extension ChaGokAlertViewModel {
-
     struct Header: Equatable {
         let title: String
 
@@ -132,17 +156,17 @@ public extension ChaGokAlertViewModel {
 
     enum BodyStyle {
         case basic(subTitle: String)
-        case languagePicker(LanguagePicker)
+        case languagePicker(Language)
         case textField(field: TextFieldView.Field, subTitle: String)
     }
-    
+
     enum ButtonType {
         case close
         case `default`
         case primary
         case danger
     }
-    
+
     struct ButtonStyle {
         let type: ButtonType
         let text: String
@@ -163,10 +187,10 @@ public extension ChaGokAlertViewModel {
     }
 
     @MainActor
-    public enum AlertEnvironment {
+    enum AlertEnvironment {
         case recordingCancel
         case recordingComplete
-        case languageSelect(LanguagePicker)
+        case languageSelect(Language)
         case createFolder(TextFieldView.Field)
         case updateFolder(TextFieldView.Field)
         case moveTrash
@@ -192,10 +216,10 @@ public extension ChaGokAlertViewModel {
                     cancelButtonStyle: .init(type: .close, text: "아니오"),
                     primaryButtonStyle: .init(type: .primary, text: "저장 후 종료")
                 )
-            case .languageSelect(let picker):
+            case .languageSelect(let selectedLanguage):
                 AlertState(
                     header: .init(title: "녹음 언어 변경"),
-                    bodyStyle: .languagePicker(picker),
+                    bodyStyle: .languagePicker(selectedLanguage),
                     cancelButtonStyle: .init(type: .close, text: "취소"),
                     primaryButtonStyle: .init(type: .primary, text: "저장하기")
                 )
