@@ -216,9 +216,9 @@ extension TextFieldView {
 
 // MARK: - Observable 구조
 
-extension TextFieldView {
+public extension TextFieldView {
     @Observable
-    public final class Field: Sendable {
+    final class Field {
         var mode: Mode
         var title: String
         var subTitle: String
@@ -255,7 +255,7 @@ extension TextFieldView {
         }
     }
 
-    public enum Mode {
+    enum Mode {
         case create
         case edit
     }
