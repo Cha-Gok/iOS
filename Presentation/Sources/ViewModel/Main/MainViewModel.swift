@@ -45,7 +45,6 @@ public final class MainViewModel {
     }
 
     private(set) var showPermissionAlert: Bool = false
-    private(set) var showLanguageAlert: Bool = false
 
     private(set) var errorMessage: String?
 
@@ -74,6 +73,7 @@ public final class MainViewModel {
 
     // TODO: 화면 전환
     public weak var mainCoordinator: MainCoordinatorDelegate?
+    public weak var alertCoordinator: ChaGokAlertCoordinatorDelegate?
 
     public init(
         microphoneRepository: any VoiceRecordRepository,
@@ -118,14 +118,6 @@ extension MainViewModel {
 
     func openPermissionAlert() {
         showPermissionAlert = true
-    }
-
-    func closeLanguageAlert() {
-        showLanguageAlert = false
-    }
-
-    func openLanguageAlert() {
-        showLanguageAlert = true
     }
 }
 

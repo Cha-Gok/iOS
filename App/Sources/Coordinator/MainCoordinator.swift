@@ -19,6 +19,7 @@ final class MainCoordinator: BaseCoordinator<UINavigationController> {
         let mainVM = dependencyContainer.makeMainViewModel()
         let mainVC = MainViewController(vm: mainVM)
         mainVM.mainCoordinator = self
+        mainVM.alertCoordinator = self
         presenter.isNavigationBarHidden = false
         presenter.setViewControllers([mainVC], animated: false)
     }
@@ -127,6 +128,21 @@ extension MainCoordinator: VoiceNoteCoordinatorDelegate {
 // MARK: - SearchCoordinatorDelegate
 
 extension MainCoordinator: SearchCoordinatorDelegate {}
+
+// MARK: - ChaGokAlertCoordinatorDelegate
+
+extension MainCoordinator: ChaGokAlertCoordinatorDelegate {
+    func presentAlert(
+        environment: ChaGokAlertViewModel.AlertEnvironment,
+        delegate: ChaGokAlertButtonTappedDelegate?
+    ) {
+        let viewModel = dependencyContainer.makeChaGokAlertViewModel(environment: environment)
+        viewModel.coordinator = self
+        let alertVC = ChaGokAlertViewController(vm: viewModel)
+        alertVC.delegate = delegate
+        presenter.present(alertVC, animated: true)
+    }
+}
 
 // MARK: - Helpers
 

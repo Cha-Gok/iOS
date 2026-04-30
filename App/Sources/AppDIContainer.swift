@@ -137,6 +137,10 @@ public final class AppDIContainer {
         return SearchViewModel(type: type, items: items, folderRepository: folderRepository)
     }
 
+    public func makeChaGokAlertViewModel(environment: ChaGokAlertViewModel.AlertEnvironment) -> ChaGokAlertViewModel {
+        return ChaGokAlertViewModel(environment: environment)
+    }
+
     #if DEBUG
         public func seedDebugDataIfNeeded() {
             DebugSeeder(
