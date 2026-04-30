@@ -1,12 +1,11 @@
 import UIKit
 
 final class AlertView: UIView {
-    let closeButton: GlassButton
+    var closeButton: GlassButton
 
-    let primaryButton: GlassButton
+    var primaryButton: GlassButton
 
     private let title: String
-
     private let subTitle: String
     private var widthConstraint: NSLayoutConstraint?
 
@@ -163,5 +162,21 @@ extension AlertView {
                 constant: -Constant.alertLeftAndRightValueForBottomContent
             )
         ])
+    }
+}
+
+// MARK: - Configure
+
+extension AlertView {
+    func configure(
+        title: String,
+        subtitle: String,
+        closeButton: GlassButton,
+        primaryButton: GlassButton
+    ) {
+        header.setTypography(text: title, style: .title2)
+        body.setTypography(text: subTitle, style: .body1)
+        self.closeButton = closeButton
+        self.primaryButton = primaryButton
     }
 }
