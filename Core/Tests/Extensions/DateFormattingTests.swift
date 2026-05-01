@@ -102,7 +102,7 @@ extension DateFormattingTests {
         let result = now.trashVoiceNoteDay(createdAt: createdAt, updatedAt: createdAt, deletedAt: deletedAt)
 
         // Then
-        XCTAssertEqual(result, "오후 3:23 · 3일 전 삭제")
+        XCTAssertEqual(result, "오후 3:23 · 3일 전 삭제됨")
     }
 
     func test_휴지통_삭제2개월전_타임라인문구생성시_개월전삭제로표시된다() {
@@ -115,7 +115,7 @@ extension DateFormattingTests {
         let result = now.trashVoiceNoteDay(createdAt: createdAt, updatedAt: createdAt, deletedAt: deletedAt)
 
         // Then
-        XCTAssertEqual(result, "오후 3:23 · 2개월 전 삭제")
+        XCTAssertEqual(result, "오후 3:23 · 2026.02.10 삭제됨")
     }
 
     func test_휴지통_삭제1년초과_타임라인문구생성시_yyyyMMdd삭제로표시된다() {
@@ -128,7 +128,7 @@ extension DateFormattingTests {
         let result = now.trashVoiceNoteDay(createdAt: createdAt, updatedAt: createdAt, deletedAt: deletedAt)
 
         // Then
-        XCTAssertEqual(result, "오후 3:23 · 2025.03.15 삭제")
+        XCTAssertEqual(result, "오후 3:23 · 2025.03.15 삭제됨")
     }
 }
 
@@ -144,19 +144,7 @@ extension DateFormattingTests {
         let result = now.trashFolderText(deletedAt: deletedAt, count: 3)
 
         // Then
-        XCTAssertEqual(result, "3개 항목 · 1개월 전 삭제")
-    }
-
-    func test_폴더_0개항목_삭제문구생성시_항목없음으로표시된다() {
-        // Given
-        let now = makeDate(2026, 4, 13, 15, 30, 0)
-        let deletedAt = makeDate(2026, 4, 13, 15, 20, 0)
-
-        // When
-        let result = now.trashFolderText(deletedAt: deletedAt, count: 0)
-
-        // Then
-        XCTAssertEqual(result, "항목 없음 · 10분 전 삭제")
+        XCTAssertEqual(result, "3개 항목 · 2026.03.10 삭제됨")
     }
 }
 
@@ -221,42 +209,26 @@ extension DateFormattingTests {
 // MARK: - 상대 시간 임계값 테스트
 
 extension DateFormattingTests {
-    func test_상대시간_방금전_경계값테스트() {
+    func test_상대시간_당일_경계값테스트() {
         let now = makeDate(2026, 4, 13, 15, 30, 0)
-
-        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-59), now: now), "방금 전")
-        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-60), now: now), "1분 전")
+        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-60), now: now), "오늘")
+        XCTAssertEqual(Date.relativeDateText(referenceDate: makeDate(2026, 4, 13, 0, 1, 0), now: now), "오늘")
     }
 
-    func test_상대시간_분전_경계값테스트() {
+    func test_상대시간_7일이내_경계값테스트() {
         let now = makeDate(2026, 4, 13, 15, 30, 0)
-
-        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-3599), now: now), "59분 전")
-        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-3600), now: now), "1시간 전")
+        let yesterday = makeDate(2026, 4, 12, 23, 59, 59)
+        let sevenDaysAgo = makeDate(2026, 4, 6, 0, 1, 0)
+        
+        XCTAssertEqual(Date.relativeDateText(referenceDate: yesterday, now: now), "1일 전")
+        XCTAssertEqual(Date.relativeDateText(referenceDate: sevenDaysAgo, now: now), "7일 전")
     }
 
-    func test_상대시간_시간전_경계값테스트() {
+    func test_상대시간_7일초과_경계값테스트() {
         let now = makeDate(2026, 4, 13, 15, 30, 0)
-
-        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-86399), now: now), "23시간 전")
-        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-86400), now: now), "1일 전")
-    }
-
-    func test_상대시간_일전_경계값테스트() {
-        let now = makeDate(2026, 4, 13, 15, 30, 0)
-
-        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-2_591_999), now: now), "29일 전")
-        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-2_592_000), now: now), "1개월 전")
-    }
-
-    func test_상대시간_개월전_경계값테스트() {
-        let now = makeDate(2026, 4, 13, 15, 30, 0)
-
-        XCTAssertEqual(Date.relativeDateText(referenceDate: now.addingTimeInterval(-31_535_999), now: now), "12개월 전")
-        XCTAssertEqual(
-            Date.relativeDateText(referenceDate: now.addingTimeInterval(-31_536_000), now: now),
-            "2025.04.13"
-        )
+        let eightDaysAgo = makeDate(2026, 4, 5, 23, 59, 59)
+        
+        XCTAssertEqual(Date.relativeDateText(referenceDate: eightDaysAgo, now: now), "2026.04.05")
     }
 }
 

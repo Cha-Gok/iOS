@@ -24,7 +24,7 @@ public extension Date {
         }
 
         let deletedText = Self.relativeDateText(referenceDate: deletedAt, now: self)
-        return "\(createdTimeText) · \(deletedText) 삭제"
+        return "\(createdTimeText) · \(deletedText) 삭제됨"
     }
 
     func searchVoiceNoteDay(createdAt: Date, updatedAt: Date, duration: Double, folderName: String) -> String {

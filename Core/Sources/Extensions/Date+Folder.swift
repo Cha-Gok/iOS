@@ -7,12 +7,7 @@ public extension Date {
             return ""
         }
         deletedText = Self.relativeDateText(referenceDate: deletedAt, now: self)
-
-        if count == 0 {
-            return "항목 없음 · \(deletedText) 삭제"
-        } else {
-            return "\(count)개 항목 · \(deletedText) 삭제"
-        }
+        return "\(count)개 항목 · \(deletedText) 삭제됨"
     }
 
     func searchFolderText() -> String {

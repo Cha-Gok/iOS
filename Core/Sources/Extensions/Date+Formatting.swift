@@ -24,11 +24,18 @@ public extension Date {
             return referenceDate.toString(format: "M월 d일 a h:mm")
         }
 
-        if elapsed < 60 { return "방금 전" }
-        if elapsed < 3600 { return "\(Int(elapsed / 60))분 전" }
-        if elapsed < 86400 { return "\(Int(elapsed / 3600))시간 전" }
-        if elapsed < 2_592_000 { return "\(Int(elapsed / 86400))일 전" }
-        if elapsed < 31_536_000 { return "\(Int(elapsed / 2_592_000))개월 전" }
+        let calendar = Calendar.current
+        if calendar.isDate(referenceDate, inSameDayAs: now) {
+            return "오늘"
+        }
+
+        let startOfReference = calendar.startOfDay(for: referenceDate)
+        let startOfNow = calendar.startOfDay(for: now)
+        let components = calendar.dateComponents([.day], from: startOfReference, to: startOfNow)
+
+        if let day = components.day, day > 0, day <= 7 {
+            return "\(day)일 전"
+        }
 
         return referenceDate.toString(format: "yyyy.MM.dd")
     }
