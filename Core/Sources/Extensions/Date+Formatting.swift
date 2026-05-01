@@ -18,7 +18,7 @@ public extension Date {
     func toString(format: String, localeIdentifier: String = "ko_KR") -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: localeIdentifier)
-        formatter.timeZone = TimeZone.autoupdatingCurrent
+        formatter.timeZone = Calendar.current.timeZone
         formatter.dateFormat = format
         return formatter.string(from: self)
     }
