@@ -1,6 +1,6 @@
 import UIKit
 
-final class TextFieldView: UIView {
+public final class TextFieldView: UIView {
     // MARK: - Properties
 
     var field: Field
@@ -105,7 +105,7 @@ final class TextFieldView: UIView {
 
     // MARK: - LifeCycle
 
-    override func layoutSubviews() {
+    override public func layoutSubviews() {
         super.layoutSubviews()
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = Constant.shadowOpacity
@@ -118,7 +118,7 @@ final class TextFieldView: UIView {
             ).cgPath
     }
 
-    override func updateProperties() {
+    override public func updateProperties() {
         super.updateProperties()
         titleLabel.setTypography(text: field.title, style: .title2, textAlignment: .center)
         subTitleLabel.setTypography(text: field.subTitle, style: .body2, textAlignment: .center)
@@ -134,7 +134,6 @@ final class TextFieldView: UIView {
         case .edit:
             primaryButton.configuration?.title = "수정하기"
         }
-        primaryButton.isEnabled = field.isSubmitEnabled
         updatePlaceholderVisibility()
         // error Message
         updateErrorMessageLabel()
@@ -212,11 +211,16 @@ extension TextFieldView {
             textCount.textColor = field.text.count >= 50 ? .danger : .gray750
         }
     }
+
+    public func setErrorMessage(_ message: String?) {
+        field.errorMessage = message
+        updateErrorMessageLabel()
+    }
 }
 
 // MARK: - Observable 구조
 
-extension TextFieldView {
+public extension TextFieldView {
     @Observable
     final class Field {
         var mode: Mode
@@ -226,10 +230,6 @@ extension TextFieldView {
         var text: String
         var errorMessage: String?
 
-        var isSubmitEnabled: Bool {
-            !text.isEmpty
-        }
-
         var textCountLabel: String {
             "\(text.count)/\(50)"
         }
@@ -238,7 +238,7 @@ extension TextFieldView {
             text.count > 50
         }
 
-        init(
+        public init(
             mode: Mode,
             title: String,
             subTitle: String,
@@ -264,12 +264,12 @@ extension TextFieldView {
 // MARK: TextField Delegate
 
 extension TextFieldView: UITextFieldDelegate {
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
     }
 
-    func textField(
+    public func textField(
         _ textField: UITextField,
         shouldChangeCharactersIn range: NSRange,
         replacementString string: String

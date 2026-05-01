@@ -19,6 +19,7 @@ final class MainCoordinator: BaseCoordinator<UINavigationController> {
         let mainVM = dependencyContainer.makeMainViewModel()
         let mainVC = MainViewController(vm: mainVM)
         mainVM.mainCoordinator = self
+        mainVM.alertCoordinator = self
         presenter.isNavigationBarHidden = false
         presenter.setViewControllers([mainVC], animated: false)
     }
@@ -50,6 +51,7 @@ extension MainCoordinator: MainCoordinatorDelegate {
     func pushTrashView() {
         let trashVM = dependencyContainer.makeTrashViewModel()
         trashVM.coordinator = self
+        trashVM.alertCoordinator = self
         let trashVC = TrashViewController(vm: trashVM)
         presenter.pushViewController(trashVC, animated: true)
     }
@@ -57,6 +59,7 @@ extension MainCoordinator: MainCoordinatorDelegate {
     func pushMyFolderView(category: CategoryToggle) {
         let myFolderVM = dependencyContainer.makeMyFolderViewModel(category)
         myFolderVM.coordinator = self
+        myFolderVM.alertCoordinator = self
         let myFolderVC = FolderViewController(vm: myFolderVM)
         presenter.pushViewController(myFolderVC, animated: true)
     }
@@ -82,6 +85,7 @@ extension MainCoordinator: MainCoordinatorDelegate {
         let navController = UINavigationController()
         let viewModel = dependencyContainer.makeRecordingViewModel()
         viewModel.coordinator = self
+        viewModel.alertCoordinator = self
         let recordingVC = RecordingViewController(viewModel: viewModel)
         navController.modalPresentationStyle = .fullScreen
         navController.setViewControllers([recordingVC], animated: false)
@@ -99,6 +103,7 @@ extension MainCoordinator: FolderCoordinatorDelegate {
     func pushMyFolderDetailView(_ folder: Folder) {
         let myFolderDetailVM = dependencyContainer.makeMyFolderDetailViewModel(folder)
         myFolderDetailVM.coordinator = self
+        myFolderDetailVM.alertCoordinator = self
         let myFolderDetailVC = FolderDetailViewController(vm: myFolderDetailVM)
         presenter.pushViewController(myFolderDetailVC, animated: true)
     }
@@ -114,7 +119,26 @@ extension MainCoordinator: FolderDetailCoordinatorDelegate {
 
 // MARK: - TrashCoordinatorDelegate
 
-extension MainCoordinator: TrashCoordinatorDelegate {}
+extension MainCoordinator: TrashCoordinatorDelegate {
+    func pushMyFolderDetailView(_ folder: Folder, isHidden: Bool) {
+        let myFolderDetailVM = dependencyContainer.makeMyFolderDetailViewModel(folder, isTrashMode: isHidden)
+        myFolderDetailVM.coordinator = self
+        myFolderDetailVM.alertCoordinator = self
+        let myFolderDetailVC = FolderDetailViewController(vm: myFolderDetailVM)
+        presenter.pushViewController(myFolderDetailVC, animated: true)
+    }
+
+    func pushSearchView(
+        type: Presentation.SearchViewModel.SearchType,
+        items: [ContentItem],
+        isHidden: Bool
+    ) {
+        let searchVM = dependencyContainer.makeSearchViewModel(type: type, items: items, isTrashMode: isHidden)
+        searchVM.coordinator = self
+        let searchVC = SearchViewController(vm: searchVM)
+        presenter.pushViewController(searchVC, animated: true)
+    }
+}
 
 // MARK: - VoiceNoteCoordinatorDelegate
 
@@ -126,7 +150,34 @@ extension MainCoordinator: VoiceNoteCoordinatorDelegate {
 
 // MARK: - SearchCoordinatorDelegate
 
-extension MainCoordinator: SearchCoordinatorDelegate {}
+extension MainCoordinator: SearchCoordinatorDelegate {
+    func pushMyFolderDetailView(_ folder: Folder, isTrashMode: Bool) {
+        let myFolderDetailVM = dependencyContainer.makeMyFolderDetailViewModel(folder, isTrashMode: isTrashMode)
+        myFolderDetailVM.coordinator = self
+        myFolderDetailVM.alertCoordinator = self
+        let myFolderDetailVC = FolderDetailViewController(vm: myFolderDetailVM)
+        presenter.pushViewController(myFolderDetailVC, animated: true)
+    }
+}
+
+// MARK: - ChaGokAlertCoordinatorDelegate
+
+extension MainCoordinator: ChaGokAlertCoordinatorDelegate {
+    func presentAlert(
+        environment: ChaGokAlertViewModel.AlertEnvironment,
+        delegate: ChaGokAlertButtonTappedDelegate?
+    ) {
+        let viewModel = dependencyContainer.makeChaGokAlertViewModel(environment: environment)
+        viewModel.coordinator = self
+        let alertVC = ChaGokAlertViewController(vm: viewModel)
+        alertVC.delegate = delegate
+        var topVC: UIViewController = presenter
+        while let presented = topVC.presentedViewController {
+            topVC = presented
+        }
+        topVC.present(alertVC, animated: true)
+    }
+}
 
 // MARK: - Helpers
 

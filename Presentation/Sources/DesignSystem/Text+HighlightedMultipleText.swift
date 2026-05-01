@@ -21,7 +21,6 @@ extension Text {
         while let range = attributedString[searchRange].range(of: keyword, options: .caseInsensitive) {
             // 스타일 적용
             attributedString[range].foregroundColor = .point900
-            attributedString[range].font = .body.weight(.bold)
 
             // 찾은 부분 다음부터 다시 검색하도록 범위를 업데이트
             searchRange = range.upperBound ..< attributedString.endIndex

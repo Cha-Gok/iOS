@@ -44,9 +44,6 @@ public final class MainViewModel {
         categoryData[selectedCategoryIndex].items.isEmpty
     }
 
-    private(set) var showPermissionAlert: Bool = false
-    private(set) var showLanguageAlert: Bool = false
-
     private(set) var errorMessage: String?
 
     // MARK: - UseCase
@@ -74,6 +71,7 @@ public final class MainViewModel {
 
     // TODO: 화면 전환
     public weak var mainCoordinator: MainCoordinatorDelegate?
+    public weak var alertCoordinator: ChaGokAlertCoordinatorDelegate?
 
     public init(
         microphoneRepository: any VoiceRecordRepository,
@@ -110,22 +108,6 @@ extension MainViewModel {
 
     func setDidScroll(_ didScroll: Bool) {
         self.didScroll = didScroll
-    }
-
-    func closePermissionAlert() {
-        showPermissionAlert = false
-    }
-
-    func openPermissionAlert() {
-        showPermissionAlert = true
-    }
-
-    func closeLanguageAlert() {
-        showLanguageAlert = false
-    }
-
-    func openLanguageAlert() {
-        showLanguageAlert = true
     }
 }
 
@@ -277,10 +259,10 @@ extension MainViewModel {
 // MARK: - Mic Permission
 
 extension MainViewModel {
-    func handleRecordButtonTap() {
+    func handleRecordButtonTap(alertAction: () -> Void) {
         let status = microphoneRepository.checkMicrophonePermission()
         if status != .authorized {
-            openPermissionAlert()
+            alertAction()
         } else {
             presentRecodingView()
         }

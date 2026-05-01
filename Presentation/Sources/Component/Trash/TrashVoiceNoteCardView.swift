@@ -57,15 +57,23 @@ struct TrashVoiceNoteCardView: View {
         .padding(.trailing)
     }
 
+    @ViewBuilder
     private var cardContent: some View {
-        HStack(spacing: 8) {
-            Group {
-                Image(systemName: "microphone")
+        let time: String = Date.now.trashVoiceNoteDay(
+            createdAt: voiceNote.createdAt,
+            updatedAt: voiceNote.updatedAt,
+            deletedAt: voiceNote.deletedAt
+        )
+        HStack(spacing: 16) {
+            Image(systemName: "microphone")
+                .frame(width: 20, height: 20)
+            VStack(alignment: .leading, spacing: 6) {
                 Text(voiceNote.title)
-                    .font(Font.custom("Pretendard", size: 16))
-                Spacer()
+                    .typography(.title2)
+                    .foregroundStyle(.gray900)
+                Text(time)
+                    .foregroundColor(.gray800)
             }
-            .foregroundColor(.gray800)
         }
     }
 }

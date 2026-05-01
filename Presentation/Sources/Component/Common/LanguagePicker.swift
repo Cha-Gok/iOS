@@ -3,7 +3,7 @@ import Domain
 import UIKit
 
 /// 언어 선택을 위한 라디오 버튼 스타일의 피커 컴포넌트입니다.
-final class LanguagePicker: UIStackView {
+public final class LanguagePicker: UIStackView {
     // MARK: - State
 
     private(set) var selectedLanguage: Language
@@ -14,7 +14,7 @@ final class LanguagePicker: UIStackView {
 
     // MARK: - LifeCycle
 
-    init(selected: Language, axis: NSLayoutConstraint.Axis = .vertical, showAlert: Bool = false) {
+    public init(selected: Language, axis: NSLayoutConstraint.Axis = .vertical, showAlert: Bool = false) {
         selectedLanguage = selected
         self.showAlert = showAlert
         super.init(frame: .zero)

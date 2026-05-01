@@ -34,29 +34,6 @@ public final class FolderViewController: CollectionViewController {
         attributedString: Typography.title1.textAttributes
     )
 
-    private var cancelButton: GlassButton = .close("취소")
-    private var primaryButton: GlassButton = .primary("만들기")
-
-    private let textFieldAlertOverlayView: UIView = {
-        let overlay = UIView()
-        overlay.translatesAutoresizingMaskIntoConstraints = false
-        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-        overlay.isHidden = true
-        return overlay
-    }()
-
-    private lazy var textField = TextFieldView(
-        field: .init(
-            mode: .create,
-            title: "새 폴더",
-            subTitle: "새로 만들 폴더의 이름을\n입력해주세요.",
-            placeHolder: "폴더 이름을 적어주세요",
-            errorMessage: vm.errorMessage
-        ),
-        cancelButton: cancelButton,
-        primaryButton: primaryButton
-    )
-
     // MARK: - Initialize
 
     public init(vm: FolderViewModel) {
@@ -79,7 +56,6 @@ public final class FolderViewController: CollectionViewController {
         setup()
         setupNavigationBar()
         setupSwipeAction()
-        setupButtons()
         setupDataSource()
         updateDataSource(animated: false)
     }
@@ -95,11 +71,8 @@ public final class FolderViewController: CollectionViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        // textField
-        updateTextFieldAlert()
-        syncTextFieldField()
-        // error Message
-        updateErrorMessage()
+        // Naviagation
+        updateNavigationBarAppearance(isTransparent: false)
         // DataSource
         updateDataSource()
     }
@@ -108,40 +81,18 @@ public final class FolderViewController: CollectionViewController {
 
     private func setup() {
         collectionView.showsVerticalScrollIndicator = false
-
-        // 1. overlay — 화면 전체를 덮는 반투명 배경
-        view.addSubview(textFieldAlertOverlayView)
-
-        // 2. layoutGuide — 키보드 위 영역을 잡는 가이드 (overlay 위)
-        let containerGuide = UILayoutGuide()
-        textFieldAlertOverlayView.addLayoutGuide(containerGuide)
-
-        // 3. textField — containerGuide 중앙에 배치 (overlay 위)
-        textFieldAlertOverlayView.addSubview(textField)
-
-        NSLayoutConstraint.activate([
-            // overlay: 화면 전체
-            textFieldAlertOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
-            textFieldAlertOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            textFieldAlertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            textFieldAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-
-            // containerGuide: safeArea top ~ 키보드 top
-            containerGuide.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            containerGuide.leadingAnchor.constraint(equalTo: textFieldAlertOverlayView.leadingAnchor),
-            containerGuide.trailingAnchor.constraint(equalTo: textFieldAlertOverlayView.trailingAnchor),
-            containerGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
-
-            // textField: containerGuide 중앙
-            textField.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-            textField.centerYAnchor.constraint(equalTo: containerGuide.centerYAnchor),
-            textField.centerXAnchor.constraint(equalTo: containerGuide.centerXAnchor),
-            textField.topAnchor.constraint(greaterThanOrEqualTo: containerGuide.topAnchor, constant: 20),
-            textField.bottomAnchor.constraint(lessThanOrEqualTo: containerGuide.bottomAnchor, constant: -20)
-        ])
     }
 
     private func setupNavigationBar() {
+        vm.showFolderAlert = { [weak self] field in
+            guard let self else { return }
+            if field.mode == .create {
+                vm.alertCoordinator?.presentAlert(environment: .createFolder(field), delegate: self)
+            } else {
+                vm.alertCoordinator?.presentAlert(environment: .updateFolder(field), delegate: self)
+            }
+        }
+
         backButton.addAction(
             UIAction { [weak self] _ in
                 self?.vm.didTapBack()
@@ -185,80 +136,6 @@ public final class FolderViewController: CollectionViewController {
             return section
         }
         collectionView.setCollectionViewLayout(layout, animated: false)
-    }
-
-    private func setupButtons() {
-        cancelButton.addAction(
-            UIAction { [weak self] _ in
-                guard let self else { return }
-                textField.endEditing(true)
-                textField.field.text = ""
-                vm.closeTextField()
-            },
-            for: .touchUpInside
-        )
-
-        primaryButton.addAction(
-            UIAction { [weak self] _ in
-                guard let self else { return }
-                let name = textField.field.text
-
-                switch vm.mode {
-                case .create:
-                    vm.create(name: name)
-                case .edit:
-                    vm.update(name: name)
-                }
-                textField.endEditing(true)
-                textField.field.text = ""
-            },
-            for: .touchUpInside
-        )
-    }
-}
-
-// MARK: - Update Method
-
-extension FolderViewController {
-    private func updateErrorMessage() {
-        textField.field.errorMessage = vm.errorMessage
-    }
-
-    private func syncTextFieldField() {
-        textField.field.mode = vm.mode
-
-        switch vm.mode {
-        case .create:
-            textField.field.title = "새 폴더"
-            textField.field.subTitle = "새로 만들 폴더의 이름을\n입력해주세요."
-            textField.field.placeHolder = "폴더 이름을 적어주세요"
-            textField.field.errorMessage = vm.errorMessage
-            if !vm.showTextField {
-                textField.field.text = ""
-            }
-        case .edit:
-            textField.field.title = "폴더 이름 수정"
-            textField.field.subTitle = "수정할 폴더의 이름을\n입력해주세요."
-            textField.field.placeHolder = "폴더 이름을 적어주세요"
-            textField.field.errorMessage = vm.errorMessage
-            textField.field.text = vm.editFolder?.name ?? ""
-        }
-    }
-
-    private func updateTextFieldAlert() {
-        let shouldShowAlert = vm.showTextField
-        textFieldAlertOverlayView.isHidden = !shouldShowAlert
-        updateInteractionForAlert(isPresented: shouldShowAlert)
-        if shouldShowAlert {
-            view.bringSubviewToFront(textFieldAlertOverlayView)
-        }
-        updateNavigationBarAppearance(isTransparent: shouldShowAlert)
-    }
-
-    func updateInteractionForAlert(isPresented: Bool) {
-        collectionView.isUserInteractionEnabled = !isPresented
-        backButton.isUserInteractionEnabled = !isPresented
-        addButton.isUserInteractionEnabled = !isPresented
     }
 }
 
@@ -350,6 +227,48 @@ public extension FolderViewController {
         // ContentItem이 folder 모델일 경우 상세 화면으로 이동합니다.
         if case .folder(let folder) = item {
             vm.pushDetail(folder)
+        }
+    }
+}
+
+// MARK: - Delegate
+
+extension FolderViewController: ChaGokAlertButtonTappedDelegate {
+    public func createFolderCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true) { [weak self] in
+            self?.vm.closeTextField()
+        }
+    }
+
+    public func createFolderPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        guard let name = alertVC.inputText, !name.isEmpty else { return }
+        vm.create(name: name)
+
+        if let errorMessage = vm.errorMessage {
+            alertVC.setErrorMessage(errorMessage)
+        } else {
+            alertVC.dismiss(animated: true) { [weak self] in
+                self?.vm.closeTextField()
+            }
+        }
+    }
+
+    public func updateFolderCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true) { [weak self] in
+            self?.vm.closeTextField()
+        }
+    }
+
+    public func updateFolderPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        guard let name = alertVC.inputText, !name.isEmpty else { return }
+        vm.update(name: name)
+
+        if let errorMessage = vm.errorMessage {
+            alertVC.setErrorMessage(errorMessage)
+        } else {
+            alertVC.dismiss(animated: true) { [weak self] in
+                self?.vm.closeTextField()
+            }
         }
     }
 }

@@ -9,9 +9,9 @@ public protocol TrashCoordinatorDelegate: AnyObject {
     /// 음성 노트 Push
     func pushVoiceNoteView(voiceNote: VoiceNote)
     /// 상세 폴더 Push
-    func pushMyFolderDetailView(_ folder: Folder)
+    func pushMyFolderDetailView(_ folder: Folder, isHidden: Bool)
     /// 검색 화면 Push함수
-    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem])
+    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem], isHidden: Bool)
 }
 
 @MainActor
@@ -19,13 +19,13 @@ public protocol TrashCoordinatorDelegate: AnyObject {
 public final class TrashViewModel {
     // MARK: - State
 
+    private(set) var isHidden: Bool = true
     private(set) var items: [ContentItem] = []
     private(set) var errorMessage: String?
     private(set) var select: SelectionMode = .none
     private(set) var selectedItems: [ContentItem] = []
-    private(set) var showTrashAlert: Bool = false
-
     public weak var coordinator: TrashCoordinatorDelegate?
+    public weak var alertCoordinator: ChaGokAlertCoordinatorDelegate?
 
     @ObservationIgnored
     private var foldersObservationTask: Task<Void, Never>?
@@ -79,14 +79,6 @@ extension TrashViewModel {
     private func allClearSelected() {
         selectedItems.removeAll()
     }
-
-    func openTrashAlert() {
-        showTrashAlert = true
-    }
-
-    func closeTrashAlert() {
-        showTrashAlert = false
-    }
 }
 
 // MARK: Action
@@ -101,11 +93,11 @@ extension TrashViewModel {
     }
 
     func pushDetailFolder(_ folder: Folder) {
-        coordinator?.pushMyFolderDetailView(folder)
+        coordinator?.pushMyFolderDetailView(folder, isHidden: isHidden)
     }
 
     func pushSearch() {
-        coordinator?.pushSearchView(type: .trash, items: items)
+        coordinator?.pushSearchView(type: .trash, items: items, isHidden: isHidden)
     }
 
     func selectItem(_ item: ContentItem) {
@@ -115,6 +107,14 @@ extension TrashViewModel {
 
     func deselectItem(_ item: ContentItem) {
         selectedItems.removeAll { $0.id == item.id }
+    }
+
+    func deleteButtonTapped(alertAction: () -> Void) {
+        guard !selectedItems.isEmpty else {
+            setSelectionMode(.none)
+            return
+        }
+        alertAction()
     }
 }
 
@@ -320,6 +320,8 @@ extension TrashViewModel {
                     if index.isMultiple(of: 2) {
                         let createdOffset = TimeInterval((index + 2) * 43200) * -1
                         let updatedOffset = TimeInterval((index + 1) * 21600) * -1
+                        let deletedOffset = TimeInterval((index + 1) * 10800) * -1
+
                         notes.append(
                             VoiceNote(
                                 title: "휴지통 메모 \(index + 1)",
@@ -333,6 +335,7 @@ extension TrashViewModel {
                                 ),
                                 transcript: nil,
                                 summary: nil,
+                                deletedAt: now.addingTimeInterval(deletedOffset),
                                 analysisState: .pending
                             )
                         )

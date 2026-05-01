@@ -359,3 +359,41 @@ private final class UnifiedGradientView: UIView {
         }
     }
 }
+
+// MARK: Alert Apply Factory
+
+extension GlassButton {
+    func apply(_ style: ChaGokAlertViewModel.ButtonStyle) {
+        switch style.type {
+        case .close:
+            configure(
+                style.text,
+                typography: .body1,
+                backgroundColor: .color(.gray300),
+                foregroundColor: .gray750
+            )
+        case .default:
+            configure(
+                style.text,
+                typography: .subtitle1,
+                border: Border(color: .color(.gray600), width: Constant.borderWidth),
+                backgroundColor: .color(.point200.withAlphaComponent(Constant.backgroundOpacity)),
+                foregroundColor: .gray900
+            )
+        case .primary:
+            configure(
+                style.text,
+                typography: .subtitle1,
+                backgroundColor: .color(.point600),
+                foregroundColor: .white
+            )
+        case .danger:
+            configure(
+                style.text,
+                typography: .subtitle1,
+                backgroundColor: .color(.danger),
+                foregroundColor: .white
+            )
+        }
+    }
+}

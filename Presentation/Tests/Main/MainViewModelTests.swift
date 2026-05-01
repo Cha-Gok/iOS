@@ -193,32 +193,17 @@ final class MainViewModelTests: XCTestCase {
         XCTAssertFalse(sut.viewModel.didScroll)
     }
 
-    func test_AlertView_상태변경() {
-        let sut = makeSUT()
-
-        sut.viewModel.openPermissionAlert()
-        XCTAssertTrue(sut.viewModel.showPermissionAlert)
-
-        sut.viewModel.closePermissionAlert()
-        XCTAssertFalse(sut.viewModel.showPermissionAlert)
-
-        sut.viewModel.openLanguageAlert()
-        XCTAssertTrue(sut.viewModel.showLanguageAlert)
-
-        sut.viewModel.closeLanguageAlert()
-        XCTAssertFalse(sut.viewModel.showLanguageAlert)
-    }
-
     func test_handleRecordButtonTap_권한허용_바로녹음화면이동() async {
         let sut = makeSUT()
         await sut.mockVoiceRecordRepo.setCheckPermissionResult(.authorized)
         await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
 
-        sut.viewModel.handleRecordButtonTap()
+        var alertActionCalled = false
+        sut.viewModel.handleRecordButtonTap(alertAction: { alertActionCalled = true })
 
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertTrue(sut.mockCoordinator.presentRecodingViewCalled)
-        XCTAssertFalse(sut.viewModel.showPermissionAlert)
+        XCTAssertFalse(alertActionCalled)
     }
 
     func test_handleRecordButtonTap_권한거부_알럿노출() async {
@@ -226,11 +211,12 @@ final class MainViewModelTests: XCTestCase {
         await sut.mockVoiceRecordRepo.setCheckPermissionResult(.denied)
         await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
 
-        sut.viewModel.handleRecordButtonTap()
+        var alertActionCalled = false
+        sut.viewModel.handleRecordButtonTap(alertAction: { alertActionCalled = true })
 
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
-        XCTAssertTrue(sut.viewModel.showPermissionAlert)
+        XCTAssertTrue(alertActionCalled)
     }
 
     func test_handleRecordButtonTap_권한미결정_알럿노출() async {
@@ -238,11 +224,12 @@ final class MainViewModelTests: XCTestCase {
         await sut.mockVoiceRecordRepo.setCheckPermissionResult(.notDetermined)
         await sut.mockVoiceRecordRepo.expectCheckPermission(callCount: 1)
 
-        sut.viewModel.handleRecordButtonTap()
+        var alertActionCalled = false
+        sut.viewModel.handleRecordButtonTap(alertAction: { alertActionCalled = true })
 
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
-        XCTAssertTrue(sut.viewModel.showPermissionAlert)
+        XCTAssertTrue(alertActionCalled)
     }
 
     // MARK: - Language Tests

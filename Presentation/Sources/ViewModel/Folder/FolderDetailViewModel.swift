@@ -31,12 +31,14 @@ public final class FolderDetailViewModel {
     private(set) var order: Order = .createdAt
     private(set) var select: SelectionMode = .none
     private(set) var selectedItems: [VoiceNote] = []
-    private(set) var showAlert: Bool = false
-
-    public weak var coordinator: FolderDetailCoordinatorDelegate?
-
+    public private(set) var isTrashMode: Bool = false
     @ObservationIgnored
     private var observationTask: Task<Void, Never>?
+
+    // MARK: - 화면 전환
+
+    public weak var coordinator: FolderDetailCoordinatorDelegate?
+    public weak var alertCoordinator: ChaGokAlertCoordinatorDelegate?
 
     // MARK: - UseCase
 
@@ -47,10 +49,12 @@ public final class FolderDetailViewModel {
     public init(
         title: String,
         folderID: UUID,
+        isTrashMode: Bool = false,
         voiceNoteUseCase: any VoiceNoteUseCase
     ) {
         self.title = title
         self.folderID = folderID
+        self.isTrashMode = isTrashMode
         self.voiceNoteUseCase = voiceNoteUseCase
         sortItems()
     }
@@ -120,16 +124,13 @@ extension FolderDetailViewModel {
         selectedItems = []
     }
 
-    func closeAlertView() {
-        showAlert = false
-    }
-
-    func openAlertView() {
+    /// 삭제 버튼 Tapped
+    func deleteButtonTapped(alertAction: () -> Void) {
         guard !selectedItems.isEmpty else {
             setSelectionMode(.none)
             return
         }
-        showAlert = true
+        alertAction()
     }
 }
 
@@ -186,7 +187,10 @@ extension FolderDetailViewModel {
 
 extension FolderDetailViewModel {
     func move() {
-        guard !selectedItems.isEmpty else { return }
+        guard !selectedItems.isEmpty else {
+            setSelectionMode(.none)
+            return
+        }
         do {
             for note in selectedItems {
                 try voiceNoteUseCase.moveToTrash(noteID: note.id)

@@ -18,11 +18,12 @@ public final class FolderViewModel {
     // MARK: - State
 
     var category: CategoryToggle
-    private(set) var showTextField: Bool = false
     private(set) var editFolder: Folder?
     private(set) var mode: TextFieldView.Mode = .create
     private(set) var errorMessage: String?
     public weak var coordinator: FolderCoordinatorDelegate?
+    public weak var alertCoordinator: ChaGokAlertCoordinatorDelegate?
+    public var showFolderAlert: ((TextFieldView.Field) -> Void)?
 
     // MARK: - Dependencies
 
@@ -49,15 +50,23 @@ extension FolderViewModel {
     func openTextField(for folder: Folder? = nil) {
         errorMessage = nil
         editFolder = folder
-        setMode(folder == nil ? .create : .edit)
-        showTextField = true
+        let currentMode: TextFieldView.Mode = folder == nil ? .create : .edit
+        setMode(currentMode)
+        let field = TextFieldView.Field(
+            mode: currentMode,
+            title: "",
+            subTitle: "",
+            placeHolder: "폴더 이름을 적어주세요",
+            text: folder?.name ?? "",
+            errorMessage: nil
+        )
+        showFolderAlert?(field)
     }
 
     func closeTextField() {
         errorMessage = nil
         editFolder = nil
         setMode(.create)
-        showTextField = false
     }
 }
 

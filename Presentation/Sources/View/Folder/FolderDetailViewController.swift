@@ -59,24 +59,6 @@ public final class FolderDetailViewController: CollectionViewController {
         self?.vm.setSelectionMode(.all)
     }
 
-    private let cancelAlertButton: GlassButton = .close("취소")
-    private let primaryAlertButton: GlassButton = .danger("삭제")
-    private let removeAlertOverlayView: UIView = {
-        let overlay = UIView()
-        overlay.translatesAutoresizingMaskIntoConstraints = false
-        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-        overlay.isHidden = true
-        return overlay
-    }()
-
-    private lazy var removeAlertView: AlertView = .init(
-        title: "기록을 삭제할까요?",
-        subTitle: "휴지통으로 이동되며,\n직접 비우기 전까지 보관돼요.",
-        closeButton: cancelAlertButton,
-        primaryButton: primaryAlertButton,
-        tintColor: .gray200.withAlphaComponent(0.2)
-    )
-
     private let vm: FolderDetailViewModel
 
     public init(vm: FolderDetailViewModel) {
@@ -96,12 +78,11 @@ public final class FolderDetailViewController: CollectionViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         collectionView.allowsSelection = false
+        updateNavigationBarAppearance(isTransparent: false)
         setupNavigation()
         setupSwipeAction()
-        setupRemoveAlert()
         setupDataSource()
         updateDataSource()
-        updateNavigationBarAppearance(isTransparent: vm.showAlert)
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -123,8 +104,6 @@ public final class FolderDetailViewController: CollectionViewController {
         updateNavigationItems(vm.select)
         // dataSource
         updateDataSource(reconfigure: true)
-        // Remove Alert
-        updateRemoveAlert()
     }
 
     private func setupNavigation() {
@@ -132,14 +111,19 @@ public final class FolderDetailViewController: CollectionViewController {
         navigationItem.leftBarButtonItem = leftItem
 
         backButton.addAction(backButtonAction(), for: .touchUpInside)
-        navigationItem.rightBarButtonItems = [
-            UIBarButtonItem(customView: moreAndActionButton),
-            UIBarButtonItem(customView: searchAndMoveButton)
-        ]
-        moreAndActionButton.addAction(moreAndActionButtonAction(), for: .touchUpInside)
-        searchAndMoveButton.addAction(searchAndMoveButtonAction(), for: .touchUpInside)
 
-        setupRightBarButtonMenu()
+        if !vm.isTrashMode {
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(customView: moreAndActionButton),
+                UIBarButtonItem(customView: searchAndMoveButton)
+            ]
+            moreAndActionButton.addAction(moreAndActionButtonAction(), for: .touchUpInside)
+            searchAndMoveButton.addAction(searchAndMoveButtonAction(), for: .touchUpInside)
+            setupRightBarButtonMenu()
+        } else {
+            navigationItem.rightBarButtonItems = []
+        }
+
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         navigationItem.rightBarButtonItems?.forEach {
             $0.hidesSharedBackground = true
@@ -148,7 +132,9 @@ public final class FolderDetailViewController: CollectionViewController {
 
     private func setupSwipeAction() {
         listConfiguration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
-            self?.trailingAction(indexPath: indexPath)
+            guard let self else { return nil }
+            if vm.isTrashMode { return UISwipeActionsConfiguration(actions: []) }
+            return trailingAction(indexPath: indexPath)
         }
 
         // List 레이아웃을 사용하되, 섹션 설정을 통해 간격을 조정합니다.
@@ -181,34 +167,6 @@ public final class FolderDetailViewController: CollectionViewController {
             children: [dateSection, selectSection]
         )
         moreAndActionButton.menu = menu
-    }
-
-    private func setupRemoveAlert() {
-        cancelAlertButton.addAction(UIAction { [weak self] _ in
-            guard let self else { return }
-            vm.closeAlertView()
-        }, for: .touchUpInside)
-
-        primaryAlertButton.addAction(UIAction { [weak self] _ in
-            guard let self else { return }
-            let restoreItems: [VoiceNote] = vm.selectedItems
-            vm.move()
-            vm.closeAlertView()
-            chagokBackgroundView.makeToast("휴지통으로 이동되었어요.") { [weak self] in
-                self?.vm.restore(items: restoreItems)
-            }
-        }, for: .touchUpInside)
-
-        view.addSubview(removeAlertOverlayView)
-        removeAlertOverlayView.addSubview(removeAlertView)
-        NSLayoutConstraint.activate([
-            removeAlertOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
-            removeAlertOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            removeAlertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            removeAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            removeAlertView.centerXAnchor.constraint(equalTo: removeAlertOverlayView.centerXAnchor),
-            removeAlertView.centerYAnchor.constraint(equalTo: removeAlertOverlayView.centerYAnchor)
-        ])
     }
 
     private func setupDataSource() {
@@ -330,16 +288,6 @@ extension FolderDetailViewController {
         }
         dataSource?.apply(snapshot, animatingDifferences: true)
     }
-
-    private func updateRemoveAlert() {
-        let shouldShowAlert = vm.showAlert
-        removeAlertOverlayView.isHidden = !shouldShowAlert
-        updateInteractionForAlert(isPresented: shouldShowAlert)
-        if shouldShowAlert {
-            view.bringSubviewToFront(removeAlertOverlayView)
-        }
-        updateNavigationBarAppearance(isTransparent: shouldShowAlert)
-    }
 }
 
 // MARK: - Helper Method
@@ -366,7 +314,14 @@ private extension FolderDetailViewController {
                 break
             case .multiple, .all:
                 // TODO: 삭제 로직 실행
-                vm.openAlertView()
+                vm.deleteButtonTapped(
+                    alertAction: {
+                        vm.alertCoordinator?.presentAlert(
+                            environment: .moveTrash,
+                            delegate: self
+                        )
+                    }
+                )
             }
         }
     }
@@ -390,13 +345,6 @@ private extension FolderDetailViewController {
             }
         }
     }
-
-    func updateInteractionForAlert(isPresented: Bool) {
-        collectionView.isUserInteractionEnabled = !isPresented
-        backButton.isUserInteractionEnabled = !isPresented
-        moreAndActionButton.isUserInteractionEnabled = !isPresented
-        searchAndMoveButton.isUserInteractionEnabled = !isPresented
-    }
 }
 
 // MARK: - Swipe Action Delegate
@@ -409,7 +357,6 @@ public extension FolderDetailViewController {
             [weak self] _, _, completion in
             if case .voiceNote(let voiceNote) = item {
                 self?.vm.move(id: voiceNote.id)
-                // Swipe 종료 애니메이션과 목록 갱신 타이밍이 어긋나면 셀이 튕겨 보일 수 있어 즉시 반영합니다.
                 self?.updateDataSource()
             }
             completion(true)
@@ -419,6 +366,21 @@ public extension FolderDetailViewController {
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
         configuration.performsFirstActionWithFullSwipe = false
         return configuration
+    }
+}
+
+// MARK: Delegate
+
+extension FolderDetailViewController: ChaGokAlertButtonTappedDelegate {
+    public func moveTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true)
+    }
+
+    public func moveTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true) { [weak self] in
+            guard let self else { return }
+            vm.move()
+        }
     }
 }
 

@@ -106,10 +106,11 @@ public final class AppDIContainer {
         )
     }
 
-    public func makeMyFolderDetailViewModel(_ folder: Folder) -> FolderDetailViewModel {
+    public func makeMyFolderDetailViewModel(_ folder: Folder, isTrashMode: Bool = false) -> FolderDetailViewModel {
         return FolderDetailViewModel(
             title: folder.name,
             folderID: folder.id,
+            isTrashMode: isTrashMode,
             voiceNoteUseCase: voiceNoteUseCase
         )
     }
@@ -130,8 +131,21 @@ public final class AppDIContainer {
         return NewFolderViewModel(folderUseCase: folderUseCase)
     }
 
-    public func makeSearchViewModel(type: SearchViewModel.SearchType, items: [ContentItem]) -> SearchViewModel {
-        return SearchViewModel(type: type, items: items)
+    public func makeSearchViewModel(
+        type: SearchViewModel.SearchType,
+        items: [ContentItem],
+        isTrashMode: Bool = false
+    ) -> SearchViewModel {
+        return SearchViewModel(
+            type: type,
+            items: items,
+            isTrashMode: isTrashMode,
+            folderRepository: folderRepository
+        )
+    }
+
+    public func makeChaGokAlertViewModel(environment: ChaGokAlertViewModel.AlertEnvironment) -> ChaGokAlertViewModel {
+        return ChaGokAlertViewModel(environment: environment)
     }
 
     #if DEBUG

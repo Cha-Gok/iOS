@@ -65,7 +65,6 @@ final class FolderViewModelTests: XCTestCase {
         let sut = makeSUT()
 
         XCTAssertEqual(sut.viewModel.category.title, "개인 폴더")
-        XCTAssertFalse(sut.viewModel.showTextField)
         XCTAssertNil(sut.viewModel.editFolder)
     }
 
@@ -103,9 +102,19 @@ final class FolderViewModelTests: XCTestCase {
         let sut = makeSUT()
         let folder = Folder(name: "수정 폴더")
 
+        var showFolderAlertCalled = false
+        var passedField: TextFieldView.Field?
+
+        sut.viewModel.showFolderAlert = { field in
+            showFolderAlertCalled = true
+            passedField = field
+        }
+
         sut.viewModel.openTextField(for: folder)
 
-        XCTAssertTrue(sut.viewModel.showTextField)
+        XCTAssertTrue(showFolderAlertCalled)
+        XCTAssertEqual(passedField?.mode, .edit)
+        XCTAssertEqual(passedField?.text, "수정 폴더")
         XCTAssertEqual(sut.viewModel.editFolder?.name, "수정 폴더")
     }
 
@@ -115,7 +124,6 @@ final class FolderViewModelTests: XCTestCase {
 
         sut.viewModel.closeTextField()
 
-        XCTAssertFalse(sut.viewModel.showTextField)
         XCTAssertNil(sut.viewModel.editFolder)
     }
 
@@ -136,7 +144,6 @@ final class FolderViewModelTests: XCTestCase {
 
         sut.mockFolderRepo.verify()
         XCTAssertEqual(sut.viewModel.category.items.count, 1)
-        XCTAssertFalse(sut.viewModel.showTextField)
     }
 
     func test_fetchAll_정상로드() async {
@@ -210,6 +217,5 @@ final class FolderViewModelTests: XCTestCase {
         }
 
         XCTAssertNil(sut.viewModel.editFolder)
-        XCTAssertFalse(sut.viewModel.showTextField)
     }
 }

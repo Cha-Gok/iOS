@@ -67,7 +67,6 @@ extension RecordingViewModelTests {
         XCTAssertEqual(sut.viewModel.state.amplitude, 0)
         XCTAssertNil(sut.viewModel.state.errorMessage)
         XCTAssertEqual(sut.viewModel.state.recordingDuration, 0)
-        XCTAssertFalse(sut.viewModel.state.showAlert)
     }
 }
 
@@ -241,32 +240,56 @@ extension RecordingViewModelTests {
         XCTAssertEqual(sut.coordinator.cancelRecordingCallCount, 1)
         await sut.repository.verify()
     }
+
+    func test_openCancelAlertButtonTapped_duration이_3초이하면_cancelButtonTapped가_호출된다() async {
+        // Given
+        let sut = makeSUT()
+        sut.viewModel.state.recordingDuration = 3
+        await sut.repository.setCancelResult(.success(()))
+        await sut.repository.expectCancelRecording(callCount: 1)
+
+        // When
+        sut.viewModel.send(.openCancelAlertButtonTapped)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.coordinator.cancelRecordingCallCount, 1)
+        await sut.repository.verify()
+    }
+
+    func test_openCancelAlertButtonTapped_duration이_3초초과면_showCancelAlert가_호출된다() {
+        // Given
+        let sut = makeSUT()
+        sut.viewModel.state.recordingDuration = 4
+        var showCancelAlertCalled = false
+        sut.viewModel.showCancelAlert = {
+            showCancelAlertCalled = true
+        }
+
+        // When
+        sut.viewModel.send(.openCancelAlertButtonTapped)
+
+        // Then
+        XCTAssertTrue(showCancelAlertCalled)
+    }
 }
 
 // MARK: - 완료
 
 extension RecordingViewModelTests {
-    func test_openAlertButtonTapped_showAlert를true로변경한다() {
+    func test_openCompleteAlertButtonTapped_showCompleteAlert가_호출된다() {
         // Given
         let sut = makeSUT()
+        var showCompleteAlertCalled = false
+        sut.viewModel.showCompleteAlert = {
+            showCompleteAlertCalled = true
+        }
 
         // When
-        sut.viewModel.send(.openAlertButtonTapped)
+        sut.viewModel.send(.openCompleteAlertButtonTapped)
 
         // Then
-        XCTAssertTrue(sut.viewModel.state.showAlert)
-    }
-
-    func test_closeAlertButtonTapped_showAlert를false로변경한다() {
-        // Given
-        let sut = makeSUT()
-        sut.viewModel.send(.openAlertButtonTapped)
-
-        // When
-        sut.viewModel.send(.closeAlertButtonTapped)
-
-        // Then
-        XCTAssertFalse(sut.viewModel.state.showAlert)
+        XCTAssertTrue(showCompleteAlertCalled)
     }
 }
 
