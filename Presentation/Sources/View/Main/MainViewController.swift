@@ -121,6 +121,8 @@ public final class MainViewController: ViewController {
         view.addSubview(collectionView)
         view.addSubview(floatingButton)
         collectionViewConstraint()
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsHorizontalScrollIndicator = false
         collectionView.delegate = self
         collectionView.setCollectionViewLayout(
             createLayout(),
