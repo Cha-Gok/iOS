@@ -194,6 +194,7 @@ extension SearchViewController {
             snapshot.appendSections([.result])
             let resultItems = vm.filteredItems.map(Item.result)
             snapshot.appendItems(resultItems, toSection: .result)
+            snapshot.reconfigureItems(resultItems)
         }
 
         dataSource.apply(snapshot, animatingDifferences: true)
