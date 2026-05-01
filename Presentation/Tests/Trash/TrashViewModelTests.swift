@@ -95,16 +95,33 @@ final class TrashViewModelTests: XCTestCase {
 
         XCTAssertTrue(sut.viewModel.items.isEmpty, "초기 항목 배열은 비어있어야 합니다.")
         XCTAssertNil(sut.viewModel.errorMessage, "초기 에러 메시지는 없어야 합니다.")
-        XCTAssertFalse(sut.viewModel.showTrashAlert, "초기 경고창 상태는 false여야 합니다.")
     }
 
-    func test_openTrashAlert_상태변경() {
+    func test_deleteButtonTapped_선택항목존재시_alertAction호출() {
         let sut = makeSUT()
-        XCTAssertFalse(sut.viewModel.showTrashAlert)
+        let folder = Folder(name: "테스트 폴더")
+        sut.viewModel.selectItem(.folder(folder))
 
-        sut.viewModel.openTrashAlert()
+        var alertActionCalled = false
+        sut.viewModel.deleteButtonTapped {
+            alertActionCalled = true
+        }
 
-        XCTAssertTrue(sut.viewModel.showTrashAlert, "알럿 상태가 true가 되어야 합니다.")
+        XCTAssertTrue(alertActionCalled, "선택된 항목이 있으면 alertAction이 호출되어야 합니다.")
+    }
+
+    func test_deleteButtonTapped_선택항목없을시_상태원복() {
+        let sut = makeSUT()
+        sut.viewModel.setSelectionMode(.multiple)
+        XCTAssertEqual(sut.viewModel.select, .multiple)
+
+        var alertActionCalled = false
+        sut.viewModel.deleteButtonTapped {
+            alertActionCalled = true
+        }
+
+        XCTAssertFalse(alertActionCalled, "선택된 항목이 없으면 alertAction이 호출되지 않아야 합니다.")
+        XCTAssertEqual(sut.viewModel.select, .none, "선택 모드가 none으로 원복되어야 합니다.")
     }
 
     func test_didTapBack_코디네이터pop호출() {
