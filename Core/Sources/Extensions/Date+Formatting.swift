@@ -2,18 +2,23 @@ import Foundation
 
 public extension Date {
     var yyyyMMddHHmmssString: String {
-        formatted(
-            Date.VerbatimFormatStyle(
-                format: "\(year: .defaultDigits)\(month: .twoDigits)\(day: .twoDigits)\(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased))\(minute: .twoDigits)\(second: .twoDigits)",
-                timeZone: .current,
-                calendar: .current
-            )
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: self)
+        return String(
+            format: "%04d%02d%02d%02d%02d%02d",
+            components.year ?? 0,
+            components.month ?? 0,
+            components.day ?? 0,
+            components.hour ?? 0,
+            components.minute ?? 0,
+            components.second ?? 0
         )
     }
 
     func toString(format: String, localeIdentifier: String = "ko_KR") -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: localeIdentifier)
+        formatter.timeZone = TimeZone.autoupdatingCurrent
         formatter.dateFormat = format
         return formatter.string(from: self)
     }

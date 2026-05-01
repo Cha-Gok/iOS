@@ -316,11 +316,11 @@ extension TrashViewController: ChaGokAlertButtonTappedDelegate {
         }
     }
 
-    public func deleteItemsTrashCloseButonTapped(_ alertVC: ChaGokAlertViewController) {
+    public func deleteItemsTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true)
     }
 
-    public func deleteItemsTrashPrimaryButonTapped(_ alertVC: ChaGokAlertViewController) {
+    public func deleteItemsTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true) { [weak self] in
             guard let selectedItems = self?.selectedItemsForBulkAction() else {
                 return

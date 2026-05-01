@@ -66,9 +66,9 @@ public protocol ChaGokAlertButtonTappedDelegate: AnyObject {
     @objc
     optional func deleteAllTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
     @objc
-    optional func deleteItemsTrashCloseButonTapped(_ alertVC: ChaGokAlertViewController)
+    optional func deleteItemsTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
     @objc
-    optional func deleteItemsTrashPrimaryButonTapped(_ alertVC: ChaGokAlertViewController)
+    optional func deleteItemsTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
 
     /// none Action
     @objc
@@ -134,7 +134,7 @@ extension ChaGokAlertViewModel {
         case .deleteAllTrash:
             delegate?.deleteAllTrashCloseButtonTapped?(alertVC)
         case .deleteItemsTrash:
-            delegate?.deleteItemsTrashCloseButonTapped?(alertVC)
+            delegate?.deleteItemsTrashCloseButtonTapped?(alertVC)
         case .none:
             delegate?.noneCloseButtonTapped?(alertVC)
         }
@@ -159,7 +159,7 @@ extension ChaGokAlertViewModel {
         case .deleteAllTrash:
             delegate?.deleteAllTrashPrimaryButtonTapped?(alertVC)
         case .deleteItemsTrash:
-            delegate?.deleteItemsTrashPrimaryButonTapped?(alertVC)
+            delegate?.deleteItemsTrashPrimaryButtonTapped?(alertVC)
         case .none:
             delegate?.nonePrimaryButtonTapped?(alertVC)
         }
