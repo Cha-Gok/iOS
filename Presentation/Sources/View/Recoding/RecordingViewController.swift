@@ -119,7 +119,7 @@ public final class RecordingViewController: ViewController {
             guard let self else { return }
             viewModel.alertCoordinator?.presentAlert(environment: .recordingCancel, delegate: self)
         }
-        
+
         viewModel.showCompleteAlert = { [weak self] in
             guard let self else { return }
             viewModel.alertCoordinator?.presentAlert(environment: .recordingComplete, delegate: self)
@@ -181,24 +181,23 @@ public final class RecordingViewController: ViewController {
     }
 }
 
-
 // MARK: - Delegate
 
 extension RecordingViewController: ChaGokAlertButtonTappedDelegate {
     public func recordingCancelCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true)
     }
-    
+
     public func recordingCancelPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true) { [weak self] in
             self?.viewModel.send(.cancelButtonTapped)
         }
     }
-    
+
     public func recordingCompleteCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true)
     }
-    
+
     public func recordingCompletePrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true) { [weak self] in
             self?.viewModel.send(.finishButtonTapped)

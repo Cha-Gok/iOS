@@ -219,7 +219,7 @@ extension DateFormattingTests {
         let now = makeDate(2026, 4, 13, 15, 30, 0)
         let yesterday = makeDate(2026, 4, 12, 23, 59, 59)
         let sevenDaysAgo = makeDate(2026, 4, 6, 0, 1, 0)
-        
+
         XCTAssertEqual(Date.relativeDateText(referenceDate: yesterday, now: now), "1일 전")
         XCTAssertEqual(Date.relativeDateText(referenceDate: sevenDaysAgo, now: now), "7일 전")
     }
@@ -227,7 +227,7 @@ extension DateFormattingTests {
     func test_상대시간_7일초과_경계값테스트() {
         let now = makeDate(2026, 4, 13, 15, 30, 0)
         let eightDaysAgo = makeDate(2026, 4, 5, 23, 59, 59)
-        
+
         XCTAssertEqual(Date.relativeDateText(referenceDate: eightDaysAgo, now: now), "2026.04.05")
     }
 }

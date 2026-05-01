@@ -59,7 +59,7 @@ public protocol ChaGokAlertButtonTappedDelegate: AnyObject {
     optional func moveTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
     @objc
     optional func moveTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
-    
+
     /// Trash Delete Action
     @objc
     optional func deleteAllTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
@@ -69,7 +69,7 @@ public protocol ChaGokAlertButtonTappedDelegate: AnyObject {
     optional func deleteItemsTrashCloseButonTapped(_ alertVC: ChaGokAlertViewController)
     @objc
     optional func deleteItemsTrashPrimaryButonTapped(_ alertVC: ChaGokAlertViewController)
-    
+
     /// none Action
     @objc
     optional func noneCloseButtonTapped(_ alertVC: ChaGokAlertViewController)

@@ -120,7 +120,6 @@ extension MainCoordinator: FolderDetailCoordinatorDelegate {
 // MARK: - TrashCoordinatorDelegate
 
 extension MainCoordinator: TrashCoordinatorDelegate {
-    
     func pushMyFolderDetailView(_ folder: Folder, isHidden: Bool) {
         let myFolderDetailVM = dependencyContainer.makeMyFolderDetailViewModel(folder, isTrashMode: isHidden)
         myFolderDetailVM.coordinator = self
@@ -128,7 +127,7 @@ extension MainCoordinator: TrashCoordinatorDelegate {
         let myFolderDetailVC = FolderDetailViewController(vm: myFolderDetailVM)
         presenter.pushViewController(myFolderDetailVC, animated: true)
     }
-    
+
     func pushSearchView(
         type: Presentation.SearchViewModel.SearchType,
         items: [ContentItem],

@@ -101,10 +101,10 @@ final class FolderViewModelTests: XCTestCase {
     func test_openTextFieldView_호출시_상태변경() {
         let sut = makeSUT()
         let folder = Folder(name: "수정 폴더")
-        
+
         var showFolderAlertCalled = false
         var passedField: TextFieldView.Field?
-        
+
         sut.viewModel.showFolderAlert = { field in
             showFolderAlertCalled = true
             passedField = field

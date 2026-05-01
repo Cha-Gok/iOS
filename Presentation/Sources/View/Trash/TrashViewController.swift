@@ -91,7 +91,6 @@ public final class TrashViewController: CollectionViewController {
         setupNavigation()
         setupDataSource()
         updateDataSource()
-        
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -306,7 +305,7 @@ extension TrashViewController: ChaGokAlertButtonTappedDelegate {
     public func deleteAllTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true)
     }
-    
+
     public func deleteAllTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true) { [weak self] in
             self?.vm.deleteAll()
@@ -316,11 +315,11 @@ extension TrashViewController: ChaGokAlertButtonTappedDelegate {
             )
         }
     }
-    
+
     public func deleteItemsTrashCloseButonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true)
     }
-    
+
     public func deleteItemsTrashPrimaryButonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true) { [weak self] in
             guard let selectedItems = self?.selectedItemsForBulkAction() else {

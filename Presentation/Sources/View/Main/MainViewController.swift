@@ -475,11 +475,11 @@ extension MainViewController: UICollectionViewDelegate, ChaGokAlertButtonTappedD
         }
         alertVC.dismiss(animated: true)
     }
-    
+
     public func micPermissionCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true)
     }
-    
+
     public func micPermissionPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
         openAppSettings()
         alertVC.dismiss(animated: true)

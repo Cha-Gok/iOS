@@ -134,7 +134,7 @@ public final class FolderDetailViewController: CollectionViewController {
         listConfiguration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
             guard let self else { return nil }
             if vm.isTrashMode { return UISwipeActionsConfiguration(actions: []) }
-            return self.trailingAction(indexPath: indexPath)
+            return trailingAction(indexPath: indexPath)
         }
 
         // List 레이아웃을 사용하되, 섹션 설정을 통해 간격을 조정합니다.
