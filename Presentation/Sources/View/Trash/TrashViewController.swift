@@ -33,14 +33,6 @@ public final class TrashViewController: CollectionViewController {
         attributedString: Typography.title1.textAttributes
     )
 
-    private let alertOverlayView: UIView = {
-        let overlay = UIView()
-        overlay.translatesAutoresizingMaskIntoConstraints = false
-        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-        overlay.isHidden = true
-        return overlay
-    }()
-
     private lazy var emptyTrashAction = UIAction(
         title: "휴지통 비우기",
         image: nil,
@@ -62,34 +54,6 @@ public final class TrashViewController: CollectionViewController {
     ) { [weak self] _ in
         self?.vm.setSelectionMode(.all)
     }
-
-    private lazy var cancelButton: GlassButton = {
-        let cancel = GlassButton.close("취소")
-        cancel.addAction(UIAction { [weak self] _ in
-            self?.vm.closeTrashAlert()
-        }, for: .touchUpInside)
-        return cancel
-    }()
-
-    private lazy var primaryButton: GlassButton = {
-        let primary = GlassButton.danger("비우기")
-        primary.addAction(UIAction { [weak self] _ in
-            self?.vm.deleteAll()
-            self?.chagokBackgroundView.makeToast(
-                type: .normal,
-                "영구 삭제 되었습니다"
-            )
-            self?.vm.closeTrashAlert()
-        }, for: .touchUpInside)
-        return primary
-    }()
-
-    private lazy var alert: AlertView = .init(
-        title: "휴지통 비울까요?",
-        subTitle: "모든 파일이 영구 삭제되며\n되돌릴 수 없어요",
-        closeButton: cancelButton,
-        primaryButton: primaryButton
-    )
 
     private let vm: TrashViewModel
 
@@ -120,11 +84,11 @@ public final class TrashViewController: CollectionViewController {
         super.viewDidLoad()
         collectionView.allowsSelection = false
         collectionView.showsVerticalScrollIndicator = false
+        updateNavigationBarAppearance(isTransparent: false)
         setupNavigation()
         setupDataSource()
         updateDataSource()
-        setupAlertView()
-        updateNavigationBarAppearance(isTransparent: vm.showTrashAlert)
+        
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -144,8 +108,6 @@ public final class TrashViewController: CollectionViewController {
         updateRightBarButtonMenu(vm.select)
         // dataSource
         updateDataSource(reconfigure: true)
-        // alert
-        updateAlertState()
     }
 
     private func setupNavigation() {
@@ -235,19 +197,6 @@ public final class TrashViewController: CollectionViewController {
             return collectionView.dequeueConfiguredReusableSupplementary(using: headerRegistration, for: indexPath)
         }
     }
-
-    private func setupAlertView() {
-        view.addSubview(alertOverlayView)
-        alertOverlayView.addSubview(alert)
-        NSLayoutConstraint.activate([
-            alertOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
-            alertOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            alertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            alertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            alert.centerXAnchor.constraint(equalTo: alertOverlayView.centerXAnchor),
-            alert.centerYAnchor.constraint(equalTo: alertOverlayView.centerYAnchor)
-        ])
-    }
 }
 
 // MARK: - Update Method
@@ -268,16 +217,6 @@ extension TrashViewController {
             item.sizeToFit()
         }
         moreAndActionButton.showsMenuAsPrimaryAction = !isEditMode
-    }
-
-    private func updateAlertState() {
-        let shouldShowAlert = vm.showTrashAlert
-        alertOverlayView.isHidden = !shouldShowAlert
-        updateInteractionForAlert(isPresented: shouldShowAlert)
-        if shouldShowAlert {
-            view.bringSubviewToFront(alertOverlayView)
-        }
-        updateNavigationBarAppearance(isTransparent: shouldShowAlert)
     }
 
     private func updateDataSource(reconfigure: Bool = false) {

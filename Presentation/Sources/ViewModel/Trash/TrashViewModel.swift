@@ -23,9 +23,8 @@ public final class TrashViewModel {
     private(set) var errorMessage: String?
     private(set) var select: SelectionMode = .none
     private(set) var selectedItems: [ContentItem] = []
-    private(set) var showTrashAlert: Bool = false
-
     public weak var coordinator: TrashCoordinatorDelegate?
+    public weak var alertCoordinator: ChaGokAlertCoordinatorDelegate?
 
     @ObservationIgnored
     private var foldersObservationTask: Task<Void, Never>?
@@ -78,14 +77,6 @@ extension TrashViewModel {
 
     private func allClearSelected() {
         selectedItems.removeAll()
-    }
-
-    func openTrashAlert() {
-        showTrashAlert = true
-    }
-
-    func closeTrashAlert() {
-        showTrashAlert = false
     }
 }
 
