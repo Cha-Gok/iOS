@@ -140,8 +140,13 @@ public final class RecordingViewController: ViewController {
     // MARK: - Private Methods
 
     private func setupNavigation() {
+        viewModel.showCancelAlert = { [weak self] in
+            guard let self else { return }
+            viewModel.alertCoordinator?.presentAlert(environment: .recordingCancel, delegate: self)
+        }
+
         cancelButton.addAction(UIAction { [weak self] _ in
-            self?.viewModel.send(.cancelButtonTapped)
+            self?.viewModel.send(.openCancelAlertButtonTapped)
         }, for: .touchUpInside)
 
         completeButton.addAction(UIAction { [weak self] _ in
@@ -217,6 +222,21 @@ public final class RecordingViewController: ViewController {
             return "pause.fill"
         case .paused:
             return "play.fill"
+        }
+    }
+}
+
+
+// MARK: - Delegate
+
+extension RecordingViewController: ChaGokAlertButtonTappedDelegate {
+    public func recordingCancelCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true)
+    }
+    
+    public func recordingCancelPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true) { [weak self] in
+            self?.viewModel.send(.cancelButtonTapped)
         }
     }
 }

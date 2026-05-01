@@ -48,6 +48,7 @@ public final class RecordingViewModel {
     public enum Action {
         case viewDidAppear
         case recordButtonTapped
+        case openCancelAlertButtonTapped
         case cancelButtonTapped
         case finishButtonTapped
         case closeAlertButtonTapped
@@ -59,8 +60,10 @@ public final class RecordingViewModel {
     private let voiceNoteUseCase: any VoiceNoteUseCase
 
     public weak var coordinator: RecordingCoordinating?
+    public weak var alertCoordinator: ChaGokAlertCoordinatorDelegate?
+    public var showCancelAlert: (() -> Void)?
 
-    private(set) var state: State = .init()
+    var state: State = .init()
     private var waveformTask: Task<Void, Never>?
     private var timerTask: Task<Void, Never>?
     private var actionTask: Task<Void, Never>?
@@ -86,6 +89,12 @@ public final class RecordingViewModel {
                 pauseRecording()
             case .idle:
                 startRecording()
+            }
+        case .openCancelAlertButtonTapped:
+            if state.recordingDuration <= 3 {
+                send(.cancelButtonTapped)
+            } else {
+                showCancelAlert?()
             }
         case .cancelButtonTapped:
             stopTimer()

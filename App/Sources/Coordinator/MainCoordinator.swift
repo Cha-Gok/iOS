@@ -83,6 +83,7 @@ extension MainCoordinator: MainCoordinatorDelegate {
         let navController = UINavigationController()
         let viewModel = dependencyContainer.makeRecordingViewModel()
         viewModel.coordinator = self
+        viewModel.alertCoordinator = self
         let recordingVC = RecordingViewController(viewModel: viewModel)
         navController.modalPresentationStyle = .fullScreen
         navController.setViewControllers([recordingVC], animated: false)
@@ -140,7 +141,11 @@ extension MainCoordinator: ChaGokAlertCoordinatorDelegate {
         viewModel.coordinator = self
         let alertVC = ChaGokAlertViewController(vm: viewModel)
         alertVC.delegate = delegate
-        presenter.present(alertVC, animated: true)
+        var topVC: UIViewController = presenter
+        while let presented = topVC.presentedViewController {
+            topVC = presented
+        }
+        topVC.present(alertVC, animated: true)
     }
 }
 
