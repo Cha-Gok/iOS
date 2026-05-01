@@ -302,10 +302,12 @@ extension SearchViewController: UITextFieldDelegate {
     }
 }
 
-#Preview {
-    UINavigationController(
-        rootViewController: SearchViewController(
-            vm: .preview()
+#if DEBUG
+    #Preview {
+        UINavigationController(
+            rootViewController: SearchViewController(
+                vm: .preview()
+            )
         )
-    )
-}
+    }
+#endif
