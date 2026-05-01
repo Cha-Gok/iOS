@@ -25,7 +25,6 @@ public final class RecordingViewModel {
         var amplitude: Float = 0
         var recordingState: RecordingState = .idle
         var errorMessage: String?
-        var showAlert: Bool = false
 
         var displayStartDate: String {
             let formatter = DateFormatter()
@@ -51,8 +50,6 @@ public final class RecordingViewModel {
         case openCancelAlertButtonTapped
         case cancelButtonTapped
         case finishButtonTapped
-        case closeAlertButtonTapped
-        case openAlertButtonTapped
         case errorOccurred(Error)
     }
 
@@ -119,10 +116,6 @@ public final class RecordingViewModel {
                     send(.errorOccurred(error))
                 }
             }
-        case .closeAlertButtonTapped:
-            state.showAlert = false
-        case .openAlertButtonTapped:
-            state.showAlert = true
         case .errorOccurred(let error):
             state.errorMessage = error.localizedDescription
         }
