@@ -59,7 +59,17 @@ public protocol ChaGokAlertButtonTappedDelegate: AnyObject {
     optional func moveTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
     @objc
     optional func moveTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
-
+    
+    /// Trash Delete Action
+    @objc
+    optional func deleteAllTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func deleteAllTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func deleteItemsTrashCloseButonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func deleteItemsTrashPrimaryButonTapped(_ alertVC: ChaGokAlertViewController)
+    
     /// none Action
     @objc
     optional func noneCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
@@ -121,6 +131,10 @@ extension ChaGokAlertViewModel {
             delegate?.updateFolderCloseButtonTapped?(alertVC)
         case .moveTrash:
             delegate?.moveTrashCloseButtonTapped?(alertVC)
+        case .deleteAllTrash:
+            delegate?.deleteAllTrashCloseButtonTapped?(alertVC)
+        case .deleteItemsTrash:
+            delegate?.deleteItemsTrashCloseButonTapped?(alertVC)
         case .none:
             delegate?.noneCloseButtonTapped?(alertVC)
         }
@@ -142,6 +156,10 @@ extension ChaGokAlertViewModel {
             delegate?.updateFolderPrimaryButtonTapped?(alertVC)
         case .moveTrash:
             delegate?.moveTrashPrimaryButtonTapped?(alertVC)
+        case .deleteAllTrash:
+            delegate?.deleteAllTrashPrimaryButtonTapped?(alertVC)
+        case .deleteItemsTrash:
+            delegate?.deleteItemsTrashPrimaryButonTapped?(alertVC)
         case .none:
             delegate?.nonePrimaryButtonTapped?(alertVC)
         }
@@ -204,6 +222,8 @@ public extension ChaGokAlertViewModel {
         case createFolder(TextFieldView.Field)
         case updateFolder(TextFieldView.Field)
         case moveTrash
+        case deleteAllTrash
+        case deleteItemsTrash
         case none
 
         var state: AlertState {
@@ -266,6 +286,24 @@ public extension ChaGokAlertViewModel {
                     bodyStyle: .basic(subTitle: "휴지통으로 이동되며,\n직접 비우기 전까지 보관돼요."),
                     cancelButtonStyle: .init(type: .close, text: "취소"),
                     primaryButtonStyle: .init(type: .danger, text: "삭제")
+                )
+            case .deleteAllTrash:
+                AlertState(
+                    header: .init(
+                        title: "휴지통을 비울까요?"
+                    ),
+                    bodyStyle: .basic(subTitle: "모든 파일이 영구 삭제되며\n되돌릴 수 없어요"),
+                    cancelButtonStyle: .init(type: .close, text: "취소"),
+                    primaryButtonStyle: .init(type: .danger, text: "비우기")
+                )
+            case .deleteItemsTrash:
+                AlertState(
+                    header: .init(
+                        title: "선택한 항목을 삭제할까요?"
+                    ),
+                    bodyStyle: .basic(subTitle: "선택한 항목이 영구 삭제되며\n되돌릴 수 없어요"),
+                    cancelButtonStyle: .init(type: .close, text: "취소"),
+                    primaryButtonStyle: .init(type: .danger, text: "삭제하기")
                 )
             case .none:
                 AlertState(

@@ -107,6 +107,14 @@ extension TrashViewModel {
     func deselectItem(_ item: ContentItem) {
         selectedItems.removeAll { $0.id == item.id }
     }
+    
+    func deleteButtonTapped(alertAction: () -> Void) {
+        guard !selectedItems.isEmpty else {
+            setSelectionMode(.none)
+            return
+        }
+        alertAction()
+    }
 }
 
 // MARK: - Lifecycle

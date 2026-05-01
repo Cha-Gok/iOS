@@ -37,8 +37,11 @@ public final class TrashViewController: CollectionViewController {
         title: "휴지통 비우기",
         image: nil,
         attributes: .destructive // 강조(빨간색) 효과
-    ) { _ in
-        self.vm.openTrashAlert()
+    ) { [weak self] _ in
+        guard let self else { return }
+        vm.alertCoordinator?.presentAlert(
+            environment: .deleteAllTrash, delegate: self
+        )
     }
 
     private lazy var selectAction = UIAction(
@@ -268,14 +271,13 @@ private extension TrashViewController {
     func moreAndActionButtonAction() -> UIAction {
         UIAction { [weak self] _ in
             guard let self else { return }
-            guard let selectedItems = selectedItemsForBulkAction() else {
-                return
+            vm.deleteButtonTapped { [weak self] in
+                guard let self else { return }
+                vm.alertCoordinator?.presentAlert(
+                    environment: .deleteItemsTrash,
+                    delegate: self
+                )
             }
-            vm.delete(items: selectedItems)
-            chagokBackgroundView.makeToast(
-                type: .normal,
-                "영구 삭제 되었습니다"
-            )
         }
     }
 
@@ -294,6 +296,41 @@ private extension TrashViewController {
                     self?.vm.cancelRestore(items: selectedItems)
                 }
             }
+        }
+    }
+}
+
+// MARK: - Delegate
+
+extension TrashViewController: ChaGokAlertButtonTappedDelegate {
+    public func deleteAllTrashCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true)
+    }
+    
+    public func deleteAllTrashPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true) { [weak self] in
+            self?.vm.deleteAll()
+            self?.chagokBackgroundView.makeToast(
+                type: .normal,
+                "영구 삭제 되었습니다"
+            )
+        }
+    }
+    
+    public func deleteItemsTrashCloseButonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true)
+    }
+    
+    public func deleteItemsTrashPrimaryButonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true) { [weak self] in
+            guard let selectedItems = self?.selectedItemsForBulkAction() else {
+                return
+            }
+            self?.vm.delete(items: selectedItems)
+            self?.chagokBackgroundView.makeToast(
+                type: .normal,
+                "영구 삭제 되었습니다"
+            )
         }
     }
 }

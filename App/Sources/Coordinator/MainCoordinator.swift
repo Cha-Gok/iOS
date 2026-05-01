@@ -51,6 +51,7 @@ extension MainCoordinator: MainCoordinatorDelegate {
     func pushTrashView() {
         let trashVM = dependencyContainer.makeTrashViewModel()
         trashVM.coordinator = self
+        trashVM.alertCoordinator = self
         let trashVC = TrashViewController(vm: trashVM)
         presenter.pushViewController(trashVC, animated: true)
     }
