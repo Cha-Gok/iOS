@@ -12,6 +12,9 @@ public final class ChaGokAlertViewController: UIViewController {
     public var selectedLanguage: Language? {
         vm.selectedLanguage
     }
+    public var inputText: String? {
+        textFieldView?.field.text
+    }
 
     // MARK: - Initialize
 
