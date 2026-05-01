@@ -44,8 +44,6 @@ public final class MainViewModel {
         categoryData[selectedCategoryIndex].items.isEmpty
     }
 
-    private(set) var showPermissionAlert: Bool = false
-
     private(set) var errorMessage: String?
 
     // MARK: - UseCase
@@ -110,14 +108,6 @@ extension MainViewModel {
 
     func setDidScroll(_ didScroll: Bool) {
         self.didScroll = didScroll
-    }
-
-    func closePermissionAlert() {
-        showPermissionAlert = false
-    }
-
-    func openPermissionAlert() {
-        showPermissionAlert = true
     }
 }
 
@@ -269,10 +259,10 @@ extension MainViewModel {
 // MARK: - Mic Permission
 
 extension MainViewModel {
-    func handleRecordButtonTap() {
+    func handleRecordButtonTap(alertAction: () -> Void) {
         let status = microphoneRepository.checkMicrophonePermission()
         if status != .authorized {
-            openPermissionAlert()
+            alertAction()
         } else {
             presentRecodingView()
         }

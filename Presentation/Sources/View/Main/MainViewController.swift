@@ -73,24 +73,6 @@ public final class MainViewController: ViewController {
         menu: UIMenu(title: "", children: [langAction, termsofServiceAction])
     )
 
-    // TODO: Permission Alert
-    private let cancelPermissionAlertButton: GlassButton = .close("나중에")
-    private let primaryPermissionAlertButton: GlassButton = .primary("설정으로 이동")
-    private let permissionAlertOverlayView: UIView = {
-        let overlay = UIView()
-        overlay.translatesAutoresizingMaskIntoConstraints = false
-        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-        overlay.isHidden = true
-        return overlay
-    }()
-
-    private lazy var permissionAlertView: AlertView = .init(
-        title: "마이크 권한이 필요해요",
-        subTitle: "설정에서 마이크 권한을 \n허용해주세요.",
-        closeButton: cancelPermissionAlertButton,
-        primaryButton: primaryPermissionAlertButton
-    )
-
     private let floatingButton: GlassButton = .floating(
         image: .init(imageName: "microphone", type: .system)
     )
@@ -104,7 +86,6 @@ public final class MainViewController: ViewController {
         setup()
         setupCollectionView()
         setupfloatingButton()
-        setupPermissionAlert()
     }
 
     override public func viewWillAppear(_ animated: Bool) {
@@ -122,16 +103,7 @@ public final class MainViewController: ViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        let shouldshowPermissionAlert = vm.showPermissionAlert
-
-        permissionAlertOverlayView.isHidden = !shouldshowPermissionAlert
-        updateInteractionForAlert(isPresented: shouldshowPermissionAlert)
-        if shouldshowPermissionAlert {
-            view.bringSubviewToFront(permissionAlertOverlayView)
-        }
-        updateNavigationBarAppearance(
-            isTransparent: shouldshowPermissionAlert
-        )
+        updateNavigationBarAppearance(isTransparent: false)
         updateDataSource()
     }
 
@@ -143,29 +115,6 @@ public final class MainViewController: ViewController {
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         navigationItem.rightBarButtonItems?.forEach { $0.hidesSharedBackground = true
         }
-    }
-
-    private func setupPermissionAlert() {
-        cancelPermissionAlertButton.addAction(UIAction { [weak self] _ in
-            self?.vm.closePermissionAlert()
-        }, for: .touchUpInside)
-
-        primaryPermissionAlertButton.addAction(UIAction { [weak self] _ in
-            guard let self else { return }
-            vm.closePermissionAlert()
-            openAppSettings()
-        }, for: .touchUpInside)
-
-        view.addSubview(permissionAlertOverlayView)
-        permissionAlertOverlayView.addSubview(permissionAlertView)
-        NSLayoutConstraint.activate([
-            permissionAlertOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
-            permissionAlertOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            permissionAlertOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            permissionAlertOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            permissionAlertView.centerXAnchor.constraint(equalTo: permissionAlertOverlayView.centerXAnchor),
-            permissionAlertView.centerYAnchor.constraint(equalTo: permissionAlertOverlayView.centerYAnchor)
-        ])
     }
 
     private func setupCollectionView() {
@@ -235,7 +184,11 @@ public final class MainViewController: ViewController {
     private func setupfloatingButton() {
         floatingButton.addAction(UIAction { [weak self] _ in
             guard let self else { return }
-            vm.handleRecordButtonTap()
+            vm.handleRecordButtonTap(
+                alertAction: {
+                    vm.alertCoordinator?.presentAlert(environment: .micPermissionRequired, delegate: self)
+                }
+            )
         }, for: .touchUpInside)
 
         NSLayoutConstraint.activate([
@@ -518,6 +471,15 @@ extension MainViewController: UICollectionViewDelegate, ChaGokAlertButtonTappedD
         if let selectedLanguage = alertVC.selectedLanguage {
             vm.saveLanguage(selectedLanguage)
         }
+        alertVC.dismiss(animated: true)
+    }
+    
+    public func micPermissionCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true)
+    }
+    
+    public func micPermissionPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        openAppSettings()
         alertVC.dismiss(animated: true)
     }
 }
