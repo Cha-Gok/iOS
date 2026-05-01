@@ -102,6 +102,7 @@ extension MainCoordinator: FolderCoordinatorDelegate {
     func pushMyFolderDetailView(_ folder: Folder) {
         let myFolderDetailVM = dependencyContainer.makeMyFolderDetailViewModel(folder)
         myFolderDetailVM.coordinator = self
+        myFolderDetailVM.alertCoordinator = self
         let myFolderDetailVC = FolderDetailViewController(vm: myFolderDetailVM)
         presenter.pushViewController(myFolderDetailVC, animated: true)
     }
