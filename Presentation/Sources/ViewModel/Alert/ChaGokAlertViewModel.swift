@@ -19,6 +19,11 @@ public extension ChaGokAlertCoordinatorDelegate {
 @MainActor
 @objc
 public protocol ChaGokAlertButtonTappedDelegate: AnyObject {
+    /// mic Permission Action
+    @objc
+    optional func micPermissionCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
+    @objc
+    optional func micPermissionPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController)
     /// recordingCancel Action
     @objc
     optional func recordingCancelCloseButtonTapped(_ alertVC: ChaGokAlertViewController)
@@ -102,6 +107,8 @@ extension ChaGokAlertViewModel {
 
     func didTapCancel(delegate: ChaGokAlertButtonTappedDelegate?, alertVC: ChaGokAlertViewController) {
         switch environment {
+        case .micPermissionRequired:
+            delegate?.micPermissionCloseButtonTapped?(alertVC)
         case .recordingCancel:
             delegate?.recordingCancelCloseButtonTapped?(alertVC)
         case .recordingComplete:
@@ -121,6 +128,8 @@ extension ChaGokAlertViewModel {
 
     func didTapPrimary(delegate: ChaGokAlertButtonTappedDelegate?, alertVC: ChaGokAlertViewController) {
         switch environment {
+        case .micPermissionRequired:
+            delegate?.micPermissionPrimaryButtonTapped?(alertVC)
         case .recordingCancel:
             delegate?.recordingCancelPrimaryButtonTapped?(alertVC)
         case .recordingComplete:
@@ -188,6 +197,7 @@ public extension ChaGokAlertViewModel {
 
     @MainActor
     enum AlertEnvironment {
+        case micPermissionRequired
         case recordingCancel
         case recordingComplete
         case languageSelect(Language)
@@ -198,6 +208,13 @@ public extension ChaGokAlertViewModel {
 
         var state: AlertState {
             switch self {
+            case .micPermissionRequired:
+                AlertState(
+                    header: .init(title: "마이크 권한이 필요해요"),
+                    bodyStyle: .basic(subTitle: "설정에서 마이크 권한을\n허용해주세요."),
+                    cancelButtonStyle: .init(type: .close, text: "나중에"),
+                    primaryButtonStyle: .init(type: .primary, text: "설정으로 이동")
+                )
             case .recordingCancel:
                 AlertState(
                     header: .init(
