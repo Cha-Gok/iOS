@@ -119,13 +119,18 @@ public final class RecordingViewController: ViewController {
             guard let self else { return }
             viewModel.alertCoordinator?.presentAlert(environment: .recordingCancel, delegate: self)
         }
+        
+        viewModel.showCompleteAlert = { [weak self] in
+            guard let self else { return }
+            viewModel.alertCoordinator?.presentAlert(environment: .recordingComplete, delegate: self)
+        }
 
         cancelButton.addAction(UIAction { [weak self] _ in
             self?.viewModel.send(.openCancelAlertButtonTapped)
         }, for: .touchUpInside)
 
         completeButton.addAction(UIAction { [weak self] _ in
-            self?.viewModel.send(.openAlertButtonTapped)
+            self?.viewModel.send(.openCompleteAlertButtonTapped)
         }, for: .touchUpInside)
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: cancelButton)
@@ -187,6 +192,16 @@ extension RecordingViewController: ChaGokAlertButtonTappedDelegate {
     public func recordingCancelPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true) { [weak self] in
             self?.viewModel.send(.cancelButtonTapped)
+        }
+    }
+    
+    public func recordingCompleteCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true)
+    }
+    
+    public func recordingCompletePrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
+        alertVC.dismiss(animated: true) { [weak self] in
+            self?.viewModel.send(.finishButtonTapped)
         }
     }
 }

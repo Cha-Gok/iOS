@@ -48,6 +48,7 @@ public final class RecordingViewModel {
         case viewDidAppear
         case recordButtonTapped
         case openCancelAlertButtonTapped
+        case openCompleteAlertButtonTapped
         case cancelButtonTapped
         case finishButtonTapped
         case errorOccurred(Error)
@@ -59,6 +60,7 @@ public final class RecordingViewModel {
     public weak var coordinator: RecordingCoordinating?
     public weak var alertCoordinator: ChaGokAlertCoordinatorDelegate?
     public var showCancelAlert: (() -> Void)?
+    public var showCompleteAlert: (() -> Void)?
 
     var state: State = .init()
     private var waveformTask: Task<Void, Never>?
@@ -93,6 +95,8 @@ public final class RecordingViewModel {
             } else {
                 showCancelAlert?()
             }
+        case .openCompleteAlertButtonTapped:
+            showCompleteAlert?()
         case .cancelButtonTapped:
             stopTimer()
             waveformTask?.cancel()
