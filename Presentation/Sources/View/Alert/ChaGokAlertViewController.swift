@@ -112,18 +112,42 @@ public final class ChaGokAlertViewController: UIViewController {
             primaryButton: primaryButton
         )
         self.textFieldView = textFieldView
-        attachContentView(textFieldView, needsWidthConstraint: true)
+        attachContentView(textFieldView, needsWidthConstraint: true, respectKeyboard: true)
     }
 
-    private func attachContentView(_ contentView: UIView, needsWidthConstraint: Bool = false) {
+    private func attachContentView(
+        _ contentView: UIView,
+        needsWidthConstraint: Bool = false,
+        respectKeyboard: Bool = false
+    ) {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(contentView)
         currentContentView = contentView
 
-        var constraints: [NSLayoutConstraint] = [
-            contentView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            contentView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ]
+        var constraints: [NSLayoutConstraint] = []
+
+        if respectKeyboard {
+            let containerGuide = UILayoutGuide()
+            view.addLayoutGuide(containerGuide)
+
+            constraints.append(contentsOf: [
+                containerGuide.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                containerGuide.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                containerGuide.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                containerGuide.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
+
+                contentView.centerXAnchor.constraint(equalTo: containerGuide.centerXAnchor),
+                contentView.centerYAnchor.constraint(equalTo: containerGuide.centerYAnchor),
+                contentView.topAnchor.constraint(greaterThanOrEqualTo: containerGuide.topAnchor, constant: 20),
+                contentView.bottomAnchor.constraint(lessThanOrEqualTo: containerGuide.bottomAnchor, constant: -20)
+            ])
+        } else {
+            constraints.append(contentsOf: [
+                contentView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                contentView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            ])
+        }
+
         if needsWidthConstraint {
             constraints.append(contentView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8))
         }

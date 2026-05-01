@@ -58,6 +58,7 @@ extension MainCoordinator: MainCoordinatorDelegate {
     func pushMyFolderView(category: CategoryToggle) {
         let myFolderVM = dependencyContainer.makeMyFolderViewModel(category)
         myFolderVM.coordinator = self
+        myFolderVM.alertCoordinator = self
         let myFolderVC = FolderViewController(vm: myFolderVM)
         presenter.pushViewController(myFolderVC, animated: true)
     }
