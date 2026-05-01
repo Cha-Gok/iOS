@@ -242,21 +242,33 @@ extension FolderViewController: ChaGokAlertButtonTappedDelegate {
 
     public func createFolderPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
         guard let name = alertVC.inputText, !name.isEmpty else { return }
-        alertVC.dismiss(animated: true) { [weak self] in
-            self?.vm.create(name: name)
+        vm.create(name: name)
+        
+        if let errorMessage = vm.errorMessage {
+            alertVC.setErrorMessage(errorMessage)
+        } else {
+            alertVC.dismiss(animated: true) { [weak self] in
+                self?.vm.closeTextField()
+            }
         }
     }
-
+    
     public func updateFolderCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
         alertVC.dismiss(animated: true) { [weak self] in
             self?.vm.closeTextField()
         }
     }
-
+    
     public func updateFolderPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
         guard let name = alertVC.inputText, !name.isEmpty else { return }
-        alertVC.dismiss(animated: true) { [weak self] in
-            self?.vm.update(name: name)
+        vm.update(name: name)
+        
+        if let errorMessage = vm.errorMessage {
+            alertVC.setErrorMessage(errorMessage)
+        } else {
+            alertVC.dismiss(animated: true) { [weak self] in
+                self?.vm.closeTextField()
+            }
         }
     }
 }

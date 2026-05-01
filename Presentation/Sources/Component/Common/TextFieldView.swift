@@ -134,7 +134,6 @@ public final class TextFieldView: UIView {
         case .edit:
             primaryButton.configuration?.title = "수정하기"
         }
-        primaryButton.isEnabled = field.isSubmitEnabled
         updatePlaceholderVisibility()
         // error Message
         updateErrorMessageLabel()
@@ -212,6 +211,11 @@ extension TextFieldView {
             textCount.textColor = field.text.count >= 50 ? .danger : .gray750
         }
     }
+
+    public func setErrorMessage(_ message: String?) {
+        field.errorMessage = message
+        updateErrorMessageLabel()
+    }
 }
 
 // MARK: - Observable 구조
@@ -225,10 +229,6 @@ public extension TextFieldView {
         var placeHolder: String
         var text: String
         var errorMessage: String?
-
-        var isSubmitEnabled: Bool {
-            !text.isEmpty
-        }
 
         var textCountLabel: String {
             "\(text.count)/\(50)"

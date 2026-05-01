@@ -267,7 +267,7 @@ public extension ChaGokAlertViewModel {
                     ),
                     bodyStyle: .textField(field: field, subTitle: "새로 만들 폴더의 이름을\n입력해주세요."),
                     cancelButtonStyle: .init(type: .close, text: "취소"),
-                    primaryButtonStyle: .init(type: .close, text: "만들기")
+                    primaryButtonStyle: .init(type: .primary, text: "만들기")
                 )
             case .updateFolder(let field):
                 AlertState(
