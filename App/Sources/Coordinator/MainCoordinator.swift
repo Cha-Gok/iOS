@@ -119,7 +119,27 @@ extension MainCoordinator: FolderDetailCoordinatorDelegate {
 
 // MARK: - TrashCoordinatorDelegate
 
-extension MainCoordinator: TrashCoordinatorDelegate {}
+extension MainCoordinator: TrashCoordinatorDelegate {
+    
+    func pushMyFolderDetailView(_ folder: Folder, isHidden: Bool) {
+        let myFolderDetailVM = dependencyContainer.makeMyFolderDetailViewModel(folder, isTrashMode: isHidden)
+        myFolderDetailVM.coordinator = self
+        myFolderDetailVM.alertCoordinator = self
+        let myFolderDetailVC = FolderDetailViewController(vm: myFolderDetailVM)
+        presenter.pushViewController(myFolderDetailVC, animated: true)
+    }
+    
+    func pushSearchView(
+        type: Presentation.SearchViewModel.SearchType,
+        items: [ContentItem],
+        isHidden: Bool
+    ) {
+        let searchVM = dependencyContainer.makeSearchViewModel(type: type, items: items, isTrashMode: isHidden)
+        searchVM.coordinator = self
+        let searchVC = SearchViewController(vm: searchVM)
+        presenter.pushViewController(searchVC, animated: true)
+    }
+}
 
 // MARK: - VoiceNoteCoordinatorDelegate
 
@@ -131,7 +151,15 @@ extension MainCoordinator: VoiceNoteCoordinatorDelegate {
 
 // MARK: - SearchCoordinatorDelegate
 
-extension MainCoordinator: SearchCoordinatorDelegate {}
+extension MainCoordinator: SearchCoordinatorDelegate {
+    func pushMyFolderDetailView(_ folder: Folder, isTrashMode: Bool) {
+        let myFolderDetailVM = dependencyContainer.makeMyFolderDetailViewModel(folder, isTrashMode: isTrashMode)
+        myFolderDetailVM.coordinator = self
+        myFolderDetailVM.alertCoordinator = self
+        let myFolderDetailVC = FolderDetailViewController(vm: myFolderDetailVM)
+        presenter.pushViewController(myFolderDetailVC, animated: true)
+    }
+}
 
 // MARK: - ChaGokAlertCoordinatorDelegate
 

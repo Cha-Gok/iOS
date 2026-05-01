@@ -111,14 +111,19 @@ public final class FolderDetailViewController: CollectionViewController {
         navigationItem.leftBarButtonItem = leftItem
 
         backButton.addAction(backButtonAction(), for: .touchUpInside)
-        navigationItem.rightBarButtonItems = [
-            UIBarButtonItem(customView: moreAndActionButton),
-            UIBarButtonItem(customView: searchAndMoveButton)
-        ]
-        moreAndActionButton.addAction(moreAndActionButtonAction(), for: .touchUpInside)
-        searchAndMoveButton.addAction(searchAndMoveButtonAction(), for: .touchUpInside)
 
-        setupRightBarButtonMenu()
+        if !vm.isTrashMode {
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(customView: moreAndActionButton),
+                UIBarButtonItem(customView: searchAndMoveButton)
+            ]
+            moreAndActionButton.addAction(moreAndActionButtonAction(), for: .touchUpInside)
+            searchAndMoveButton.addAction(searchAndMoveButtonAction(), for: .touchUpInside)
+            setupRightBarButtonMenu()
+        } else {
+            navigationItem.rightBarButtonItems = []
+        }
+
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         navigationItem.rightBarButtonItems?.forEach {
             $0.hidesSharedBackground = true
@@ -127,7 +132,9 @@ public final class FolderDetailViewController: CollectionViewController {
 
     private func setupSwipeAction() {
         listConfiguration.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
-            self?.trailingAction(indexPath: indexPath)
+            guard let self else { return nil }
+            if vm.isTrashMode { return UISwipeActionsConfiguration(actions: []) }
+            return self.trailingAction(indexPath: indexPath)
         }
 
         // List 레이아웃을 사용하되, 섹션 설정을 통해 간격을 조정합니다.

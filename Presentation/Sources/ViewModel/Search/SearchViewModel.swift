@@ -7,7 +7,7 @@ public protocol SearchCoordinatorDelegate: AnyObject {
     /// 뒤로 가기
     func pop()
     /// 폴더 Push
-    func pushMyFolderDetailView(_ folder: Folder)
+    func pushMyFolderDetailView(_ folder: Folder, isTrashMode: Bool)
     /// 음성 노트 Push
     func pushVoiceNoteView(voiceNote: VoiceNote)
 }
@@ -49,6 +49,7 @@ public final class SearchViewModel {
     private(set) var items: [ContentItem]
     @ObservationIgnored
     let type: SearchType
+    public private(set) var isTrashMode: Bool = false
     private(set) var searchState: SearchState = .empty
     private(set) var filteredItems: [ContentItem] = []
     private(set) var query: String = ""
@@ -60,10 +61,12 @@ public final class SearchViewModel {
     public init(
         type: SearchType,
         items: [ContentItem],
+        isTrashMode: Bool = false,
         folderRepository: FolderRepository
     ) {
         self.type = type
         self.items = items
+        self.isTrashMode = isTrashMode
         self.folderRepository = folderRepository
     }
 
@@ -109,7 +112,7 @@ public final class SearchViewModel {
     // MARK: - Coordinator
 
     func pushFolder(_ folder: Folder) {
-        coordinator?.pushMyFolderDetailView(folder)
+        coordinator?.pushMyFolderDetailView(folder, isTrashMode: isTrashMode)
     }
 
     func pushVoiceNote(_ voiceNote: VoiceNote) {

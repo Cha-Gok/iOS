@@ -20,11 +20,11 @@ final class MockTrashCoordinatorDelegate: TrashCoordinatorDelegate {
         pushedVoiceNote = voiceNote
     }
 
-    func pushMyFolderDetailView(_ folder: Folder) {
+    func pushMyFolderDetailView(_ folder: Folder, isHidden: Bool) {
         pushedFolder = folder
     }
 
-    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem]) {
+    func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem], isHidden: Bool) {
         pushSearchViewCalled = true
         pushedSearchType = type
         pushedSearchItems = items

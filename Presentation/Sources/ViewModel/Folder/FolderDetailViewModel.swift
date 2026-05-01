@@ -31,6 +31,7 @@ public final class FolderDetailViewModel {
     private(set) var order: Order = .createdAt
     private(set) var select: SelectionMode = .none
     private(set) var selectedItems: [VoiceNote] = []
+    public private(set) var isTrashMode: Bool = false
     @ObservationIgnored
     private var observationTask: Task<Void, Never>?
 
@@ -48,10 +49,12 @@ public final class FolderDetailViewModel {
     public init(
         title: String,
         folderID: UUID,
+        isTrashMode: Bool = false,
         voiceNoteUseCase: any VoiceNoteUseCase
     ) {
         self.title = title
         self.folderID = folderID
+        self.isTrashMode = isTrashMode
         self.voiceNoteUseCase = voiceNoteUseCase
         sortItems()
     }
