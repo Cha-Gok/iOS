@@ -26,9 +26,8 @@ public let settings: Settings = .settings(
         "ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS": "YES",
         // String Catalog → Swift 심볼 생성 (Xcode "Enable String Catalog Symbol Generation")
         "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
-        // Apple Clang Module Verifier (Xcode "Target 'Core' - Enable Module Verifier")
-        "ENABLE_MODULE_VERIFIER": "YES",
-        "MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS": "gnu11 gnu++14",
+        // Module Verifier는 순수 Swift 프레임워크에서 Obj-C 검증 실패를 유발하므로 비활성화
+        "ENABLE_MODULE_VERIFIER": "NO",
         // Run Script가 정상 동작하도록 User Script Sandboxing 비활성화
         "ENABLE_USER_SCRIPT_SANDBOXING": "NO"
     ],
