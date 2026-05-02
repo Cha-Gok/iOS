@@ -79,5 +79,4 @@ public extension VoiceNote {
         guard let summary, let transcript else { return false }
         return summary.createdAt < transcript.updatedAt
     }
-
 }

@@ -98,7 +98,14 @@ private extension VoiceNoteViewController {
     }
 
     func setupConstraints() {
-        for subview in [pageViewController.view, playerView, segmentedControl, bottomFadeView, dimOverlayView, matchAccessoryBar] {
+        for subview in [
+            pageViewController.view,
+            playerView,
+            segmentedControl,
+            bottomFadeView,
+            dimOverlayView,
+            matchAccessoryBar
+        ] {
             subview?.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -142,7 +149,7 @@ private extension VoiceNoteViewController {
             matchAccessoryBar.bottomAnchor.constraint(
                 equalTo: view.keyboardLayoutGuide.topAnchor,
                 constant: -Constant.matchAccessoryBarKeyboardSpacing
-            ),
+            )
         ])
 
         pageTopToSegmentBottom.isActive = true

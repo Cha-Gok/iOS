@@ -29,7 +29,7 @@ final class VoiceNoteSummaryViewController: UICollectionViewController {
     func scrollToMatch(_ match: VoiceNoteSearchMatch) {
         let indexPath: IndexPath
         switch match.location {
-        case let .keyPoint(index):
+        case .keyPoint(let index):
             indexPath = IndexPath(item: index, section: Section.keyPoints.rawValue)
         case .keyword:
             indexPath = IndexPath(item: 0, section: Section.keywords.rawValue)
@@ -112,7 +112,7 @@ private extension VoiceNoteSummaryViewController {
 
         let keyPointCellReg = UICollectionView
             .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, indexPath, item in
-                guard case let .keyPoint(number, text) = item else { return }
+                guard case .keyPoint(let number, let text) = item else { return }
                 cell.contentConfiguration = KeyPointContentConfiguration(
                     number: number,
                     text: text,
@@ -133,7 +133,7 @@ private extension VoiceNoteSummaryViewController {
         }
 
         let keyPointSkeletonCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case let .keyPointSkeleton(number, beginOffset) = item else { return }
+            guard case .keyPointSkeleton(let number, let beginOffset) = item else { return }
             cell.contentConfiguration = KeyPointSkeletonContentConfiguration(
                 number: number,
                 beginOffset: beginOffset
@@ -141,7 +141,7 @@ private extension VoiceNoteSummaryViewController {
         }
 
         let keywordsSkeletonCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case let .keywordsSkeleton(beginOffset) = item else { return }
+            guard case .keywordsSkeleton(let beginOffset) = item else { return }
             cell.contentConfiguration = KeywordsSkeletonContentConfiguration(beginOffset: beginOffset)
         }
 

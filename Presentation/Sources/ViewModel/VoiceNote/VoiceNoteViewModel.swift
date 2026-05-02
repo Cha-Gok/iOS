@@ -23,9 +23,12 @@ public final class VoiceNoteViewModel {
     public private(set) var searchQuery: String = ""
     public private(set) var currentMatchIndex: Int = 0
 
-    @ObservationIgnored private var playbackObservationTask: Task<Void, Never>?
-    @ObservationIgnored private var voiceNoteObservationTask: Task<Void, Never>?
-    @ObservationIgnored private var wasPlayingBeforeSeek = false
+    @ObservationIgnored
+    private var playbackObservationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var voiceNoteObservationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var wasPlayingBeforeSeek = false
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
 
     // MARK: - UseCases
@@ -460,7 +463,7 @@ public extension VoiceNoteViewModel {
     /// 지정한 핵심 포인트 인덱스가 현재 포커스된 매치이면 해당 범위를 반환합니다.
     func focusedKeyPointRange(at index: Int) -> NSRange? {
         guard let match = currentMatch,
-              case let .keyPoint(idx) = match.location,
+              case .keyPoint(let idx) = match.location,
               idx == index else { return nil }
         return match.range
     }
@@ -468,7 +471,7 @@ public extension VoiceNoteViewModel {
     /// 현재 포커스된 매치가 키워드이면 (키워드 인덱스, 범위)를 반환합니다.
     func focusedKeywordMatch() -> (index: Int, range: NSRange)? {
         guard let match = currentMatch,
-              case let .keyword(idx) = match.location else { return nil }
+              case .keyword(let idx) = match.location else { return nil }
         return (idx, match.range)
     }
 }

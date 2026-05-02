@@ -39,7 +39,9 @@ final class VoiceNoteNavigationBar {
         set { titleContainerView.text = newValue }
     }
 
-    var isEditingTitle: Bool { titleContainerView.isEditingTitle }
+    var isEditingTitle: Bool {
+        titleContainerView.isEditingTitle
+    }
 
     // MARK: - Init
 
@@ -148,7 +150,7 @@ private extension VoiceNoteNavigationBar {
             },
             UIAction(title: "삭제하기", attributes: .destructive) { [weak self] _ in
                 self?.onDelete?()
-            },
+            }
         ])
         searchItem.primaryAction = UIAction { [weak self] _ in
             self?.onSearchEnter?()
@@ -266,7 +268,7 @@ private final class TitleContainerView: UIView {
             titleField.leadingAnchor.constraint(equalTo: leadingAnchor),
             titleField.trailingAnchor.constraint(equalTo: trailingAnchor),
             titleField.topAnchor.constraint(equalTo: topAnchor),
-            titleField.bottomAnchor.constraint(equalTo: bottomAnchor),
+            titleField.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 
@@ -313,4 +315,3 @@ extension TitleContainerView: UITextFieldDelegate {
 
     return UINavigationController(rootViewController: viewController)
 }
-
