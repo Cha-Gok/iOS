@@ -294,3 +294,23 @@ extension TitleContainerView: UITextFieldDelegate {
         onCommit?(textField.text ?? "")
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    let viewController = ViewController()
+    viewController.loadViewIfNeeded()
+
+    let appearance = UINavigationBarAppearance()
+    appearance.configureWithTransparentBackground()
+    appearance.backgroundEffect = UIBlurEffect(style: .dark)
+    viewController.navigationItem.standardAppearance = appearance
+    viewController.navigationItem.compactAppearance = appearance
+    viewController.navigationItem.scrollEdgeAppearance = appearance
+
+    let navigationBar = VoiceNoteNavigationBar()
+    navigationBar.apply(to: viewController.navigationItem, title: "음성 메모 제목")
+
+    return UINavigationController(rootViewController: viewController)
+}
+
