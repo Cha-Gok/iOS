@@ -35,12 +35,27 @@ public final class KeywordChipLabel: TypographyLabel {
         focusedRange: NSRange? = nil,
         focusedHighlightBackgroundColor: UIColor? = nil
     ) {
-        guard !query.isEmpty else {
+        applyHighlight(
+            ranges: baseText.ranges(of: query),
+            highlightBackgroundColor: highlightBackgroundColor,
+            focusedRange: focusedRange,
+            focusedHighlightBackgroundColor: focusedHighlightBackgroundColor
+        )
+    }
+
+    /// 미리 계산된 범위에 형광펜 스타일의 배경 하이라이트를 적용합니다.
+    public func applyHighlight(
+        ranges: [NSRange],
+        highlightBackgroundColor: UIColor,
+        focusedRange: NSRange? = nil,
+        focusedHighlightBackgroundColor: UIColor? = nil
+    ) {
+        guard !ranges.isEmpty else {
             text = baseText
             return
         }
         attributedText = baseText.highlighted(
-            query: query,
+            ranges: ranges,
             baseAttributes: typography.textAttributes,
             highlightBackgroundColor: highlightBackgroundColor,
             focusedRange: focusedRange,

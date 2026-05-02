@@ -1,7 +1,7 @@
 import UIKit
 
-final class UnderlineTabButton: UIControl {
-    private let titleLabel = TypographyLabel(typography: .body1, alignment: .center)
+final class UnderlineTabButton: UIButton {
+    private let tabTitleLabel = TypographyLabel(typography: .body1, alignment: .center)
     private let countLabel: TypographyLabel = {
         let label = TypographyLabel(typography: .title3, alignment: .center)
         label.textColor = UIColor.point700
@@ -10,7 +10,7 @@ final class UnderlineTabButton: UIControl {
     }()
 
     private lazy var contentStack: UIStackView = {
-        let stack = UIStackView(arrangedSubviews: [titleLabel, countLabel])
+        let stack = UIStackView(arrangedSubviews: [tabTitleLabel, countLabel])
         stack.axis = .horizontal
         stack.spacing = Constant.underlineTabContentSpacing
         stack.alignment = .center
@@ -29,15 +29,13 @@ final class UnderlineTabButton: UIControl {
 
     init(title: String, isSelected: Bool = false) {
         super.init(frame: .zero)
-        titleLabel.text = title
+        tabTitleLabel.text = title
         setupUI()
         setSelected(isSelected, animated: false)
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    required init?(coder: NSCoder) { nil }
 
     // MARK: - Setup
 
@@ -63,11 +61,10 @@ final class UnderlineTabButton: UIControl {
     func setSelected(_ isSelected: Bool, animated: Bool = true) {
         self.isSelected = isSelected
         indicator.isHidden = !isSelected
-        titleLabel.typography = isSelected ? .title3 : .body1
-        titleLabel.textColor = isSelected ? UIColor.gray950 : UIColor.gray600
+        tabTitleLabel.typography = isSelected ? .title3 : .body1
+        tabTitleLabel.textColor = isSelected ? UIColor.gray950 : UIColor.gray600
     }
 
-    /// 탭 제목 우측에 표시할 카운트. `nil`이면 숨깁니다.
     func setCount(_ count: Int?) {
         if let count {
             countLabel.text = "\(count)"

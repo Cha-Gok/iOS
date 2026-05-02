@@ -2,7 +2,7 @@ import UIKit
 
 struct KeywordsContentConfiguration: UIContentConfiguration {
     var keywords: [String] = []
-    var searchQuery: String = ""
+    var keywordHighlightRanges: [[NSRange]] = []
     var focusedKeywordIndex: Int?
     var focusedRange: NSRange?
 
@@ -50,9 +50,11 @@ final class KeywordsContentView: UIView, UIContentView {
         chipLabels.forEach { $0.removeFromSuperview() }
         chipLabels = config.keywords.enumerated().map { index, keyword in
             let chip = KeywordChipLabel(text: keyword)
+            let ranges = config.keywordHighlightRanges.indices.contains(index)
+                ? config.keywordHighlightRanges[index] : []
             let focusedRange = index == config.focusedKeywordIndex ? config.focusedRange : nil
             chip.applyHighlight(
-                query: config.searchQuery,
+                ranges: ranges,
                 highlightBackgroundColor: UIColor.point700,
                 focusedRange: focusedRange,
                 focusedHighlightBackgroundColor: .systemRed

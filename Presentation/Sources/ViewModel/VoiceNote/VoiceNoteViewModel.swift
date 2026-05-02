@@ -182,7 +182,9 @@ public final class VoiceNoteViewModel {
             return
         }
 
-        let updatedNote = voiceNote.copyWith(title: trimmedTitle)
+        var updatedNote = voiceNote
+        updatedNote.title = trimmedTitle
+        updatedNote.updatedAt = .now
 
         do {
             _ = try voiceNoteUseCase.update(updatedNote)
@@ -199,7 +201,9 @@ public final class VoiceNoteViewModel {
             return
         }
 
-        let updatedNote = voiceNote.copyWith(transcript: updatedTranscript)
+        var updatedNote = voiceNote
+        updatedNote.transcript = updatedTranscript
+        updatedNote.updatedAt = .now
 
         do {
             voiceNote = try voiceNoteUseCase.update(updatedNote)
@@ -384,11 +388,8 @@ public extension VoiceNoteViewModel {
         return editableScriptSections != (voiceNote.transcript?.sections ?? [])
     }
 
-    /// 요약 생성 이후 스크립트가 수정되어 요약이 최신 상태가 아닌지 여부.
     var isSummaryOutdated: Bool {
-        guard let summary = voiceNote.summary,
-              let transcript = voiceNote.transcript else { return false }
-        return summary.createdAt < transcript.updatedAt
+        voiceNote.isSummaryOutdated
     }
 
     /// 요약 페이지에서 매치되는 항목 목록. 핵심 포인트 → 키워드 순서로 정렬됩니다.
@@ -452,6 +453,26 @@ public extension VoiceNoteViewModel {
     /// 세그먼트에 표시할 스크립트 매치 수. 검색 모드가 아니거나 쿼리가 비어 있으면 `nil`을 반환해 카운트를 숨깁니다.
     var scriptMatchCount: Int? {
         searchMode && !searchQuery.isEmpty ? scriptMatches.count : nil
+    }
+
+    /// 현재 검색 쿼리에 매칭되는 범위를 반환합니다.
+    func highlightRanges(in text: String) -> [NSRange] {
+        text.ranges(of: searchQuery)
+    }
+
+    /// 지정한 핵심 포인트 인덱스가 현재 포커스된 매치이면 해당 범위를 반환합니다.
+    func focusedKeyPointRange(at index: Int) -> NSRange? {
+        guard let match = currentMatch,
+              case .keyPoint(let idx) = match.location,
+              idx == index else { return nil }
+        return match.range
+    }
+
+    /// 현재 포커스된 매치가 키워드이면 (키워드 인덱스, 범위)를 반환합니다.
+    func focusedKeywordMatch() -> (index: Int, range: NSRange)? {
+        guard let match = currentMatch,
+              case .keyword(let idx) = match.location else { return nil }
+        return (idx, match.range)
     }
 }
 

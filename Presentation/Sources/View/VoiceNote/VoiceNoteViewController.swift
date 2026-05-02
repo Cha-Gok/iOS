@@ -1,52 +1,54 @@
 import Domain
-import SwiftUI
 import UIKit
 
-public final class VoiceNoteViewController: UIViewController, Alertable {
+public final class VoiceNoteViewController: ViewController, Alertable {
     fileprivate typealias Page = VoiceNoteViewModel.Page
 
     private let viewModel: VoiceNoteViewModel
 
     // MARK: - UI Components
 
-    private let titleContainerView = NavigationTitleContainerView()
+    private let navigationBar = VoiceNoteNavigationBar()
     private let playerView = AudioPlayerView()
     private let segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
     private let bottomFadeView = VoiceNoteBottomFadeView()
-    private let searchBar = VoiceNoteSearchBar()
-    private let matchAccessoryBar = VoiceNoteMatchAccessoryBar()
+    private let matchAccessoryBar: VoiceNoteMatchAccessoryBar = {
+        let bar = VoiceNoteMatchAccessoryBar()
+        bar.isHidden = true
+        return bar
+    }()
 
-    private var searchModeLastApplied = false
-    private let contentBottomGuide = UILayoutGuide()
-    private var contentBottomToPlayerTop: NSLayoutConstraint?
-    private var contentBottomToViewBottom: NSLayoutConstraint?
-    private let dimOverlayView: UIView = {
+    private lazy var dimOverlayView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.dimBackground
         view.isHidden = true
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dimOverlayTapped))
+        view.addGestureRecognizer(tap)
+
         return view
     }()
 
-    private let backItem = UIBarButtonItem(image: .chevronLeft)
-    private let editCancelItem = UIBarButtonItem(image: .cornerUpLeft)
-    private let doneItem = UIBarButtonItem(title: "완료")
-    private let moreItem = UIBarButtonItem(image: .moreVertical)
-    private let searchItem = UIBarButtonItem(image: .search)
-
     private lazy var pageViewController: UIPageViewController = {
-        let pvc = UIPageViewController(
-            transitionStyle: .scroll,
-            navigationOrientation: .horizontal,
-            options: nil
-        )
+        let pvc = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
         pvc.dataSource = self
         pvc.delegate = self
+        pvc.setViewControllers([summaryViewController], direction: .forward, animated: false)
         return pvc
     }()
 
     private lazy var summaryViewController = VoiceNoteSummaryViewController(viewModel: viewModel)
     private lazy var scriptViewController = VoiceNoteScriptViewController(viewModel: viewModel)
     private lazy var pages: [UIViewController] = [summaryViewController, scriptViewController]
+
+    private let contentBottomGuide = UILayoutGuide()
+    private lazy var contentBottomToPlayerTop = contentBottomGuide.topAnchor.constraint(equalTo: playerView.topAnchor)
+    private lazy var contentBottomToViewBottom = contentBottomGuide.topAnchor.constraint(equalTo: view.bottomAnchor)
+    private lazy var pageTopToSegmentBottom = pageViewController.view.topAnchor.constraint(
+        equalTo: segmentedControl.bottomAnchor
+    )
+    private lazy var pageTopToSafeArea = pageViewController.view.topAnchor.constraint(
+        equalTo: view.safeAreaLayoutGuide.topAnchor
+    )
 
     // MARK: - Init
 
@@ -56,9 +58,7 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        nil
-    }
+    required init?(coder: NSCoder) { nil }
 
     // MARK: - Lifecycle
 
@@ -79,26 +79,22 @@ public final class VoiceNoteViewController: UIViewController, Alertable {
 
 private extension VoiceNoteViewController {
     func setupUI() {
-        view.backgroundColor = UIColor.gray0
+        addChild(pageViewController)
+        pageViewController.didMove(toParent: self)
 
+        view.addSubview(segmentedControl)
         view.addSubview(pageViewController.view)
         view.addSubview(bottomFadeView)
         view.addSubview(playerView)
-        view.addSubview(segmentedControl)
+
         view.addSubview(dimOverlayView)
         view.addSubview(matchAccessoryBar)
-        matchAccessoryBar.isHidden = true
-
-        addChild(pageViewController)
-        pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
-        pageViewController.didMove(toParent: self)
 
         setupConstraints()
         setupNavigationBar()
         setupTabBar()
         setupPlayerView()
-        setupSearchBar()
-        setupDimOverlay()
+        setupMatchAccessoryBar()
     }
 
     func setupConstraints() {
@@ -116,22 +112,17 @@ private extension VoiceNoteViewController {
         view.addLayoutGuide(contentBottomGuide)
 
         NSLayoutConstraint.activate([
-            pageViewController.view.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor),
+            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
             pageViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             pageViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             pageViewController.view.bottomAnchor.constraint(equalTo: contentBottomGuide.topAnchor),
 
-            segmentedControl.topAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.topAnchor,
-                constant: Constant.underlineSegmentedControlTopMargin
-            ),
-            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            segmentedControl.heightAnchor.constraint(equalToConstant: Constant.underlineSegmentedControlHeight),
-
             bottomFadeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomFadeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bottomFadeView.heightAnchor.constraint(equalToConstant: 169),
+            bottomFadeView.heightAnchor.constraint(equalToConstant: Constant.voiceNoteBottomFadeHeight),
             bottomFadeView.bottomAnchor.constraint(equalTo: contentBottomGuide.topAnchor),
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -147,97 +138,76 @@ private extension VoiceNoteViewController {
             dimOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             dimOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            matchAccessoryBar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            matchAccessoryBar.trailingAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.trailingAnchor,
-                constant: -20
+            matchAccessoryBar.leadingAnchor.constraint(
+                equalTo: view.leadingAnchor,
+                constant: Constant.matchAccessoryBarHorizontalMargin
             ),
-            matchAccessoryBar.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: -8)
+            matchAccessoryBar.trailingAnchor.constraint(
+                equalTo: view.trailingAnchor,
+                constant: -Constant.matchAccessoryBarHorizontalMargin
+            ),
+            matchAccessoryBar.bottomAnchor.constraint(
+                equalTo: view.keyboardLayoutGuide.topAnchor,
+                constant: -Constant.matchAccessoryBarKeyboardSpacing
+            )
         ])
 
-        contentBottomToPlayerTop = contentBottomGuide.topAnchor.constraint(equalTo: playerView.topAnchor)
-        contentBottomToViewBottom = contentBottomGuide.topAnchor.constraint(equalTo: view.bottomAnchor)
-        contentBottomToPlayerTop?.isActive = true
-    }
-
-    func setupDimOverlay() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(dimOverlayTapped))
-        dimOverlayView.addGestureRecognizer(tap)
+        pageTopToSegmentBottom.isActive = true
+        contentBottomToPlayerTop.isActive = true
     }
 
     @objc
     func dimOverlayTapped() {
-        viewModel.doneTitleEditing(title: titleContainerView.text ?? "")
-    }
-
-    func setupTitleContainer() {
-        titleContainerView.text = viewModel.title
-        titleContainerView.onTapTitle = { [weak self] in
-            self?.viewModel.enterTitleEditing()
-        }
-        titleContainerView.onShouldBeginEditing = { [weak self] in
-            guard let self, viewModel.editingMode == nil else { return }
-            viewModel.enterTitleEditing()
-        }
-        titleContainerView.onCommit = { [weak self] text in
-            self?.viewModel.doneTitleEditing(title: text)
-        }
+        viewModel.doneTitleEditing(title: navigationBar.titleText)
     }
 
     func setupNavigationBar() {
-        setupTitleContainer()
-
-        for item in [backItem, editCancelItem, doneItem, moreItem, searchItem] {
-            item.hidesSharedBackground = true
-        }
-        backItem.tintColor = UIColor.gray950
-        doneItem.tintColor = UIColor.point800
-        [moreItem, searchItem].forEach { $0.tintColor = .white }
-
-        backItem.primaryAction = UIAction { [weak self] _ in
+        navigationBar.onBack = { [weak self] in
             self?.viewModel.pop()
         }
-        editCancelItem.primaryAction = UIAction { [weak self] _ in
+        navigationBar.onEditCancel = { [weak self] in
             self?.viewModel.cancelEditing()
         }
-        doneItem.primaryAction = UIAction { [weak self] _ in
-            guard let self else { return }
-            switch viewModel.editingMode {
-            case .title:
-                viewModel.doneTitleEditing(title: titleContainerView.text ?? "")
-            case .script:
-                viewModel.doneScriptEditing()
-            case nil:
-                break
-            }
+        navigationBar.onDoneTitle = { [weak self] title in
+            self?.viewModel.doneTitleEditing(title: title)
         }
-        moreItem.menu = UIMenu(children: [
-            UIAction(title: "기록 이동하기") { [weak self] _ in
-                self?.viewModel.moveVoiceNote { [weak self] name in
-                    self?.view.makeToast(type: .normal, "`\(name)` 폴더로 이동됐어요.")
-                }
-            },
-            UIAction(title: "편집하기") { [weak self] _ in
-                self?.viewModel.enterScriptEditing()
-            },
-            UIAction(title: "삭제하기", attributes: .destructive) { [weak self] _ in
-                self?.viewModel.deleteVoiceNote()
-            }
-        ])
-        searchItem.primaryAction = UIAction { [weak self] _ in
-            self?.viewModel.enterSearchMode()
+        navigationBar.onDoneScript = { [weak self] in
+            self?.viewModel.doneScriptEditing()
         }
 
-        navigationItem.leftBarButtonItem = backItem
-        navigationItem.titleView = titleContainerView
-        navigationItem.rightBarButtonItems = [moreItem, searchItem]
+        // TODO: - 완료 핸들러 안해도 될듯.
+        navigationBar.onMove = { [weak self] in
+            self?.viewModel.moveVoiceNote { [weak self] name in
+                self?.view.makeToast(type: .normal, "`\(name)` 폴더로 이동됐어요.")
+            }
+        }
+        navigationBar.onEditScript = { [weak self] in
+            self?.viewModel.enterScriptEditing()
+        }
+        navigationBar.onDelete = { [weak self] in
+            self?.viewModel.deleteVoiceNote()
+        }
+        navigationBar.onTapTitle = { [weak self] in
+            self?.viewModel.enterTitleEditing()
+        }
+        navigationBar.onSearchEnter = { [weak self] in
+            self?.viewModel.enterSearchMode()
+        }
+        navigationBar.onSearchQuery = { [weak self] query in
+            self?.viewModel.updateSearchQuery(query)
+        }
+        navigationBar.onSearchClose = { [weak self] in
+            self?.viewModel.exitSearchMode()
+        }
+
+        navigationBar.apply(to: navigationItem, title: viewModel.title)
     }
 
     func setupTabBar() {
-        segmentedControl.addAction(UIAction { [weak self] _ in
-            guard let self, let page = Page(rawValue: segmentedControl.selectedSegmentIndex) else { return }
+        segmentedControl.onSegmentSelected = { [weak self] index in
+            guard let self, let page = Page(rawValue: index) else { return }
             viewModel.updateCurrentPage(page)
-        }, for: .valueChanged)
+        }
     }
 
     func setupPlayerView() {
@@ -248,13 +218,7 @@ private extension VoiceNoteViewController {
         playerView.onSeekEnded = { [weak self] time in self?.viewModel.seekEnded(time) }
     }
 
-    func setupSearchBar() {
-        searchBar.onReturn = { [weak self] query in
-            self?.viewModel.updateSearchQuery(query)
-        }
-        searchBar.onClose = { [weak self] in
-            self?.viewModel.exitSearchMode()
-        }
+    func setupMatchAccessoryBar() {
         matchAccessoryBar.onPrev = { [weak self] in
             self?.viewModel.previousMatch()
         }
@@ -298,11 +262,20 @@ private extension VoiceNoteViewController {
             }
         }
     }
-}
 
-// MARK: - Page Switching
+    func observeEditingState() {
+        withObservationTracking {
+            _ = viewModel.editingMode
+            _ = viewModel.hasScriptEdits
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.applyEditingMode()
+                self.observeEditingState()
+            }
+        }
+    }
 
-private extension VoiceNoteViewController {
     func observeCurrentPage() {
         withObservationTracking {
             _ = viewModel.currentPage
@@ -311,6 +284,82 @@ private extension VoiceNoteViewController {
             Task { @MainActor in
                 self.applyCurrentPage(self.viewModel.currentPage)
                 self.observeCurrentPage()
+            }
+        }
+    }
+
+    func observeSearchState() {
+        withObservationTracking {
+            _ = viewModel.searchMode
+            _ = viewModel.searchQuery
+            _ = viewModel.currentMatchIndex
+        } onChange: { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.applySearchState()
+                self.observeSearchState()
+            }
+        }
+    }
+
+    func applyEditingMode() {
+        let isScriptEditing = viewModel.editingMode == .script
+
+        dimOverlayView.isHidden = viewModel.editingMode != .title
+        segmentedControl.isHidden = isScriptEditing
+        playerView.isHidden = isScriptEditing || viewModel.searchMode
+        bottomFadeView.isHidden = isScriptEditing
+
+        pageTopToSegmentBottom.isActive = !isScriptEditing
+        pageTopToSafeArea.isActive = isScriptEditing
+
+        if !viewModel.searchMode {
+            contentBottomToPlayerTop.isActive = !isScriptEditing
+            contentBottomToViewBottom.isActive = isScriptEditing
+        }
+
+        navigationBar.apply(
+            to: navigationItem,
+            title: viewModel.title,
+            editingMode: viewModel.editingMode,
+            searchMode: viewModel.searchMode,
+            hasScriptEdits: viewModel.hasScriptEdits
+        )
+    }
+
+    func applySearchState() {
+        let isSearching = viewModel.searchMode
+
+        segmentedControl.setCount(viewModel.summaryMatchCount, at: Page.summary.rawValue)
+        segmentedControl.setCount(viewModel.scriptMatchCount, at: Page.script.rawValue)
+
+        matchAccessoryBar.configure(
+            countText: viewModel.matchCountText,
+            hasMatches: viewModel.hasCurrentPageMatches
+        )
+
+        let didToggle = navigationBar.apply(
+            to: navigationItem,
+            title: viewModel.title,
+            editingMode: viewModel.editingMode,
+            searchMode: isSearching,
+            hasScriptEdits: viewModel.hasScriptEdits
+        )
+
+        if didToggle {
+            let isScriptEditing = viewModel.editingMode == .script
+            playerView.isHidden = isSearching || isScriptEditing
+            matchAccessoryBar.isHidden = !isSearching
+            contentBottomToPlayerTop.isActive = !isSearching && !isScriptEditing
+            contentBottomToViewBottom.isActive = isSearching || isScriptEditing
+        }
+
+        if let match = viewModel.currentMatch {
+            switch match.location {
+            case .keyPoint, .keyword:
+                summaryViewController.scrollToMatch(match)
+            case .script:
+                scriptViewController.scrollToMatch(match)
             }
         }
     }
@@ -340,7 +389,8 @@ extension VoiceNoteViewController: UIPageViewControllerDataSource, UIPageViewCon
         _ pageViewController: UIPageViewController,
         viewControllerBefore viewController: UIViewController
     ) -> UIViewController? {
-        guard let idx = pages.firstIndex(of: viewController), idx > 0 else { return nil }
+        guard viewModel.editingMode == nil,
+              let idx = pages.firstIndex(of: viewController), idx > 0 else { return nil }
         return pages[idx - 1]
     }
 
@@ -348,7 +398,8 @@ extension VoiceNoteViewController: UIPageViewControllerDataSource, UIPageViewCon
         _ pageViewController: UIPageViewController,
         viewControllerAfter viewController: UIViewController
     ) -> UIViewController? {
-        guard let idx = pages.firstIndex(of: viewController), idx < pages.count - 1 else { return nil }
+        guard viewModel.editingMode == nil,
+              let idx = pages.firstIndex(of: viewController), idx < pages.count - 1 else { return nil }
         return pages[idx + 1]
     }
 
@@ -364,126 +415,6 @@ extension VoiceNoteViewController: UIPageViewControllerDataSource, UIPageViewCon
               let page = Page(rawValue: index)
         else { return }
         viewModel.updateCurrentPage(page)
-    }
-}
-
-// MARK: - Edit Mode
-
-private extension VoiceNoteViewController {
-    func observeEditingState() {
-        withObservationTracking {
-            _ = viewModel.editingMode
-            _ = viewModel.hasScriptEdits
-        } onChange: { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                applyEditingMode(viewModel.editingMode)
-                observeEditingState()
-            }
-        }
-    }
-}
-
-private extension VoiceNoteViewController {
-    func applyEditingMode(_ mode: VoiceNoteViewModel.EditingMode?) {
-        switch mode {
-        case .title:
-            if !titleContainerView.isEditingTitle {
-                titleContainerView.text = viewModel.title
-                titleContainerView.setEditing(true)
-            }
-            dimOverlayView.isHidden = false
-        case .script:
-            titleContainerView.isHidden = true
-            editCancelItem.tintColor = viewModel.hasScriptEdits ? UIColor.gray950 : UIColor.gray600
-            dimOverlayView.isHidden = true
-        case nil:
-            titleContainerView.setEditing(false)
-            titleContainerView.text = viewModel.title
-            titleContainerView.isHidden = false
-            dimOverlayView.isHidden = true
-        }
-        updateNavigationItems()
-    }
-
-    func updateNavigationItems() {
-        if viewModel.searchMode {
-            navigationItem.hidesBackButton = true
-            navigationItem.leftBarButtonItem = nil
-            navigationItem.rightBarButtonItems = []
-            navigationItem.titleView = searchBar
-            return
-        }
-
-        navigationItem.hidesBackButton = false
-        navigationItem.titleView = titleContainerView
-        switch viewModel.editingMode {
-        case .title:
-            navigationItem.leftBarButtonItem = backItem
-            navigationItem.rightBarButtonItems = [doneItem]
-        case .script:
-            navigationItem.leftBarButtonItem = editCancelItem
-            navigationItem.rightBarButtonItems = [doneItem]
-        case nil:
-            navigationItem.leftBarButtonItem = backItem
-            navigationItem.rightBarButtonItems = [moreItem, searchItem]
-        }
-    }
-}
-
-// MARK: - Search Mode
-
-private extension VoiceNoteViewController {
-    func observeSearchState() {
-        withObservationTracking {
-            _ = viewModel.searchMode
-            _ = viewModel.searchQuery
-            _ = viewModel.currentMatchIndex
-        } onChange: { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                self.applySearchState()
-                self.observeSearchState()
-            }
-        }
-    }
-
-    func applySearchState() {
-        let isSearching = viewModel.searchMode
-        let didToggle = isSearching != searchModeLastApplied
-        searchModeLastApplied = isSearching
-
-        segmentedControl.setCount(viewModel.summaryMatchCount, at: Page.summary.rawValue)
-        segmentedControl.setCount(viewModel.scriptMatchCount, at: Page.script.rawValue)
-
-        matchAccessoryBar.configure(
-            countText: viewModel.matchCountText,
-            hasMatches: viewModel.hasCurrentPageMatches
-        )
-
-        updateNavigationItems()
-
-        if didToggle {
-            playerView.isHidden = isSearching
-            matchAccessoryBar.isHidden = !isSearching
-            contentBottomToPlayerTop?.isActive = !isSearching
-            contentBottomToViewBottom?.isActive = isSearching
-            if isSearching {
-                searchBar.becomeFirstResponder()
-            } else {
-                searchBar.setQuery("")
-                searchBar.resignFirstResponder()
-            }
-        }
-
-        if let match = viewModel.currentMatch {
-            switch match.location {
-            case .keyPoint, .keyword:
-                summaryViewController.scrollToMatch(match)
-            case .script:
-                scriptViewController.scrollToMatch(match)
-            }
-        }
     }
 }
 

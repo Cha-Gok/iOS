@@ -250,6 +250,15 @@ public extension Constant {
 
     /// SkeletonLineView scaleX 애니메이션 편도 주기 (초)
     static let skeletonAnimationDuration: CFTimeInterval = 1.0
+
+    /// 스켈레톤 핵심 포인트 개수 (3)
+    static let skeletonKeyPointCount: Int = 3
+
+    /// 스켈레톤 키워드 개수 (2)
+    static let skeletonKeywordCount: Int = 2
+
+    /// 스켈레톤 항목 간 애니메이션 시작 오프셋 간격 (0.2초)
+    static let skeletonStaggerOffset: Double = 0.2
 }
 
 // MARK: - BackgroundView Constants
@@ -281,4 +290,42 @@ public extension Constant {
     static let ellipseFirstBottomOffset: CGFloat = 69
     /// 두 번째 타원 Bottom Offset (100)
     static let ellipseSecondBottomOffset: CGFloat = 100
+}
+
+// MARK: - VoiceNote Layout Constants
+
+public extension Constant {
+    /// BottomFadeView 높이 (192)
+    static let voiceNoteBottomFadeHeight: CGFloat = 192
+
+    /// MatchAccessoryBar 좌우 수평 마진 (20)
+    static let matchAccessoryBarHorizontalMargin: CGFloat = 20
+
+    /// MatchAccessoryBar 키보드 상단 간격 (8)
+    static let matchAccessoryBarKeyboardSpacing: CGFloat = 8
+}
+
+// MARK: - SummarySection Layout Constants
+
+public extension Constant {
+    /// SummarySection 좌우 여백 (20)
+    static let summarySectionHorizontalInset: CGFloat = 20
+
+    /// SummarySection metadata 셀 상단 여백 (24)
+    static let summarySectionMetadataTopInset: CGFloat = 24
+
+    /// SummarySection keyPoints 헤더 상단 여백 (26)
+    static let summarySectionKeyPointsHeaderTop: CGFloat = 26
+
+    /// SummarySection keyPoints 셀 상단 여백 (16)
+    static let summarySectionKeyPointsTopInset: CGFloat = 16
+
+    /// SummarySection keyPoints 셀 간 간격 (6)
+    static let summarySectionKeyPointsGroupSpacing: CGFloat = 6
+
+    /// SummarySection keywords 헤더 상단 여백 (32)
+    static let summarySectionKeywordsHeaderTop: CGFloat = 32
+
+    /// SummarySection keywords 셀 상단 여백 (12)
+    static let summarySectionKeywordsTopInset: CGFloat = 12
 }
