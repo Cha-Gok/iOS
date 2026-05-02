@@ -1,7 +1,7 @@
 import Domain
 import UIKit
 
-public final class VoiceNoteViewController: UIViewController, Alertable {
+public final class VoiceNoteViewController: ViewController, Alertable {
     fileprivate typealias Page = VoiceNoteViewModel.Page
 
     private let viewModel: VoiceNoteViewModel
