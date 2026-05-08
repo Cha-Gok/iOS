@@ -180,7 +180,7 @@ public actor DefaultVoiceRecordRepository: VoiceRecordRepository {
 
     private func activateSession() throws(VoiceRecordRepositoryError) {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.record, mode: .default)
+            try AVAudioSession.sharedInstance().setCategory(.record, mode: .spokenAudio, options: [.duckOthers])
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             throw .startFailed
