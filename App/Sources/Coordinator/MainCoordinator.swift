@@ -1,6 +1,7 @@
 import Core
 import Domain
 import Presentation
+import SwiftUI
 import UIKit
 
 @MainActor
@@ -16,12 +17,14 @@ final class MainCoordinator: BaseCoordinator<UINavigationController> {
     }
 
     override func start() {
-        let mainVM = dependencyContainer.makeMainViewModel()
-        let mainVC = MainViewController(vm: mainVM)
-        mainVM.mainCoordinator = self
-        mainVM.alertCoordinator = self
-        presenter.isNavigationBarHidden = false
-        presenter.setViewControllers([mainVC], animated: false)
+        let vc = UIHostingController(rootView: MLXGemma4TestView())
+        presenter.setViewControllers([vc], animated: false)
+//        let mainVM = dependencyContainer.makeMainViewModel()
+//        let mainVC = MainViewController(vm: mainVM)
+//        mainVM.mainCoordinator = self
+//        mainVM.alertCoordinator = self
+//        presenter.isNavigationBarHidden = false
+//        presenter.setViewControllers([mainVC], animated: false)
     }
 }
 
