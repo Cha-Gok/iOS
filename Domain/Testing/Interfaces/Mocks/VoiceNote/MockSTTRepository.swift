@@ -8,16 +8,19 @@ public actor MockSTTRepository: STTRepository {
     private var result: Result<Transcript, STTRepositoryError>?
     private nonisolated(unsafe) var checkResult: PermissionStatus?
     private var requestResult: Result<PermissionStatus, STTPermissionRepositoryError>?
+    private var downloadResult: Result<URL, STTRepositoryError>?
 
     private var actualCallCount = 0
     private var actualAudioFilePath: String?
     private nonisolated(unsafe) var actualCheckSTTPermissionCallCount = 0
     private var actualRequestSTTPermissionCallCount = 0
+    private var actualDownloadCallCount = 0
 
     private var expectedCallCount: Int?
     private var expectedAudioFilePath: String?
     private nonisolated(unsafe) var expectedCheckSTTPermissionCallCount: Int?
     private var expectedRequestSTTPermissionCallCount: Int?
+    private var expectedDownloadCallCount: Int?
 
     public func setResult(_ result: Result<Transcript, STTRepositoryError>) {
         self.result = result
@@ -31,6 +34,10 @@ public actor MockSTTRepository: STTRepository {
         requestResult = result
     }
 
+    public func setDownloadResult(_ result: Result<URL, STTRepositoryError>) {
+        downloadResult = result
+    }
+
     public func expectTranscribe(callCount: Int, audioFilePath: String? = nil) {
         expectedCallCount = callCount
         expectedAudioFilePath = audioFilePath
@@ -42,6 +49,10 @@ public actor MockSTTRepository: STTRepository {
 
     public func expectRequestSTTPermission(callCount: Int) {
         expectedRequestSTTPermissionCallCount = callCount
+    }
+
+    public func expectDownload(callCount: Int) {
+        expectedDownloadCallCount = callCount
     }
 
     public func verify(file: StaticString = #filePath, line: UInt = #line) {
@@ -69,6 +80,15 @@ public actor MockSTTRepository: STTRepository {
                 actualRequestSTTPermissionCallCount,
                 expected,
                 "STT 권한 요청 호출 횟수가 일치하지 않습니다.",
+                file: file,
+                line: line
+            )
+        }
+        if let expected = expectedDownloadCallCount {
+            XCTAssertEqual(
+                actualDownloadCallCount,
+                expected,
+                "다운로드 호출 횟수가 일치하지 않습니다.",
                 file: file,
                 line: line
             )
@@ -112,6 +132,23 @@ public actor MockSTTRepository: STTRepository {
         case .none:
             XCTFail("MockSTTRepository.requestResult 가 설정되지 않았습니다.")
             throw .unknown(NSError(domain: "MockSTTRepository.requestResult", code: -1))
+        }
+    }
+
+    @discardableResult
+    public func download(
+        progressHandler: (@Sendable (Progress) -> Void)? = nil
+    ) async throws(STTRepositoryError) -> URL {
+        actualDownloadCallCount += 1
+
+        switch downloadResult {
+        case .success(let url):
+            return url
+        case .failure(let error):
+            throw error
+        case .none:
+            XCTFail("MockSTTRepository.downloadResult 가 설정되지 않았습니다.")
+            throw .unknown(NSError(domain: "MockSTTRepository.downloadResult", code: -1))
         }
     }
 }
