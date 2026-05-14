@@ -96,12 +96,12 @@ extension DownloadOnDeviceViewModelTests {
 // MARK: - 다운로드 취소 및 기타
 
 extension DownloadOnDeviceViewModelTests {
-    func test_cancelDownload_호출시_다운로드를취소하고_상태가초기화된다() async throws {
+    func test_cancelDownload_호출시_다운로드를취소하고_상태가초기화된다() async {
         // Given
         let sut = makeSUT()
         let dummyURL = URL(fileURLWithPath: "/dummy/path")
         await sut.repository.setDownloadResult(.success(dummyURL))
-        
+
         sut.viewModel.download() // Task 시작
 
         // When
