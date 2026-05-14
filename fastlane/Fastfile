@@ -58,7 +58,7 @@ platform :ios do
   end
 
   private_lane :build_ipa do |options|
-    sh("cd .. && tuist generate --no-open")
+    sh("cd .. && tuist install && tuist generate --no-open")
     build_app(
       workspace: "ChaGok.xcworkspace",
       scheme: "App",
