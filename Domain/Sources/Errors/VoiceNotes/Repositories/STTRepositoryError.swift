@@ -4,6 +4,8 @@ import Foundation
 public enum STTRepositoryError: LocalizedError, Sendable {
     /// 오디오 전사(Transcription) 실패.
     case transcribeFailed
+    /// 모델 다운로드 실패.
+    case downloadFailed
     /// 취소됨.
     case cancelled
     /// 알 수 없는 에러.
@@ -13,6 +15,8 @@ public enum STTRepositoryError: LocalizedError, Sendable {
         switch self {
         case .transcribeFailed:
             return "음성 인식에 실패했습니다."
+        case .downloadFailed:
+            return "모델 다운로드에 실패했습니다."
         case .cancelled:
             return nil
         case .unknown(let error):

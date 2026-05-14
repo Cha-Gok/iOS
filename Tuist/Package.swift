@@ -3,5 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "ChaGok",
-    dependencies: []
+    dependencies: [
+        .package(url: "https://github.com/argmaxinc/argmax-oss-swift.git", from: "1.0.0")
+    ]
 )

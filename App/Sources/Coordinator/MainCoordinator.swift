@@ -83,12 +83,30 @@ extension MainCoordinator: MainCoordinatorDelegate {
 
     func presentRecodingView() {
         let navController = UINavigationController()
-        let viewModel = dependencyContainer.makeRecordingViewModel()
-        viewModel.coordinator = self
-        viewModel.alertCoordinator = self
-        let recordingVC = RecordingViewController(viewModel: viewModel)
-        navController.modalPresentationStyle = .fullScreen
-        navController.setViewControllers([recordingVC], animated: false)
+        let isModelDownloaded = dependencyContainer.isWhisperModelDownloaded()
+
+        if isModelDownloaded {
+            let viewModel = dependencyContainer.makeRecordingViewModel()
+            viewModel.coordinator = self
+            viewModel.alertCoordinator = self
+            let recordingVC = RecordingViewController(viewModel: viewModel)
+            navController.isNavigationBarHidden = false
+            navController.modalPresentationStyle = .fullScreen
+            navController.setViewControllers([recordingVC], animated: false)
+        } else {
+            let viewModel = dependencyContainer.makeDownloadOnDeviceViewModel()
+            viewModel.coordinator = self
+            let downloadVC = DownloadOnDeviceViewController(vm: viewModel)
+            navController.isNavigationBarHidden = true
+            navController.modalPresentationStyle = .pageSheet
+            navController.setViewControllers([downloadVC], animated: false)
+
+            if let sheet = navController.sheetPresentationController {
+                sheet.detents = [.medium()]
+                sheet.prefersGrabberVisible = true
+            }
+        }
+
         presenter.present(navController, animated: true)
     }
 }
@@ -176,6 +194,22 @@ extension MainCoordinator: ChaGokAlertCoordinatorDelegate {
             topVC = presented
         }
         topVC.present(alertVC, animated: true)
+    }
+}
+
+// MARK: - DownloadWhisperCoordinatorDelegate
+
+extension MainCoordinator: DownloadOnDeviceCoordinatorDelegate {
+    func dismissSheet(completion: Bool) {
+        if completion { // 모델 다운로드 완료 후
+            presenter.dismiss(animated: true) { [weak self] in
+                Task {
+                    await self?.dependencyContainer.preloadWhisperKit()
+                }
+            }
+        } else {
+            presenter.dismiss(animated: true)
+        }
     }
 }
 

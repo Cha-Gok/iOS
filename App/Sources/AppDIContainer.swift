@@ -25,11 +25,18 @@ public final class AppDIContainer {
         languageRepository: languageRepository
     )
     private lazy var summaryRepository = DefaultSummaryRepository()
+    private lazy var whisperProvider = WhisperKitProvider(
+        storageService: storageService,
+        languageRepository: languageRepository
+    )
 
+    private lazy var sttWhisperRepository = DefaultWhisperSTTRepository(
+        whisperProvider: whisperProvider
+    )
     /// Analysis (Domain Service)
     private(set) lazy var voiceNoteAnalysisService = DefaultVoiceNoteAnalysisService(
         voiceNoteRepository: voiceNoteRepository,
-        sttRepository: sttRepository,
+        sttRepository: sttWhisperRepository,
         summaryRepository: summaryRepository,
         languageRepository: languageRepository
     )
@@ -43,6 +50,16 @@ public final class AppDIContainer {
     )
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
+    }
+
+    // MARK: - Whisper 모델 ( preload , download ) Status
+
+    public func isWhisperModelDownloaded() -> Bool {
+        WhisperKitProvider.isModelDownloaded(storageService: storageService)
+    }
+
+    public func preloadWhisperKit() async {
+        await whisperProvider.preload()
     }
 
     // MARK: - Repository
@@ -146,6 +163,12 @@ public final class AppDIContainer {
 
     public func makeChaGokAlertViewModel(environment: ChaGokAlertViewModel.AlertEnvironment) -> ChaGokAlertViewModel {
         return ChaGokAlertViewModel(environment: environment)
+    }
+
+    public func makeDownloadOnDeviceViewModel() -> DownloadOnDeviceViewModel {
+        return DownloadOnDeviceViewModel(
+            repository: sttWhisperRepository
+        )
     }
 
     #if DEBUG
