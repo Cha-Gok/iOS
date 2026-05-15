@@ -83,3 +83,5 @@ CLAUDE.md
 fastlane/.env.secret
 fastlane/.env.*.secret
 fastlane/*.p8
+fastlane/report.xml
+fastlane/README.md
