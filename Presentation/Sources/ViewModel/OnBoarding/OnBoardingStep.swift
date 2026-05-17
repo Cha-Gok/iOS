@@ -17,6 +17,7 @@ enum Step: Int, CaseIterable, Equatable {
     case first = 0
     case second
     case micPermission
+    case download
     case finish
 
     static func matchingStep(_ val: Int) -> Step {
@@ -28,6 +29,8 @@ enum Step: Int, CaseIterable, Equatable {
         case 2:
             return .micPermission
         case 3:
+            return .download
+        case 4:
             return .finish
         default:
             AppLogger.warning("매칭되지 않는 Int값이 들어왔습니다, value: \(val)")
@@ -55,6 +58,11 @@ enum Step: Int, CaseIterable, Equatable {
                 body: "녹음과 음성 변환을 위해\n마이크와 음성 인식 권한이 필요해요.",
                 image: "onboarding03"
             )
+        case .download:
+            OnBoardingItem(
+                headline: "기기에서 바로 작동하도록,\n몇 가지를 준비할게요.",
+                body: "사용자님의 기기 환경을 확인중이에요"
+            )
         case .finish:
             OnBoardingItem(
                 headline: "기록할 언어를 선택해 주세요.",
@@ -70,6 +78,8 @@ enum Step: Int, CaseIterable, Equatable {
         case .second:
             return .micPermission
         case .micPermission:
+            return .download
+        case .download:
             return .finish
         case .finish:
             return .finish
@@ -84,8 +94,10 @@ enum Step: Int, CaseIterable, Equatable {
             return .first
         case .micPermission:
             return .second
-        case .finish:
+        case .download:
             return .micPermission
+        case .finish:
+            return .download
         }
     }
 

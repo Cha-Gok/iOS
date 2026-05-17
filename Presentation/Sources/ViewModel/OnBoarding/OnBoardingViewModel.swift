@@ -23,6 +23,7 @@ public final class OnBoardingViewModel {
     let sttRepository: any STTRepository
     let checkFirstLaunchRepository: any CheckFirstLaunchRepository
     let folderUseCase: any FolderUseCase
+    let mlxRepository: any AvailableModelSupportRepository
 
     // MARK: - 생성자
 
@@ -31,13 +32,15 @@ public final class OnBoardingViewModel {
         voiceRecordRepository: any VoiceRecordRepository,
         sttRepository: any STTRepository,
         checkFirstLaunchRepository: any CheckFirstLaunchRepository,
-        folderUseCase: any FolderUseCase
+        folderUseCase: any FolderUseCase,
+        mlxRepository: any AvailableModelSupportRepository
     ) {
         self.languageRepository = languageRepository
         self.voiceRecordRepository = voiceRecordRepository
         self.sttRepository = sttRepository
         self.checkFirstLaunchRepository = checkFirstLaunchRepository
         self.folderUseCase = folderUseCase
+        self.mlxRepository = mlxRepository
     }
 
     // MARK: - State
@@ -45,14 +48,24 @@ public final class OnBoardingViewModel {
     private(set) var currentStep: Step = .first
     private(set) var errorMessage: String?
     private(set) var language: Language = .ko
+    private(set) var downloadStatus: DownloadStatus = .idle
 
     private var isPaging: Bool = false
+    @ObservationIgnored
+    private var downloadTask: Task<Void, Never>?
     var steps: [Step] {
         Step.allCases
     }
 
     var primaryButtonTitle: String {
-        currentStep == .finish ? "시작하기" : "다음"
+        switch currentStep {
+        case .finish:
+            return "시작하기"
+        case .download:
+            return primaryDownloadButtonTitle
+        default:
+            return "다음"
+        }
     }
 
     var secondButtonTitle: String {
@@ -97,10 +110,17 @@ extension OnBoardingViewModel {
             isPaging = true
             finishOnBoarding()
         default: // 다음
-            let nextIndex = currentStep.rawValue + 1
-            guard nextIndex < Step.allCases.count else { return }
-            isPaging = true
-            scrollAction(nextIndex)
+            guard currentStep != .download else {
+                switch downloadStatus {
+                case .checking, .downloading:
+                    return
+                case .completed, .notFoundModel:
+                    return nextPage(scrollAction: scrollAction)
+                case .idle, .failed:
+                    return download()
+                }
+            }
+            return nextPage(scrollAction: scrollAction)
         }
     }
 
@@ -120,6 +140,155 @@ extension OnBoardingViewModel {
     }
 }
 
+// MARK: - Download Page State
+
+extension OnBoardingViewModel {
+    private var primaryDownloadButtonTitle: String {
+        switch downloadStatus {
+        case .checking:
+            return "확인 중"
+        case .downloading:
+            return "다운로드 중"
+        case .completed, .notFoundModel:
+            return "다음"
+        default:
+            return "다운로드"
+        }
+    }
+    
+    @ObservationIgnored
+    var modelCardIsHidden: Bool {
+        switch downloadStatus {
+        case .failed, .checking, .notFoundModel:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var progressPercentText: String {
+        let fraction = Float(downloadStatus.progress)
+        return "\(Int((fraction * 100).rounded()))%"
+    }
+    
+    func checkModel() {
+        guard downloadStatus != .completed else { return }
+        guard !downloadStatus.isDownloading else { return }
+        downloadStatus = .checking
+        
+        let configuration = mlxRepository.checkSupportModel()
+        switch configuration.model {
+        case .none:
+            downloadStatus = .notFoundModel
+        case .gemma4_e2b_4bit:
+            downloadStatus = .idle
+        }
+    }
+    
+    private func download() {
+        guard downloadTask == nil else { return }
+        downloadStatus = .downloading(progress: 0)
+        downloadTask = Task {
+            do {
+                try await mlxRepository.downloadModel { [weak self] progress in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        guard self.downloadStatus != .completed else { return }
+                        self.downloadStatus = .downloading(progress: progress.fractionCompleted)
+                    }
+                }
+                downloadStatus = .completed
+            } catch {
+                AppLogger.error(error)
+                downloadStatus = .failed(error: error.localizedDescription)
+            }
+            downloadTask = nil
+        }
+    }
+}
+
+#if DEBUG
+    extension OnBoardingViewModel {
+        /// SwiftUI Preview에서 사용할 수 있는 가상 뷰모델 인스턴스를 생성합니다.
+        public static func preview() -> OnBoardingViewModel {
+            OnBoardingViewModel(
+                languageRepository: PreviewLanguageRepository(),
+                voiceRecordRepository: PreviewVoiceRecordRepository(),
+                sttRepository: PreviewSTTRepository(),
+                checkFirstLaunchRepository: PreviewCheckFirstLaunchRepository(),
+                folderUseCase: PreviewFolderUseCase(),
+                mlxRepository: PreviewAvailableModelSupportRepository()
+            )
+        }
+    }
+
+    private extension OnBoardingViewModel {
+        struct PreviewLanguageRepository: LanguageRepository {
+            func fetchLanguage() -> Language { .ko }
+            func saveLanguage(_ language: Language) {}
+        }
+
+        struct PreviewVoiceRecordRepository: VoiceRecordRepository {
+            func checkMicrophonePermission() -> PermissionStatus { .authorized }
+            func requestMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus { .authorized }
+            func startRecording() async throws(VoiceRecordRepositoryError) -> AsyncStream<Waveform> { .init { _ in } }
+            func pauseRecording() async throws(VoiceRecordRepositoryError) {}
+            func resumeRecording() async throws(VoiceRecordRepositoryError) {}
+            func finishRecording() async throws(VoiceRecordRepositoryError) -> VoiceRecord {
+                VoiceRecord(audioFilePath: "", duration: 0)
+            }
+            func cancelRecording() async throws(VoiceRecordRepositoryError) {}
+        }
+
+        struct PreviewSTTRepository: STTRepository {
+            func transcribe(audioFilePath: String) async throws(STTRepositoryError) -> Transcript { Transcript() }
+            func checkSTTPermission() -> PermissionStatus { .authorized }
+            func requestSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus { .authorized }
+        }
+
+        struct PreviewCheckFirstLaunchRepository: CheckFirstLaunchRepository {
+            func checkIsFirstLaunch() -> Bool { true }
+            func checkAndMarkFirstLaunch() -> Bool { true }
+        }
+
+        struct PreviewFolderUseCase: FolderUseCase {
+            func create(name: String) throws(FolderUseCaseError) -> Folder { Folder(name: name, kind: .custom) }
+            func createDefault() throws(FolderUseCaseError) -> Folder { Folder(name: "기본", kind: .default) }
+            func createTrash() throws(FolderUseCaseError) -> Folder { Folder(name: "휴지통", kind: .trash) }
+            func fetchAll() throws(FolderUseCaseError) -> [Folder] { [] }
+            func fetchDefault() throws(FolderUseCaseError) -> Folder { Folder(name: "기본", kind: .default) }
+            func fetchTrash() throws(FolderUseCaseError) -> Folder { Folder(name: "휴지통", kind: .trash) }
+            func fetchDeletableFolders() throws(FolderUseCaseError) -> [Folder] { [] }
+            func fetch(by id: UUID) throws(FolderUseCaseError) -> Folder { Folder(name: "테스트", kind: .custom) }
+            func update(_ folder: Folder) throws(FolderUseCaseError) -> Folder { folder }
+            func observeCustom() throws(FolderUseCaseError) -> AsyncStream<[Folder]> { .init { _ in } }
+            func observeTrashed() throws(FolderUseCaseError) -> AsyncStream<[Folder]> { .init { _ in } }
+            func moveToTrash(folderID: UUID) throws(FolderUseCaseError) {}
+            func restore(folderID: UUID) throws(FolderUseCaseError) {}
+            func delete(folderID: UUID) throws(FolderUseCaseError) {}
+        }
+
+        struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
+            func checkSupportModel() -> ChaGokModelSupport {
+                ChaGokModelSupport(ramSizeGB: 4, isProUser: false)
+            }
+
+            func downloadModel(
+                progressHandler: @Sendable @escaping (Progress) -> Void
+            ) async throws(AvailableModelSupportRepositoryError) {
+                let progress = Progress(totalUnitCount: 100)
+                for value in [10, 30, 55, 80, 100] {
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                    progress.completedUnitCount = Int64(value)
+                    progressHandler(progress)
+                }
+            }
+
+            var isModelLoaded: Bool { true }
+        }
+    }
+#endif
+
 // MARK: - Delegate Helper Function
 
 extension OnBoardingViewModel {
@@ -131,7 +300,16 @@ extension OnBoardingViewModel {
         currentStep = Step.matchingStep(nextStep)
         if currentStep == .micPermission {
             requestPermission()
+        } else if currentStep == .download {
+            checkModel()
         }
+    }
+    
+    private func nextPage(scrollAction: (Int) -> Void) {
+        let nextIndex = currentStep.rawValue + 1
+        guard nextIndex < Step.allCases.count else { return }
+        isPaging = true
+        scrollAction(nextIndex)
     }
 }
 

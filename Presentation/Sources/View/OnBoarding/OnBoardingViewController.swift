@@ -15,7 +15,7 @@ public final class OnBoardingViewController: ViewController {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
 
     // MARK: - Component
@@ -64,9 +64,7 @@ public final class OnBoardingViewController: ViewController {
         secondButton.isUserInteractionEnabled = vm.isSecondButtonEnabled
         primaryButton.configuration?.baseBackgroundColor = vm.isFinalStep ? UIColor.point600 : UIColor.point200
             .withAlphaComponent(Constant.backgroundOpacity)
-
         primaryButton.configuration?.baseForegroundColor = UIColor.gray900
-
         // pagenation 업데이트
         pagenation.currentIndex = vm.currentStep.rawValue
     }
@@ -202,6 +200,13 @@ extension OnBoardingViewController {
                     body: item.body,
                     image: UIImage(named: item.image ?? "", in: Bundle(for: OnBoardingCardView.self), with: nil)
                 )
+            case .download:
+                let item = step.item
+                return OnBoardingDownloadView(
+                    headline: item.headline,
+                    body: item.body,
+                    vm: vm
+                )
             case .finish:
                 let item = step.item
                 return OnBoardingFinishView(
@@ -233,6 +238,10 @@ extension OnBoardingViewController: UIScrollViewDelegate {
     }
 }
 
-// #Preview {
-//    OnBoardingViewController()
-// }
+#if DEBUG
+    #Preview {
+       OnBoardingViewController(
+            vm: .preview()
+       )
+    }
+#endif
