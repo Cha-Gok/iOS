@@ -52,6 +52,10 @@ private let appTarget = Target.target(
     ),
     sources: ["Sources/**/*.swift"],
     resources: ["Resources/**"],
+    entitlements: .dictionary([
+        "com.apple.developer.kernel.increased-memory-limit": .boolean(true),
+        "com.apple.developer.kernel.extended-virtual-addressing": .boolean(true)
+    ]),
     dependencies: [
         .project(target: "Core", path: "../Core"),
         .project(target: "Domain", path: "../Domain"),

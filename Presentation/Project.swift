@@ -44,12 +44,7 @@ private let presentationTarget = Target.target(
     resources: ["Resources/**"],
     dependencies: [
         .project(target: "Core", path: "../Core"),
-        .project(target: "Domain", path: "../Domain"),
-        .external(name: "MLXLLM"),
-        .external(name: "MLXLMCommon"),
-        .external(name: "MLXHuggingFace"),
-        .external(name: "HuggingFace"),
-        .external(name: "Tokenizers")
+        .project(target: "Domain", path: "../Domain")
     ]
 )
 
