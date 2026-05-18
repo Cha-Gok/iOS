@@ -3,14 +3,14 @@ import Domain
 import Foundation
 import WhisperKit
 
-public actor WhisperKitProvider {
+public actor WhisperKitProvider: WhisperDataSource {
     private let storageService: any StorageService
     private let languageRepository: any LanguageRepository
 
     // MARK: - Configuration
 
     private var cachedWhisper: WhisperKit?
-    private let modelDirectory = "WhisperModels"
+    private static let modelDirectory = "WhisperModels"
     private var decodingOptions: DecodingOptions {
         DecodingOptions(
             language: whisperLanguageCode(for: languageRepository.fetchLanguage()),
@@ -19,7 +19,7 @@ public actor WhisperKitProvider {
     }
 
     public var downloadedBaseURL: URL {
-        storageService.absoluteURL(for: modelDirectory)
+        storageService.absoluteURL(for: Self.modelDirectory)
     }
 
     public init(
@@ -31,7 +31,7 @@ public actor WhisperKitProvider {
     }
 
     public static func isModelDownloaded(storageService: any StorageService) -> Bool {
-        let downloadBase = storageService.absoluteURL(for: "WhisperModels")
+        let downloadBase = storageService.absoluteURL(for: Self.modelDirectory)
         let recommendedModel = WhisperKit.recommendedModels().default
         let modelPath = downloadBase
             .appendingPathComponent("models")
@@ -49,7 +49,8 @@ public actor WhisperKitProvider {
             return cached
         }
 
-        let downloadBase = storageService.absoluteURL(for: modelDirectory)
+        let downloadBase = storageService.absoluteURL(for: Self.modelDirectory)
+        try FileManager.default.createDirectory(at: downloadBase, withIntermediateDirectories: true, attributes: nil)
         let recommendedModel = WhisperKit.recommendedModels().default
         let modelFolderPath = downloadBase
             .appendingPathComponent("models")
@@ -61,7 +62,9 @@ public actor WhisperKitProvider {
 
         let config = WhisperKitConfig(
             model: recommendedModel,
+            downloadBase: downloadBase,
             modelFolder: modelFolderPath.path,
+            tokenizerFolder: downloadBase,
             download: false
         )
         let whisper = try await WhisperKit(config)

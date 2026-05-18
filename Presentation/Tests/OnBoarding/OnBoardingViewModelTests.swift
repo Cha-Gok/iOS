@@ -26,6 +26,7 @@ final class OnBoardingViewModelTests: XCTestCase {
         let mockCheckFirstLaunchRepo: MockCheckFirstLaunchRepository
         let mockFolderRepo: MockFolderRepository
         let mockNavDelegate: MockNavigationDelegate
+        let mockMLXRepo: MockAvailableModelSupportRepository
     }
 
     private func makeSUT() -> SUT {
@@ -35,13 +36,15 @@ final class OnBoardingViewModelTests: XCTestCase {
         let mockCheckFirstLaunchRepo = MockCheckFirstLaunchRepository()
         let mockFolderRepo = MockFolderRepository()
         let mockNavDelegate = MockNavigationDelegate()
+        let mockMLXRepo = MockAvailableModelSupportRepository()
 
         let viewModel = OnBoardingViewModel(
             languageRepository: mockLanguageRepo,
             voiceRecordRepository: mockVoiceRecordRepo,
             sttRepository: mockSTTRepo,
             checkFirstLaunchRepository: mockCheckFirstLaunchRepo,
-            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo)
+            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
+            mlxRepository: mockMLXRepo
         )
         viewModel.onBoardingCoordinator = mockNavDelegate
 
@@ -52,7 +55,8 @@ final class OnBoardingViewModelTests: XCTestCase {
             mockSTTRepo: mockSTTRepo,
             mockCheckFirstLaunchRepo: mockCheckFirstLaunchRepo,
             mockFolderRepo: mockFolderRepo,
-            mockNavDelegate: mockNavDelegate
+            mockNavDelegate: mockNavDelegate,
+            mockMLXRepo: mockMLXRepo
         )
     }
 
@@ -62,8 +66,8 @@ final class OnBoardingViewModelTests: XCTestCase {
         let sut = makeSUT()
 
         XCTAssertEqual(sut.viewModel.currentStep, .first)
-        XCTAssertEqual(sut.viewModel.steps.count, 4)
-        XCTAssertEqual(sut.viewModel.getMaxIndex(), 4)
+        XCTAssertEqual(sut.viewModel.steps.count, 5)
+        XCTAssertEqual(sut.viewModel.getMaxIndex(), 5)
         XCTAssertEqual(sut.viewModel.primaryButtonTitle, "다음")
         XCTAssertEqual(sut.viewModel.secondButtonTitle, "건너뛰기")
         XCTAssertTrue(sut.viewModel.isSecondButtonEnabled)
@@ -81,7 +85,7 @@ final class OnBoardingViewModelTests: XCTestCase {
     func test_마지막스텝인경우_버튼타이틀과_상태가_변경된다() {
         let sut = makeSUT()
 
-        sut.viewModel.syncPageState(nextStep: Step.finish.rawValue) // 3
+        sut.viewModel.syncPageState(nextStep: Step.finish.rawValue) // 4
 
         XCTAssertEqual(sut.viewModel.currentStep, .finish)
         XCTAssertEqual(sut.viewModel.primaryButtonTitle, "시작하기")
@@ -193,5 +197,53 @@ final class OnBoardingViewModelTests: XCTestCase {
         }
 
         XCTAssertEqual(scrolledIndex, Step.second.rawValue)
+    }
+
+    func test_syncPageState호출시_다운로드스텝이면_모델을_확인하고_상태를_업데이트한다() async {
+        let sut = makeSUT()
+
+        sut.mockMLXRepo.setCheckSupportModelResult(ChaGokModelSupport(ramSizeGB: 8, isProUser: false))
+        sut.mockMLXRepo.expectCheckSupportModel(callCount: 1)
+
+        sut.viewModel.syncPageState(nextStep: Step.download.rawValue)
+
+        // Task 내부 비동기 호출 대기
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.mockMLXRepo.verify()
+        XCTAssertEqual(sut.viewModel.downloadStatus, .idle)
+    }
+
+    func test_primaryButtonAction_다운로드스텝에서_성공적으로_다운로드하면_상태가_completed가된다() async {
+        let sut = makeSUT()
+
+        sut.mockMLXRepo.setCheckSupportModelResult(ChaGokModelSupport(ramSizeGB: 8, isProUser: false))
+        sut.mockMLXRepo.setDownloadModelResult(.success(()))
+        sut.mockMLXRepo.expectCheckSupportModel(callCount: 1)
+        sut.mockMLXRepo.expectDownloadModel(callCount: 1)
+
+        sut.viewModel.syncPageState(nextStep: Step.download.rawValue)
+        try? await Task.sleep(nanoseconds: 300_000_000) // syncPageState 비동기 대기 (idle 상태)
+
+        sut.viewModel.primaryButtonAction { _ in }
+        try? await Task.sleep(nanoseconds: 300_000_000) // 다운로드 완료 비동기 대기
+
+        sut.mockMLXRepo.verify()
+        XCTAssertEqual(sut.viewModel.downloadStatus, .completed)
+    }
+
+    func test_syncPageState호출시_다운로드스텝인데_RAM이4GB이하로부족하면_notFoundModel상태가된다() async {
+        let sut = makeSUT()
+
+        sut.mockMLXRepo.setCheckSupportModelResult(ChaGokModelSupport(ramSizeGB: 4, isProUser: false))
+        sut.mockMLXRepo.expectCheckSupportModel(callCount: 1)
+
+        sut.viewModel.syncPageState(nextStep: Step.download.rawValue)
+
+        // Task 내부 비동기 호출 대기
+        try? await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.mockMLXRepo.verify()
+        XCTAssertEqual(sut.viewModel.downloadStatus, .notFoundModel)
     }
 }

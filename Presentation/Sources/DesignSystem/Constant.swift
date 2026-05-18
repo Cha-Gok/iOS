@@ -110,8 +110,8 @@ public extension Constant {
     /// OnBoardingCardView 바디 라벨과 이미지 사이의 특수 간격 (36)
     static let onBoardingCardImageTopSpacing: CGFloat = 36
 
-    /// OnBoarding 라벨 최대 줄 수 (2)
-    static let onBoardingLabelNumberOfLines: Int = 2
+    /// OnBoarding 라벨 최대 줄 수 (0)
+    static let onBoardingLabelNumberOfLines: Int = 0
 
     /// OnBoarding 페이지네이션 상단 여백 (52)
     static let onBoardingPaginationTopMargin: CGFloat = 52

@@ -13,6 +13,7 @@ public final class AppDIContainer {
     private lazy var store = UserDefaultsKeyValueStoreService()
     private lazy var storageService = FileManagerStorageService()
     private let localDataBase: CoreDataLocalDataBase
+    private let mlxProvider: MLXModelProvider = .init()
 
     /// Repository
     private lazy var languageRepository = DefaultLanguageRepository(store: store)
@@ -25,19 +26,23 @@ public final class AppDIContainer {
         languageRepository: languageRepository
     )
     private lazy var summaryRepository = DefaultSummaryRepository()
+    private lazy var mlxSummaryRepository = DefaultMLXSummaryRepository(
+        provider: mlxProvider
+    )
     private lazy var whisperProvider = WhisperKitProvider(
         storageService: storageService,
         languageRepository: languageRepository
     )
+    private lazy var mlxModelRepository = DefaultAvailableModelSupportRepository(provider: mlxProvider)
 
     private lazy var sttWhisperRepository = DefaultWhisperSTTRepository(
-        whisperProvider: whisperProvider
+        whisperDataSource: whisperProvider
     )
     /// Analysis (Domain Service)
     private(set) lazy var voiceNoteAnalysisService = DefaultVoiceNoteAnalysisService(
         voiceNoteRepository: voiceNoteRepository,
         sttRepository: sttWhisperRepository,
-        summaryRepository: summaryRepository,
+        summaryRepository: mlxSummaryRepository,
         languageRepository: languageRepository
     )
 
@@ -80,7 +85,8 @@ public final class AppDIContainer {
             voiceRecordRepository: voiceRecordRepository,
             sttRepository: sttRepository,
             checkFirstLaunchRepository: checkFirstLaunchRepository,
-            folderUseCase: folderUseCase
+            folderUseCase: folderUseCase,
+            mlxRepository: mlxModelRepository
         )
     }
 

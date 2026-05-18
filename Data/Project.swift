@@ -22,7 +22,12 @@ private let dataTarget = Target.target(
     dependencies: [
         .project(target: "Core", path: "../Core"),
         .project(target: "Domain", path: "../Domain"),
-        .external(name: "ArgmaxOSS")
+        .external(name: "ArgmaxOSS"),
+        .external(name: "MLXLLM"),
+        .external(name: "MLXLMCommon"),
+        .external(name: "MLXHuggingFace"),
+        .external(name: "HuggingFace"),
+        .external(name: "Tokenizers")
     ]
 )
 

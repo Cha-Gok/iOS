@@ -1,6 +1,7 @@
 import Core
 import Domain
 import Presentation
+import SwiftUI
 import UIKit
 
 @MainActor
