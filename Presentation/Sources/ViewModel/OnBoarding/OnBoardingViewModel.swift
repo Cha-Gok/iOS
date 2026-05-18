@@ -174,6 +174,7 @@ extension OnBoardingViewModel {
     func checkModel() {
         guard downloadStatus != .completed else { return }
         guard !downloadStatus.isDownloading else { return }
+        guard downloadStatus != .checking else { return }
         downloadStatus = .checking
 
         Task {

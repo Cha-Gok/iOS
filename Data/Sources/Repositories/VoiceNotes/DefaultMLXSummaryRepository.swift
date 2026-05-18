@@ -48,12 +48,15 @@ public struct DefaultMLXSummaryRepository: SummaryRepository {
                 )
             )
 
-            summaryResponse = summaryResponse.replacingOccurrences(of: "```json", with: "")
-                .replacingOccurrences(of: "```", with: "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if let firstOpen = summaryResponse.firstIndex(of: "{"),
+               let lastClose = summaryResponse.lastIndex(of: "}")
+            {
+                summaryResponse = String(summaryResponse[firstOpen ... lastClose])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
 
             guard let data = summaryResponse.data(using: .utf8) else {
-                AppLogger.error("summaryResponse Decoding 문제")
+                AppLogger.error("summaryResponse Decoding 문제: \(summaryResponse)")
                 throw SummaryRepositoryError.summarizeFailed
             }
 
