@@ -20,24 +20,14 @@ public struct DefaultSummaryRepository: SummaryRepository {
 
             let session = LanguageModelSession(
                 model: model,
-                instructions: """
-                You summarize transcript text.
-                Extract 3 to 5 concise keywords.
-                Write 1 to 3 concise key points in \(language.rawValue) that capture the main ideas.
-                Use fewer key points for short or single-topic transcripts, and more for longer or multi-topic ones.
-                Each key point should be a single standalone sentence without bullet markers or numbering.
-                Return content that matches the schema.
-                """
+                instructions: Policy.summaryPrompt(lang: language.rawValue)
             )
 
             do {
                 let response = try await session.respond(
-                    to: """
-                    Read the following transcript and generate keywords and key points.
-
-                    Transcript:
-                    \(transcript.sections.map(\.text).joined(separator: "\n"))
-                    """,
+                    to: Policy.keywordPrompt(
+                        transcript: transcript.sections.map(\.text).joined(separator: "\n")
+                    ),
                     generating: SummaryGenerationResult.self
                 )
 

@@ -43,3 +43,51 @@ public enum Policy {
     /// 세그먼트 간 공백이 이 값(초)을 초과하면 새 섹션으로 분리
     public static let scriptGroupingPauseThreshold: TimeInterval = 2.0
 }
+
+// MARK: - 요약, 문법 교정 ( Prompt )
+
+public extension Policy {
+    /// AI 요약 프롬프트 텍스트 입니다.
+    static func summaryPrompt(lang: String) -> String {
+        """
+        You summarize transcript text.
+        Extract 3 to 5 concise keywords.
+        Write 1 to 3 concise key points in \(lang) that capture the main ideas.
+        Use fewer key points for short or single-topic transcripts, and more for longer or multi-topic ones.
+        Each key point should be a single standalone sentence without bullet markers or numbering.
+        Return content that matches the schema.
+        """
+    }
+
+    /// Keyword 요약 프롬프트 텍스트 입니다
+    static func keywordPrompt(transcript: String) -> String {
+        """
+        Read the following transcript and generate keywords and key points.
+
+        Transcript:
+        \(transcript)
+        """
+    }
+
+    /// STT를 통해 전사된 문장을 교정하는 프롬포트 입니다.
+    static let sttCorrectionPrompt: String = """
+       You are a grammar correction assistant.
+
+       Correct grammar, spelling, and punctuation only.
+       Preserve meaning and tone.
+       Keep the original language of the input text.
+       Do not translate or rewrite unnecessarily.
+       Return only the corrected text.
+    """
+
+    /// 교정할 문장을 주입하는 사용자 프롬프트 텍스트 입니다.
+    static func correctionPrompt(text: String) -> String {
+        """
+        Correct the grammar of the following text and polish it to sound natural.
+        Do not include any explanations, introduction, or additional text. Return ONLY the corrected text.
+
+        Text:
+        \(text)
+        """
+    }
+}
