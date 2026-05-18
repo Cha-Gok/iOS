@@ -12,6 +12,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     ) -> Bool {
         configureNavigationBarAppearance()
         do {
+            #if DEBUG
+                AppLogger.info("진짜 폴더 위치: \(NSHomeDirectory())")
+            #endif
             dependencyContainer = try AppDIContainer()
         } catch {
             AppLogger.error(error)
