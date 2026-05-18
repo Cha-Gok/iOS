@@ -5,19 +5,19 @@ import Speech
 import WhisperKit
 
 public actor DefaultWhisperSTTRepository: STTRepository {
-    private let whisperProvider: WhisperKitProvider
+    private let whisperDataSource: any WhisperDataSource
 
     public init(
-        whisperProvider: WhisperKitProvider
+        whisperDataSource: any WhisperDataSource
     ) {
-        self.whisperProvider = whisperProvider
+        self.whisperDataSource = whisperDataSource
     }
 
     @discardableResult
     public func download(
         progressHandler: (@Sendable (Progress) -> Void)? = nil
     ) async throws(STTRepositoryError) -> URL {
-        let downloadBaseURL = await whisperProvider.downloadedBaseURL
+        let downloadBaseURL = await whisperDataSource.downloadedBaseURL
 
         do {
             let recommendedModel: String = WhisperKit.recommendedModels().default
@@ -28,7 +28,7 @@ public actor DefaultWhisperSTTRepository: STTRepository {
                 progressCallback: progressHandler
             )
             // 다운로드 후 캐시된 인스턴스를 초기화하여 다음 transcribe 시 새 모델을 로드하도록 함
-            await whisperProvider.clearCache()
+            await whisperDataSource.clearCache()
             return modelFolder
         } catch is CancellationError {
             throw .cancelled
@@ -41,9 +41,10 @@ public actor DefaultWhisperSTTRepository: STTRepository {
         guard !Task.isCancelled else { throw .cancelled }
 
         do {
-            let result = try await whisperProvider.transcribe(
+            let result = try await whisperDataSource.transcribe(
                 audioFilePath: audioFilePath
             )
+            await whisperDataSource.clearCache()
 
             let sections = Self.groupIntoSections(result.flatMap(\.segments))
             if !sections.isEmpty {
@@ -57,8 +58,10 @@ public actor DefaultWhisperSTTRepository: STTRepository {
             guard !text.isEmpty else { throw STTRepositoryError.transcribeFailed }
             return Transcript(sections: [TranscriptSection(timestamp: 0, text: text)])
         } catch let error as STTRepositoryError {
+            await whisperDataSource.clearCache()
             throw error
         } catch {
+            await whisperDataSource.clearCache()
             throw .unknown(error)
         }
     }
