@@ -240,8 +240,8 @@ extension OnBoardingViewController: UIScrollViewDelegate {
 
 #if DEBUG
     #Preview {
-       OnBoardingViewController(
+        OnBoardingViewController(
             vm: .preview()
-       )
+        )
     }
 #endif

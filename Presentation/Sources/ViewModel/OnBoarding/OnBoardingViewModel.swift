@@ -155,7 +155,7 @@ extension OnBoardingViewModel {
             return "다운로드"
         }
     }
-    
+
     @ObservationIgnored
     var modelCardIsHidden: Bool {
         switch downloadStatus {
@@ -165,26 +165,28 @@ extension OnBoardingViewModel {
             return false
         }
     }
-    
+
     var progressPercentText: String {
         let fraction = Float(downloadStatus.progress)
         return "\(Int((fraction * 100).rounded()))%"
     }
-    
+
     func checkModel() {
         guard downloadStatus != .completed else { return }
         guard !downloadStatus.isDownloading else { return }
         downloadStatus = .checking
-        
-        let configuration = mlxRepository.checkSupportModel()
-        switch configuration.model {
-        case .none:
-            downloadStatus = .notFoundModel
-        case .gemma4_e2b_4bit:
-            downloadStatus = .idle
+
+        Task {
+            let configuration = await mlxRepository.checkSupportModel()
+            switch configuration.model {
+            case .none:
+                downloadStatus = .notFoundModel
+            case .gemma4_e2b_4bit:
+                downloadStatus = .idle
+            }
         }
     }
-    
+
     private func download() {
         guard downloadTask == nil else { return }
         downloadStatus = .downloading(progress: 0)
@@ -208,9 +210,9 @@ extension OnBoardingViewModel {
 }
 
 #if DEBUG
-    extension OnBoardingViewModel {
+    public extension OnBoardingViewModel {
         /// SwiftUI Preview에서 사용할 수 있는 가상 뷰모델 인스턴스를 생성합니다.
-        public static func preview() -> OnBoardingViewModel {
+        static func preview() -> OnBoardingViewModel {
             OnBoardingViewModel(
                 languageRepository: PreviewLanguageRepository(),
                 voiceRecordRepository: PreviewVoiceRecordRepository(),
@@ -230,13 +232,15 @@ extension OnBoardingViewModel {
 
         struct PreviewVoiceRecordRepository: VoiceRecordRepository {
             func checkMicrophonePermission() -> PermissionStatus { .authorized }
-            func requestMicrophonePermission() async throws(VoiceRecordRepositoryError) -> PermissionStatus { .authorized }
+            func requestMicrophonePermission() async throws(VoiceRecordRepositoryError)
+                -> PermissionStatus { .authorized }
             func startRecording() async throws(VoiceRecordRepositoryError) -> AsyncStream<Waveform> { .init { _ in } }
             func pauseRecording() async throws(VoiceRecordRepositoryError) {}
             func resumeRecording() async throws(VoiceRecordRepositoryError) {}
             func finishRecording() async throws(VoiceRecordRepositoryError) -> VoiceRecord {
                 VoiceRecord(audioFilePath: "", duration: 0)
             }
+
             func cancelRecording() async throws(VoiceRecordRepositoryError) {}
         }
 
@@ -284,7 +288,9 @@ extension OnBoardingViewModel {
                 }
             }
 
-            var isModelLoaded: Bool { true }
+            var isModelLoaded: Bool {
+                true
+            }
         }
     }
 #endif
@@ -304,7 +310,7 @@ extension OnBoardingViewModel {
             checkModel()
         }
     }
-    
+
     private func nextPage(scrollAction: (Int) -> Void) {
         let nextIndex = currentStep.rawValue + 1
         guard nextIndex < Step.allCases.count else { return }

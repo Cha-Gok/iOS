@@ -1,12 +1,12 @@
 import Foundation
 
 public enum DownloadStatus: Equatable, Sendable {
-    case checking                               // 다운로드 모델 확인
-    case idle                                   // 준비
-    case downloading(progress: Double)          // 진행 중
-    case completed                              // 완료
-    case notFoundModel                          // 모델을 다운로드 받을 수 없는 경우 ex) 4GB
-    case failed(error: String)                  // 다운로드 실패
+    case checking // 다운로드 모델 확인
+    case idle // 준비
+    case downloading(progress: Double) // 진행 중
+    case completed // 완료
+    case notFoundModel // 모델을 다운로드 받을 수 없는 경우 ex) 4GB
+    case failed(error: String) // 다운로드 실패
 
     public var isDownloading: Bool {
         if case .downloading = self { return true }
@@ -14,11 +14,11 @@ public enum DownloadStatus: Equatable, Sendable {
     }
 
     public var progress: Double {
-        if case let .downloading(progress) = self { return progress }
+        if case .downloading(let progress) = self { return progress }
         if case .completed = self { return 1.0 }
         return 0.0
     }
-    
+
     public var message: String {
         switch self {
         case .checking:
