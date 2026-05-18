@@ -1,13 +1,13 @@
 import Foundation
 
 public enum AvailableModelSupportRepositoryError: LocalizedError, Sendable {
-    // Task 취소
+    /// Task 취소
     case cancelled
-    // 모델을 찾을 수 없음
+    /// 모델을 찾을 수 없음
     case notFoundModel
-    // unknown
+    /// unknown
     case unknown(Error)
-    
+
     public var errorDescription: String? {
         switch self {
         case .cancelled: return nil
