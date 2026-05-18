@@ -329,37 +329,3 @@ public extension Constant {
     /// SummarySection keywords 셀 상단 여백 (12)
     static let summarySectionKeywordsTopInset: CGFloat = 12
 }
-
-// MARK: - 요약, 문법 교정 ( Prompt )
-
-extension Constant {
-    /// AI 요약 프롬프트 텍스트 입니다.
-    static func summaryPrompt(lang: String) -> String {
-    """
-    You are a summary assistant.
-
-    Output format example:
-    First key point
-    Second key point
-    Third key point
-
-    Rules:
-    - Use \(lang).
-    - Output exactly 3 lines.
-    - One key point per line.
-    - No numbering.
-    - No extra text.
-    """
-    }
-    
-    /// STT를 통해 전사된 문장을 교정하는 프롬포트 입니다.
-    static let sttCorrectionPrompt: String = """
-       You are a grammar correction assistant.
-
-       Correct grammar, spelling, and punctuation only.
-       Preserve meaning and tone.
-       Keep the original language of the input text.
-       Do not translate or rewrite unnecessarily.
-       Return only the corrected text.
-    """
-}
