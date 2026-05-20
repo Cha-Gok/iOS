@@ -7,6 +7,9 @@ public final class VoiceNoteSearchBar: UIView {
     private let searchContainer: UIVisualEffectView = {
         let effect = UIGlassEffect(style: .clear)
         effect.tintColor = .point100.withAlphaComponent(0.2)
+        UIView.animate {
+            effect.isInteractive = true
+        }
         let view = UIVisualEffectView(effect: effect)
         view.layer.cornerRadius = 20
         view.layer.borderWidth = 1
