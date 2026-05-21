@@ -1,6 +1,6 @@
 import Foundation
 
-public struct ChaGokModelSupport: Sendable {
+public struct ChaGokModelSupport: Hashable, Sendable {
     let ramSizeGB: Int
     var isProUser: Bool
 
