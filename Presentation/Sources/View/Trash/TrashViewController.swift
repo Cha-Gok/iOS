@@ -15,7 +15,7 @@ public final class TrashViewController: CollectionViewController {
     // MARK: - Component
 
     private lazy var backButton: NavigationItemButton = .init(
-        normalItem: .init(title: " 휴지통", imageName: "chevron.left"),
+        normalItem: .init(title: "휴지통", imageName: "chevron.left"),
         selectedItem: .init(title: "", imageName: "xmark"),
         attributedString: Typography.title1.textAttributes
     )
