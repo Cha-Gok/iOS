@@ -97,7 +97,7 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
 
         // 4. VoiceNote 모델 구성 (제목 등 비즈니스 규칙은 UseCase에서 결정)
         let voiceNote = VoiceNote(
-            title: voiceRecord.createdAt.yyyyMMddHHmmssString,
+            title: Policy.voiceNoteDefaultName,
             createdAt: voiceRecord.createdAt,
             updatedAt: voiceRecord.createdAt,
             folderID: defaultFolder.id,
