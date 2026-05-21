@@ -60,11 +60,6 @@ public struct DefaultMLXSummaryRepository: SummaryRepository {
                 throw SummaryRepositoryError.summarizeFailed
             }
 
-            struct MLXSummaryResult: Codable {
-                let keywords: [String]
-                let keyPoints: [String]
-            }
-
             let result = try JSONDecoder().decode(MLXSummaryResult.self, from: data)
 
             let keywords = result.keywords

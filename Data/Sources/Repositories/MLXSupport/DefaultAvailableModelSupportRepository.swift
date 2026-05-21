@@ -36,7 +36,6 @@ public final class DefaultAvailableModelSupportRepository: AvailableModelSupport
                 from: #hubDownloader(),
                 useLatest: false
             ) { progress in
-                AppLogger.info("progress : \(progress)")
                 progressHandler(progress)
             }
 

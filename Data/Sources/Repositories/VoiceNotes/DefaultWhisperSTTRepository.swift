@@ -46,7 +46,13 @@ public actor DefaultWhisperSTTRepository: STTRepository {
             )
             await whisperDataSource.clearCache()
 
-            let sections = Self.groupIntoSections(result.flatMap(\.segments))
+            let sections = result.flatMap(\.segments).map { segment in
+                TranscriptSection(
+                    timestamp: TimeInterval(segment.start),
+                    text: segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                )
+            }.filter { !$0.text.isEmpty }
+            
             if !sections.isEmpty {
                 return Transcript(sections: sections)
             }
@@ -98,54 +104,5 @@ public actor DefaultWhisperSTTRepository: STTRepository {
         @unknown default:
             return .denied
         }
-    }
-}
-
-// MARK: - Private
-
-fileprivate extension DefaultWhisperSTTRepository {
-    private static func groupIntoSections(_ segments: [TranscriptionSegment]) -> [TranscriptSection] {
-        var sections: [TranscriptSection] = []
-        var currentTimestamp: TimeInterval?
-        var currentTexts: [String] = []
-        var previousEnd: TimeInterval?
-
-        for segment in segments {
-            let text = segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !text.isEmpty else { continue }
-
-            let start = TimeInterval(segment.start)
-            let end = TimeInterval(segment.end)
-
-            guard let timestamp = currentTimestamp else {
-                currentTimestamp = start
-                currentTexts = [text]
-                previousEnd = end
-                continue
-            }
-
-            let gap = max(0, start - (previousEnd ?? start))
-            if gap > Policy.scriptGroupingPauseThreshold {
-                let merged = currentTexts.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
-                if !merged.isEmpty {
-                    sections.append(TranscriptSection(timestamp: timestamp, text: merged))
-                }
-                currentTimestamp = start
-                currentTexts = [text]
-            } else {
-                currentTexts.append(text)
-            }
-
-            previousEnd = end
-        }
-
-        if let timestamp = currentTimestamp {
-            let merged = currentTexts.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
-            if !merged.isEmpty {
-                sections.append(TranscriptSection(timestamp: timestamp, text: merged))
-            }
-        }
-
-        return sections
     }
 }
