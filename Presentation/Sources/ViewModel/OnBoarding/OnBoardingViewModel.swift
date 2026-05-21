@@ -180,7 +180,7 @@ extension OnBoardingViewModel {
         Task {
             let configuration = await mlxRepository.checkSupportModel()
             switch configuration.model {
-            case .none:
+            case .none, .whisper:
                 downloadStatus = .notFoundModel
             case .gemma4_e2b_4bit:
                 downloadStatus = .idle

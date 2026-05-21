@@ -27,5 +27,6 @@ public struct ChaGokModelSupport: Hashable, Sendable {
 
 public enum ChaGokModel: Equatable, Sendable {
     case none // OnDevice Model 제공 X
+    case whisper
     case gemma4_e2b_4bit
 }

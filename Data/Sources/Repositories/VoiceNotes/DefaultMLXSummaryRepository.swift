@@ -95,7 +95,7 @@ public struct DefaultMLXSummaryRepository: SummaryRepository {
         switch model {
         case .gemma4_e2b_4bit:
             return LLMRegistry.gemma4_e2b_it_4bit
-        case .none:
+        case .none, .whisper:
             throw .notFoundModel
         }
     }
