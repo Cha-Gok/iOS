@@ -44,6 +44,11 @@ public final class SettingViewController: CollectionViewController {
         setupNavigation()
         applySnapShot(animate: false)
     }
+    
+    public override func updateProperties() {
+        super.updateProperties()
+        applySnapShot(animate: true)
+    }
 
     // MARK: - Setup
     
@@ -56,22 +61,34 @@ public final class SettingViewController: CollectionViewController {
     // MARK: - DataSource
     
     private func makeDataSource() -> DataSource {
-        let langCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell,indexPath,itemIdentifier in
+        let langCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell,indexPath,itemIdentifier in
             guard case .lang(let language) = itemIdentifier.data else { return }
             cell.contentConfiguration = SettingLanguageContentConfiguration(
-                language: language
+                title: itemIdentifier.title,
+                subtitle: itemIdentifier.subTitle,
+                language: language,
+                action: { selectedLanguage in
+                    self?.vm.setLanguage(selectedLanguage)
+                }
             )
         }
         
         let modelCelllRegistration = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell,indexPath,itemIdentifier in
             guard case .model(let chagokModel) = itemIdentifier.data else { return }
             cell.contentConfiguration = SettingModelContentConfiguration(
+                title: itemIdentifier.title,
                 model: chagokModel
             )
         }
         
         let defaultCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, Item> { cell,indexPath,itemIdentifier in
-            cell.contentConfiguration = cell.defaultContentConfiguration()
+            var content = cell.defaultContentConfiguration()
+            content.text = itemIdentifier.title
+            content.secondaryText = itemIdentifier.subTitle
+            content.textProperties.font = Typography.body1.font
+            content.textProperties.color = .gray950
+            cell.contentConfiguration = content
+            cell.backgroundConfiguration = .clear()
         }
         
         let dataSource = DataSource(collectionView: collectionView) { col, indexPath, itemIdentifier in
@@ -92,7 +109,7 @@ public final class SettingViewController: CollectionViewController {
         var snapshot = SnapShot()
         snapshot.appendSections([.lang, .model, .label])
         let langData: [Item] = [
-            Item(title: "언어 선택", subTitle: "녹음 기록 언어를 바꿉니다", data: .lang(.ko))
+            Item(title: "언어 선택", subTitle: "녹음 기록 언어를 바꿉니다", data: .lang(vm.language))
         ]
         snapshot.appendItems(langData, toSection: .lang)
         

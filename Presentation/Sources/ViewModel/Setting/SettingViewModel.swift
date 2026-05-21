@@ -5,7 +5,23 @@ import Observation
 @MainActor
 @Observable
 public final class SettingViewModel {
-    public init() {}
+    private let languageRepository: any LanguageRepository
+    // MARK: - State
+    private(set) var language: Language
+
+    public init(
+        languageRepository: any LanguageRepository
+    ) {
+        self.languageRepository = languageRepository
+        self.language = languageRepository.fetchLanguage()
+    }
+    
+    // MARK: - Actions
+    
+    func setLanguage(_ lang: Language) {
+        self.language = lang
+        languageRepository.saveLanguage(lang)
+    }
 }
 
 // MARK: - Data
