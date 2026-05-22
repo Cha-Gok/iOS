@@ -33,7 +33,10 @@ public final class AppDIContainer {
         storageService: storageService,
         languageRepository: languageRepository
     )
-    private lazy var mlxModelRepository = DefaultAvailableModelSupportRepository(provider: mlxProvider)
+    private lazy var mlxModelRepository = DefaultAvailableModelSupportRepository(
+        provider: mlxProvider,
+        whisperProvider: whisperProvider
+    )
 
     private lazy var sttWhisperRepository = DefaultWhisperSTTRepository(
         whisperDataSource: whisperProvider
@@ -59,8 +62,8 @@ public final class AppDIContainer {
 
     // MARK: - Whisper 모델 ( preload , download ) Status
 
-    public func isWhisperModelDownloaded() -> Bool {
-        WhisperKitProvider.isModelDownloaded(storageService: storageService)
+    public func isWhisperModelDownloaded() async -> Bool {
+        await whisperProvider.isModelDownloaded()
     }
 
     public func preloadWhisperKit() async {
@@ -110,8 +113,7 @@ public final class AppDIContainer {
         return MainViewModel(
             microphoneRepository: voiceRecordRepository,
             voiceNoteUseCase: voiceNoteUseCase,
-            folderUseCase: folderUseCase,
-            languageRepository: languageRepository
+            folderUseCase: folderUseCase
         )
     }
 

@@ -51,7 +51,6 @@ public final class MainViewModel {
     let microphoneRepository: VoiceRecordRepository
     let voiceNoteUseCase: any VoiceNoteUseCase
     let folderUseCase: any FolderUseCase
-    let languageRepository: any LanguageRepository
 
     @ObservationIgnored
     private var recentTask: Task<Void, Never>?
@@ -77,12 +76,10 @@ public final class MainViewModel {
         microphoneRepository: any VoiceRecordRepository,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
-        languageRepository: any LanguageRepository
     ) {
         self.microphoneRepository = microphoneRepository
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
-        self.languageRepository = languageRepository
     }
 }
 
@@ -269,18 +266,6 @@ extension MainViewModel {
     }
 }
 
-// MARK: - Language Method
-
-extension MainViewModel {
-    func checkLanguage() -> Language {
-        languageRepository.fetchLanguage()
-    }
-
-    func saveLanguage(_ lang: Language) {
-        languageRepository.saveLanguage(lang)
-    }
-}
-
 #if DEBUG
     extension MainViewModel {
         static func preview(selectedCategoryIndex: Int = 0) -> MainViewModel {
@@ -295,8 +280,7 @@ extension MainViewModel {
                 folderUseCase: PreviewFolderUseCase(
                     items: previewData.folders,
                     trashedItems: previewData.trashedFolders
-                ),
-                languageRepository: PreviewLanguageRepository()
+                )
             )
 
             viewModel.categoryData[0].items = previewData.recentVoiceNotes.map(ContentItem.voiceNote)
@@ -593,16 +577,6 @@ extension MainViewModel {
             func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}
             func restore(folderID _: UUID) throws(FolderUseCaseError) {}
             func delete(folderID _: UUID) throws(FolderUseCaseError) {}
-        }
-
-        struct PreviewLanguageRepository: LanguageRepository {
-            func fetchLanguage() -> Language {
-                .ko
-            }
-
-            func saveLanguage(_ language: Language) {
-                AppLogger.info("Language State : \(language)")
-            }
         }
     }
 #endif
