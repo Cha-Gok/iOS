@@ -84,31 +84,32 @@ extension MainCoordinator: MainCoordinatorDelegate {
 
     func presentRecodingView() {
         let navController = UINavigationController()
-        let isModelDownloaded = dependencyContainer.isWhisperModelDownloaded()
+        Task {
+            let isModelDownloaded = await dependencyContainer.isWhisperModelDownloaded()
+            if isModelDownloaded {
+                let viewModel = dependencyContainer.makeRecordingViewModel()
+                viewModel.coordinator = self
+                viewModel.alertCoordinator = self
+                let recordingVC = RecordingViewController(viewModel: viewModel)
+                navController.isNavigationBarHidden = false
+                navController.modalPresentationStyle = .fullScreen
+                navController.setViewControllers([recordingVC], animated: false)
+            } else {
+                let viewModel = dependencyContainer.makeDownloadOnDeviceViewModel()
+                viewModel.coordinator = self
+                let downloadVC = DownloadOnDeviceViewController(vm: viewModel)
+                navController.isNavigationBarHidden = true
+                navController.modalPresentationStyle = .pageSheet
+                navController.setViewControllers([downloadVC], animated: false)
 
-        if isModelDownloaded {
-            let viewModel = dependencyContainer.makeRecordingViewModel()
-            viewModel.coordinator = self
-            viewModel.alertCoordinator = self
-            let recordingVC = RecordingViewController(viewModel: viewModel)
-            navController.isNavigationBarHidden = false
-            navController.modalPresentationStyle = .fullScreen
-            navController.setViewControllers([recordingVC], animated: false)
-        } else {
-            let viewModel = dependencyContainer.makeDownloadOnDeviceViewModel()
-            viewModel.coordinator = self
-            let downloadVC = DownloadOnDeviceViewController(vm: viewModel)
-            navController.isNavigationBarHidden = true
-            navController.modalPresentationStyle = .pageSheet
-            navController.setViewControllers([downloadVC], animated: false)
-
-            if let sheet = navController.sheetPresentationController {
-                sheet.detents = [.medium()]
-                sheet.prefersGrabberVisible = true
+                if let sheet = navController.sheetPresentationController {
+                    sheet.detents = [.medium()]
+                    sheet.prefersGrabberVisible = true
+                }
             }
-        }
 
-        presenter.present(navController, animated: true)
+            presenter.present(navController, animated: true)
+        }
     }
 }
 
