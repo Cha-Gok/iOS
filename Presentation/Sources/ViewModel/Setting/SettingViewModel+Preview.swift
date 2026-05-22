@@ -8,7 +8,8 @@ import Core
             return SettingViewModel(
                 languageRepository: PreviewLanguageRepository(
                     language: .ko
-                )
+                ),
+                mlxRepository:  PreviewAvailableModelSupportRepository()
             )
         }
         
@@ -25,6 +26,31 @@ import Core
 
             func saveLanguage(_ language: Language) {
                 self.language = language
+            }
+        }
+        
+        struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
+            func fetchSupportModels() async -> [ChaGokModelState] {
+                []
+            }
+            
+            func checkSupportModel() -> ChaGokModelSupport {
+                ChaGokModelSupport(ramSizeGB: 4, isProUser: false)
+            }
+
+            func downloadModel(
+                progressHandler: @Sendable @escaping (Progress) -> Void
+            ) async throws(AvailableModelSupportRepositoryError) {
+                let progress = Progress(totalUnitCount: 100)
+                for value in [10, 30, 55, 80, 100] {
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                    progress.completedUnitCount = Int64(value)
+                    progressHandler(progress)
+                }
+            }
+
+            var isModelLoaded: Bool {
+                true
             }
         }
     }

@@ -6,21 +6,34 @@ import Observation
 @Observable
 public final class SettingViewModel {
     private let languageRepository: any LanguageRepository
+    private let mlxRepository: any AvailableModelSupportRepository
+
     // MARK: - State
     private(set) var language: Language
-
+    private(set) var models: [ChaGokModelSupport] = []
+    
     public init(
-        languageRepository: any LanguageRepository
+        languageRepository: any LanguageRepository,
+        mlxRepository: any AvailableModelSupportRepository
     ) {
         self.languageRepository = languageRepository
+        self.mlxRepository = mlxRepository
         self.language = languageRepository.fetchLanguage()
     }
     
-    // MARK: - Actions
+    // MARK: - Setter / Getter
     
     func setLanguage(_ lang: Language) {
         self.language = lang
         languageRepository.saveLanguage(lang)
+    }
+    
+    // MARK: - Actions
+    
+    func checkModels() {
+        Task {
+            
+        }
     }
 }
 
