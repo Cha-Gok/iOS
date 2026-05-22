@@ -6,9 +6,12 @@ import MLXLMCommon
 public protocol MLXModelDataSource: Sendable {
     /// 메모리에 로드된 모델 컨테이너. 로드되지 않았을 경우 nil입니다.
     var container: ModelContainer? { get async }
-
+    
     /// 모델 로드 여부 확인
     var isLoaded: Bool { get async }
+    
+    /// 모델 다운로드 여부 확인
+    var isDownloaded: Bool { get async }
 
     /// 지정된 설정을 사용하여 모델을 메모리에 로드합니다.
     /// - Parameter configuration: 로드할 모델의 설정 정보

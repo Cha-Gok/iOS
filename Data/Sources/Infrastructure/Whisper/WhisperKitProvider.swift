@@ -21,7 +21,7 @@ public actor WhisperKitProvider: WhisperDataSource {
     public var downloadedBaseURL: URL {
         storageService.absoluteURL(for: Self.modelDirectory)
     }
-
+    
     public init(
         storageService: any StorageService,
         languageRepository: any LanguageRepository
@@ -30,10 +30,9 @@ public actor WhisperKitProvider: WhisperDataSource {
         self.languageRepository = languageRepository
     }
 
-    public static func isModelDownloaded(storageService: any StorageService) -> Bool {
-        let downloadBase = storageService.absoluteURL(for: Self.modelDirectory)
+    public func isModelDownloaded() -> Bool {
         let recommendedModel = WhisperKit.recommendedModels().default
-        let modelPath = downloadBase
+        let modelPath = downloadedBaseURL
             .appendingPathComponent("models")
             .appendingPathComponent("argmaxinc")
             .appendingPathComponent("whisperkit-coreml")

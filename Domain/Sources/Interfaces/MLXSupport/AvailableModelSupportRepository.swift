@@ -7,6 +7,9 @@ public protocol AvailableModelSupportRepository: Sendable {
     /// - Returns: 기기의 RAM 용량, 프로 유저 여부, 할당된 모델 타입을 포함하는 지원 정보 객체
     func checkSupportModel() async -> ChaGokModelSupport
 
+    /// 차곡에서 사용하는 모델을 전부 표기합니다.
+    func fetchSupportModels() async -> [ChaGokModelState]
+    
     /// 모델 파일을 다운로드하여 로컬 캐시에 저장합니다. (메모리 적재 X)
     func downloadModel(progressHandler: @Sendable @escaping (Progress)
         -> Void) async throws(AvailableModelSupportRepositoryError)

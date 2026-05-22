@@ -15,6 +15,9 @@ public actor MLXModelProvider: MLXModelDataSource {
 
     /// 모델 로드 여부 확인
     public var isLoaded: Bool = false
+    
+    /// 모델 다운로드 여부 확인
+    public var isDownloaded: Bool = false
 
     /// 지정된 설정을 사용하여 모델을 메모리에 로드합니다.
     /// - Parameter configuration: 로드할 모델의 설정 정보
@@ -28,6 +31,7 @@ public actor MLXModelProvider: MLXModelDataSource {
             configuration: configuration
         )
         isLoaded = true
+        isDownloaded = true
     }
 
     /// 메모리에서 모델을 해제합니다.
