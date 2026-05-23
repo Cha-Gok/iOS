@@ -64,6 +64,7 @@ final class NavigationItemButton: UIButton {
             } else {
                 config.attributedTitle = nil
             }
+            config.imagePadding = 8
             config.background.backgroundColor = .clear
             button.configuration = config
         }

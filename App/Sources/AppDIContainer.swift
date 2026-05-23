@@ -13,7 +13,9 @@ public final class AppDIContainer {
     private lazy var store = UserDefaultsKeyValueStoreService()
     private lazy var storageService = FileManagerStorageService()
     private let localDataBase: CoreDataLocalDataBase
-    private let mlxProvider: MLXModelProvider = .init()
+    private lazy var mlxProvider: MLXModelProvider = .init(
+        fileManager: storageService
+    )
 
     /// Repository
     private lazy var languageRepository = DefaultLanguageRepository(store: store)
@@ -33,7 +35,10 @@ public final class AppDIContainer {
         storageService: storageService,
         languageRepository: languageRepository
     )
-    private lazy var mlxModelRepository = DefaultAvailableModelSupportRepository(provider: mlxProvider)
+    private lazy var mlxModelRepository = DefaultAvailableModelSupportRepository(
+        mlxProvider: mlxProvider,
+        whisperProvider: whisperProvider
+    )
 
     private lazy var sttWhisperRepository = DefaultWhisperSTTRepository(
         whisperDataSource: whisperProvider
@@ -44,6 +49,11 @@ public final class AppDIContainer {
         sttRepository: sttWhisperRepository,
         summaryRepository: mlxSummaryRepository,
         languageRepository: languageRepository
+    )
+
+    private lazy var deleteModelRepository = DefaultDeleteOnDeviceRepository(
+        mlxProvider: mlxProvider,
+        whisperProvider: whisperProvider
     )
 
     /// UseCase
@@ -59,8 +69,8 @@ public final class AppDIContainer {
 
     // MARK: - Whisper 모델 ( preload , download ) Status
 
-    public func isWhisperModelDownloaded() -> Bool {
-        WhisperKitProvider.isModelDownloaded(storageService: storageService)
+    public func isWhisperModelDownloaded() async -> Bool {
+        await whisperProvider.isModelDownloaded()
     }
 
     public func preloadWhisperKit() async {
@@ -110,8 +120,7 @@ public final class AppDIContainer {
         return MainViewModel(
             microphoneRepository: voiceRecordRepository,
             voiceNoteUseCase: voiceNoteUseCase,
-            folderUseCase: folderUseCase,
-            languageRepository: languageRepository
+            folderUseCase: folderUseCase
         )
     }
 
@@ -174,6 +183,15 @@ public final class AppDIContainer {
     public func makeDownloadOnDeviceViewModel() -> DownloadOnDeviceViewModel {
         return DownloadOnDeviceViewModel(
             repository: sttWhisperRepository
+        )
+    }
+
+    public func makeSettingViewModel() -> SettingViewModel {
+        return SettingViewModel(
+            languageRepository: languageRepository,
+            mlxRepository: mlxModelRepository,
+            sttRepository: sttWhisperRepository,
+            deleteModelRepository: deleteModelRepository
         )
     }
 

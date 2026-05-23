@@ -60,11 +60,6 @@ public struct DefaultMLXSummaryRepository: SummaryRepository {
                 throw SummaryRepositoryError.summarizeFailed
             }
 
-            struct MLXSummaryResult: Codable {
-                let keywords: [String]
-                let keyPoints: [String]
-            }
-
             let result = try JSONDecoder().decode(MLXSummaryResult.self, from: data)
 
             let keywords = result.keywords
@@ -100,7 +95,7 @@ public struct DefaultMLXSummaryRepository: SummaryRepository {
         switch model {
         case .gemma4_e2b_4bit:
             return LLMRegistry.gemma4_e2b_it_4bit
-        case .none:
+        case .none, .whisper:
             throw .notFoundModel
         }
     }

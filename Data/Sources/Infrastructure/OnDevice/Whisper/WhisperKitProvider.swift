@@ -30,10 +30,9 @@ public actor WhisperKitProvider: WhisperDataSource {
         self.languageRepository = languageRepository
     }
 
-    public static func isModelDownloaded(storageService: any StorageService) -> Bool {
-        let downloadBase = storageService.absoluteURL(for: Self.modelDirectory)
+    public func isModelDownloaded() -> Bool {
         let recommendedModel = WhisperKit.recommendedModels().default
-        let modelPath = downloadBase
+        let modelPath = downloadedBaseURL
             .appendingPathComponent("models")
             .appendingPathComponent("argmaxinc")
             .appendingPathComponent("whisperkit-coreml")
@@ -87,6 +86,15 @@ public actor WhisperKitProvider: WhisperDataSource {
 
     public func clearCache() {
         cachedWhisper = nil
+    }
+
+    public func deleteModel() async throws {
+        let downloadBase = downloadedBaseURL
+        if FileManager.default.fileExists(atPath: downloadBase.path) {
+            try FileManager.default.removeItem(at: downloadBase)
+            AppLogger.info("Whisper 모델 폴더 삭제 완료: \(downloadBase.path)")
+        }
+        clearCache()
     }
 }
 

@@ -17,8 +17,8 @@ public final class FolderViewController: CollectionViewController {
     // MARK: - Component
 
     private lazy var backButton: NavigationItemButton = .init(
-        normalItem: .init(title: " \(vm.category.title)", imageName: "chevron.left"),
-        selectedItem: .init(title: " \(vm.category.title)", imageName: "chevron.left"),
+        normalItem: .init(title: "\(vm.category.title)", imageName: "chevron.left"),
+        selectedItem: .init(title: "\(vm.category.title)", imageName: "chevron.left"),
         attributedString: Typography.title1.textAttributes
     )
 

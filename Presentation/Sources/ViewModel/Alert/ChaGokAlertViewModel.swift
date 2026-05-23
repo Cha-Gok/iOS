@@ -123,8 +123,6 @@ extension ChaGokAlertViewModel {
             delegate?.recordingCancelCloseButtonTapped?(alertVC)
         case .recordingComplete:
             delegate?.recordingCompleteCloseButtonTapped?(alertVC)
-        case .languageSelect:
-            delegate?.languageSelectCloseButtonTapped?(alertVC)
         case .createFolder:
             delegate?.createFolderCloseButtonTapped?(alertVC)
         case .updateFolder:
@@ -148,8 +146,6 @@ extension ChaGokAlertViewModel {
             delegate?.recordingCancelPrimaryButtonTapped?(alertVC)
         case .recordingComplete:
             delegate?.recordingCompletePrimaryButtonTapped?(alertVC)
-        case .languageSelect:
-            delegate?.languageSelectPrimaryButtonTapped?(alertVC)
         case .createFolder:
             delegate?.createFolderPrimaryButtonTapped?(alertVC)
         case .updateFolder:
@@ -183,7 +179,6 @@ public extension ChaGokAlertViewModel {
 
     enum BodyStyle {
         case basic(subTitle: String)
-        case languagePicker(Language)
         case textField(field: TextFieldView.Field, subTitle: String)
     }
 
@@ -218,7 +213,6 @@ public extension ChaGokAlertViewModel {
         case micPermissionRequired
         case recordingCancel
         case recordingComplete
-        case languageSelect(Language)
         case createFolder(TextFieldView.Field)
         case updateFolder(TextFieldView.Field)
         case moveTrash
@@ -252,13 +246,6 @@ public extension ChaGokAlertViewModel {
                     bodyStyle: .basic(subTitle: "지금까지 녹음한 내용이\n기록됩니다."),
                     cancelButtonStyle: .init(type: .close, text: "아니오"),
                     primaryButtonStyle: .init(type: .primary, text: "저장 후 종료")
-                )
-            case .languageSelect(let selectedLanguage):
-                AlertState(
-                    header: .init(title: "녹음 언어 변경"),
-                    bodyStyle: .languagePicker(selectedLanguage),
-                    cancelButtonStyle: .init(type: .close, text: "취소"),
-                    primaryButtonStyle: .init(type: .primary, text: "저장하기")
                 )
             case .createFolder(let field):
                 AlertState(

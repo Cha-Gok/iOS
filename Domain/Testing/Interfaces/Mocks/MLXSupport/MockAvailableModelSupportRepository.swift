@@ -8,12 +8,15 @@ public final class MockAvailableModelSupportRepository: AvailableModelSupportRep
 
     private var checkSupportModelResult: ChaGokModelSupport?
     private var downloadModelResult: Result<Void, AvailableModelSupportRepositoryError>?
+    private var fetchSupportModelsResult: [ChaGokModelState] = []
 
     private var actualCheckSupportModelCallCount = 0
     private var actualDownloadModelCallCount = 0
+    private var actualFetchSupportModelsCallCount = 0
 
     private var expectedCheckSupportModelCallCount: Int?
     private var expectedDownloadModelCallCount: Int?
+    private var expectedFetchSupportModelsCallCount: Int?
 
     public func setCheckSupportModelResult(_ result: ChaGokModelSupport) {
         checkSupportModelResult = result
@@ -23,12 +26,20 @@ public final class MockAvailableModelSupportRepository: AvailableModelSupportRep
         downloadModelResult = result
     }
 
+    public func setFetchSupportModelsResult(_ result: [ChaGokModelState]) {
+        fetchSupportModelsResult = result
+    }
+
     public func expectCheckSupportModel(callCount: Int) {
         expectedCheckSupportModelCallCount = callCount
     }
 
     public func expectDownloadModel(callCount: Int) {
         expectedDownloadModelCallCount = callCount
+    }
+
+    public func expectFetchSupportModels(callCount: Int) {
+        expectedFetchSupportModelsCallCount = callCount
     }
 
     public func verify(file: StaticString = #filePath, line: UInt = #line) {
@@ -40,6 +51,13 @@ public final class MockAvailableModelSupportRepository: AvailableModelSupportRep
             line
         )
         assertCount(actualDownloadModelCallCount, expectedDownloadModelCallCount, "downloadModel", file, line)
+        assertCount(
+            actualFetchSupportModelsCallCount,
+            expectedFetchSupportModelsCallCount,
+            "fetchSupportModels",
+            file,
+            line
+        )
     }
 
     private func assertCount(
@@ -80,5 +98,10 @@ public final class MockAvailableModelSupportRepository: AvailableModelSupportRep
             XCTFail("MockAvailableModelSupportRepository.downloadModelResult 미설정")
             throw .unknown(NSError(domain: "Mock", code: -1))
         }
+    }
+
+    public func fetchSupportModels() async -> [Domain.ChaGokModelState] {
+        actualFetchSupportModelsCallCount += 1
+        return fetchSupportModelsResult
     }
 }

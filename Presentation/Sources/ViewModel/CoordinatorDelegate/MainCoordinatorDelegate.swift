@@ -17,4 +17,6 @@ public protocol MainCoordinatorDelegate: AnyObject {
     func pop()
     /// 검색 화면 Push함수
     func pushSearchView(type: SearchViewModel.SearchType, items: [ContentItem])
+    /// 설정 화면 push
+    func pushSettingView()
 }

@@ -6,12 +6,8 @@ public final class ChaGokAlertViewController: UIViewController {
     private let primaryButton: GlassButton = .init()
     private var alertView: AlertView?
     private var textFieldView: TextFieldView?
-    private var languagePickerAlert: LanguagePickerAlert?
     private weak var currentContentView: UIView?
     public weak var delegate: ChaGokAlertButtonTappedDelegate?
-    public var selectedLanguage: Language? {
-        vm.selectedLanguage
-    }
 
     public var inputText: String? {
         textFieldView?.field.text
@@ -80,30 +76,6 @@ public final class ChaGokAlertViewController: UIViewController {
         )
         self.alertView = alertView
         attachContentView(alertView)
-    }
-
-    /// Componenet 중 LanguagePickerAlert 를 초기화 합니다.
-    private func setLanguagePickerAlertView(
-        state: ChaGokAlertViewModel.AlertState,
-        language: Language
-    ) {
-        let languagePicker = LanguagePicker(
-            selected: language,
-            axis: .horizontal,
-            showAlert: true
-        )
-        vm.setSelectedLanguage(language)
-        languagePicker.onLanguageChanged = { [weak self] updatedLanguage in
-            self?.vm.setSelectedLanguage(updatedLanguage)
-        }
-        let languagePickerAlert = LanguagePickerAlert(
-            title: state.header.title,
-            languagePicker: languagePicker,
-            closeButton: cancelButton,
-            primaryButton: primaryButton
-        )
-        self.languagePickerAlert = languagePickerAlert
-        attachContentView(languagePickerAlert)
     }
 
     /// Componenet 중 TextFieldView 를 초기화 합니다.
@@ -175,8 +147,6 @@ extension ChaGokAlertViewController {
         switch state.bodyStyle {
         case .basic(let subTitle):
             setAlertView(state: state, subTitle: subTitle)
-        case .languagePicker(let language):
-            setLanguagePickerAlertView(state: state, language: language)
         case .textField(let field, let subTitle):
             setTextFieldAlertView(state: state, field: field, subTitle: subTitle)
         }

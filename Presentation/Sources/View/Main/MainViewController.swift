@@ -47,17 +47,6 @@ public final class MainViewController: ViewController {
         return c
     }()
 
-    private lazy var langAction: UIAction = UIAction(title: "녹음 언어 선택") { [weak self] _ in
-        guard let self else { return }
-        vm.alertCoordinator?.presentAlert(
-            environment: .languageSelect(vm.checkLanguage()),
-            delegate: self
-        )
-    }
-
-    private lazy var termsofServiceAction: UIAction = UIAction(title: "약관 보기") { [weak self] _ in
-    }
-
     private lazy var searchItem: UIBarButtonItem = {
         let search = UIBarButtonItem()
         search.image = UIImage(systemName: "magnifyingglass")
@@ -70,7 +59,9 @@ public final class MainViewController: ViewController {
 
     private lazy var settingItem: UIBarButtonItem = .init(
         image: UIImage(systemName: "gearshape"),
-        menu: UIMenu(title: "", children: [langAction, termsofServiceAction])
+        primaryAction: UIAction { [weak self] _ in
+            self?.vm.pushSettingView()
+        }
     )
 
     private let floatingButton: GlassButton = .floating(
@@ -463,17 +454,6 @@ extension MainViewController: UICollectionViewDelegate, ChaGokAlertButtonTappedD
             .first as? MainCategoryHeaderView else { return }
         header.updateScrollState(didScroll)
         collectionView.collectionViewLayout.invalidateLayout()
-    }
-
-    public func languageSelectCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {
-        alertVC.dismiss(animated: true)
-    }
-
-    public func languageSelectPrimaryButtonTapped(_ alertVC: ChaGokAlertViewController) {
-        if let selectedLanguage = alertVC.selectedLanguage {
-            vm.saveLanguage(selectedLanguage)
-        }
-        alertVC.dismiss(animated: true)
     }
 
     public func micPermissionCloseButtonTapped(_ alertVC: ChaGokAlertViewController) {

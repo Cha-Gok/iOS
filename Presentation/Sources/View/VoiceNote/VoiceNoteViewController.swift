@@ -11,7 +11,6 @@ public final class VoiceNoteViewController: ViewController, Alertable {
     private let navigationBar = VoiceNoteNavigationBar()
     private let playerView = AudioPlayerView()
     private let segmentedControl = UnderlineSegmentedControl(items: Page.allCases.map(\.title))
-    private let bottomFadeView = VoiceNoteBottomFadeView()
     private let matchAccessoryBar: VoiceNoteMatchAccessoryBar = {
         let bar = VoiceNoteMatchAccessoryBar()
         bar.isHidden = true
@@ -79,12 +78,12 @@ public final class VoiceNoteViewController: ViewController, Alertable {
 
 private extension VoiceNoteViewController {
     func setupUI() {
+        updateNavigationBarAppearance(isTransparent: false)
         addChild(pageViewController)
         pageViewController.didMove(toParent: self)
 
         view.addSubview(segmentedControl)
         view.addSubview(pageViewController.view)
-        view.addSubview(bottomFadeView)
         view.addSubview(playerView)
 
         view.addSubview(dimOverlayView)
@@ -102,7 +101,6 @@ private extension VoiceNoteViewController {
             pageViewController.view,
             playerView,
             segmentedControl,
-            bottomFadeView,
             dimOverlayView,
             matchAccessoryBar
         ] {
@@ -119,11 +117,6 @@ private extension VoiceNoteViewController {
             pageViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             pageViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             pageViewController.view.bottomAnchor.constraint(equalTo: contentBottomGuide.topAnchor),
-
-            bottomFadeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bottomFadeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bottomFadeView.heightAnchor.constraint(equalToConstant: Constant.voiceNoteBottomFadeHeight),
-            bottomFadeView.bottomAnchor.constraint(equalTo: contentBottomGuide.topAnchor),
 
             playerView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -308,7 +301,6 @@ private extension VoiceNoteViewController {
         dimOverlayView.isHidden = viewModel.editingMode != .title
         segmentedControl.isHidden = isScriptEditing
         playerView.isHidden = isScriptEditing || viewModel.searchMode
-        bottomFadeView.isHidden = isScriptEditing
 
         pageTopToSegmentBottom.isActive = !isScriptEditing
         pageTopToSafeArea.isActive = isScriptEditing

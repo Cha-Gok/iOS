@@ -10,6 +10,7 @@ final class MockMainCoordinatorDelegate: MainCoordinatorDelegate {
     var pushVoiceNoteViewCalled = false
     var pushSearchViewCalled = false
     var presentRecodingViewCalled = false
+    var pushSettingViewCalled = false
     var popCalled = false
 
     var pushedCategory: CategoryToggle?
@@ -39,6 +40,10 @@ final class MockMainCoordinatorDelegate: MainCoordinatorDelegate {
         pushSearchViewCalled = true
         pushedSearchType = type
         pushedSearchItems = items
+    }
+
+    func pushSettingView() {
+        pushSettingViewCalled = true
     }
 
     func pop() {
@@ -80,8 +85,7 @@ final class MainViewModelTests: XCTestCase {
                 folderRepository: mockFolderRepo,
                 analysisService: MockVoiceNoteAnalysisService()
             ),
-            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
-            languageRepository: mockLanguageRepo
+            folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo)
         )
         viewModel.mainCoordinator = mockCoordinator
 
@@ -143,6 +147,13 @@ final class MainViewModelTests: XCTestCase {
 
         XCTAssertTrue(sut.mockCoordinator.pushVoiceNoteViewCalled)
         XCTAssertEqual(sut.mockCoordinator.pushedVoiceNote?.id, note.id)
+    }
+
+    func test_pushSettingView_호출시_화면전환() {
+        let sut = makeSUT()
+        sut.viewModel.pushSettingView()
+
+        XCTAssertTrue(sut.mockCoordinator.pushSettingViewCalled)
     }
 
     func test_pushSearchView_호출시_화면전환() async {
@@ -230,28 +241,6 @@ final class MainViewModelTests: XCTestCase {
         await sut.mockVoiceRecordRepo.verify()
         XCTAssertFalse(sut.mockCoordinator.presentRecodingViewCalled)
         XCTAssertTrue(alertActionCalled)
-    }
-
-    // MARK: - Language Tests
-
-    func test_checkLanguage_언어데이터로드확인() {
-        let sut = makeSUT()
-        sut.mockLanguageRepo.setFetchResult(.en)
-        sut.mockLanguageRepo.expectFetch(callCount: 1)
-
-        let language = sut.viewModel.checkLanguage()
-
-        XCTAssertEqual(language, .en)
-        sut.mockLanguageRepo.verify()
-    }
-
-    func test_saveLanguage_언어설정값저장확인() {
-        let sut = makeSUT()
-
-        sut.viewModel.saveLanguage(.en)
-
-        sut.mockLanguageRepo.expectSave(language: .en, callCount: 1)
-        sut.mockLanguageRepo.verify()
     }
 
     // MARK: - Update Tests
