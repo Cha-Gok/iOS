@@ -14,6 +14,7 @@ public final class SettingViewModel {
     private let languageRepository: any LanguageRepository
     private let mlxRepository: any AvailableModelSupportRepository
     private let sttRepository: any STTRepository
+    private let deleteModelRepository: any DeleteOnDeviceRepository
 
     public weak var coordinator: SettingCoordinatorDelegate?
 
@@ -25,11 +26,13 @@ public final class SettingViewModel {
     public init(
         languageRepository: any LanguageRepository,
         mlxRepository: any AvailableModelSupportRepository,
-        sttRepository: any STTRepository
+        sttRepository: any STTRepository,
+        deleteModelRepository: any DeleteOnDeviceRepository
     ) {
         self.languageRepository = languageRepository
         self.mlxRepository = mlxRepository
         self.sttRepository = sttRepository
+        self.deleteModelRepository = deleteModelRepository
         language = languageRepository.fetchLanguage()
     }
 
@@ -68,9 +71,15 @@ public final class SettingViewModel {
     func deleteModel(model: ChaGokModel) {
         updateModelState(model: model, newState: .downloading)
 
-        // 가상의 삭제 지연 로직 (실제 연결 전 임시 구현)
         Task {
-            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            switch model {
+            case .none:
+                return
+            case .whisper:
+                try await deleteModelRepository.whisperModel()
+            case .gemma4_e2b_4bit:
+                try await deleteModelRepository.mlxModel()
+            }
             updateModelState(model: model, newState: .notDownloaded)
         }
     }

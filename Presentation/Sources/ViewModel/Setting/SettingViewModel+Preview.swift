@@ -10,7 +10,8 @@ import Foundation
                     language: .ko
                 ),
                 mlxRepository: PreviewAvailableModelSupportRepository(),
-                sttRepository: PreviewSTTRepository()
+                sttRepository: PreviewSTTRepository(),
+                deleteModelRepository: PreviewDeleteModelRepository()
             )
         }
 
@@ -31,6 +32,10 @@ import Foundation
         }
 
         struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
+            func deleteWhisperModel() async throws(Domain.AvailableModelSupportRepositoryError) {}
+
+            func deleteMLXModel() async throws(Domain.AvailableModelSupportRepositoryError) {}
+
             func fetchSupportModels() async -> [ChaGokModelState] {
                 [
                     ChaGokModelState(title: "Gemma-4", subTitle: "내용", model: .gemma4_e2b_4bit),
@@ -70,6 +75,12 @@ import Foundation
             func requestSTTPermission() async throws(Domain.STTPermissionRepositoryError) -> Domain.PermissionStatus {
                 return .authorized
             }
+        }
+
+        struct PreviewDeleteModelRepository: DeleteOnDeviceRepository {
+            func whisperModel() async throws(Domain.DeleteOnDeviceRepositoryError) {}
+
+            func mlxModel() async throws(Domain.DeleteOnDeviceRepositoryError) {}
         }
     }
 #endif

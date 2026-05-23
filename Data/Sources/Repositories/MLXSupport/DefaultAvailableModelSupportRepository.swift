@@ -8,14 +8,14 @@ import MLXLMCommon
 
 /// 온디바이스 AI 모델의 지원 여부 확인 및 다운로드를 담당하는 리포지토리 구현체.
 public final class DefaultAvailableModelSupportRepository: AvailableModelSupportRepository {
-    private let provider: any MLXModelDataSource
+    private let mlxProvider: any MLXModelDataSource
     private let whisperProvider: any WhisperDataSource
 
     public init(
-        provider: any MLXModelDataSource,
+        mlxProvider: any MLXModelDataSource,
         whisperProvider: any WhisperDataSource
     ) {
-        self.provider = provider
+        self.mlxProvider = mlxProvider
         self.whisperProvider = whisperProvider
     }
 
@@ -28,8 +28,9 @@ public final class DefaultAvailableModelSupportRepository: AvailableModelSupport
     public func fetchSupportModels() async -> [ChaGokModelState] {
         let models: [ChaGokModel] = ChaGokModel.models
         let whisperStatus: Bool = await whisperProvider.isModelDownloaded()
-        let mlxStatus: Bool = await provider.isDownloaded
-
+        let mlxStatus: Bool = await mlxProvider.isDownloaded
+        // gemma를 설치 할 수 있는지 여부
+        let available: Bool = await checkSupportModel().model == .gemma4_e2b_4bit
         return models.compactMap { model in
             switch model {
             case .whisper:
@@ -40,12 +41,15 @@ public final class DefaultAvailableModelSupportRepository: AvailableModelSupport
                     isDownloaded: whisperStatus ? .downloaded : .notDownloaded
                 )
             case .gemma4_e2b_4bit:
-                return ChaGokModelState(
-                    title: "Gemma-4",
-                    subTitle: "Ai 요약, 문법 교정을 통해 정확한 문장을 생성합니다.",
-                    model: .gemma4_e2b_4bit,
-                    isDownloaded: mlxStatus ? .downloaded : .notDownloaded
-                )
+                if available {
+                    return ChaGokModelState(
+                        title: "Gemma-4",
+                        subTitle: "Ai 요약, 문법 교정을 통해 정확한 문장을 생성합니다.",
+                        model: .gemma4_e2b_4bit,
+                        isDownloaded: mlxStatus ? .downloaded : .notDownloaded
+                    )
+                }
+                return nil
             default:
                 return nil
             }

@@ -274,6 +274,10 @@ extension OnBoardingViewModel {
         }
 
         struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
+            func deleteWhisperModel() async throws(Domain.AvailableModelSupportRepositoryError) {}
+
+            func deleteMLXModel() async throws(Domain.AvailableModelSupportRepositoryError) {}
+
             func fetchSupportModels() async -> [ChaGokModelState] {
                 []
             }

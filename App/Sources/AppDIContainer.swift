@@ -13,7 +13,9 @@ public final class AppDIContainer {
     private lazy var store = UserDefaultsKeyValueStoreService()
     private lazy var storageService = FileManagerStorageService()
     private let localDataBase: CoreDataLocalDataBase
-    private let mlxProvider: MLXModelProvider = .init()
+    private lazy var mlxProvider: MLXModelProvider = .init(
+        fileManager: storageService
+    )
 
     /// Repository
     private lazy var languageRepository = DefaultLanguageRepository(store: store)
@@ -34,7 +36,7 @@ public final class AppDIContainer {
         languageRepository: languageRepository
     )
     private lazy var mlxModelRepository = DefaultAvailableModelSupportRepository(
-        provider: mlxProvider,
+        mlxProvider: mlxProvider,
         whisperProvider: whisperProvider
     )
 
@@ -47,6 +49,11 @@ public final class AppDIContainer {
         sttRepository: sttWhisperRepository,
         summaryRepository: mlxSummaryRepository,
         languageRepository: languageRepository
+    )
+
+    private lazy var deleteModelRepository = DefaultDeleteOnDeviceRepository(
+        mlxProvider: mlxProvider,
+        whisperProvider: whisperProvider
     )
 
     /// UseCase
@@ -183,7 +190,8 @@ public final class AppDIContainer {
         return SettingViewModel(
             languageRepository: languageRepository,
             mlxRepository: mlxModelRepository,
-            sttRepository: sttRepository
+            sttRepository: sttWhisperRepository,
+            deleteModelRepository: deleteModelRepository
         )
     }
 
