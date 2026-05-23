@@ -10,8 +10,13 @@ import Tokenizers
 public actor MLXModelProvider: MLXModelDataSource {
     /// 메모리에 로드된 모델 컨테이너. 로드되지 않았을 경우 nil입니다.
     public internal(set) var container: ModelContainer?
+    private let fileManager: any StorageService
 
-    public init() {}
+    public init(
+        fileManager: any StorageService
+    ) {
+        self.fileManager = fileManager
+    }
 
     /// 모델 로드 여부 확인
     public var isLoaded: Bool = false
@@ -39,5 +44,16 @@ public actor MLXModelProvider: MLXModelDataSource {
         MLX.Memory.cacheLimit = 0
         container = nil
         isLoaded = false
+    }
+
+    /// 허깅페이스 캐시 폴더를 삭제하여 모델을 기기에서 제거합니다.
+    public func deleteModel() async throws {
+        guard let container else { return }
+        let downloadURL: URL = try await container.modelDirectory
+        // file remove
+        try fileManager.delete(fileURL: downloadURL)
+        // deinit
+        clear()
+        isDownloaded = false
     }
 }

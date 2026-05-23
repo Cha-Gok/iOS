@@ -19,4 +19,7 @@ public protocol MLXModelDataSource: Sendable {
 
     /// 메모리에서 모델을 해제하여 리소스를 반환합니다.
     func clear() async
+
+    /// 다운로드된 로컬 모델 캐시 파일을 제거합니다.
+    func deleteModel() async throws
 }

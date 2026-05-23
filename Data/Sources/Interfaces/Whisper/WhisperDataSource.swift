@@ -19,4 +19,7 @@ public protocol WhisperDataSource: Sendable {
 
     /// 백그라운드에서 모델을 미리 로드하여 최초 음성 전사 속도를 향상시킵니다.
     func preload() async
+
+    /// 다운로드된 로컬 모델 파일(디렉토리)을 제거합니다.
+    func deleteModel() async throws
 }
