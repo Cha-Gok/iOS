@@ -41,10 +41,10 @@ public enum ChaGokModel: Equatable, Sendable, CaseIterable {
 
 /// 차곡 - 설정에서 사용자가 현재 모델의 상태를 나타냅니다.
 public struct ChaGokModelState: Hashable, Sendable {
-    let title: String
-    let subTitle: String
-    let model: ChaGokModel
-    var isDownloaded: DownloadState
+    public let title: String
+    public let subTitle: String
+    public let model: ChaGokModel
+    public var isDownloaded: DownloadState
     
     public init(
         title: String,
