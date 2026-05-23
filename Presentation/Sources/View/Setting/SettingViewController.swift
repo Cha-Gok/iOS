@@ -158,10 +158,12 @@ public final class SettingViewController: CollectionViewController {
     }
 }
 
-#Preview {
-    UINavigationController(
-        rootViewController: SettingViewController(
-            vm: .preview
+#if DEBUG
+    #Preview {
+        UINavigationController(
+            rootViewController: SettingViewController(
+                vm: .preview
+            )
         )
-    )
-}
+    }
+#endif
