@@ -11,6 +11,7 @@ public protocol SettingCoordinatorDelegate: AnyObject {
 @MainActor
 @Observable
 public final class SettingViewModel {
+    private var downloadTasks: [ChaGokModel: Task<Void, Never>] = [:]
     private let languageRepository: any LanguageRepository
     private let mlxRepository: any AvailableModelSupportRepository
     private let sttRepository: any STTRepository
@@ -54,34 +55,57 @@ public final class SettingViewModel {
     func downloadModel(model: ChaGokModel) {
         updateModelState(model: model, newState: .downloading)
 
-        Task {
-            switch model {
-            case .none:
-                return
-            case .whisper:
-                try await sttRepository.download { _ in }
-            case .gemma4_e2b_4bit:
-                try await mlxRepository.downloadModel { _ in }
+        // Create and store a Task so it can be cancelled when the ViewModel is popped/deinitialized
+        let task = Task { [weak self] in
+            do {
+                switch model {
+                case .none:
+                    return
+                case .whisper:
+                    try await self?.sttRepository.download { _ in }
+                case .gemma4_e2b_4bit:
+                    try await self?.mlxRepository.downloadModel { _ in }
+                }
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                await MainActor.run {
+                    self?.updateModelState(model: model, newState: .downloaded)
+                }
+            } catch {
+                // If cancelled or failed, we simply stop; repository implementations should honor Task.isCancelled
             }
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            updateModelState(model: model, newState: .downloaded)
+            await MainActor.run {
+                self?.downloadTasks[model] = nil
+            }
         }
+
+        downloadTasks[model] = task
     }
 
     func deleteModel(model: ChaGokModel) {
         updateModelState(model: model, newState: .downloading)
 
-        Task {
-            switch model {
-            case .none:
-                return
-            case .whisper:
-                try await deleteModelRepository.whisperModel()
-            case .gemma4_e2b_4bit:
-                try await deleteModelRepository.mlxModel()
+        let task = Task { [weak self] in
+            do {
+                switch model {
+                case .none:
+                    return
+                case .whisper:
+                    try await self?.deleteModelRepository.whisperModel()
+                case .gemma4_e2b_4bit:
+                    try await self?.deleteModelRepository.mlxModel()
+                }
+                await MainActor.run {
+                    self?.updateModelState(model: model, newState: .notDownloaded)
+                }
+            } catch {
+                // ignore errors / cancellations
             }
-            updateModelState(model: model, newState: .notDownloaded)
+            await MainActor.run {
+                self?.downloadTasks[model] = nil
+            }
         }
+
+        downloadTasks[model] = task
     }
 
     private func updateModelState(model: ChaGokModel, newState: ChaGokModelState.DownloadState) {
@@ -93,7 +117,31 @@ public final class SettingViewModel {
     }
 
     func pop() {
+        // Cancel any in-flight download/delete tasks before popping
+        let modelsToCleanup = Array(downloadTasks.keys)
+        downloadTasks.values.forEach { $0.cancel() }
+        downloadTasks.removeAll()
+
+        // Immediately navigate back. Delete any partial model files in background
+        // so the next `checkModels()` call reflects on-disk state.
         coordinator?.pop()
+
+        Task {
+            for model in modelsToCleanup {
+                do {
+                    switch model {
+                    case .none:
+                        break
+                    case .whisper:
+                        try await deleteModelRepository.whisperModel()
+                    case .gemma4_e2b_4bit:
+                        try await deleteModelRepository.mlxModel()
+                    }
+                } catch {
+                    // ignore errors / cancellations
+                }
+            }
+        }
     }
 }
 

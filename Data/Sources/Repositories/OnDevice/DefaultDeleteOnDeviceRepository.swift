@@ -16,6 +16,8 @@ public final class DefaultDeleteOnDeviceRepository: DeleteOnDeviceRepository {
 
     /// 다운로드 된 모델을 제거합니다. ( MLX Model )
     public func mlxModel() async throws(DeleteOnDeviceRepositoryError) {
+        if Task.isCancelled { throw .cancelled }
+
         do {
             try await mlxProvider.deleteModel()
         } catch {
@@ -26,6 +28,8 @@ public final class DefaultDeleteOnDeviceRepository: DeleteOnDeviceRepository {
 
     /// 다운로드 된 모델을 제거합니다. ( Whisper Model )
     public func whisperModel() async throws(DeleteOnDeviceRepositoryError) {
+        if Task.isCancelled { throw .cancelled }
+
         do {
             try await whisperProvider.deleteModel()
         } catch {
