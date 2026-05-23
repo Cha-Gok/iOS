@@ -104,7 +104,7 @@ public final class SettingViewController: CollectionViewController {
                 var content = cell.defaultContentConfiguration()
                 content.text = itemIdentifier.title
                 content.secondaryText = itemIdentifier.subTitle
-                content.textProperties.font = Typography.body1.font
+                content.textProperties.font = Typography.title3.font
                 content.textProperties.color = .gray950
                 cell.contentConfiguration = content
                 cell.backgroundConfiguration = .clear()
@@ -148,8 +148,9 @@ public final class SettingViewController: CollectionViewController {
         snapshot.appendItems(modelItems, toSection: .model)
 
         let labelItems = [
-            Item(title: "앱 버전 정보", subTitle: nil, data: .none),
-            Item(title: "오픈소스 라이선스", subTitle: nil, data: .none)
+            Item(title: "이용약관", subTitle: nil, data: .none),
+            Item(title: "개인 정보 처리 방침", subTitle: nil, data: .none),
+            Item(title: "고객 문의", subTitle: nil, data: .none)
         ]
         snapshot.appendItems(labelItems, toSection: .label)
 
