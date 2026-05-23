@@ -178,6 +178,14 @@ public final class AppDIContainer {
             repository: sttWhisperRepository
         )
     }
+    
+    public func makeSettingViewModel() -> SettingViewModel {
+        return SettingViewModel(
+            languageRepository: languageRepository,
+            mlxRepository: mlxModelRepository,
+            sttRepository: sttRepository
+        )
+    }
 
     #if DEBUG
         public func seedDebugDataIfNeeded() {

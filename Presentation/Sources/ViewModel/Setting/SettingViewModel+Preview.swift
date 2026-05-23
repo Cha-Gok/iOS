@@ -9,7 +9,8 @@ import Core
                 languageRepository: PreviewLanguageRepository(
                     language: .ko
                 ),
-                mlxRepository:  PreviewAvailableModelSupportRepository()
+                mlxRepository:  PreviewAvailableModelSupportRepository(),
+                sttRepository: PreviewSTTRepository()
             )
         }
         
@@ -31,7 +32,10 @@ import Core
         
         struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
             func fetchSupportModels() async -> [ChaGokModelState] {
-                []
+                [
+                    ChaGokModelState(title: "Gemma-4", subTitle: "내용", model: .gemma4_e2b_4bit),
+                    ChaGokModelState(title: "whisper", subTitle: "내용", model: .whisper),
+                ]
             }
             
             func checkSupportModel() -> ChaGokModelSupport {
@@ -51,6 +55,20 @@ import Core
 
             var isModelLoaded: Bool {
                 true
+            }
+        }
+        
+        struct PreviewSTTRepository: STTRepository {
+            func transcribe(audioFilePath: String) async throws(Domain.STTRepositoryError) -> Domain.Transcript {
+                Transcript()
+            }
+            
+            func checkSTTPermission() -> Domain.PermissionStatus {
+                return .authorized
+            }
+            
+            func requestSTTPermission() async throws(Domain.STTPermissionRepositoryError) -> Domain.PermissionStatus {
+                return .authorized
             }
         }
     }

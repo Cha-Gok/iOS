@@ -23,7 +23,7 @@ public final class SettingViewController: CollectionViewController {
     
     // MARK: - Initialize
     
-    init(vm: SettingViewModel) {
+    public init(vm: SettingViewModel) {
         var listConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
         listConfiguration.backgroundColor = .clear
         listConfiguration.showsSeparators = false
@@ -45,6 +45,11 @@ public final class SettingViewController: CollectionViewController {
         applySnapShot(animate: false)
     }
     
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        vm.checkModels()
+    }
+    
     public override func updateProperties() {
         super.updateProperties()
         applySnapShot(animate: true)
@@ -56,6 +61,9 @@ public final class SettingViewController: CollectionViewController {
         updateNavigationBarAppearance(isTransparent: false)
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backItem)
         navigationItem.leftBarButtonItem?.hidesSharedBackground = true
+        backItem.addAction(UIAction { [weak self] _ in
+            self?.vm.pop()
+        }, for: .touchUpInside)
     }
     
     // MARK: - DataSource
@@ -73,11 +81,19 @@ public final class SettingViewController: CollectionViewController {
             )
         }
         
-        let modelCelllRegistration = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell,indexPath,itemIdentifier in
-            guard case .model(let chagokModel) = itemIdentifier.data else { return }
+        let modelCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, indexPath, itemIdentifier in
+            guard case .model(let models) = itemIdentifier.data else { return }
             cell.contentConfiguration = SettingModelContentConfiguration(
                 title: itemIdentifier.title,
-                model: chagokModel
+                models: models,
+                action: { [weak self] targetModel, actionType in
+                    switch actionType {
+                    case .download:
+                        self?.vm.downloadModel(model: targetModel)
+                    case .delete:
+                        self?.vm.deleteModel(model: targetModel)
+                    }
+                }
             )
         }
         
@@ -96,7 +112,7 @@ public final class SettingViewController: CollectionViewController {
             case .lang:
                 return col.dequeueConfiguredReusableCell(using: langCellRegistration, for: indexPath, item: itemIdentifier)
             case .model:
-                return col.dequeueConfiguredReusableCell(using: modelCelllRegistration, for: indexPath, item: itemIdentifier)
+                return col.dequeueConfiguredReusableCell(using: modelCellRegistration, for: indexPath, item: itemIdentifier)
             case .none:
                 return col.dequeueConfiguredReusableCell(using: defaultCellRegistration, for: indexPath, item: itemIdentifier)
             }
@@ -114,7 +130,7 @@ public final class SettingViewController: CollectionViewController {
         snapshot.appendItems(langData, toSection: .lang)
         
         let modelItems = [
-            Item(title: "음성 인식 모델 설정", subTitle: "기본 모델", data: .model(.current))
+            Item(title: "음성 인식 모델 설정", subTitle: "기본 모델", data: .model(vm.models))
         ]
         snapshot.appendItems(modelItems, toSection: .model)
         

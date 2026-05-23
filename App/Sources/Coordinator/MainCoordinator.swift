@@ -80,6 +80,14 @@ extension MainCoordinator: MainCoordinatorDelegate {
         presenter.pushViewController(searchVC, animated: true)
     }
 
+    func pushSettingView() {
+        let settingVM = dependencyContainer.makeSettingViewModel()
+        settingVM.coordinator = self
+        let settingVC = SettingViewController(vm: settingVM)
+        
+        presenter.pushViewController(settingVC, animated: true)
+    }
+    
     // TODO: Present
 
     func presentRecodingView() {
@@ -214,6 +222,8 @@ extension MainCoordinator: DownloadOnDeviceCoordinatorDelegate {
         }
     }
 }
+
+extension MainCoordinator: SettingCoordinatorDelegate {}
 
 // MARK: - Helpers
 

@@ -145,6 +145,10 @@ extension MainViewModel {
             items: uniqueItems
         )
     }
+    
+    func pushSettingView() {
+        mainCoordinator?.pushSettingView()
+    }
 }
 
 // MARK: - Update CategoryData
