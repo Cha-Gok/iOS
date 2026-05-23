@@ -1,5 +1,5 @@
-import Domain
 import Core
+import Domain
 import Observation
 
 @MainActor
@@ -16,11 +16,12 @@ public final class SettingViewModel {
     private let sttRepository: any STTRepository
 
     public weak var coordinator: SettingCoordinatorDelegate?
-    
+
     // MARK: - State
+
     private(set) var language: Language
     private(set) var models: [ChaGokModelState] = []
-    
+
     public init(
         languageRepository: any LanguageRepository,
         mlxRepository: any AvailableModelSupportRepository,
@@ -29,27 +30,27 @@ public final class SettingViewModel {
         self.languageRepository = languageRepository
         self.mlxRepository = mlxRepository
         self.sttRepository = sttRepository
-        self.language = languageRepository.fetchLanguage()
+        language = languageRepository.fetchLanguage()
     }
-    
+
     // MARK: - Setter / Getter
-    
+
     func setLanguage(_ lang: Language) {
-        self.language = lang
+        language = lang
         languageRepository.saveLanguage(lang)
     }
-    
+
     // MARK: - Actions
-    
+
     func checkModels() {
         Task {
             self.models = await mlxRepository.fetchSupportModels()
         }
     }
-    
+
     func downloadModel(model: ChaGokModel) {
         updateModelState(model: model, newState: .downloading)
-        
+
         Task {
             switch model {
             case .none:
@@ -63,17 +64,17 @@ public final class SettingViewModel {
             updateModelState(model: model, newState: .downloaded)
         }
     }
-    
+
     func deleteModel(model: ChaGokModel) {
         updateModelState(model: model, newState: .downloading)
-        
+
         // 가상의 삭제 지연 로직 (실제 연결 전 임시 구현)
         Task {
             try? await Task.sleep(nanoseconds: 1_000_000_000)
             updateModelState(model: model, newState: .notDownloaded)
         }
     }
-    
+
     private func updateModelState(model: ChaGokModel, newState: ChaGokModelState.DownloadState) {
         if let index = models.firstIndex(where: { $0.model == model }) {
             var updatedModel = models[index]
@@ -81,7 +82,7 @@ public final class SettingViewModel {
             models[index] = updatedModel
         }
     }
-    
+
     func pop() {
         coordinator?.pop()
     }
@@ -95,13 +96,13 @@ extension SettingViewModel {
         case model
         case label
     }
-    
+
     struct Item: Hashable {
         let title: String
         let subTitle: String?
         let data: ItemData
     }
-    
+
     enum ItemData: Hashable {
         case lang(Language)
         case model([ChaGokModelState])

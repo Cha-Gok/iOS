@@ -277,7 +277,7 @@ extension OnBoardingViewModel {
             func fetchSupportModels() async -> [ChaGokModelState] {
                 []
             }
-            
+
             func checkSupportModel() -> ChaGokModelSupport {
                 ChaGokModelSupport(ramSizeGB: 4, isProUser: false)
             }

@@ -1,6 +1,6 @@
-import Foundation
-import Domain
 import Core
+import Domain
+import Foundation
 
 #if DEBUG
     extension SettingViewModel {
@@ -9,35 +9,35 @@ import Core
                 languageRepository: PreviewLanguageRepository(
                     language: .ko
                 ),
-                mlxRepository:  PreviewAvailableModelSupportRepository(),
+                mlxRepository: PreviewAvailableModelSupportRepository(),
                 sttRepository: PreviewSTTRepository()
             )
         }
-        
+
         final class PreviewLanguageRepository: LanguageRepository, @unchecked Sendable {
             var language: Language
-            
+
             init(language: Language) {
                 self.language = language
             }
-            
+
             func fetchLanguage() -> Language {
-                self.language
+                language
             }
 
             func saveLanguage(_ language: Language) {
                 self.language = language
             }
         }
-        
+
         struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
             func fetchSupportModels() async -> [ChaGokModelState] {
                 [
                     ChaGokModelState(title: "Gemma-4", subTitle: "내용", model: .gemma4_e2b_4bit),
-                    ChaGokModelState(title: "whisper", subTitle: "내용", model: .whisper),
+                    ChaGokModelState(title: "whisper", subTitle: "내용", model: .whisper)
                 ]
             }
-            
+
             func checkSupportModel() -> ChaGokModelSupport {
                 ChaGokModelSupport(ramSizeGB: 4, isProUser: false)
             }
@@ -57,16 +57,16 @@ import Core
                 true
             }
         }
-        
+
         struct PreviewSTTRepository: STTRepository {
             func transcribe(audioFilePath: String) async throws(Domain.STTRepositoryError) -> Domain.Transcript {
                 Transcript()
             }
-            
+
             func checkSTTPermission() -> Domain.PermissionStatus {
                 return .authorized
             }
-            
+
             func requestSTTPermission() async throws(Domain.STTPermissionRepositoryError) -> Domain.PermissionStatus {
                 return .authorized
             }

@@ -10,7 +10,7 @@ import MLXLMCommon
 public final class DefaultAvailableModelSupportRepository: AvailableModelSupportRepository {
     private let provider: any MLXModelDataSource
     private let whisperProvider: any WhisperDataSource
-    
+
     public init(
         provider: any MLXModelDataSource,
         whisperProvider: any WhisperDataSource
@@ -23,14 +23,14 @@ public final class DefaultAvailableModelSupportRepository: AvailableModelSupport
     public func checkSupportModel() async -> ChaGokModelSupport {
         return ChaGokModelSupport.current
     }
-    
+
     /// 현재 사용자의 On-Device LLM 모두  fetch 합니다.
     public func fetchSupportModels() async -> [ChaGokModelState] {
         let models: [ChaGokModel] = ChaGokModel.models
         let whisperStatus: Bool = await whisperProvider.isModelDownloaded()
         let mlxStatus: Bool = await provider.isDownloaded
-        
-        let modelStates: [ChaGokModelState] = models.compactMap { model in
+
+        return models.compactMap { model in
             switch model {
             case .whisper:
                 return ChaGokModelState(
@@ -41,17 +41,15 @@ public final class DefaultAvailableModelSupportRepository: AvailableModelSupport
                 )
             case .gemma4_e2b_4bit:
                 return ChaGokModelState(
-                        title: "Gemma-4",
-                        subTitle: "Ai 요약, 문법 교정을 통해 정확한 문장을 생성합니다.",
-                        model: .gemma4_e2b_4bit,
-                        isDownloaded: mlxStatus ? .downloaded : .notDownloaded
-                    )
+                    title: "Gemma-4",
+                    subTitle: "Ai 요약, 문법 교정을 통해 정확한 문장을 생성합니다.",
+                    model: .gemma4_e2b_4bit,
+                    isDownloaded: mlxStatus ? .downloaded : .notDownloaded
+                )
             default:
                 return nil
             }
         }
-        
-        return modelStates
     }
 
     /// 모델 다운로드 (resolve)

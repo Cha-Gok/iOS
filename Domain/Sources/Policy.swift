@@ -21,7 +21,7 @@ public enum Policy {
 
     /// 온보딩 완료 시 자동 생성되는 휴지통 폴더 이름
     public static let trashFolderName: String = "휴지통"
-    
+
     /// 음성 노트 `Default Name`
     public static let voiceNoteDefaultName: String = "새 기록"
 

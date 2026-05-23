@@ -52,7 +52,7 @@ public actor DefaultWhisperSTTRepository: STTRepository {
                     text: segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
                 )
             }.filter { !$0.text.isEmpty }
-            
+
             if !sections.isEmpty {
                 return Transcript(sections: sections)
             }

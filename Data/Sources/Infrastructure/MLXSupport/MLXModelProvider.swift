@@ -15,7 +15,7 @@ public actor MLXModelProvider: MLXModelDataSource {
 
     /// 모델 로드 여부 확인
     public var isLoaded: Bool = false
-    
+
     /// 모델 다운로드 여부 확인
     public var isDownloaded: Bool = false
 

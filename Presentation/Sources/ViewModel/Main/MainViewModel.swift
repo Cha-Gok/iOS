@@ -75,7 +75,7 @@ public final class MainViewModel {
     public init(
         microphoneRepository: any VoiceRecordRepository,
         voiceNoteUseCase: any VoiceNoteUseCase,
-        folderUseCase: any FolderUseCase,
+        folderUseCase: any FolderUseCase
     ) {
         self.microphoneRepository = microphoneRepository
         self.voiceNoteUseCase = voiceNoteUseCase
@@ -145,7 +145,7 @@ extension MainViewModel {
             items: uniqueItems
         )
     }
-    
+
     func pushSettingView() {
         mainCoordinator?.pushSettingView()
     }

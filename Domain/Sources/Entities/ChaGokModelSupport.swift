@@ -26,16 +26,15 @@ public struct ChaGokModelSupport: Hashable, Sendable {
     }
 }
 
-
 /// 차곡에서 사용하는 OnDevice-AI LLM 모델입니다.
 public enum ChaGokModel: Equatable, Sendable, CaseIterable {
     case none // OnDevice Model 제공 X
     case whisper
     case gemma4_e2b_4bit
-    
+
     /// none을 제외한 모델을 List 화 합니다.
     public static var models: [ChaGokModel] {
-        Array(Self.allCases.filter{ $0 != .none })
+        Array(allCases.filter { $0 != .none })
     }
 }
 
@@ -45,7 +44,7 @@ public struct ChaGokModelState: Hashable, Sendable {
     public let subTitle: String
     public let model: ChaGokModel
     public var isDownloaded: DownloadState
-    
+
     public init(
         title: String,
         subTitle: String,
@@ -57,11 +56,11 @@ public struct ChaGokModelState: Hashable, Sendable {
         self.model = model
         self.isDownloaded = isDownloaded
     }
-    
+
     public enum DownloadState: Hashable, Sendable {
-        case initialized            // 초기 상태 (모델 확인 전)
-        case downloaded             // 다운로드 됨
-        case notDownloaded          // 다운로드 되지 않음
-        case downloading            // 다운로드 중
+        case initialized // 초기 상태 (모델 확인 전)
+        case downloaded // 다운로드 됨
+        case notDownloaded // 다운로드 되지 않음
+        case downloading // 다운로드 중
     }
 }

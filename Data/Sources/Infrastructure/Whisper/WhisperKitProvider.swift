@@ -21,7 +21,7 @@ public actor WhisperKitProvider: WhisperDataSource {
     public var downloadedBaseURL: URL {
         storageService.absoluteURL(for: Self.modelDirectory)
     }
-    
+
     public init(
         storageService: any StorageService,
         languageRepository: any LanguageRepository

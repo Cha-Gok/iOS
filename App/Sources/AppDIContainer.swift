@@ -178,7 +178,7 @@ public final class AppDIContainer {
             repository: sttWhisperRepository
         )
     }
-    
+
     public func makeSettingViewModel() -> SettingViewModel {
         return SettingViewModel(
             languageRepository: languageRepository,
