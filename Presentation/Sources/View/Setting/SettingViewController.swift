@@ -101,6 +101,7 @@ public final class SettingViewController: CollectionViewController {
 
         let defaultCellRegistration = UICollectionView
             .CellRegistration<UICollectionViewListCell, Item> { cell, indexPath, itemIdentifier in
+                guard case .none(let label) = itemIdentifier.data else { return }
                 var content = cell.defaultContentConfiguration()
                 content.text = itemIdentifier.title
                 content.secondaryText = itemIdentifier.subTitle
@@ -108,6 +109,13 @@ public final class SettingViewController: CollectionViewController {
                 content.textProperties.color = .gray950
                 cell.contentConfiguration = content
                 cell.backgroundConfiguration = .clear()
+                cell.addTapGesture { [weak self] in
+                    switch label {
+                    case .privacyPolicy: self?.vm.pushPrivacyPolicy()
+                    case .termsOfUse: self?.vm.pushTermsOfUse()
+                    case .customerInquiry: self?.customerInquiryLink()
+                    }
+                }
             }
 
         return DataSource(collectionView: collectionView) { col, indexPath, itemIdentifier in
@@ -148,20 +156,29 @@ public final class SettingViewController: CollectionViewController {
         snapshot.appendItems(modelItems, toSection: .model)
 
         let labelItems = [
-            Item(title: "이용약관", subTitle: nil, data: .none),
-            Item(title: "개인 정보 처리 방침", subTitle: nil, data: .none),
-            Item(title: "고객 문의", subTitle: nil, data: .none)
+            Item(title: "이용약관", subTitle: nil, data: .none(.termsOfUse)),
+            Item(title: "개인정보 처리 방침", subTitle: nil, data: .none(.privacyPolicy)),
+            Item(title: "고객 문의", subTitle: nil, data: .none(.customerInquiry))
         ]
         snapshot.appendItems(labelItems, toSection: .label)
 
         dataSource.apply(snapshot, animatingDifferences: animate)
     }
+
+    /// 고객 문의 링크 함수
+    private func customerInquiryLink() {
+        if let url = URL(string: Constant.customerInquiry) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
 }
 
-#Preview {
-    UINavigationController(
-        rootViewController: SettingViewController(
-            vm: .preview
+#if DEBUG
+    #Preview {
+        UINavigationController(
+            rootViewController: SettingViewController(
+                vm: .preview
+            )
         )
-    )
-}
+    }
+#endif

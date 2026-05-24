@@ -223,7 +223,19 @@ extension MainCoordinator: DownloadOnDeviceCoordinatorDelegate {
     }
 }
 
-extension MainCoordinator: SettingCoordinatorDelegate {}
+// MARK: - SettingCoordinatorDelegate
+
+extension MainCoordinator: SettingCoordinatorDelegate {
+    func pushTermsOfUseView() {
+        let termsVC = TermsOfUseViewController()
+        presenter.pushViewController(termsVC, animated: true)
+    }
+
+    func pushPrivacyPolicyView() {
+        let privacyVC = PrivacyPolicyViewController()
+        presenter.pushViewController(privacyVC, animated: true)
+    }
+}
 
 // MARK: - Helpers
 
