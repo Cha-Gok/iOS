@@ -6,9 +6,19 @@ import XCTest
 @MainActor
 final class MockSettingCoordinatorDelegate: SettingCoordinatorDelegate {
     var popCalled = false
+    var pushTermsCalled = false
+    var pushPrivacyCalled = false
 
     func pop() {
         popCalled = true
+    }
+
+    func pushTermsOfUseView() {
+        pushTermsCalled = true
+    }
+
+    func pushPrivacyPolicyView() {
+        pushPrivacyCalled = true
     }
 }
 
@@ -258,6 +268,28 @@ final class SettingViewModelTests: XCTestCase {
 
         // Assert
         XCTAssertTrue(sut.mockCoordinator.popCalled)
+    }
+
+    func test_pushTermsOfUse_코디네이터호출() {
+        // Arrange
+        let sut = makeSUT()
+
+        // Act
+        sut.viewModel.pushTermsOfUse()
+
+        // Assert
+        XCTAssertTrue(sut.mockCoordinator.pushTermsCalled)
+    }
+
+    func test_pushPrivacyPolicy_코디네이터호출() {
+        // Arrange
+        let sut = makeSUT()
+
+        // Act
+        sut.viewModel.pushPrivacyPolicy()
+
+        // Assert
+        XCTAssertTrue(sut.mockCoordinator.pushPrivacyCalled)
     }
 
     // MARK: - None Model Tests
