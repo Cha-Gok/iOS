@@ -47,7 +47,10 @@ private let appTarget = Target.target(
             "NSMicrophoneUsageDescription": "음성 메모를 녹음하기 위해 마이크 권한이 필요합니다.",
             "NSSpeechRecognitionUsageDescription": "음성을 텍스트로 변환하기 위해 음성 인식 권한이 필요합니다.",
             "ITSAppUsesNonExemptEncryption": false,
-            "UIBackgroundModes": ["audio"]
+            "UIBackgroundModes": ["audio"],
+            "NSAppTransportSecurity": .dictionary([
+                "NSAllowsArbitraryLoads": .boolean(true)
+            ])
         ]
     ),
     sources: ["Sources/**/*.swift"],

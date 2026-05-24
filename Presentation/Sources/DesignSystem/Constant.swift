@@ -329,3 +329,14 @@ public extension Constant {
     /// SummarySection keywords 셀 상단 여백 (12)
     static let summarySectionKeywordsTopInset: CGFloat = 12
 }
+
+// MARK: - WebView URL
+
+public extension Constant {
+    /// 개인정보 처리 방침
+    static let privacyPolicy: String = "https://sunset-bar-890.notion.site/369d9da368aa80538cced7f6c56e339a?pvs=74"
+    /// 이용 약관
+    static let termsOfUse: String = "https://sunset-bar-890.notion.site/369d9da368aa8033be62f317299c07f2"
+    /// 고객 문의
+    static let customerInquiry: String = "https://docs.google.com/forms/d/e/1FAIpQLSeevBvqUuIG4yBEos3T6KEZc_R1GgbMLAZYG9iHTc4JMv7DIg/viewform?usp=publish-editor"
+}

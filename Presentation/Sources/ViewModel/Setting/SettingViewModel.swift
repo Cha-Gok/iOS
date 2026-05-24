@@ -6,6 +6,10 @@ import Observation
 public protocol SettingCoordinatorDelegate: AnyObject {
     /// 뒤로가기
     func pop()
+    /// 이용약관 push
+    func pushTermsOfUseView()
+    /// 개인정보 처리 방침 push
+    func pushPrivacyPolicyView()
 }
 
 @MainActor
@@ -143,6 +147,14 @@ public final class SettingViewModel {
             }
         }
     }
+
+    func pushTermsOfUse() {
+        coordinator?.pushTermsOfUseView()
+    }
+
+    func pushPrivacyPolicy() {
+        coordinator?.pushPrivacyPolicyView()
+    }
 }
 
 // MARK: - Data
@@ -163,6 +175,12 @@ extension SettingViewModel {
     enum ItemData: Hashable {
         case lang(Language)
         case model([ChaGokModelState])
-        case none
+        case none(LabelData)
+    }
+
+    enum LabelData: Hashable {
+        case termsOfUse // 이용약관
+        case privacyPolicy // 개인 정보 처리 방침
+        case customerInquiry // 고객 문의
     }
 }
