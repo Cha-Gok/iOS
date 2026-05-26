@@ -52,7 +52,7 @@ public final class SettingViewController: CollectionViewController {
 
     override public func updateProperties() {
         super.updateProperties()
-        applySnapShot(animate: true)
+        applySnapShot(animate: false)
     }
 
     // MARK: - Setup
