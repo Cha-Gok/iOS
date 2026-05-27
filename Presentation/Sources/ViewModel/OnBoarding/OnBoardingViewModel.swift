@@ -23,7 +23,8 @@ public final class OnBoardingViewModel {
     let sttRepository: any STTRepository
     let checkFirstLaunchRepository: any CheckFirstLaunchRepository
     let folderUseCase: any FolderUseCase
-    let mlxRepository: any AvailableModelSupportRepository
+    let availableSupportModelRepository: any AvailableModelSupportRepository
+    let mlxRepository: any OnDeviceRepository
 
     // MARK: - 생성자
 
@@ -33,13 +34,15 @@ public final class OnBoardingViewModel {
         sttRepository: any STTRepository,
         checkFirstLaunchRepository: any CheckFirstLaunchRepository,
         folderUseCase: any FolderUseCase,
-        mlxRepository: any AvailableModelSupportRepository
+        availableSupportModelRepository: any AvailableModelSupportRepository,
+        mlxRepository: any OnDeviceRepository
     ) {
         self.languageRepository = languageRepository
         self.voiceRecordRepository = voiceRecordRepository
         self.sttRepository = sttRepository
         self.checkFirstLaunchRepository = checkFirstLaunchRepository
         self.folderUseCase = folderUseCase
+        self.availableSupportModelRepository = availableSupportModelRepository
         self.mlxRepository = mlxRepository
     }
 
@@ -51,8 +54,6 @@ public final class OnBoardingViewModel {
     private(set) var downloadStatus: DownloadStatus = .idle
 
     private var isPaging: Bool = false
-    @ObservationIgnored
-    private var downloadTask: Task<Void, Never>?
     var steps: [Step] {
         Step.allCases
     }
@@ -178,7 +179,7 @@ extension OnBoardingViewModel {
         downloadStatus = .checking
 
         Task {
-            let configuration = await mlxRepository.checkSupportModel()
+            let configuration = await availableSupportModelRepository.checkMLXSupportModel()
             switch configuration.model {
             case .none, .whisper:
                 downloadStatus = .notFoundModel
@@ -189,24 +190,7 @@ extension OnBoardingViewModel {
     }
 
     private func download() {
-        guard downloadTask == nil else { return }
-        downloadStatus = .downloading(progress: 0)
-        downloadTask = Task {
-            do {
-                try await mlxRepository.downloadModel { [weak self] progress in
-                    Task { @MainActor in
-                        guard let self else { return }
-                        guard self.downloadStatus != .completed else { return }
-                        self.downloadStatus = .downloading(progress: progress.fractionCompleted)
-                    }
-                }
-                downloadStatus = .completed
-            } catch {
-                AppLogger.error(error)
-                downloadStatus = .failed(error: error.localizedDescription)
-            }
-            downloadTask = nil
-        }
+        
     }
 }
 
@@ -220,7 +204,8 @@ extension OnBoardingViewModel {
                 sttRepository: PreviewSTTRepository(),
                 checkFirstLaunchRepository: PreviewCheckFirstLaunchRepository(),
                 folderUseCase: PreviewFolderUseCase(),
-                mlxRepository: PreviewAvailableModelSupportRepository()
+                availableSupportModelRepository: PreviewAvailableModelSupportRepository(),
+                mlxRepository: PreviewOnDeviceRepository()
             )
         }
     }
@@ -274,31 +259,26 @@ extension OnBoardingViewModel {
         }
 
         struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
-            func deleteWhisperModel() async throws(Domain.AvailableModelSupportRepositoryError) {}
-
-            func deleteMLXModel() async throws(Domain.AvailableModelSupportRepositoryError) {}
+            func checkMLXSupportModel() async -> ChaGokModelSupport {
+                ChaGokModelSupport(ramSizeGB: 8, isProUser: false)
+            }
 
             func fetchSupportModels() async -> [ChaGokModelState] {
                 []
             }
+        }
 
-            func checkSupportModel() -> ChaGokModelSupport {
-                ChaGokModelSupport(ramSizeGB: 4, isProUser: false)
-            }
-
-            func downloadModel(
-                progressHandler: @Sendable @escaping (Progress) -> Void
-            ) async throws(AvailableModelSupportRepositoryError) {
-                let progress = Progress(totalUnitCount: 100)
-                for value in [10, 30, 55, 80, 100] {
-                    try? await Task.sleep(nanoseconds: 250_000_000)
-                    progress.completedUnitCount = Int64(value)
-                    progressHandler(progress)
+        struct PreviewOnDeviceRepository: OnDeviceRepository {
+            func download() -> AsyncThrowingStream<OnDeviceStatus, any Error> {
+                AsyncThrowingStream { continuation in
+                    continuation.yield(OnDeviceStatus(storage: .downloading(progress: 0.2), runtime: .unloaded))
+                    continuation.yield(OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
+                    continuation.finish()
                 }
             }
 
-            var isModelLoaded: Bool {
-                true
+            func delete() async throws(DeleteOnDeviceRepositoryError) -> OnDeviceStatus {
+                OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
             }
         }
     }

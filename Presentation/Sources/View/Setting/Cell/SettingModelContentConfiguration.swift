@@ -183,7 +183,7 @@ final class SettingModelContent: UIView, UIContentView {
 
         // Configure State
         let actionType: SettingModelContentConfiguration.ActionType
-        switch model.isDownloaded {
+        switch model.status.storage {
         case .downloaded:
             actionButton.isHidden = false
             actionButton.setImage(UIImage(systemName: "trash", withConfiguration: actionConfig), for: .normal)
@@ -193,7 +193,7 @@ final class SettingModelContent: UIView, UIContentView {
             actionButton.isHidden = true
             activityIndicator.startAnimating()
             actionType = .download // Disabled anyway, but needed for compilation
-        case .notDownloaded, .initialized:
+        default:
             actionButton.isHidden = false
             actionButton.setImage(
                 UIImage(systemName: "square.and.arrow.down", withConfiguration: actionConfig),

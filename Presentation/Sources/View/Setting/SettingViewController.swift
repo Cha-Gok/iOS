@@ -70,8 +70,11 @@ public final class SettingViewController: CollectionViewController {
 
     private func makeDataSource() -> DataSource {
         let langCellRegistration = UICollectionView
-            .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, indexPath, itemIdentifier in
+            .CellRegistration<UICollectionViewListCell, Item> { [weak self] cell, indexPath, itemIdentifier in
                 guard case .lang(let language) = itemIdentifier.data else { return }
+                var backgroundConfig = UIBackgroundConfiguration.listCell()
+                backgroundConfig.backgroundColor = .clear
+                cell.backgroundConfiguration = backgroundConfig
                 cell.contentConfiguration = SettingLanguageContentConfiguration(
                     title: itemIdentifier.title,
                     subtitle: itemIdentifier.subTitle,
@@ -83,8 +86,11 @@ public final class SettingViewController: CollectionViewController {
             }
 
         let modelCellRegistration = UICollectionView
-            .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, indexPath, itemIdentifier in
+            .CellRegistration<UICollectionViewListCell, Item> { [weak self] cell, indexPath, itemIdentifier in
                 guard case .model(let models) = itemIdentifier.data else { return }
+                var backgroundConfig = UIBackgroundConfiguration.listCell()
+                backgroundConfig.backgroundColor = .clear
+                cell.backgroundConfiguration = backgroundConfig
                 cell.contentConfiguration = SettingModelContentConfiguration(
                     title: itemIdentifier.title,
                     models: models,

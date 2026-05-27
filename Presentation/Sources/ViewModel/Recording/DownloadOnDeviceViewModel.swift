@@ -42,35 +42,35 @@ public final class DownloadOnDeviceViewModel {
 extension DownloadOnDeviceViewModel {
     /// 모델의 다운로드를 진행 하며 현재 상태를 handler를 통해 반환합니다.
     func download() {
-        guard downloadTask == nil else { return }
-
-        downloadTask = Task { [weak self] in
-            guard let self else { return }
-            isDownloading = true
-            do {
-                _ = try await repository.download { [weak self] progress in
-                    Task { @MainActor [weak self] in
-                        self?.progressFraction = progress.fractionCompleted
-                    }
-                }
-            } catch let error as STTRepositoryError {
-                switch error {
-                case .cancelled:
-                    self.progressFraction = nil
-                default:
-                    AppLogger.error(error)
-                    self.errorMessage = error.localizedDescription
-                    self.progressFraction = nil
-                }
-            } catch {
-                AppLogger.error(error)
-                errorMessage = error.localizedDescription
-                progressFraction = nil
-            }
-            downloadTask = nil
-            isDownloading = false
-            dismiss()
-        }
+//        guard downloadTask == nil else { return }
+//
+//        downloadTask = Task { [weak self] in
+//            guard let self else { return }
+//            isDownloading = true
+//            do {
+//                _ = try await repository.download { [weak self] progress in
+//                    Task { @MainActor [weak self] in
+//                        self?.progressFraction = progress.fractionCompleted
+//                    }
+//                }
+//            } catch let error as STTRepositoryError {
+//                switch error {
+//                case .cancelled:
+//                    self.progressFraction = nil
+//                default:
+//                    AppLogger.error(error)
+//                    self.errorMessage = error.localizedDescription
+//                    self.progressFraction = nil
+//                }
+//            } catch {
+//                AppLogger.error(error)
+//                errorMessage = error.localizedDescription
+//                progressFraction = nil
+//            }
+//            downloadTask = nil
+//            isDownloading = false
+//            dismiss()
+//        }
     }
 
     func dismissError() {
