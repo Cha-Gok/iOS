@@ -4,47 +4,33 @@ import Foundation
 import Speech
 import WhisperKit
 
-public actor DefaultWhisperSTTRepository: STTRepository {
-    private let whisperDataSource: any WhisperDataSource
+public struct DefaultWhisperSTTRepository: STTRepository , @unchecked Sendable {
+    private let storageService: any StorageService
+    private let dataSource: any WhisperDataSource
 
     public init(
-        whisperDataSource: any WhisperDataSource
+        storageService: any StorageService,
+        dataSource: any WhisperDataSource
     ) {
-        self.whisperDataSource = whisperDataSource
-    }
-
-    @discardableResult
-    public func download(
-        progressHandler: (@Sendable (Progress) -> Void)? = nil
-    ) async throws(STTRepositoryError) -> URL {
-        let downloadBaseURL = await whisperDataSource.downloadedBaseURL
-
-        do {
-            let recommendedModel: String = WhisperKit.recommendedModels().default
-            AppLogger.info("추천하는 모델은 : \(recommendedModel)")
-            let modelFolder = try await WhisperKit.download(
-                variant: recommendedModel,
-                downloadBase: downloadBaseURL,
-                progressCallback: progressHandler
-            )
-            // 다운로드 후 캐시된 인스턴스를 초기화하여 다음 transcribe 시 새 모델을 로드하도록 함
-            await whisperDataSource.clearCache()
-            return modelFolder
-        } catch is CancellationError {
-            throw .cancelled
-        } catch {
-            throw .unknown(error)
-        }
+        self.storageService = storageService
+        self.dataSource = dataSource
     }
 
     public func transcribe(audioFilePath: String) async throws(STTRepositoryError) -> Transcript {
         guard !Task.isCancelled else { throw .cancelled }
 
         do {
-            let result = try await whisperDataSource.transcribe(
-                audioFilePath: audioFilePath
+            let whisper = try await dataSource.getWhisper()
+            let audioURL = storageService.absoluteURL(for: audioFilePath)
+            let options = dataSource.getDocodingOptions()
+            AppLogger.info("오디오 전사 실행: \(audioURL)")
+            let result: [TranscriptionResult] = try await whisper.transcribe(
+                audioPath: audioURL.path,
+                decodeOptions: options
             )
-            await whisperDataSource.clearCache()
+            
+            // Whisper 메모리 해제
+            await dataSource.clearCache()
 
             let sections = result.flatMap(\.segments).map { segment in
                 TranscriptSection(
@@ -64,10 +50,10 @@ public actor DefaultWhisperSTTRepository: STTRepository {
             guard !text.isEmpty else { throw STTRepositoryError.transcribeFailed }
             return Transcript(sections: [TranscriptSection(timestamp: 0, text: text)])
         } catch let error as STTRepositoryError {
-            await whisperDataSource.clearCache()
+            await dataSource.clearCache()
             throw error
         } catch {
-            await whisperDataSource.clearCache()
+            await dataSource.clearCache()
             throw .unknown(error)
         }
     }
