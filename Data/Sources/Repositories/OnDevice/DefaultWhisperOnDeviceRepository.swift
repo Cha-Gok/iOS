@@ -1,10 +1,9 @@
 import Core
 import Domain
 import Foundation
-import WhisperKit
 
 /// Whisper 객체에 대한 기능 구현체를 담은 `Repository`
-public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository, @unchecked Sendable {
+public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
     private let storageService: any StorageService
     let provider: any WhisperDataSource
 
@@ -42,16 +41,6 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository, @unchecked S
             continuation.onTermination = { _ in
                 task.cancel()
             }
-        }
-    }
-
-    public func loadModel() async throws(OnDeviceRepositoryError) {
-        do {
-            let whisper: WhisperKit = try await provider.getWhisper()
-            try await whisper.loadModels()
-        } catch {
-            AppLogger.error(error)
-            throw .loadFailed
         }
     }
 

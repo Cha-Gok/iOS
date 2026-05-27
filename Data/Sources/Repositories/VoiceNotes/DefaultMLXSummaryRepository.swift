@@ -21,10 +21,8 @@ public struct DefaultMLXSummaryRepository: SummaryRepository {
         if Task.isCancelled { throw .cancelled }
         do {
             // model load
-            let configuration = try await provider.modelConfiguration()
-            try await provider.loadModel(configuration: configuration)
-            guard let container = await provider.container else { throw SummaryRepositoryError.summarizeFailed }
-
+            let context: ModelContext = try await provider.loadModel()
+            let container: ModelContainer = ModelContainer(context: context)
             // JSON 응답을 위한 스키마 강제 프롬프트 추가
             let jsonInstruction = """
             \(Policy.summaryPrompt(lang: language.rawValue))

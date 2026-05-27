@@ -16,12 +16,6 @@ public actor MLXModelProvider: MLXModelDataSource {
     /// 메모리에 로드된 모델 컨테이너. 로드되지 않았을 경우 nil입니다.
     private var container: ResolvedModelConfiguration?
 
-    /// 모델 로드 여부 확인
-    public var isLoaded: Bool = false
-
-    /// 모델 다운로드 여부 확인
-    public var isDownloaded: Bool = false
-
     public func download(
         progressHandler: @Sendable @escaping (Progress) -> Void
     ) async throws(MLXModelDataSourceError) {
@@ -44,13 +38,29 @@ public actor MLXModelProvider: MLXModelDataSource {
     public func clear() {
         MLX.Memory.cacheLimit = 0
         container = nil
-        isLoaded = false
     }
 
     /// 모델이 설치된 경로를  전달 하기 위한 함수
     public func getDownloadPath() async throws(MLXModelDataSourceError) -> URL {
         guard let path: URL = container?.modelDirectory else { throw .notFound }
         return path
+    }
+
+    nonisolated public func loadModel() async throws(MLXModelDataSourceError) -> ModelContext {
+        do {
+            let from: URL = try await getDownloadPath()
+            let context = try await LLMModelFactory.shared.load(from: from, using: #huggingFaceTokenizerLoader())
+            AppLogger.info("MLX model loaded: \(context)")
+            return context
+        } catch is CancellationError {
+            throw .cancelled
+        } catch let error as MLXModelDataSourceError {
+            AppLogger.error(error)
+            throw error
+        } catch {
+            AppLogger.error(error)
+            throw .unknown(error)
+        }
     }
 }
 

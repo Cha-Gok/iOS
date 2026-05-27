@@ -3,8 +3,7 @@ import Domain
 import Foundation
 import WhisperKit
 
-@MainActor
-public final class WhisperKitProvider: WhisperDataSource {
+public actor WhisperKitProvider: WhisperDataSource {
     private let languageRepository: any LanguageRepository
 
     // MARK: - Configuration
@@ -37,7 +36,7 @@ public final class WhisperKitProvider: WhisperDataSource {
         )
     }
 
-    public func getWhisper() async throws(WhisperDataSourceError) -> WhisperKit {
+    private func getWhisper() async throws(WhisperDataSourceError) -> WhisperKit {
         if let cached = cachedWhisper {
             return cached
         }
@@ -60,7 +59,6 @@ public final class WhisperKitProvider: WhisperDataSource {
             cachedWhisper = whisper
             AppLogger.info("WhisperKit 모델 로드 완료")
             try await whisper.prewarmModels() // preload
-            
             return whisper
         } catch is CancellationError {
             throw .cancelled
@@ -82,6 +80,21 @@ public final class WhisperKitProvider: WhisperDataSource {
         }
     }
 
+    public func loadModel() async throws(WhisperDataSourceError) {
+        do {
+            let whisper = try await getWhisper()
+            try await whisper.loadModels()
+        } catch is CancellationError {
+            throw .cancelled
+        } catch let error as WhisperDataSourceError {
+            AppLogger.error(error)
+            throw error
+        } catch {
+            AppLogger.error(error)
+            throw .loadFailed
+        }
+    }
+
     public func clearCache() async {
         guard let cachedWhisper = cachedWhisper else { return }
         await cachedWhisper.unloadModels()
@@ -95,6 +108,16 @@ public final class WhisperKitProvider: WhisperDataSource {
     
     public func getDocodingOptions() -> DecodingOptions {
         return decodingOptions
+    }
+    
+    public func transcribe(audioPath: URL) async throws -> [TranscriptionResult] {
+        let whisper = try await getWhisper()
+        
+        AppLogger.info("오디오 전사 실행: \(audioPath)")
+        return try await whisper.transcribe(
+            audioPath: audioPath.absoluteString,
+            decodeOptions: decodingOptions
+        )
     }
 }
 

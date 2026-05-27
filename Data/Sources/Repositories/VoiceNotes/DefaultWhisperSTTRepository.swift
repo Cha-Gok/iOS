@@ -20,14 +20,8 @@ public struct DefaultWhisperSTTRepository: STTRepository , @unchecked Sendable {
         guard !Task.isCancelled else { throw .cancelled }
 
         do {
-            let whisper = try await dataSource.getWhisper()
             let audioURL = storageService.absoluteURL(for: audioFilePath)
-            let options = dataSource.getDocodingOptions()
-            AppLogger.info("오디오 전사 실행: \(audioURL)")
-            let result: [TranscriptionResult] = try await whisper.transcribe(
-                audioPath: audioURL.path,
-                decodeOptions: options
-            )
+            let result: [TranscriptionResult] = try await dataSource.transcribe(audioPath: audioURL)
             
             // Whisper 메모리 해제
             await dataSource.clearCache()
