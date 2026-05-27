@@ -13,9 +13,7 @@ public final class AppDIContainer {
     private lazy var store = UserDefaultsKeyValueStoreService()
     private lazy var storageService = FileManagerStorageService()
     private let localDataBase: CoreDataLocalDataBase
-    private lazy var mlxProvider: MLXModelProvider = .init(
-        fileManager: storageService
-    )
+    private lazy var mlxProvider = MLXModelProvider()
 
     /// Repository
     private lazy var languageRepository = DefaultLanguageRepository(store: store)
@@ -32,16 +30,26 @@ public final class AppDIContainer {
         provider: mlxProvider
     )
     private lazy var whisperProvider = WhisperKitProvider(
-        storageService: storageService,
         languageRepository: languageRepository
     )
-    private lazy var mlxModelRepository = DefaultAvailableModelSupportRepository(
+    private lazy var availableSupportModelRepository = DefaultAvailableModelSupportRepository(
         mlxProvider: mlxProvider,
         whisperProvider: whisperProvider
     )
 
     private lazy var sttWhisperRepository = DefaultWhisperSTTRepository(
-        whisperDataSource: whisperProvider
+        storageService: storageService,
+        dataSource: whisperProvider
+    )
+    
+    private lazy var mlxOnDeviceRepository = DefaultMlxOnDeviceRepository(
+        provider: mlxProvider,
+        storageService: storageService
+    )
+    
+    private lazy var whisperOnDeviceRepository = DefaultWhisperOnDeviceRepository(
+        storageService: storageService,
+        provider: whisperProvider
     )
     /// Analysis (Domain Service)
     private(set) lazy var voiceNoteAnalysisService = DefaultVoiceNoteAnalysisService(
@@ -51,17 +59,16 @@ public final class AppDIContainer {
         languageRepository: languageRepository
     )
 
-    private lazy var deleteModelRepository = DefaultDeleteOnDeviceRepository(
-        mlxProvider: mlxProvider,
-        whisperProvider: whisperProvider
-    )
-
     /// UseCase
     private lazy var folderUseCase = DefaultFolderUseCase(repository: folderRepository)
     private lazy var voiceNoteUseCase = DefaultVoiceNoteUseCase(
         repository: voiceNoteRepository,
         folderRepository: folderRepository,
         analysisService: voiceNoteAnalysisService
+    )
+    private lazy var onDeviceStatusUseCase = DefaultOnDeviceStatusUseCase(
+        whisperRepository: whisperOnDeviceRepository,
+        mlxRepository: mlxOnDeviceRepository
     )
     public init() throws {
         localDataBase = try CoreDataLocalDataBase()
@@ -70,11 +77,19 @@ public final class AppDIContainer {
     // MARK: - Whisper 모델 ( preload , download ) Status
 
     public func isWhisperModelDownloaded() async -> Bool {
-        await whisperProvider.isModelDownloaded()
+        do {
+            _ = try await whisperProvider.getDownloadPath()
+            return true
+        } catch {
+            AppLogger.error(error)
+            return false
+        }
     }
 
-    public func preloadWhisperKit() async {
-        await whisperProvider.preload()
+    public func preloadWhisperKit() {
+        Task { @MainActor in
+            await whisperProvider.preload()
+        }
     }
 
     // MARK: - Repository
@@ -96,7 +111,8 @@ public final class AppDIContainer {
             sttRepository: sttRepository,
             checkFirstLaunchRepository: checkFirstLaunchRepository,
             folderUseCase: folderUseCase,
-            mlxRepository: mlxModelRepository
+            availableSupportModelRepository: availableSupportModelRepository,
+            mlxRepository: mlxOnDeviceRepository
         )
     }
 
@@ -189,9 +205,8 @@ public final class AppDIContainer {
     public func makeSettingViewModel() -> SettingViewModel {
         return SettingViewModel(
             languageRepository: languageRepository,
-            mlxRepository: mlxModelRepository,
-            sttRepository: sttWhisperRepository,
-            deleteModelRepository: deleteModelRepository
+            availableModelRepository: availableSupportModelRepository,
+            onDeviceStatusUseCase: onDeviceStatusUseCase
         )
     }
 
