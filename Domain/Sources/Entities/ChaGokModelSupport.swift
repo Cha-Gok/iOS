@@ -43,24 +43,17 @@ public struct ChaGokModelState: Hashable, Sendable {
     public let title: String
     public let subTitle: String
     public let model: ChaGokModel
-    public var isDownloaded: DownloadState
+    public var status: OnDeviceStatus
 
     public init(
         title: String,
         subTitle: String,
         model: ChaGokModel,
-        isDownloaded: DownloadState = .initialized
+        status: OnDeviceStatus = .init(storage: .notDownloaded, runtime: .unloaded)
     ) {
         self.title = title
         self.subTitle = subTitle
         self.model = model
-        self.isDownloaded = isDownloaded
-    }
-
-    public enum DownloadState: Hashable, Sendable {
-        case initialized // 초기 상태 (모델 확인 전)
-        case downloaded // 다운로드 됨
-        case notDownloaded // 다운로드 되지 않음
-        case downloading // 다운로드 중
+        self.status = status
     }
 }
