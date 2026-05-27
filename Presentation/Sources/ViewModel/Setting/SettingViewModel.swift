@@ -25,7 +25,7 @@ public final class SettingViewModel {
 
     private(set) var language: Language
     private(set) var models: [ChaGokModelState] = []
-    
+
     public init(
         languageRepository: any LanguageRepository,
         availableModelRepository: any AvailableModelSupportRepository,
@@ -52,13 +52,10 @@ public final class SettingViewModel {
         }
     }
 
-    func downloadModel(model: ChaGokModel) {
-        
-    }
+    func downloadModel(model: ChaGokModel) {}
 
     func deleteModel(model: ChaGokModel) {
         guard model != .none else { return }
-        
     }
 
     func pop() {

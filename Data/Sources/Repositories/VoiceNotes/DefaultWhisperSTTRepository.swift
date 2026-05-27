@@ -4,7 +4,7 @@ import Foundation
 import Speech
 import WhisperKit
 
-public struct DefaultWhisperSTTRepository: STTRepository , @unchecked Sendable {
+public struct DefaultWhisperSTTRepository: STTRepository, @unchecked Sendable {
     private let storageService: any StorageService
     private let dataSource: any WhisperDataSource
 
@@ -22,7 +22,7 @@ public struct DefaultWhisperSTTRepository: STTRepository , @unchecked Sendable {
         do {
             let audioURL = storageService.absoluteURL(for: audioFilePath)
             let result: [TranscriptionResult] = try await dataSource.transcribe(audioPath: audioURL)
-            
+
             // Whisper 메모리 해제
             await dataSource.clearCache()
 

@@ -189,9 +189,7 @@ extension OnBoardingViewModel {
         }
     }
 
-    private func download() {
-        
-    }
+    private func download() {}
 }
 
 #if DEBUG

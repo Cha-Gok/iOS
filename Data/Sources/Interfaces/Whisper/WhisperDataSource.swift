@@ -5,10 +5,10 @@ import WhisperKit
 public protocol WhisperDataSource: Sendable {
     /// 모델의 다운로드 경로를 전달합니다.
     func getDownloadPath() async throws(WhisperDataSourceError) -> URL
-    
+
     /// 다운로드
     func download(progressHandler: @Sendable @escaping (Progress) -> Void) async throws
-    
+
     /// 캐싱된 Whisper 모델 인스턴스를 메모리에서 해제하여 자원을 반환합니다.
     func clearCache() async
 
@@ -17,10 +17,10 @@ public protocol WhisperDataSource: Sendable {
 
     /// 다운로드된 모델을 메모리에 로드합니다.
     func loadModel() async throws(WhisperDataSourceError)
-    
+
     /// STT 전사 transcribe
     func transcribe(audioPath: URL) async throws -> [TranscriptionResult]
-    
+
     /// DecodingOptions를 전달합니다 (`Getter`)
     func getDocodingOptions() async -> DecodingOptions
 }

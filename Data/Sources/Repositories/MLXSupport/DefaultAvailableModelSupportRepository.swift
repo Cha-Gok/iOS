@@ -43,7 +43,7 @@ public final class DefaultAvailableModelSupportRepository: AvailableModelSupport
         } catch {
             AppLogger.info("MLX 모델 다운로드 경로 없음: \(error.localizedDescription)")
         }
-        
+
         // gemma를 설치 할 수 있는지 여부
         let available: Bool = await checkMLXSupportModel().model == .gemma4_e2b_4bit
         return models.compactMap { model in

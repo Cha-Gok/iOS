@@ -1,5 +1,5 @@
-import Foundation
 import Core
+import Foundation
 
 /// 온디바이스 다운로드 상태를 공유하기 위한 유즈케이스
 public protocol OnDeviceStatusUseCase: Sendable {
@@ -12,7 +12,7 @@ public protocol OnDeviceStatusUseCase: Sendable {
 public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     private let whisperRepository: any OnDeviceRepository
     private let mlxRepository: any OnDeviceRepository
-    
+
     private var tasks: [ChaGokModel: Task<Void, Never>] = [:]
     private var latest: [ChaGokModel: OnDeviceStatus] = [:]
     private var subscribers: [UUID: (model: ChaGokModel, cont: AsyncStream<OnDeviceStatus>.Continuation)] = [:]

@@ -41,12 +41,12 @@ public final class AppDIContainer {
         storageService: storageService,
         dataSource: whisperProvider
     )
-    
+
     private lazy var mlxOnDeviceRepository = DefaultMlxOnDeviceRepository(
         provider: mlxProvider,
         storageService: storageService
     )
-    
+
     private lazy var whisperOnDeviceRepository = DefaultWhisperOnDeviceRepository(
         storageService: storageService,
         provider: whisperProvider

@@ -1,9 +1,9 @@
 import Foundation
 import HuggingFace
 import MLXHuggingFace
-import Tokenizers
 import MLXLLM
 import MLXLMCommon
+import Tokenizers
 
 /// MLX 모델 컨테이너를 공유하고 생명주기를 관리하는 데이터 소스 인터페이스.
 public protocol MLXModelDataSource: Sendable {

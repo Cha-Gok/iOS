@@ -14,7 +14,7 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
         self.storageService = storageService
         self.provider = provider
     }
-    
+
     public func download() -> AsyncThrowingStream<OnDeviceStatus, any Error> {
         AsyncThrowingStream(
             OnDeviceStatus.self,

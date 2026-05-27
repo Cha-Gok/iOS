@@ -44,8 +44,8 @@ public actor WhisperKitProvider: WhisperDataSource {
         do {
             guard let downloadBase = modelDirectory else { throw WhisperDataSourceError.notFound }
             AppLogger.info("WhisperKit 모델 로드 시작: \(downloadBase.path)")
-            guard let recommendedModel = self.recommendedModel else { throw WhisperDataSourceError.notRecommendedModel }
-            
+            guard let recommendedModel else { throw WhisperDataSourceError.notRecommendedModel }
+
             let config = WhisperKitConfig(
                 model: recommendedModel,
                 downloadBase: downloadBase,
@@ -53,7 +53,7 @@ public actor WhisperKitProvider: WhisperDataSource {
                 tokenizerFolder: downloadBase,
                 download: false
             )
-            
+
             let whisper = try await WhisperKit(config)
 
             cachedWhisper = whisper
@@ -96,23 +96,23 @@ public actor WhisperKitProvider: WhisperDataSource {
     }
 
     public func clearCache() async {
-        guard let cachedWhisper = cachedWhisper else { return }
+        guard let cachedWhisper else { return }
         await cachedWhisper.unloadModels()
     }
-    
+
     /// 모델이 설치된 경로를  전달 하기 위한 함수
     public func getDownloadPath() async throws(WhisperDataSourceError) -> URL {
-        guard let path = self.modelDirectory else { throw .notFound }
+        guard let path = modelDirectory else { throw .notFound }
         return path
     }
-    
+
     public func getDocodingOptions() -> DecodingOptions {
         return decodingOptions
     }
-    
+
     public func transcribe(audioPath: URL) async throws -> [TranscriptionResult] {
         let whisper = try await getWhisper()
-        
+
         AppLogger.info("오디오 전사 실행: \(audioPath)")
         return try await whisper.transcribe(
             audioPath: audioPath.absoluteString,

@@ -10,9 +10,8 @@ import Tokenizers
 
 /// 데이터 레이어 내부에서 MLX 모델 컨테이너를 공유하고 생명주기를 관리하는 프로바이더.
 public actor MLXModelProvider: MLXModelDataSource {
-    
     public init() {}
-    
+
     /// 메모리에 로드된 모델 컨테이너. 로드되지 않았을 경우 nil입니다.
     private var container: ResolvedModelConfiguration?
 
@@ -46,7 +45,7 @@ public actor MLXModelProvider: MLXModelDataSource {
         return path
     }
 
-    nonisolated public func loadModel() async throws(MLXModelDataSourceError) -> ModelContext {
+    public nonisolated func loadModel() async throws(MLXModelDataSourceError) -> ModelContext {
         do {
             let from: URL = try await getDownloadPath()
             let context = try await LLMModelFactory.shared.load(from: from, using: #huggingFaceTokenizerLoader())
