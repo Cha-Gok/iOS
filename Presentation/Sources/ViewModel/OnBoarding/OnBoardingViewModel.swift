@@ -52,11 +52,10 @@ public final class OnBoardingViewModel {
     private(set) var errorMessage: String?
     private(set) var language: Language = .ko
     private(set) var downloadStatus: DownloadStatus = .idle
-
+    private(set) var modelSupport: Bool = false
+    
     private var isPaging: Bool = false
-    var steps: [Step] {
-        Step.allCases
-    }
+    private(set) var steps: [Step] = Step.allCases
 
     var primaryButtonTitle: String {
         switch currentStep {
@@ -96,8 +95,8 @@ public final class OnBoardingViewModel {
 
     // MARK: - Getters
 
-    func getMaxIndex() -> Int {
-        Step.allCases.count
+    var currentStepIndex: Int {
+        steps.firstIndex(of: currentStep) ?? 0
     }
 }
 
@@ -129,11 +128,11 @@ extension OnBoardingViewModel {
         guard !isPaging else { return }
         switch currentStep {
         case .first: // 건너뛰기
-            let nextIndex = Step.micPermission.rawValue
+            let nextIndex = steps.firstIndex(of: .micPermission) ?? 0
             isPaging = true
             scrollAction(nextIndex)
         default: // 뒤로가기
-            let nextIndex = currentStep.rawValue - 1
+            let nextIndex = currentStepIndex - 1
             guard nextIndex >= 0 else { return }
             isPaging = true
             scrollAction(nextIndex)
@@ -144,6 +143,17 @@ extension OnBoardingViewModel {
 // MARK: - Download Page State
 
 extension OnBoardingViewModel {
+    
+    /// 온보딩 진입 시 Gemma4를 지원하는 기기인지 분기합니다.
+    func checkModelSupport() async {
+        let support = await availableSupportModelRepository.checkMLXSupportModel()
+        modelSupport = support.model == .gemma4_e2b_4bit
+        steps = modelSupport ? Step.allCases : Step.allCases.filter { $0 != .download }
+        if !steps.contains(currentStep) {
+            currentStep = .finish
+        }
+    }
+    
     private var primaryDownloadButtonTitle: String {
         switch downloadStatus {
         case .checking:
@@ -258,7 +268,7 @@ extension OnBoardingViewModel {
 
         struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
             func checkMLXSupportModel() async -> ChaGokModelSupport {
-                ChaGokModelSupport(ramSizeGB: 8, isProUser: false)
+                ChaGokModelSupport(ramSizeGB: 4, isProUser: false)
             }
 
             func fetchSupportModels() async -> [ChaGokModelState] {
@@ -289,8 +299,10 @@ extension OnBoardingViewModel {
     /// 스와이프(1칸)든 건너뛰기(여러 칸)든 모든 페이지 전환이 이 함수를 통해 처리됩니다.
     func syncPageState(nextStep: Int) {
         defer { isPaging = false }
-        guard nextStep != currentStep.rawValue else { return }
-        currentStep = Step.matchingStep(nextStep)
+        guard steps.indices.contains(nextStep) else { return }
+        let targetStep = steps[nextStep]
+        guard targetStep != currentStep else { return }
+        currentStep = targetStep
         if currentStep == .micPermission {
             requestPermission()
         } else if currentStep == .download {
@@ -299,8 +311,8 @@ extension OnBoardingViewModel {
     }
 
     private func nextPage(scrollAction: (Int) -> Void) {
-        let nextIndex = currentStep.rawValue + 1
-        guard nextIndex < Step.allCases.count else { return }
+        let nextIndex = currentStepIndex + 1
+        guard nextIndex < steps.count else { return }
         isPaging = true
         scrollAction(nextIndex)
     }
