@@ -25,8 +25,6 @@ public struct OnDeviceStatus: Hashable, Sendable {
         case downloading(progress: Double)
         /// 로컬에 파일이 준비된 상태입니다.
         case downloaded
-        /// 삭제가 진행 중인 상태입니다.
-        case deleting
         /// 저장 단계에서 실패한 상태입니다.
         case failed
     }
@@ -39,7 +37,5 @@ public struct OnDeviceStatus: Hashable, Sendable {
         case loading
         /// 메모리에 적재된 상태입니다.
         case loaded
-        /// 런타임 적재 단계에서 실패한 상태입니다.
-        case failed
     }
 }
