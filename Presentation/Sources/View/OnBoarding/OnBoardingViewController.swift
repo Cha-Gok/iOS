@@ -68,11 +68,14 @@ public final class OnBoardingViewController: ViewController {
 
         // 버튼 상태 업데이트
         primaryButton.configuration?.title = vm.primaryButtonTitle
+        primaryButton.isUserInteractionEnabled = vm.isPrimaryButtonEnabled
         secondButton.configuration?.title = vm.secondButtonTitle
         secondButton.isUserInteractionEnabled = vm.isSecondButtonEnabled
-        primaryButton.configuration?.baseBackgroundColor = vm.isFinalStep ? UIColor.point600 : UIColor.point200
+        primaryButton.configuration?.baseBackgroundColor = vm.isPrimaryButtonBgColor ? (vm.isPrimaryButtonEnabled ? UIColor.point600 : UIColor.gray600) : UIColor.point200
             .withAlphaComponent(Constant.backgroundOpacity)
         primaryButton.configuration?.baseForegroundColor = UIColor.gray900
+        // paginView
+        pagingView.isScrollEnabled = vm.scrollEnabled
         // pagenation 업데이트
         pagenation.currentIndex = vm.currentStepIndex
     }

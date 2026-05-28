@@ -51,8 +51,13 @@ public final class OnBoardingViewModel {
     private(set) var currentStep: Step = .first
     private(set) var errorMessage: String?
     private(set) var language: Language = .ko
-    private(set) var downloadStatus: DownloadStatus = .idle
     private(set) var modelSupport: Bool = false
+    private(set) var downloadTask: Task<Void, Never>?
+    private(set) var status: OnDeviceStatus = .init(
+        storage: .notDownloaded,
+        runtime: .unloaded
+    )
+    private(set) var scrollEnabled: Bool = true
     
     private var isPaging: Bool = false
     private(set) var steps: [Step] = Step.allCases
@@ -62,7 +67,14 @@ public final class OnBoardingViewModel {
         case .finish:
             return "시작하기"
         case .download:
-            return primaryDownloadButtonTitle
+            switch status.storage {
+            case .downloading:
+                return "다운로드 중입니다..."
+            case .downloaded:
+                return "다음"
+            default:
+                return "다운로드"
+            }
         default:
             return "다음"
         }
@@ -74,6 +86,11 @@ public final class OnBoardingViewModel {
             return "건너뛰기"
         case .finish:
             return ""
+        case .download:
+            switch status.storage {
+            case .downloading: return "취소"
+            default: return "이전"
+            }
         default:
             return "이전"
         }
@@ -82,9 +99,28 @@ public final class OnBoardingViewModel {
     var isSecondButtonEnabled: Bool {
         currentStep != .finish
     }
+    
+    var isPrimaryButtonEnabled: Bool {
+        switch currentStep {
+        case .download:
+            switch status.storage {
+            case .downloading:
+                return false
+            default:
+                return true
+            }
+        default:
+            return true
+        }
+    }
 
-    var isFinalStep: Bool {
-        currentStep == .finish
+    var isPrimaryButtonBgColor: Bool {
+        switch currentStep {
+        case .download, .finish:
+            return true
+        default:
+            return false
+        }
     }
 
     // MARK: - Setters
@@ -111,12 +147,12 @@ extension OnBoardingViewModel {
             finishOnBoarding()
         default: // 다음
             guard currentStep != .download else {
-                switch downloadStatus {
-                case .checking, .downloading:
+                switch status.storage {
+                case .downloading:
                     return
-                case .completed, .notFoundModel:
+                case .downloaded:
                     return nextPage(scrollAction: scrollAction)
-                case .idle, .failed:
+                default:
                     return download()
                 }
             }
@@ -131,6 +167,18 @@ extension OnBoardingViewModel {
             let nextIndex = steps.firstIndex(of: .micPermission) ?? 0
             isPaging = true
             scrollAction(nextIndex)
+        case .download:
+            switch status.storage {
+            case .downloading:
+                // 다운로드 중일 때는 다운로드 취소
+                downloadTask?.cancel()
+                downloadTask = nil
+            default:
+                let nextIndex = currentStepIndex - 1
+                guard nextIndex >= 0 else { return }
+                isPaging = true
+                scrollAction(nextIndex)
+            }
         default: // 뒤로가기
             let nextIndex = currentStepIndex - 1
             guard nextIndex >= 0 else { return }
@@ -153,60 +201,39 @@ extension OnBoardingViewModel {
             currentStep = .finish
         }
     }
-    
-    private var primaryDownloadButtonTitle: String {
-        switch downloadStatus {
-        case .checking:
-            return "확인 중"
-        case .downloading:
-            return "다운로드 중"
-        case .completed, .notFoundModel:
-            return "다음"
-        default:
-            return "다운로드"
-        }
-    }
 
-    @ObservationIgnored
-    var modelCardIsHidden: Bool {
-        switch downloadStatus {
-        case .failed, .checking, .notFoundModel:
-            return true
-        default:
-            return false
-        }
-    }
-
-    var progressPercentText: String {
-        let fraction = Float(downloadStatus.progress)
-        return "\(Int((fraction * 100).rounded()))%"
-    }
-
-    func checkModel() {
-        guard downloadStatus != .completed else { return }
-        guard !downloadStatus.isDownloading else { return }
-        guard downloadStatus != .checking else { return }
-        downloadStatus = .checking
-
-        Task {
-            let configuration = await availableSupportModelRepository.checkMLXSupportModel()
-            switch configuration.model {
-            case .none, .whisper:
-                downloadStatus = .notFoundModel
-            case .gemma4_e2b_4bit:
-                downloadStatus = .idle
+    private func download() {
+        scrollEnabled = false
+        downloadTask?.cancel()
+        downloadTask = Task {
+            defer {
+                scrollEnabled = true
+                if Task.isCancelled {
+                    AppLogger.debug("Download Task Cancelled!!")
+                    status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+                }
+            }
+            do {
+                for try await status in mlxRepository.download() {
+                    self.status = status
+                }
+            } catch let repoError as OnDeviceRepositoryError {
+                // 사용자가 취소한 경우에는 에러 알림 없이 다운로드 상태를 초기화
+                AppLogger.error(repoError)
+                errorMessage = repoError.errorDescription
+            } catch {
+                AppLogger.error(error)
+                errorMessage = error.localizedDescription
             }
         }
     }
-
-    private func download() {}
 }
 
 #if DEBUG
     public extension OnBoardingViewModel {
         /// SwiftUI Preview에서 사용할 수 있는 가상 뷰모델 인스턴스를 생성합니다.
         static func preview() -> OnBoardingViewModel {
-            OnBoardingViewModel(
+            let vm = OnBoardingViewModel(
                 languageRepository: PreviewLanguageRepository(),
                 voiceRecordRepository: PreviewVoiceRecordRepository(),
                 sttRepository: PreviewSTTRepository(),
@@ -214,7 +241,8 @@ extension OnBoardingViewModel {
                 folderUseCase: PreviewFolderUseCase(),
                 availableSupportModelRepository: PreviewAvailableModelSupportRepository(),
                 mlxRepository: PreviewOnDeviceRepository()
-            )
+            )            
+            return vm
         }
     }
 
@@ -268,7 +296,7 @@ extension OnBoardingViewModel {
 
         struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
             func checkMLXSupportModel() async -> ChaGokModelSupport {
-                ChaGokModelSupport(ramSizeGB: 4, isProUser: false)
+                ChaGokModelSupport(ramSizeGB: 8, isProUser: false)
             }
 
             func fetchSupportModels() async -> [ChaGokModelState] {
@@ -278,10 +306,31 @@ extension OnBoardingViewModel {
 
         struct PreviewOnDeviceRepository: OnDeviceRepository {
             func download() -> AsyncThrowingStream<OnDeviceStatus, any Error> {
-                AsyncThrowingStream { continuation in
-                    continuation.yield(OnDeviceStatus(storage: .downloading(progress: 0.2), runtime: .unloaded))
-                    continuation.yield(OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
-                    continuation.finish()
+                AsyncThrowingStream(OnDeviceStatus.self, bufferingPolicy: .unbounded) { continuation in
+                    let task = Task {
+                        do {
+                            // 0%에서 100%까지 0.5초 간격으로 진행률을 올려 취소를 테스트할 충분한 시간을 줍니다.
+                            for progress in stride(from: 0.0, through: 1.0, by: 0.1) {
+                                try await Task.sleep(nanoseconds: 500_000_000) // 0.5초 간격
+                                try Task.checkCancellation()
+                                
+                                if progress < 1.0 {
+                                    continuation.yield(OnDeviceStatus(storage: .downloading(progress: progress), runtime: .unloaded))
+                                } else {
+                                    continuation.yield(OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
+                                }
+                            }
+                            continuation.finish()
+                        } catch is CancellationError {
+                            continuation.finish(throwing: OnDeviceRepositoryError.cancelled)
+                        } catch {
+                            continuation.finish(throwing: error)
+                        }
+                    }
+                    
+                    continuation.onTermination = { _ in
+                        task.cancel()
+                    }
                 }
             }
 
@@ -305,8 +354,6 @@ extension OnBoardingViewModel {
         currentStep = targetStep
         if currentStep == .micPermission {
             requestPermission()
-        } else if currentStep == .download {
-            checkModel()
         }
     }
 

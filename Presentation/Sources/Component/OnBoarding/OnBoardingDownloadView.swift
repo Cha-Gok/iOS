@@ -8,6 +8,7 @@ final class OnBoardingDownloadView: UIStackView {
 
     var vm: OnBoardingViewModel
     private let headlineText: String
+    private let bodyText: String
 
     // MARK: - Component
 
@@ -24,73 +25,31 @@ final class OnBoardingDownloadView: UIStackView {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = Constant.onBoardingLabelNumberOfLines
+        label.setTypography(text: bodyText, style: .subtitle1)
         label.textColor = .gray950
         return label
     }()
 
-    private let progressView: UIProgressView = {
-        let progressView = UIProgressView(progressViewStyle: .default)
-        progressView.translatesAutoresizingMaskIntoConstraints = false
-        progressView.trackTintColor = .gray200
-        progressView.progressTintColor = .point900
-        progressView.progress = 0
-        progressView.layer.cornerRadius = 4
-        progressView.clipsToBounds = true
-        return progressView
-    }()
+    private let progressView = ImmutableProgressView()
 
-    private let progressPercentLabel: UILabel = {
+    private let downloadMessageLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.setTypography(text: "0%", style: .title3)
-        label.textColor = .point800
-        label.textAlignment = .right
+        label.setTypography(text: "다운로드 상태 표기", style: .body2)
         return label
     }()
-
-    private lazy var modelCard: UIView = {
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-
-        // 글래스 효과 적용
-        container.applyGlassEffect(cornerRadius: 24, tintColor: .point200.withAlphaComponent(0.4))
-
-        // 내부 레이아웃용 스택뷰
-        let contentStack = UIStackView()
-        contentStack.translatesAutoresizingMaskIntoConstraints = false
-        contentStack.axis = .vertical
-        contentStack.spacing = 16
-
-        // 1. 상단 정보 (아이콘 + 모델명 + %)
-        let infoHeader = createListLabelText(
-            symbol: "cpu.fill",
-            text: "온디바이스 AI 모델",
-            text2: "0%"
-        )
-
-        // 2. 하단 상태 메시지
-        [infoHeader, progressView].forEach { contentStack.addArrangedSubview($0) }
-
-        container.addSubview(contentStack)
-
-        NSLayoutConstraint.activate([
-            // 카드 내부 여백 설정
-            contentStack.topAnchor.constraint(equalTo: container.topAnchor, constant: 20),
-            contentStack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
-            contentStack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
-            contentStack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -20),
-
-            // 프로그레스 바 두께 조절
-            progressView.heightAnchor.constraint(equalToConstant: 8)
-        ])
-
-        // 프로그레스 바 내부 레이어 코너 라운딩 처리
-        for subview in progressView.subviews {
-            subview.layer.cornerRadius = 4
-            subview.clipsToBounds = true
-        }
-
-        return container
+    
+    private lazy var modelLabel: UIStackView = createLabel("Gemma-4", symbolName: "internaldrive")
+    
+    private lazy var modelCard: UIStackView = {
+        let card = UIStackView(arrangedSubviews: [modelLabel, progressView, downloadMessageLabel])
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.axis = .vertical
+        card.spacing = 8
+        card.applyGlassEffect(tintColor: .point200.withAlphaComponent(0.2))
+        card.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        card.isLayoutMarginsRelativeArrangement = true
+        return card
     }()
 
     /// 남는 수직 공간을 흡수하는 빈 뷰 (OnBoardingCardView의 imageContainer 역할)
@@ -105,6 +64,7 @@ final class OnBoardingDownloadView: UIStackView {
         frame: CGRect = .zero
     ) {
         headlineText = headline
+        bodyText = body
         self.vm = vm
         super.init(frame: frame)
         setup()
@@ -116,11 +76,60 @@ final class OnBoardingDownloadView: UIStackView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - LifeCycle
-
     override func updateProperties() {
         super.updateProperties()
-        updateView()
+        let state = vm.status.storage
+        
+        switch state {
+        case .notDownloaded:
+            progressView.isHidden = true
+            downloadMessageLabel.isHidden = true
+        case .downloading:
+            progressView.isHidden = false
+            downloadMessageLabel.isHidden = false
+            downloadMessageLabel.setTypography(text: "다운로드 중...", style: .body2)
+            downloadMessageLabel.textColor = .gray950
+        case .downloaded:
+            progressView.isHidden = true
+            downloadMessageLabel.isHidden = true
+        case .failed:
+            progressView.isHidden = true
+            downloadMessageLabel.text = vm.errorMessage
+            downloadMessageLabel.textColor = .danger
+        }
+    }
+}
+
+// MARK: - Private
+
+extension OnBoardingDownloadView {
+    func createLabel(_ modelName: String, symbolName: String) -> UIStackView {
+        let container = UIStackView()
+        let imageView = UIImageView()
+        let nameLabel = UILabel()
+        
+        [container, imageView, nameLabel].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+        
+        // nameLabel
+        nameLabel.setTypography(text: modelName, style: .body2)
+        nameLabel.textColor = UIColor.gray950
+        // imageView
+        let config: UIImage.SymbolConfiguration = .init(pointSize: 20, weight: .medium)
+        imageView.image = UIImage(systemName: symbolName, withConfiguration: config)
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = UIColor.gray950
+        // container (return)
+        container.axis = .horizontal
+        container.spacing = 8
+        // spacer
+        let spacer = UIView()
+        [imageView, nameLabel, spacer].forEach {
+            container.addArrangedSubview($0)
+        }
+        
+        return container
     }
 }
 
@@ -131,73 +140,23 @@ extension OnBoardingDownloadView {
         translatesAutoresizingMaskIntoConstraints = false
         axis = .vertical
         spacing = Constant.onBoardingContentSpacing
-
+        
         // headline·body는 intrinsic size만 차지하고,
         // 남는 수직 공간은 imageContainer가 흡수하도록 설정
         headlineLabel.setContentHuggingPriority(.required, for: .vertical)
         bodyLabel.setContentHuggingPriority(.required, for: .vertical)
-        spacerView.setContentHuggingPriority(.defaultLow, for: .vertical)
-        modelCard.setContentHuggingPriority(.defaultLow, for: .vertical)
+        modelCard.setContentHuggingPriority(.required, for: .vertical)
+        
+        // progressView 높이 설정
+        NSLayoutConstraint.activate([
+            progressView.heightAnchor.constraint(equalToConstant: 8)
+        ])
     }
-
+    
     private func setupHierarchy() {
         addArrangedSubview(headlineLabel)
         addArrangedSubview(bodyLabel)
         addArrangedSubview(modelCard)
         addArrangedSubview(spacerView)
-        updateView()
-    }
-}
-
-// MARK: - Helper
-
-extension OnBoardingDownloadView {
-    private func createListLabelText(symbol: String? = nil, text: String, text2: String) -> UIStackView {
-        let listLabel = UIStackView()
-        let imageView = UIImageView()
-        let label = UILabel()
-        let spacerView = UIView()
-        [listLabel, imageView, label, progressPercentLabel]
-            .forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
-        // listLabel
-        listLabel.spacing = 8
-        listLabel.axis = .horizontal
-        // image
-        if let symbol {
-            let symbolConfig: UIImage.SymbolConfiguration = .init(pointSize: 12, weight: .bold)
-            imageView.image = UIImage(systemName: symbol, withConfiguration: symbolConfig)
-            imageView.tintColor = .gray200
-            imageView.contentMode = .scaleAspectFit
-        }
-        // label
-        label.setTypography(text: text, style: .body2)
-        label.textColor = .gray950
-        label.numberOfLines = 2
-        // progress label
-        progressPercentLabel.setTypography(text: text2, style: .title3)
-        progressPercentLabel.setContentHuggingPriority(.required, for: .horizontal)
-        progressPercentLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-        spacerView.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        spacerView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        // result
-        listLabel.addArrangedSubview(imageView)
-        listLabel.addArrangedSubview(label)
-        listLabel.addArrangedSubview(spacerView)
-        listLabel.addArrangedSubview(progressPercentLabel)
-        return listLabel
-    }
-}
-
-// MARK: - Update Method
-
-extension OnBoardingDownloadView {
-    private func updateView() {
-        bodyLabel.setTypography(text: vm.downloadStatus.message, style: .subtitle1)
-        modelCard.isHidden = vm.modelCardIsHidden
-        progressView.setProgress(Float(vm.downloadStatus.progress), animated: true)
-        progressPercentLabel.setTypography(
-            text: vm.progressPercentText,
-            style: .title3
-        )
     }
 }

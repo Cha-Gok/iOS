@@ -61,7 +61,7 @@ enum Step: Int, CaseIterable, Equatable {
         case .download:
             OnBoardingItem(
                 headline: "기기에서 바로 작동하도록,\n몇 가지를 준비할게요.",
-                body: "사용자님의 기기 환경을 확인중이에요"
+                body: "녹음과 요약을 기기 안에서 처리하기 위해\n필요한 모델을 다운로드 해요.\nWi-Fi연결을 권장하며 몇 분 정도 걸려요."
             )
         case .finish:
             OnBoardingItem(
