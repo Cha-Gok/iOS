@@ -27,8 +27,13 @@ public actor MLXModelProvider: MLXModelDataSource {
                 useLatest: false,
                 progressHandler: progressHandler
             )
-        } catch {
+        } catch is CancellationError {
+            throw .cancelled
+        } catch let error as MLXModelDataSourceError {
             AppLogger.error(error)
+            throw error
+        } catch {
+            AppLogger.error(error.localizedDescription)
             throw .unknown(error)
         }
     }
