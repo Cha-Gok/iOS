@@ -4,14 +4,11 @@ import Foundation
 
 public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
     private let provider: any MLXModelDataSource
-    private let storageService: any StorageService
 
     public init(
-        provider: any MLXModelDataSource,
-        storageService: any StorageService
+        provider: any MLXModelDataSource
     ) {
         self.provider = provider
-        self.storageService = storageService
     }
 
     public func download() -> AsyncThrowingStream<OnDeviceStatus, any Error> {
@@ -64,11 +61,7 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
     /// 다운로드 경로에 존재하는 모델 경로를 삭제합니다.
     public func delete() async throws(DeleteOnDeviceRepositoryError) -> OnDeviceStatus {
         do {
-            let downloadURL: URL = try await provider.getDownloadPath()
-            // file remove
-            try storageService.delete(fileURL: downloadURL)
-            // deinit
-            await provider.clear()
+            try await provider.delete()
             return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
         } catch is CancellationError {
             throw .cancelled
@@ -79,7 +72,6 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
                 throw .cancelled
             case .notFound:
                 // 이미 존재하지 않아 삭제할 대상이 없는 경우 성공으로 간주하여 상태를 정상 복구합니다.
-                await provider.clear()
                 return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
             case .networkFailed:
                 throw .deleteMLXFailed

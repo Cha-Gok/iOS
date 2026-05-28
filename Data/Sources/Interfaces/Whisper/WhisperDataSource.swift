@@ -23,4 +23,7 @@ public protocol WhisperDataSource: Sendable {
 
     /// DecodingOptions를 전달합니다 (`Getter`)
     func getDocodingOptions() async -> DecodingOptions
+
+    /// 모델을 제거합니다.
+    func delete() async throws
 }

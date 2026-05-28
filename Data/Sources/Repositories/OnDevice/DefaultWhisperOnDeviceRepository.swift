@@ -4,14 +4,11 @@ import Foundation
 
 /// Whisper 객체에 대한 기능 구현체를 담은 `Repository`
 public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
-    private let storageService: any StorageService
     let provider: any WhisperDataSource
 
     public init(
-        storageService: any StorageService,
         provider: any WhisperDataSource
     ) {
-        self.storageService = storageService
         self.provider = provider
     }
 
@@ -32,12 +29,29 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
                     continuation.yield(OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
                     continuation.finish()
                 } catch is CancellationError {
+                    AppLogger.info(OnDeviceRepositoryError.cancelled.errorDescription)
                     continuation.finish(throwing: OnDeviceRepositoryError.cancelled)
+                } catch let error as WhisperDataSourceError {
+                    let repoError: OnDeviceRepositoryError
+                    switch error {
+                    case .cancelled:
+                        repoError = .cancelled
+                    case .networkFailed, .notRecommendedModel:
+                        repoError = .networkFailed
+                    case .notFound:
+                        repoError = .unknown(error)
+                    case .loadFailed:
+                        repoError = .loadFailed
+                    case .unknown(let underlying):
+                        repoError = .unknown(underlying)
+                    }
+                    AppLogger.info(repoError.errorDescription)
+                    continuation.finish(throwing: repoError)
                 } catch {
+                    AppLogger.error(error.localizedDescription)
                     continuation.finish(throwing: OnDeviceRepositoryError.mapDownloadError(error))
                 }
             }
-
             continuation.onTermination = { _ in
                 task.cancel()
             }
@@ -46,11 +60,7 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
 
     public func delete() async throws(DeleteOnDeviceRepositoryError) -> OnDeviceStatus {
         do {
-            let downloadURL: URL = try await provider.getDownloadPath()
-            // file remove
-            try storageService.delete(fileURL: downloadURL)
-            // deinit
-            await provider.clearCache()
+            try await provider.delete()
             return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
         } catch {
             AppLogger.error(error)

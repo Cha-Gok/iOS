@@ -13,7 +13,7 @@ public final class AppDIContainer {
     private lazy var store = UserDefaultsKeyValueStoreService()
     private lazy var storageService = FileManagerStorageService()
     private let localDataBase: CoreDataLocalDataBase
-    private lazy var mlxProvider = MLXModelProvider()
+    private lazy var mlxProvider = MLXModelProvider(storageService: storageService)
 
     /// Repository
     private lazy var languageRepository = DefaultLanguageRepository(store: store)
@@ -30,6 +30,7 @@ public final class AppDIContainer {
         provider: mlxProvider
     )
     private lazy var whisperProvider = WhisperKitProvider(
+        storageService: storageService,
         languageRepository: languageRepository
     )
     private lazy var availableSupportModelRepository = DefaultAvailableModelSupportRepository(
@@ -43,12 +44,10 @@ public final class AppDIContainer {
     )
 
     private lazy var mlxOnDeviceRepository = DefaultMlxOnDeviceRepository(
-        provider: mlxProvider,
-        storageService: storageService
+        provider: mlxProvider
     )
 
     private lazy var whisperOnDeviceRepository = DefaultWhisperOnDeviceRepository(
-        storageService: storageService,
         provider: whisperProvider
     )
     /// Analysis (Domain Service)
@@ -198,7 +197,7 @@ public final class AppDIContainer {
 
     public func makeDownloadOnDeviceViewModel() -> DownloadOnDeviceViewModel {
         return DownloadOnDeviceViewModel(
-            repository: sttWhisperRepository
+            onDeviceStatusUseCase: onDeviceStatusUseCase
         )
     }
 

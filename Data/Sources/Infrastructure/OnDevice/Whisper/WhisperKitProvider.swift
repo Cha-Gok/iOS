@@ -4,6 +4,7 @@ import Foundation
 import WhisperKit
 
 public actor WhisperKitProvider: WhisperDataSource {
+    private let storageService: any StorageService
     private let languageRepository: any LanguageRepository
 
     // MARK: - Configuration
@@ -19,8 +20,10 @@ public actor WhisperKitProvider: WhisperDataSource {
     }
 
     public init(
+        storageService: any StorageService,
         languageRepository: any LanguageRepository
     ) {
+        self.storageService = storageService
         self.languageRepository = languageRepository
     }
 
@@ -34,6 +37,7 @@ public actor WhisperKitProvider: WhisperDataSource {
             useBackgroundSession: true,
             progressCallback: progressHandler
         )
+        AppLogger.info("WhisperKit 모델 위치 : \(modelDirectory?.absoluteString)")
     }
 
     private func getWhisper() async throws(WhisperDataSourceError) -> WhisperKit {
@@ -42,12 +46,12 @@ public actor WhisperKitProvider: WhisperDataSource {
         }
 
         do {
-            guard let downloadBase = modelDirectory else { throw WhisperDataSourceError.notFound }
+            let downloadBase = try await getDownloadPath()
             AppLogger.info("WhisperKit 모델 로드 시작: \(downloadBase.path)")
-            guard let recommendedModel else { throw WhisperDataSourceError.notRecommendedModel }
+            let modelName = recommendedModel ?? WhisperKit.recommendedModels().default
 
             let config = WhisperKitConfig(
-                model: recommendedModel,
+                model: modelName,
                 downloadBase: downloadBase,
                 modelFolder: downloadBase.path,
                 tokenizerFolder: downloadBase,
@@ -64,7 +68,7 @@ public actor WhisperKitProvider: WhisperDataSource {
             throw .cancelled
         } catch let error as WhisperDataSourceError {
             AppLogger.error(error)
-            throw .loadFailed
+            throw error
         } catch {
             AppLogger.error(error)
             throw .unknown(error)
@@ -102,8 +106,24 @@ public actor WhisperKitProvider: WhisperDataSource {
 
     /// 모델이 설치된 경로를  전달 하기 위한 함수
     public func getDownloadPath() async throws(WhisperDataSourceError) -> URL {
-        guard let path = modelDirectory else { throw .notFound }
-        return path
+        if let path = modelDirectory {
+            AppLogger.info("whisper 저장 위치 (캐시) : \(path)")
+            return path
+        }
+
+        // 앱 재시작 시 메모리 초기화에 대응하기 위해 디스크의 물리적인 경로 체크
+        let recommendedModel = WhisperKit.recommendedModels().default
+        let relativePath = "huggingface/models/argmaxinc/whisperkit-coreml/\(recommendedModel)"
+        let defaultPath = storageService.absoluteURL(for: relativePath)
+
+        if storageService.exists(relativePath: relativePath) {
+            self.modelDirectory = defaultPath
+            self.recommendedModel = recommendedModel
+            AppLogger.info("whisper 저장 위치 (디스크 감지) : \(defaultPath)")
+            return defaultPath
+        }
+
+        throw .notFound
     }
 
     public func getDocodingOptions() -> DecodingOptions {
@@ -118,6 +138,19 @@ public actor WhisperKitProvider: WhisperDataSource {
             audioPath: audioPath.absoluteString,
             decodeOptions: decodingOptions
         )
+    }
+
+    public func delete() async throws {
+        do {
+            let downloadURL = try await getDownloadPath()
+            try storageService.delete(fileURL: downloadURL)
+            AppLogger.info(downloadURL.absoluteString)
+            await clearCache()
+            modelDirectory = nil
+        } catch {
+            AppLogger.error(error)
+            throw error
+        }
     }
 }
 

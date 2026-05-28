@@ -20,4 +20,7 @@ public protocol MLXModelDataSource: Sendable {
 
     /// 다운로드된 모델을 메모리에 로드합니다.
     func loadModel() async throws(MLXModelDataSourceError) -> ModelContext
+
+    /// 모델을 제거합니다.
+    func delete() async throws(MLXModelDataSourceError)
 }
