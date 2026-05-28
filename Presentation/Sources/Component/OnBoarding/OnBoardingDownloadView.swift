@@ -94,7 +94,7 @@ final class OnBoardingDownloadView: UIStackView {
             downloadMessageLabel.isHidden = true
         case .failed:
             progressView.isHidden = true
-            downloadMessageLabel.text = vm.errorMessage
+            downloadMessageLabel.setTypography(text: vm.errorMessage, style: .body2)
             downloadMessageLabel.textColor = .danger
         }
     }
