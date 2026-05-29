@@ -14,78 +14,90 @@ public protocol DownloadOnDeviceCoordinatorDelegate: AnyObject {
 public final class DownloadOnDeviceViewModel {
     // MARK: - State
 
-    private(set) var progressFraction: Double?
-    private(set) var isDownloading: Bool = false
+    /// 온디바이스 모델의 통합 상태값
+    private(set) var status: OnDeviceStatus = .init(storage: .notDownloaded, runtime: .unloaded)
     private(set) var errorMessage: String?
 
     public weak var coordinator: DownloadOnDeviceCoordinatorDelegate?
-    private let repository: any STTRepository
+    private let onDeviceStatusUseCase: any OnDeviceStatusUseCase
+    
+    @ObservationIgnored
+    private var statusObservationTask: Task<Void, Never>?
     @ObservationIgnored
     private var downloadTask: Task<Void, Never>?
-    @ObservationIgnored
-    var progressPercentText: String {
-        guard let fraction = progressFraction else { return "0%" }
-        return "\(Int((fraction * 100).rounded()))%"
+    
+    // UI Binding을 위해 status로부터 파생된 연산 프로퍼티들
+    var isDownloading: Bool {
+        if case .downloading = status.storage { return true }
+        return false
     }
 
     // MARK: - Initialize
 
     public init(
-        repository: any STTRepository
+        onDeviceStatusUseCase: any OnDeviceStatusUseCase
     ) {
-        self.repository = repository
+        self.onDeviceStatusUseCase = onDeviceStatusUseCase
+        observeDownloadStatus()
     }
 }
 
 // MARK: - Actions
 
 extension DownloadOnDeviceViewModel {
-    /// 모델의 다운로드를 진행 하며 현재 상태를 handler를 통해 반환합니다.
-    func download() {
-//        guard downloadTask == nil else { return }
-//
-//        downloadTask = Task { [weak self] in
-//            guard let self else { return }
-//            isDownloading = true
-//            do {
-//                _ = try await repository.download { [weak self] progress in
-//                    Task { @MainActor [weak self] in
-//                        self?.progressFraction = progress.fractionCompleted
-//                    }
-//                }
-//            } catch let error as STTRepositoryError {
-//                switch error {
-//                case .cancelled:
-//                    self.progressFraction = nil
-//                default:
-//                    AppLogger.error(error)
-//                    self.errorMessage = error.localizedDescription
-//                    self.progressFraction = nil
-//                }
-//            } catch {
-//                AppLogger.error(error)
-//                errorMessage = error.localizedDescription
-//                progressFraction = nil
-//            }
-//            downloadTask = nil
-//            isDownloading = false
-//            dismiss()
-//        }
+    /// 온디바이스 모델(Whisper)의 상태 스트림을 구독하여 상태를 관찰합니다.
+    private func observeDownloadStatus() {
+        statusObservationTask?.cancel()
+        statusObservationTask = Task { [weak self] in
+            guard let self else { return }
+            let stream = await onDeviceStatusUseCase.subscribe(model: .whisper)
+            for await newStatus in stream {
+                self.status = newStatus
+                AppLogger.debug("OnDeviceStatus: \(newStatus)")
+            }
+        }
     }
 
-    func dismissError() {
-        errorMessage = nil
+    /// 모델의 다운로드를 유즈케이스에 요청합니다.
+    func download() {
+        guard downloadTask == nil else { return }
+        
+        downloadTask = Task {
+            do {
+                try await onDeviceStatusUseCase.download(model: .whisper)
+            } catch {
+                // 사용자 명시적 취소(.cancelled)인 경우 에러 메시지를 표시하지 않고 무시
+                if case .cancelled = error as? OnDeviceStatusUseCaseError {
+                    return
+                }
+                self.errorMessage = error.localizedDescription
+            }
+        }
     }
 
     func cancelDownload() {
         downloadTask?.cancel()
         downloadTask = nil
-        isDownloading = false
-        progressFraction = nil
+        self.status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+        
+        let useCase = onDeviceStatusUseCase
+        Task {
+            try? await useCase.delete(model: .whisper)
+        }
     }
 
     func dismiss() {
-        let condition: Bool = !isDownloading && progressFraction == 1
-        coordinator?.dismissSheet(completion: condition)
+        statusObservationTask?.cancel()
+        downloadTask?.cancel()
+        
+        // 다운로드가 완전히 완료되지 않은 상태(예: 취소 상태)에서 해제될 때만
+        // 유즈케이스의 저장 캐시 및 디스크 상태를 완전히 초기화(notDownloaded)합니다.
+        if status.storage != .downloaded {
+            let useCase = onDeviceStatusUseCase
+            Task {
+                try? await useCase.delete(model: .whisper)
+            }
+        }
+        coordinator?.dismissSheet(completion: true)
     }
 }
