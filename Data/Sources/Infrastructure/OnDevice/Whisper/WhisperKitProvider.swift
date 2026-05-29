@@ -32,11 +32,21 @@ public actor WhisperKitProvider: WhisperDataSource {
         self.recommendedModel = recommendedModel
         AppLogger.info("WhisperKit 추천 모델 : \(recommendedModel)")
         AppLogger.info("WhisperKit 모델 다운로드 시작")
-        modelDirectory = try await WhisperKit.download(
+        
+        let path = try await WhisperKit.download(
             variant: recommendedModel,
-            useBackgroundSession: true,
+            useBackgroundSession: false,
             progressCallback: progressHandler
         )
+        
+        // 다운로드 복귀 직후 태스크 취소 상태 감지 (레이스 컨디션 봉쇄)
+        if Task.isCancelled {
+            AppLogger.info("WhisperKit 다운로드 완료 복귀 후 취소 상태 감지 - 즉각 강제 소거 및 에러 방출")
+            try? storageService.delete(fileURL: path)
+            throw CancellationError()
+        }
+        
+        self.modelDirectory = path
         AppLogger.info("WhisperKit 모델 위치 : \(modelDirectory?.absoluteString)")
     }
 
@@ -141,12 +151,32 @@ public actor WhisperKitProvider: WhisperDataSource {
     }
 
     public func delete() async throws {
-        do {
-            let downloadURL = try await getDownloadPath()
-            try storageService.delete(fileURL: downloadURL)
-            AppLogger.info(downloadURL.absoluteString)
-            await clearCache()
+        defer {
             modelDirectory = nil
+        }
+        do {
+            // 캐시된 경로가 있거나 디스크 감지가 되는 경우 해당 경로를 사용
+            let downloadURL: URL
+            if let path = try? await getDownloadPath() {
+                downloadURL = path
+            } else {
+                // 다운로드 중 취소된 경우 등의 대비를 위해 기본 임시/일부 다운로드 경로 계산
+                let model = recommendedModel ?? WhisperKit.recommendedModels().default
+                let relativePath = "huggingface/models/argmaxinc/whisperkit-coreml/\(model)"
+                downloadURL = storageService.absoluteURL(for: relativePath)
+            }
+            
+            do {
+                try storageService.delete(fileURL: downloadURL)
+            } catch {
+                // error는 자동으로 StorageServiceError로 강하게 추론됩니다.
+                guard case .fileNotFound = error else {
+                    throw error
+                }
+            }
+            AppLogger.info("WhisperKit 모델/임시 폴더 삭제 완료: \(downloadURL.path)")
+            
+            await clearCache()
         } catch {
             AppLogger.error(error)
             throw error

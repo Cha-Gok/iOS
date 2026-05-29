@@ -13,7 +13,8 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
     }
 
     public func download() -> AsyncThrowingStream<OnDeviceStatus, any Error> {
-        AsyncThrowingStream(
+        let provider = self.provider
+        return AsyncThrowingStream(
             OnDeviceStatus.self,
             bufferingPolicy: .unbounded
         ) { continuation in
@@ -30,6 +31,7 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
                     continuation.finish()
                 } catch is CancellationError {
                     AppLogger.info(OnDeviceRepositoryError.cancelled.errorDescription)
+                    _ = try? await provider.delete()
                     continuation.finish(throwing: OnDeviceRepositoryError.cancelled)
                 } catch let error as WhisperDataSourceError {
                     let repoError: OnDeviceRepositoryError
@@ -46,13 +48,18 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
                         repoError = .unknown(underlying)
                     }
                     AppLogger.info(repoError.errorDescription)
+                    _ = try? await provider.delete()
                     continuation.finish(throwing: repoError)
                 } catch {
                     AppLogger.error(error.localizedDescription)
+                    _ = try? await provider.delete()
                     continuation.finish(throwing: OnDeviceRepositoryError.mapDownloadError(error))
                 }
             }
-            continuation.onTermination = { _ in
+            continuation.onTermination = { termination in
+                if case .cancelled = termination {
+                    Task { try? await provider.delete() }
+                }
                 task.cancel()
             }
         }

@@ -12,7 +12,8 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
     }
 
     public func download() -> AsyncThrowingStream<OnDeviceStatus, any Error> {
-        AsyncThrowingStream(
+        let provider = self.provider
+        return AsyncThrowingStream(
             OnDeviceStatus.self,
             bufferingPolicy: .unbounded
         ) { continuation in
@@ -32,6 +33,7 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
                     continuation.finish()
                 } catch is CancellationError {
                     AppLogger.info(OnDeviceRepositoryError.cancelled.errorDescription)
+                    _ = try? await provider.delete()
                     continuation.finish(throwing: OnDeviceRepositoryError.cancelled)
                 } catch let error as MLXModelDataSourceError {
                     let repoError: OnDeviceRepositoryError
@@ -46,13 +48,18 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
                         repoError = .unknown(underlying)
                     }
                     AppLogger.info(repoError.errorDescription)
+                    _ = try? await provider.delete()
                     continuation.finish(throwing: repoError)
                 } catch {
                     AppLogger.error(error.localizedDescription)
+                    _ = try? await provider.delete()
                     continuation.finish(throwing: OnDeviceRepositoryError.mapDownloadError(error))
                 }
             }
-            continuation.onTermination = { _ in
+            continuation.onTermination = { termination in
+                if case .cancelled = termination {
+                    Task { try? await provider.delete() }
+                }
                 task.cancel()
             }
         }
@@ -63,9 +70,7 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
         do {
             try await provider.delete()
             return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
-        } catch is CancellationError {
-            throw .cancelled
-        } catch let error as MLXModelDataSourceError {
+        } catch {
             AppLogger.error(error)
             switch error {
             case .cancelled:
@@ -76,14 +81,13 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
             case .networkFailed:
                 throw .deleteMLXFailed
             case .unknown(let underlying):
-                if underlying is CancellationError {
+                if underlying is CancellationError ||
+                   (underlying as? URLError)?.code == .cancelled ||
+                   (underlying as NSError).domain == NSURLErrorDomain && (underlying as NSError).code == NSURLErrorCancelled {
                     throw .cancelled
                 }
                 throw .unknown(underlying)
             }
-        } catch {
-            AppLogger.error(error)
-            throw .deleteMLXFailed
         }
     }
 }

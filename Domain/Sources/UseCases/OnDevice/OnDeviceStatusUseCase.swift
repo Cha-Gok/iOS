@@ -1,19 +1,20 @@
 import Core
 import Foundation
 
-/// 온디바이스 다운로드 상태를 공유하기 위한 유즈케이스
 public protocol OnDeviceStatusUseCase: Sendable {
     /// 구독 함수
     func subscribe(model: ChaGokModel) async -> AsyncStream<OnDeviceStatus>
     /// 다운로드
-    func download(model: ChaGokModel) async
+    func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError)
+    /// 모델 제거
+    func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError)
 }
 
 public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     private let whisperRepository: any OnDeviceRepository
     private let mlxRepository: any OnDeviceRepository
 
-    private var tasks: [ChaGokModel: Task<Void, Never>] = [:]
+    private var isDownloading: [ChaGokModel: Bool] = [:]
     private var latest: [ChaGokModel: OnDeviceStatus] = [:]
     private var subscribers: [UUID: (model: ChaGokModel, cont: AsyncStream<OnDeviceStatus>.Continuation)] = [:]
 
@@ -36,18 +37,55 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
         }
     }
 
-    public func download(model: ChaGokModel) {
-        guard tasks[model] == nil, let repo = repo(for: model) else { return }
-        tasks[model] = Task {
-            defer { Task { await self.clearTask(model: model) } }
-            do {
-                for try await status in repo.download() {
-                    await publish(model: model, status: status)
+    public func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {
+        guard isDownloading[model] != true, let repo = repo(for: model) else { return }
+        
+        isDownloading[model] = true
+        defer { isDownloading[model] = false }
+        
+        do {
+            for try await status in repo.download() {
+                try Task.checkCancellation()
+                await publish(model: model, status: status)
+            }
+        } catch {
+            let mappedError: OnDeviceStatusUseCaseError
+            if error is CancellationError {
+                mappedError = .cancelled
+            } else if let repoError = error as? OnDeviceRepositoryError {
+                switch repoError {
+                case .cancelled:
+                    mappedError = .cancelled
+                case .networkFailed:
+                    mappedError = .networkFailed
+                case .loadFailed:
+                    mappedError = .loadFailed
+                case .unknown(let err):
+                    mappedError = .unknown(err)
                 }
-            } catch {
-                AppLogger.error(error)
+            } else {
+                mappedError = .unknown(error)
+            }
+            
+            AppLogger.error(mappedError)
+            if case .cancelled = mappedError {
+                // 사용자 취소 시 상태를 .notDownloaded로 복구하여 구독 모델들에 알림
+                await publish(model: model, status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+            } else {
                 await publish(model: model, status: OnDeviceStatus(storage: .failed, runtime: .unloaded))
             }
+            throw mappedError
+        }
+    }
+
+    public func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError) {
+        guard let repo = repo(for: model) else { return }
+        do {
+            let status = try await repo.delete()
+            await publish(model: model, status: status)
+        } catch {
+            AppLogger.error(error)
+            throw error
         }
     }
 
@@ -55,6 +93,7 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
         latest[model] = status
         for (_, item) in subscribers where item.model == model {
             item.cont.yield(status)
+            AppLogger.info("📢 [UseCase] 상태 발행: \(status)")
         }
     }
 
@@ -72,10 +111,6 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     private func unsubscribe(id: UUID) {
         subscribers[id]?.cont.finish()
         subscribers[id] = nil
-    }
-
-    private func clearTask(model: ChaGokModel) async {
-        tasks[model] = nil
     }
 
     private func repo(for model: ChaGokModel) -> (any OnDeviceRepository)? {

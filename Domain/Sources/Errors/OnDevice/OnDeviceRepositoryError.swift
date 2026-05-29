@@ -20,6 +20,12 @@ public enum OnDeviceRepositoryError: LocalizedError, Sendable {
     }
 
     public static func mapDownloadError(_ error: Error) -> Self {
+        if error is CancellationError ||
+           (error as? URLError)?.code == .cancelled ||
+           (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled {
+            return .cancelled
+        }
+
         if isNetworkError(error) {
             return .networkFailed
         }
@@ -31,6 +37,9 @@ public enum OnDeviceRepositoryError: LocalizedError, Sendable {
         let nsError = error as NSError
 
         if nsError.domain == NSURLErrorDomain {
+            if nsError.code == NSURLErrorCancelled {
+                return false
+            }
             return true
         }
 

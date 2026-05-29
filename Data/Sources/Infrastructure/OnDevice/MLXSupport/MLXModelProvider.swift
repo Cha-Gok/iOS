@@ -25,18 +25,32 @@ public actor MLXModelProvider: MLXModelDataSource {
         do {
             let model: ChaGokModel = ChaGokModelSupport.current.model
             let configuration = try matchModelConfiguration(model: model)
-            container = try await resolve(
+            let path = try await resolve(
                 configuration: configuration,
                 from: #hubDownloader(),
                 useLatest: false,
                 progressHandler: progressHandler
             )
+            
+            // 다운로드 완료 복귀 직후 태스크 취소 상태 감지 (레이스 컨디션 봉쇄)
+            if Task.isCancelled {
+                AppLogger.info("MLX 다운로드 완료 복귀 후 취소 상태 감지 - 즉각 강제 소거 및 에러 방출")
+                try? storageService.delete(fileURL: path.modelDirectory)
+                throw CancellationError()
+            }
+            
+            container = path
         } catch is CancellationError {
             throw .cancelled
         } catch let error as MLXModelDataSourceError {
             AppLogger.error(error)
             throw error
         } catch {
+            if error is CancellationError ||
+               (error as? URLError)?.code == .cancelled ||
+               (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled {
+                throw .cancelled
+            }
             AppLogger.error(error.localizedDescription)
             throw .unknown(error)
         }
@@ -63,8 +77,7 @@ public actor MLXModelProvider: MLXModelDataSource {
             let relativePath = "huggingface/models/\(repoID)"
             let defaultPath = storageService.absoluteURL(for: relativePath)
 
-            let relativeConfigJSON = "\(relativePath)/config.json"
-            if storageService.exists(relativePath: relativeConfigJSON) {
+            if storageService.exists(relativePath: relativePath) {
                 AppLogger.info("MLX 저장 위치 (디스크 감지) : \(defaultPath)")
                 return defaultPath
             }
@@ -87,17 +100,42 @@ public actor MLXModelProvider: MLXModelDataSource {
             AppLogger.error(error)
             throw error
         } catch {
+            if error is CancellationError ||
+               (error as? URLError)?.code == .cancelled ||
+               (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled {
+                throw .cancelled
+            }
             AppLogger.error(error)
             throw .unknown(error)
         }
     }
 
     public func delete() async throws(MLXModelDataSourceError) {
-        do {
-            let downloadURL = try await getDownloadPath()
-            try storageService.delete(fileURL: downloadURL)
+        defer {
             clear()
-            AppLogger.info(downloadURL.absoluteString)
+        }
+        do {
+            // 캐시된 경로가 있거나 디스크 감지가 되는 경우 해당 경로를 사용
+            let downloadURL: URL
+            if let path = try? await getDownloadPath() {
+                downloadURL = path
+            } else {
+                // 다운로드 중 취소된 경우 등의 대비를 위해 기본 경로 계산
+                let model = ChaGokModelSupport.current.model
+                let configuration = try matchModelConfiguration(model: model)
+                let repoID = configuration.id
+                let relativePath = "huggingface/models/\(repoID)"
+                downloadURL = storageService.absoluteURL(for: relativePath)
+            }
+            
+            do {
+                try storageService.delete(fileURL: downloadURL)
+            } catch {
+                guard case .fileNotFound = error else {
+                    throw error
+                }
+            }
+            AppLogger.info("MLX 모델/임시 폴더 삭제 완료: \(downloadURL.path)")
         } catch is CancellationError {
             throw .cancelled
         } catch let error as MLXModelDataSourceError {
