@@ -15,13 +15,13 @@ public final class MainViewModel {
             items: []
         ),
         CategoryToggle(
-            imageName: "folder",
-            title: "기본 폴더",
+            imageName: "microphone",
+            title: "모든 기록",
             items: []
         ),
         CategoryToggle(
             imageName: "folder",
-            title: "개인 폴더",
+            title: "폴더 목록",
             items: []
         ),
         CategoryToggle(
