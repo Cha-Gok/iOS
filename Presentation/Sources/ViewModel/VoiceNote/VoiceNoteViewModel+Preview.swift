@@ -41,7 +41,8 @@
                 voiceNote: voiceNote,
                 voiceNoteUseCase: PreviewVoiceNoteUseCase(items: [voiceNote]),
                 folderUseCase: PreviewFolderUseCase(),
-                playbackRepository: PreviewPlaybackRepository()
+                playbackRepository: PreviewPlaybackRepository(),
+                availableSupportModelRepository: PreviewAvailableModelSupportRepository()
             )
         }
     }
@@ -169,6 +170,16 @@
         func pause() throws(VoiceRecordPlaybackRepositoryError) {}
         func seek(to _: TimeInterval) throws(VoiceRecordPlaybackRepositoryError) {}
         func stop() throws(VoiceRecordPlaybackRepositoryError) {}
+    }
+
+    private struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
+        func checkMLXSupportModel() async -> ChaGokModelSupport {
+            ChaGokModelSupport(ramSizeGB: 8, isProUser: false)
+        }
+
+        func fetchSupportModels() async -> [ChaGokModelState] {
+            []
+        }
     }
 
 #endif

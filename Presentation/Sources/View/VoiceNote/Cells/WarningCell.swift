@@ -140,7 +140,7 @@ public final class WarningContentView: UIView, UIContentView {
         
         if let buttonTitle = config.buttonTitle {
             actionButton.configure(
-                config.buttonTitle,
+                buttonTitle,
                 typography: .subtitle1,
                 border: .init(color: .color(.gray600), width: Constant.borderWidth),
                 backgroundColor: .color(UIColor.point200.withAlphaComponent(Constant.backgroundOpacity)),

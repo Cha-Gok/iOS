@@ -22,7 +22,7 @@ final class MockSettingCoordinatorDelegate: SettingCoordinatorDelegate {
     }
 }
 
-final class MockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked Sendable {
+final class SettingMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked Sendable {
     private var continuation: AsyncStream<OnDeviceStatus>.Continuation?
     private(set) var downloadCallCount = 0
     private(set) var deleteCallCount = 0
@@ -75,14 +75,14 @@ final class SettingViewModelTests: XCTestCase {
         let viewModel: SettingViewModel
         let mockLanguageRepo: MockLanguageRepository
         let mockAvailableModelRepo: MockAvailableModelSupportRepository
-        let mockOnDeviceStatusUseCase: MockOnDeviceStatusUseCase
+        let mockOnDeviceStatusUseCase: SettingMockOnDeviceStatusUseCase
         let mockCoordinator: MockSettingCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
         let mockLanguageRepo = MockLanguageRepository()
         let mockAvailableModelRepo = MockAvailableModelSupportRepository()
-        let mockOnDeviceStatusUseCase = MockOnDeviceStatusUseCase()
+        let mockOnDeviceStatusUseCase = SettingMockOnDeviceStatusUseCase()
         let mockCoordinator = MockSettingCoordinatorDelegate()
 
         let viewModel = SettingViewModel(

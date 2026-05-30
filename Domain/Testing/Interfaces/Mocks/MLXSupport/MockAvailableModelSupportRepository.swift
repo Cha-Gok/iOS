@@ -71,7 +71,7 @@ public final class MockAvailableModelSupportRepository: AvailableModelSupportRep
         XCTAssertEqual(actual, expected, "\(label) 호출 횟수 불일치", file: file, line: line)
     }
 
-    public func checkSupportModel() async -> ChaGokModelSupport {
+    public func checkMLXSupportModel() async -> ChaGokModelSupport {
         actualCheckSupportModelCallCount += 1
         if let result = checkSupportModelResult {
             return result

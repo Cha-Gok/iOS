@@ -18,7 +18,7 @@ public enum OnDeviceStatusUseCaseError: LocalizedError, Sendable {
             return "네트워크 연결이 유실되었습니다"
         case .loadFailed:
             return "모델을 메모리에 올리지 못했습니다"
-        case .unknown(let error):
+        case .unknown(_):
             return "다운로드에 실패했습니다"
         }
     }

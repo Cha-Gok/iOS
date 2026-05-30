@@ -1,4 +1,3 @@
-import Core
 import Foundation
 
 /// 음성 메모 통합 유스케이스 에러.
