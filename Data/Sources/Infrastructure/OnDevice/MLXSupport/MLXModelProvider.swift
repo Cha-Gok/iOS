@@ -82,7 +82,16 @@ public actor MLXModelProvider: MLXModelDataSource {
                     at: snapshotsURL,
                     includingPropertiesForKeys: nil
                 ).first {
-                    return firstSnapshot
+                    // 완결성 검사: 모델 폴더 내부에 핵심 설정인 config.json 및 tokenizer 파일들이 완벽하게 다운로드되어 존재하는지 검사하여 C++ 크래시를 예방합니다.
+                    let configURL = firstSnapshot.appendingPathComponent("config.json")
+                    let tokenizerURL = firstSnapshot.appendingPathComponent("tokenizer.json")
+                    let tokenizerConfigURL = firstSnapshot.appendingPathComponent("tokenizer_config.json")
+                    
+                    if FileManager.default.fileExists(atPath: configURL.path) &&
+                       FileManager.default.fileExists(atPath: tokenizerURL.path) &&
+                       FileManager.default.fileExists(atPath: tokenizerConfigURL.path) {
+                        return firstSnapshot
+                    }
                 }
             }
 
