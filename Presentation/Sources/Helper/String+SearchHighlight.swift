@@ -63,7 +63,7 @@ extension String {
            focusedRange.location + focusedRange.length <= (self as NSString).length
         {
             attributed.addAttribute(.backgroundColor, value: focusedHighlightBackgroundColor, range: focusedRange)
-            attributed.addAttribute(.foregroundColor, value: UIColor.gray950, range: focusedRange)
+            attributed.addAttribute(.foregroundColor, value: UIColor.gray50, range: focusedRange)
         }
 
         return attributed

@@ -16,20 +16,4 @@ public protocol STTRepository: Sendable {
     /// - Returns: 요청 결과 권한 상태.
     /// - Throws: `STTPermissionRepositoryError`
     func requestSTTPermission() async throws(STTPermissionRepositoryError) -> PermissionStatus
-
-    /// 온디바이스 모델 다운로드를 진행합니다.
-    /// Speech 프레임워크를 사용할 경우 함수를 호출하지 않으며, Whisper 또는 다른 HuggingFace 모델 다운로드 용도로 사용합니다.
-    /// - Returns: 모델 다운로드 경로
-    /// - Throws: `STTRepositoryError`
-    @discardableResult
-    func download(progressHandler: (@Sendable (Progress) -> Void)?) async throws(STTRepositoryError) -> URL
-}
-
-public extension STTRepository {
-    @discardableResult
-    func download(
-        progressHandler: (@Sendable (Progress) -> Void)? = nil
-    ) async throws(STTRepositoryError) -> URL {
-        throw .downloadFailed
-    }
 }

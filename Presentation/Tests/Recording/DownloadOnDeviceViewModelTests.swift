@@ -14,29 +14,57 @@ final class MockDownloadOnDeviceCoordinator: DownloadOnDeviceCoordinatorDelegate
     }
 }
 
+final class DownloadMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked Sendable {
+    private(set) var downloadCallCount = 0
+    private(set) var deleteCallCount = 0
+    private(set) var lastDownloadedModel: ChaGokModel?
+    private(set) var lastDeletedModel: ChaGokModel?
+
+    func subscribe(model: ChaGokModel) -> AsyncStream<OnDeviceStatus> {
+        AsyncStream { cont in
+            cont.yield(OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+            cont.finish()
+        }
+    }
+
+    func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {
+        downloadCallCount += 1
+        lastDownloadedModel = model
+    }
+
+    func cancelDownload(model: ChaGokModel) {
+        // Not used by the VM directly (VM uses downloadTask cancellation + delete)
+    }
+
+    func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError) {
+        deleteCallCount += 1
+        lastDeletedModel = model
+    }
+}
+
 @MainActor
 final class DownloadOnDeviceViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: DownloadOnDeviceViewModel
-        let repository: MockSTTRepository
+        let useCase: DownloadMockOnDeviceStatusUseCase
         let coordinator: MockDownloadOnDeviceCoordinator
     }
 
     private func makeSUT() -> SUT {
-        let repository = MockSTTRepository()
+        let useCase = DownloadMockOnDeviceStatusUseCase()
         let coordinator = MockDownloadOnDeviceCoordinator()
-        let viewModel = DownloadOnDeviceViewModel(repository: repository)
+        let viewModel = DownloadOnDeviceViewModel(onDeviceStatusUseCase: useCase)
         viewModel.coordinator = coordinator
 
         return SUT(
             viewModel: viewModel,
-            repository: repository,
+            useCase: useCase,
             coordinator: coordinator
         )
     }
 }
 
-// MARK: - 초기 상태
+// MARK: - 초기 상태 및 기본 호출 검사
 
 extension DownloadOnDeviceViewModelTests {
     func test_뷰모델생성시_초기상태를확인한다() {
@@ -45,82 +73,66 @@ extension DownloadOnDeviceViewModelTests {
 
         // Then
         XCTAssertFalse(sut.viewModel.isDownloading)
-        XCTAssertNil(sut.viewModel.progressFraction)
         XCTAssertNil(sut.viewModel.errorMessage)
-        XCTAssertEqual(sut.viewModel.progressPercentText, "0%")
+        XCTAssertEqual(sut.viewModel.status.storage, .notDownloaded)
     }
-}
 
-// MARK: - 다운로드
-
-extension DownloadOnDeviceViewModelTests {
-    func test_다운로드를_성공적으로_완료하면_isDownloading이_false가되고_coordinator를호출한다() async throws {
+    func test_download호출시_유즈케이스의download를호출한다() async {
         // Given
         let sut = makeSUT()
-        let dummyURL = URL(fileURLWithPath: "/dummy/path")
-        await sut.repository.setDownloadResult(.success(dummyURL))
-        await sut.repository.expectDownload(callCount: 1)
 
         // When
         sut.viewModel.download()
 
-        // Wait for async task to complete
-        try await Task.sleep(nanoseconds: 100_000_000)
+        // 비동기 Task 내부에서 유즈케이스 메소드가 호출될 때까지 대기
+        let start = Date()
+        while sut.useCase.downloadCallCount == 0 {
+            if Date().timeIntervalSince(start) > 1.0 {
+                XCTFail("Timeout waiting for download call")
+                return
+            }
+            await Task.yield()
+        }
 
         // Then
-        XCTAssertFalse(sut.viewModel.isDownloading)
-        XCTAssertEqual(sut.coordinator.dismissSheetCallCount, 1)
-        XCTAssertEqual(sut.coordinator.completionValue, false) // Note: 성공이더라도 progressFraction이 1이 아니면 false가 반환됩니다.
-        await sut.repository.verify()
+        XCTAssertEqual(sut.useCase.downloadCallCount, 1)
+        XCTAssertEqual(sut.useCase.lastDownloadedModel, .whisper)
     }
 
-    func test_다운로드가_실패하면_errorMessage를_설정하고_isDownloading이_false가된다() async throws {
+    func test_cancelDownload호출시_상태를초기화하고_유즈케이스의delete를호출한다() async {
         // Given
         let sut = makeSUT()
-        await sut.repository.setDownloadResult(.failure(.downloadFailed))
-        await sut.repository.expectDownload(callCount: 1)
-
-        // When
-        sut.viewModel.download()
-
-        try await Task.sleep(nanoseconds: 100_000_000)
-
-        // Then
-        XCTAssertFalse(sut.viewModel.isDownloading)
-        XCTAssertNotNil(sut.viewModel.errorMessage)
-        XCTAssertEqual(sut.coordinator.dismissSheetCallCount, 1)
-        await sut.repository.verify()
-    }
-}
-
-// MARK: - 다운로드 취소 및 기타
-
-extension DownloadOnDeviceViewModelTests {
-    func test_cancelDownload_호출시_다운로드를취소하고_상태가초기화된다() async {
-        // Given
-        let sut = makeSUT()
-        let dummyURL = URL(fileURLWithPath: "/dummy/path")
-        await sut.repository.setDownloadResult(.success(dummyURL))
-
-        sut.viewModel.download() // Task 시작
 
         // When
         sut.viewModel.cancelDownload()
 
         // Then
         XCTAssertFalse(sut.viewModel.isDownloading)
-        XCTAssertNil(sut.viewModel.progressFraction)
+        XCTAssertEqual(sut.viewModel.status.storage, .notDownloaded)
+
+        // 비동기 Task 내부에서 유즈케이스 메소드가 호출될 때까지 대기
+        let start = Date()
+        while sut.useCase.deleteCallCount == 0 {
+            if Date().timeIntervalSince(start) > 1.0 {
+                XCTFail("Timeout waiting for delete call")
+                return
+            }
+            await Task.yield()
+        }
+
+        XCTAssertEqual(sut.useCase.deleteCallCount, 1)
+        XCTAssertEqual(sut.useCase.lastDeletedModel, .whisper)
     }
 
-    func test_dismissError_호출시_errorMessage가_nil이된다() {
+    func test_dismiss호출시_coordinator의dismissSheet를호출한다() {
         // Given
         let sut = makeSUT()
 
-        // 에러를 강제로 주입하기 위해 다운로드 실패 플로우를 한 번 태웁니다.
-        sut.viewModel.download()
-        sut.viewModel.dismissError() // 직접 지우기 시뮬레이션
+        // When
+        sut.viewModel.dismiss()
 
         // Then
-        XCTAssertNil(sut.viewModel.errorMessage)
+        XCTAssertEqual(sut.coordinator.dismissSheetCallCount, 1)
+        XCTAssertTrue(sut.coordinator.completionValue ?? false)
     }
 }

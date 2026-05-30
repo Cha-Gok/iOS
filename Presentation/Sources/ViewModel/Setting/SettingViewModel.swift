@@ -15,11 +15,9 @@ public protocol SettingCoordinatorDelegate: AnyObject {
 @MainActor
 @Observable
 public final class SettingViewModel {
-    private var downloadTasks: [ChaGokModel: Task<Void, Never>] = [:]
     private let languageRepository: any LanguageRepository
-    private let mlxRepository: any AvailableModelSupportRepository
-    private let sttRepository: any STTRepository
-    private let deleteModelRepository: any DeleteOnDeviceRepository
+    private let availableModelRepository: any AvailableModelSupportRepository
+    private let onDeviceStatusUseCase: any OnDeviceStatusUseCase
 
     public weak var coordinator: SettingCoordinatorDelegate?
 
@@ -30,16 +28,16 @@ public final class SettingViewModel {
 
     public init(
         languageRepository: any LanguageRepository,
-        mlxRepository: any AvailableModelSupportRepository,
-        sttRepository: any STTRepository,
-        deleteModelRepository: any DeleteOnDeviceRepository
+        availableModelRepository: any AvailableModelSupportRepository,
+        onDeviceStatusUseCase: any OnDeviceStatusUseCase
     ) {
         self.languageRepository = languageRepository
-        self.mlxRepository = mlxRepository
-        self.sttRepository = sttRepository
-        self.deleteModelRepository = deleteModelRepository
+        self.availableModelRepository = availableModelRepository
+        self.onDeviceStatusUseCase = onDeviceStatusUseCase
         language = languageRepository.fetchLanguage()
     }
+
+    private var observationTasks: [ChaGokModel: Task<Void, Never>] = [:]
 
     // MARK: - Setter / Getter
 
@@ -52,100 +50,35 @@ public final class SettingViewModel {
 
     func checkModels() {
         Task {
-            self.models = await mlxRepository.fetchSupportModels()
+            self.models = await availableModelRepository.fetchSupportModels()
+            observeDownloadStatus()
         }
     }
 
     func downloadModel(model: ChaGokModel) {
-        updateModelState(model: model, newState: .downloading)
-
-        // Create and store a Task so it can be cancelled when the ViewModel is popped/deinitialized
-        let task = Task { [weak self] in
+        guard model != .none else { return }
+        Task {
             do {
-                switch model {
-                case .none:
-                    return
-                case .whisper:
-                    try await self?.sttRepository.download { _ in }
-                case .gemma4_e2b_4bit:
-                    try await self?.mlxRepository.downloadModel { _ in }
-                }
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                await MainActor.run {
-                    self?.updateModelState(model: model, newState: .downloaded)
-                }
+                try await onDeviceStatusUseCase.download(model: model)
             } catch {
-                // If cancelled or failed, we simply stop; repository implementations should honor Task.isCancelled
-            }
-            await MainActor.run {
-                self?.downloadTasks[model] = nil
+                AppLogger.error(error)
             }
         }
-
-        downloadTasks[model] = task
     }
 
     func deleteModel(model: ChaGokModel) {
-        updateModelState(model: model, newState: .downloading)
-
-        let task = Task { [weak self] in
+        guard model != .none else { return }
+        Task {
             do {
-                switch model {
-                case .none:
-                    return
-                case .whisper:
-                    try await self?.deleteModelRepository.whisperModel()
-                case .gemma4_e2b_4bit:
-                    try await self?.deleteModelRepository.mlxModel()
-                }
-                await MainActor.run {
-                    self?.updateModelState(model: model, newState: .notDownloaded)
-                }
+                try await onDeviceStatusUseCase.delete(model: model)
             } catch {
-                // ignore errors / cancellations
+                AppLogger.error(error)
             }
-            await MainActor.run {
-                self?.downloadTasks[model] = nil
-            }
-        }
-
-        downloadTasks[model] = task
-    }
-
-    private func updateModelState(model: ChaGokModel, newState: ChaGokModelState.DownloadState) {
-        if let index = models.firstIndex(where: { $0.model == model }) {
-            var updatedModel = models[index]
-            updatedModel.isDownloaded = newState
-            models[index] = updatedModel
         }
     }
 
     func pop() {
-        // Cancel any in-flight download/delete tasks before popping
-        let modelsToCleanup = Array(downloadTasks.keys)
-        downloadTasks.values.forEach { $0.cancel() }
-        downloadTasks.removeAll()
-
-        // Immediately navigate back. Delete any partial model files in background
-        // so the next `checkModels()` call reflects on-disk state.
         coordinator?.pop()
-
-        Task {
-            for model in modelsToCleanup {
-                do {
-                    switch model {
-                    case .none:
-                        break
-                    case .whisper:
-                        try await deleteModelRepository.whisperModel()
-                    case .gemma4_e2b_4bit:
-                        try await deleteModelRepository.mlxModel()
-                    }
-                } catch {
-                    // ignore errors / cancellations
-                }
-            }
-        }
     }
 
     func pushTermsOfUse() {
@@ -154,6 +87,38 @@ public final class SettingViewModel {
 
     func pushPrivacyPolicy() {
         coordinator?.pushPrivacyPolicyView()
+    }
+
+    // MARK: - Private Observation
+
+    private func observeDownloadStatus() {
+        for task in observationTasks.values {
+            task.cancel()
+        }
+        observationTasks.removeAll()
+
+        for modelState in models {
+            let model = modelState.model
+            guard model != .none else { continue }
+
+            observationTasks[model] = Task { [weak self] in
+                let stream = await self?.onDeviceStatusUseCase.subscribe(model: model)
+                guard let stream else { return }
+                for await newStatus in stream {
+                    self?.updateModelStatus(model: model, status: newStatus)
+                }
+            }
+        }
+    }
+
+    private func updateModelStatus(model: ChaGokModel, status: OnDeviceStatus) {
+        if let index = models.firstIndex(where: { $0.model == model }) {
+            let currentStatus = models[index].status
+            if case .downloading = currentStatus.storage, case .downloading = status.storage {
+                return
+            }
+            models[index].status = status
+        }
     }
 }
 

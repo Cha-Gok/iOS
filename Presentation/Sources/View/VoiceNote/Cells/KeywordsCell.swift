@@ -57,7 +57,7 @@ final class KeywordsContentView: UIView, UIContentView {
                 ranges: ranges,
                 highlightBackgroundColor: UIColor.point700,
                 focusedRange: focusedRange,
-                focusedHighlightBackgroundColor: .systemRed
+                focusedHighlightBackgroundColor: .warning2
             )
             return chip
         }

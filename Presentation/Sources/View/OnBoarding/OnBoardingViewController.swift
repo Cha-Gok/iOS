@@ -7,6 +7,7 @@ public final class OnBoardingViewController: ViewController {
     // MARK: - State
 
     private let vm: OnBoardingViewModel
+    private var didSetupUI = false
 
     public init(vm: OnBoardingViewModel) {
         self.vm = vm
@@ -21,8 +22,8 @@ public final class OnBoardingViewController: ViewController {
     // MARK: - Component
 
     private lazy var pagenation: Pagenation = .init(
-        currentIndex: vm.currentStep.rawValue,
-        maxIndex: vm.getMaxIndex()
+        currentIndex: vm.currentStepIndex,
+        maxIndex: vm.steps.count
     )
 
     private lazy var pagingView: OnBoardingPagingView = .init(pages: createPages())
@@ -49,24 +50,36 @@ public final class OnBoardingViewController: ViewController {
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-        setup()
-        setupPagenation()
-        setupCard()
-        setupButtons()
+        Task { [weak self] in
+            guard let self else { return }
+            await vm.checkModelSupport()
+            setup()
+            setupPagenation()
+            setupCard()
+            setupButtons()
+            didSetupUI = true
+            setNeedsUpdateProperties()
+        }
     }
 
     override public func updateProperties() {
         super.updateProperties()
+        guard didSetupUI else { return }
 
         // 버튼 상태 업데이트
         primaryButton.configuration?.title = vm.primaryButtonTitle
+        primaryButton.isUserInteractionEnabled = vm.isPrimaryButtonEnabled
         secondButton.configuration?.title = vm.secondButtonTitle
         secondButton.isUserInteractionEnabled = vm.isSecondButtonEnabled
-        primaryButton.configuration?.baseBackgroundColor = vm.isFinalStep ? UIColor.point600 : UIColor.point200
+        primaryButton.configuration?.baseBackgroundColor = vm
+            .isPrimaryButtonBgColor ? (vm.isPrimaryButtonEnabled ? UIColor.point600 : UIColor.gray600) : UIColor
+            .point200
             .withAlphaComponent(Constant.backgroundOpacity)
         primaryButton.configuration?.baseForegroundColor = UIColor.gray900
+        // paginView
+        pagingView.isScrollEnabled = vm.scrollEnabled
         // pagenation 업데이트
-        pagenation.currentIndex = vm.currentStep.rawValue
+        pagenation.currentIndex = vm.currentStepIndex
     }
 
     // MARK: - Set up
@@ -189,7 +202,7 @@ public final class OnBoardingViewController: ViewController {
 
 extension OnBoardingViewController {
     /// first, second, micPermission 은 OnBoardingCardView로 화면 구성
-    /// finish 만 다른 컴포넌트 화면을 사용합니다.
+    /// finish, download  만 다른 컴포넌트 화면을 사용합니다.
     private func createPages() -> [UIView] {
         vm.steps.map { step in
             switch step {

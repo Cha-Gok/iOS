@@ -148,11 +148,6 @@ public struct FileManagerStorageService: StorageService, @unchecked Sendable {
     public func delete(fileURL: URL) throws(StorageServiceError) {
         AppLogger.debug("임시 파일 삭제 시작: \(fileURL.path)")
 
-        if Task.isCancelled {
-            AppLogger.debug("작업 취소됨: delete")
-            throw StorageServiceError.cancelled
-        }
-
         guard fileManager.fileExists(atPath: fileURL.path) else {
             AppLogger.error("삭제할 파일을 찾을 수 없음: \(fileURL.path)")
             throw StorageServiceError.fileNotFound

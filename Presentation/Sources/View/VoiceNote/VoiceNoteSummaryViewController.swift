@@ -8,7 +8,7 @@ final class VoiceNoteSummaryViewController: UICollectionViewController {
 
     init(viewModel: VoiceNoteViewModel) {
         self.viewModel = viewModel
-        super.init(collectionViewLayout: Self.makeLayout())
+        super.init(collectionViewLayout: UICollectionViewFlowLayout())
     }
 
     @available(*, unavailable)
@@ -19,6 +19,7 @@ final class VoiceNoteSummaryViewController: UICollectionViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.keyboardDismissMode = .interactive
+        collectionView.collectionViewLayout = makeLayout()
 
         applySnapshot()
         observeAnalysisState()
@@ -44,14 +45,20 @@ final class VoiceNoteSummaryViewController: UICollectionViewController {
 // MARK: - Layout
 
 private extension VoiceNoteSummaryViewController {
-    static func makeLayout() -> UICollectionViewLayout {
-        UICollectionViewCompositionalLayout { sectionIndex, environment in
-            let sectionType = Section(rawValue: sectionIndex)
+    func makeLayout() -> UICollectionViewLayout {
+        UICollectionViewCompositionalLayout { [weak self] sectionIndex, environment in
+            guard let self else { return nil }
+            guard let sectionType = dataSource.sectionIdentifier(for: sectionIndex) else { return nil }
 
             var config = UICollectionLayoutListConfiguration(appearance: .plain)
             config.backgroundColor = .clear
             config.showsSeparators = false
-            config.headerMode = sectionType == .metadata ? .none : .supplementary
+
+            if sectionType == .metadata || sectionType == .failure {
+                config.headerMode = .none
+            } else {
+                config.headerMode = .supplementary
+            }
 
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
 
@@ -145,6 +152,40 @@ private extension VoiceNoteSummaryViewController {
             cell.contentConfiguration = KeywordsSkeletonContentConfiguration(beginOffset: beginOffset)
         }
 
+        let warningCellReg = UICollectionView
+            .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
+                guard case .failure = item, let self else { return }
+
+                let title: String
+                let subTitle: String
+                let buttonTitle: String
+                let action: () -> Void
+
+                if !viewModel.isMLXModelSupported {
+                    title = "요약을 생성하지 못했어요"
+                    subTitle = "AI 요약 기능이\n현재 기기에서는 지원되지 않습니다"
+                    buttonTitle = "스크립트"
+                    action = { [weak self] in
+                        self?.viewModel.updateCurrentPage(.script)
+                    }
+                } else {
+                    title = "요약을 생성하지 못했어요"
+                    subTitle = "일시적인 오류가 발생했어요\n잠시 후 다시 시도해주세요"
+                    buttonTitle = "재 생성"
+                    action = { [weak self] in
+                        self?.viewModel.regenerateSummary()
+                    }
+                }
+
+                cell.contentConfiguration = WarningContentConfiguration(
+                    title: title,
+                    subTitle: subTitle,
+                    buttonTitle: buttonTitle,
+                    symbolIconName: "exclamationmark.triangle.fill",
+                    action: action
+                )
+            }
+
         let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
             collectionView: collectionView
         ) { collectionView, indexPath, item in
@@ -163,6 +204,10 @@ private extension VoiceNoteSummaryViewController {
                 return collectionView.dequeueConfiguredReusableCell(
                     using: keywordsSkeletonCellReg, for: indexPath, item: item
                 )
+            case .failure:
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: warningCellReg, for: indexPath, item: item
+                )
             }
         }
 
@@ -178,7 +223,8 @@ private extension VoiceNoteSummaryViewController {
         UICollectionView.SupplementaryRegistration<VoiceNoteSectionHeaderView>(
             elementKind: UICollectionView.elementKindSectionHeader
         ) { [weak self] header, _, indexPath in
-            guard let self, let section = Section(rawValue: indexPath.section),
+            guard let self,
+                  let section = dataSource.sectionIdentifier(for: indexPath.section),
                   let title = section.headerTitle else { return }
 
             if section == .keyPoints, let state = regenerationChipState {
@@ -214,31 +260,42 @@ private extension VoiceNoteSummaryViewController {
 
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        snapshot.appendSections(Section.allCases)
+        let isFailed = viewModel.voiceNote.analysisState == .summarizationFailed || !viewModel.isMLXModelSupported
 
-        let metadataItems: [Item] = [.metadata]
-        snapshot.appendItems(metadataItems, toSection: .metadata)
+        if isFailed {
+            snapshot.appendSections([.metadata, .failure])
+            snapshot.appendItems([.metadata], toSection: .metadata)
+            snapshot.appendItems([.failure], toSection: .failure)
 
-        let keyPointItems: [Item]
-        let keywordItems: [Item]
-        if isShowingSkeleton {
-            keyPointItems = (0 ..< Constant.skeletonKeyPointCount).map {
-                .keyPointSkeleton(number: $0 + 1, beginOffset: Double($0) * Constant.skeletonStaggerOffset)
-            }
-            keywordItems = (0 ..< Constant.skeletonKeywordCount).map {
-                .keywordsSkeleton(beginOffset: Double($0) * Constant.skeletonStaggerOffset)
-            }
+            dataSource.apply(snapshot, animatingDifferences: true)
         } else {
-            keyPointItems = viewModel.keyPoints.map { Item.keyPoint(number: $0.number, text: $0.text) }
-            keywordItems = [.keywords]
+            snapshot.appendSections([.metadata, .keyPoints, .keywords])
+
+            let metadataItems: [Item] = [.metadata]
+            snapshot.appendItems(metadataItems, toSection: .metadata)
+
+            let keyPointItems: [Item]
+            let keywordItems: [Item]
+
+            if isShowingSkeleton {
+                keyPointItems = (0 ..< Constant.skeletonKeyPointCount).map {
+                    .keyPointSkeleton(number: $0 + 1, beginOffset: Double($0) * Constant.skeletonStaggerOffset)
+                }
+                keywordItems = (0 ..< Constant.skeletonKeywordCount).map {
+                    .keywordsSkeleton(beginOffset: Double($0) * Constant.skeletonStaggerOffset)
+                }
+            } else {
+                keyPointItems = viewModel.keyPoints.map { Item.keyPoint(number: $0.number, text: $0.text) }
+                keywordItems = [.keywords]
+            }
+
+            snapshot.appendItems(keyPointItems, toSection: .keyPoints)
+            snapshot.appendItems(keywordItems, toSection: .keywords)
+
+            snapshot.reconfigureItems(metadataItems + keywordItems)
+            snapshot.reloadSections([.keyPoints])
+            dataSource.apply(snapshot, animatingDifferences: true)
         }
-
-        snapshot.appendItems(keyPointItems, toSection: .keyPoints)
-        snapshot.appendItems(keywordItems, toSection: .keywords)
-
-        snapshot.reconfigureItems(metadataItems + keywordItems)
-        snapshot.reloadSections([.keyPoints])
-        dataSource.apply(snapshot, animatingDifferences: true)
     }
 }
 
@@ -248,10 +305,12 @@ private extension VoiceNoteSummaryViewController {
     func observeAnalysisState() {
         withObservationTracking {
             _ = viewModel.voiceNote.analysisState
+            _ = viewModel.isMLXModelSupported
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in
                 self.applySnapshot()
+                self.collectionView.collectionViewLayout.invalidateLayout()
                 self.observeAnalysisState()
             }
         }
@@ -301,10 +360,11 @@ extension VoiceNoteSummaryViewController {
         case metadata
         case keyPoints
         case keywords
+        case failure
 
         var headerTitle: String? {
             switch self {
-            case .metadata: return nil
+            case .metadata, .failure: return nil
             case .keyPoints: return "핵심 포인트"
             case .keywords: return "키워드"
             }
@@ -317,5 +377,6 @@ extension VoiceNoteSummaryViewController {
         case keywords
         case keyPointSkeleton(number: Int, beginOffset: CFTimeInterval)
         case keywordsSkeleton(beginOffset: CFTimeInterval)
+        case failure
     }
 }

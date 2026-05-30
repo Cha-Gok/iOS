@@ -5,13 +5,10 @@ import Foundation
 #if DEBUG
     extension SettingViewModel {
         static var preview: SettingViewModel {
-            return SettingViewModel(
-                languageRepository: PreviewLanguageRepository(
-                    language: .ko
-                ),
-                mlxRepository: PreviewAvailableModelSupportRepository(),
-                sttRepository: PreviewSTTRepository(),
-                deleteModelRepository: PreviewDeleteModelRepository()
+            SettingViewModel(
+                languageRepository: PreviewLanguageRepository(language: .ko),
+                availableModelRepository: PreviewAvailableModelSupportRepository(),
+                onDeviceStatusUseCase: PreviewOnDeviceStatusUseCase()
             )
         }
 
@@ -32,55 +29,41 @@ import Foundation
         }
 
         struct PreviewAvailableModelSupportRepository: AvailableModelSupportRepository {
-            func deleteWhisperModel() async throws(Domain.AvailableModelSupportRepositoryError) {}
-
-            func deleteMLXModel() async throws(Domain.AvailableModelSupportRepositoryError) {}
+            func checkMLXSupportModel() async -> ChaGokModelSupport {
+                ChaGokModelSupport(ramSizeGB: 8, isProUser: false)
+            }
 
             func fetchSupportModels() async -> [ChaGokModelState] {
                 [
-                    ChaGokModelState(title: "Gemma-4", subTitle: "내용", model: .gemma4_e2b_4bit),
-                    ChaGokModelState(title: "whisper", subTitle: "내용", model: .whisper)
+                    ChaGokModelState(
+                        title: "Gemma-4",
+                        subTitle: "AI 요약 모델",
+                        model: .gemma4_e2b_4bit,
+                        status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+                    ),
+                    ChaGokModelState(
+                        title: "Whisper",
+                        subTitle: "음성 전사 모델",
+                        model: .whisper,
+                        status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+                    )
                 ]
             }
+        }
 
-            func checkSupportModel() -> ChaGokModelSupport {
-                ChaGokModelSupport(ramSizeGB: 4, isProUser: false)
-            }
+        actor PreviewOnDeviceStatusUseCase: OnDeviceStatusUseCase {
+            func cancelDownload(model: Domain.ChaGokModel) async {}
 
-            func downloadModel(
-                progressHandler: @Sendable @escaping (Progress) -> Void
-            ) async throws(AvailableModelSupportRepositoryError) {
-                let progress = Progress(totalUnitCount: 100)
-                for value in [10, 30, 55, 80, 100] {
-                    try? await Task.sleep(nanoseconds: 250_000_000)
-                    progress.completedUnitCount = Int64(value)
-                    progressHandler(progress)
+            func subscribe(model: ChaGokModel) async -> AsyncStream<OnDeviceStatus> {
+                AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
+                    continuation.yield(OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
+                    continuation.finish()
                 }
             }
 
-            var isModelLoaded: Bool {
-                true
-            }
-        }
+            func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {}
 
-        struct PreviewSTTRepository: STTRepository {
-            func transcribe(audioFilePath: String) async throws(Domain.STTRepositoryError) -> Domain.Transcript {
-                Transcript()
-            }
-
-            func checkSTTPermission() -> Domain.PermissionStatus {
-                return .authorized
-            }
-
-            func requestSTTPermission() async throws(Domain.STTPermissionRepositoryError) -> Domain.PermissionStatus {
-                return .authorized
-            }
-        }
-
-        struct PreviewDeleteModelRepository: DeleteOnDeviceRepository {
-            func whisperModel() async throws(Domain.DeleteOnDeviceRepositoryError) {}
-
-            func mlxModel() async throws(Domain.DeleteOnDeviceRepositoryError) {}
+            func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError) {}
         }
     }
 #endif

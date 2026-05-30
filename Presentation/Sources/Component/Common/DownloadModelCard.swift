@@ -1,0 +1,168 @@
+import Domain
+import SwiftUI
+import UIKit
+
+final class DownloadModelCard: UIStackView {
+    let modelName: String
+    let symbolName: String
+    let style: ProgressStyle
+    var storage: OnDeviceStatus.StorageState
+    var errorMessage: String?
+
+    // MARK: - Initialize
+
+    init(
+        symbolName: String,
+        modelName: String,
+        style: ProgressStyle,
+        storage: OnDeviceStatus.StorageState,
+        errorMessage: String? = nil,
+        frame: CGRect = .zero
+    ) {
+        self.symbolName = symbolName
+        self.modelName = modelName
+        self.style = style
+        self.storage = storage
+        self.errorMessage = errorMessage
+        super.init(frame: frame)
+        setup()
+    }
+
+    @available(*, unavailable)
+    required init(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Component
+
+    private lazy var modelLabel: UIStackView = createLabel(modelName, symbolName: symbolName)
+
+    private lazy var immutableProgressView = ImmutableProgressView()
+    private lazy var defaultProgressView = DefaultProgressView()
+
+    private let downloadMessageLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.setTypography(text: "다운로드 상태 표기", style: .body2)
+        return label
+    }()
+
+    // MARK: - LifeCycle
+
+    override func updateProperties() {
+        super.updateProperties()
+        updateStatus()
+    }
+
+    // MARK: - Setup
+
+    private func setup() {
+        translatesAutoresizingMaskIntoConstraints = false
+        axis = .vertical
+        spacing = 8
+        applyGlassEffect(tintColor: .point200.withAlphaComponent(0.2))
+        layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        isLayoutMarginsRelativeArrangement = true
+
+        addArrangedSubview(modelLabel)
+        switch style {
+        case .default:
+            addArrangedSubview(defaultProgressView)
+            defaultProgressView.heightAnchor.constraint(equalToConstant: 8).isActive = true
+        case .immutable:
+            addArrangedSubview(immutableProgressView)
+            immutableProgressView.heightAnchor.constraint(equalToConstant: 8).isActive = true
+        }
+        addArrangedSubview(downloadMessageLabel)
+    }
+
+    /// 프로그래스의 스타일을 정의합니다.
+    enum ProgressStyle: Equatable {
+        case `default` // 기본 스타일
+        case immutable // 불변 프로그래스 바
+    }
+}
+
+// MARK: - Private
+
+extension DownloadModelCard {
+    /// model의 이름과 이미지를 표기하는 View입니다.
+    func createLabel(_ modelName: String, symbolName: String) -> UIStackView {
+        let container = UIStackView()
+        let imageView = UIImageView()
+        let nameLabel = UILabel()
+
+        for item in [container, imageView, nameLabel] {
+            item.translatesAutoresizingMaskIntoConstraints = false
+        }
+
+        // nameLabel
+        nameLabel.setTypography(text: modelName, style: .body2)
+        nameLabel.textColor = UIColor.gray950
+        // imageView
+        let config: UIImage.SymbolConfiguration = .init(pointSize: 20, weight: .medium)
+        imageView.image = UIImage(systemName: symbolName, withConfiguration: config)
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = UIColor.gray950
+        // container (return)
+        container.axis = .horizontal
+        container.spacing = 8
+        // spacer
+        let spacer = UIView()
+        for item in [imageView, nameLabel, spacer] {
+            container.addArrangedSubview(item)
+        }
+
+        return container
+    }
+}
+
+// MARK: - Update
+
+extension DownloadModelCard {
+    func updateStatus(_ storage: OnDeviceStatus.StorageState, errorMessage: String?) {
+        self.storage = storage
+        setNeedsUpdateProperties()
+    }
+
+    private func updateStatus() {
+        switch storage {
+        case .notDownloaded:
+            switch style {
+            case .default:
+                defaultProgressView.isHidden = true
+            case .immutable:
+                immutableProgressView.isHidden = true
+            }
+            downloadMessageLabel.isHidden = true
+        case .downloading(let progress):
+            switch style {
+            case .default:
+                defaultProgressView.isHidden = false
+                defaultProgressView.setProgress(Float(progress), animated: true)
+            case .immutable:
+                immutableProgressView.isHidden = false
+            }
+            downloadMessageLabel.isHidden = false
+            downloadMessageLabel.setTypography(text: "다운로드 중...", style: .body2)
+            downloadMessageLabel.textColor = .gray950
+        case .downloaded:
+            switch style {
+            case .default:
+                defaultProgressView.isHidden = true
+            case .immutable:
+                immutableProgressView.isHidden = true
+            }
+            downloadMessageLabel.isHidden = true
+        case .failed:
+            switch style {
+            case .default:
+                defaultProgressView.isHidden = true
+            case .immutable:
+                immutableProgressView.isHidden = true
+            }
+            downloadMessageLabel.setTypography(text: errorMessage, style: .body2)
+            downloadMessageLabel.textColor = .danger
+        }
+    }
+}

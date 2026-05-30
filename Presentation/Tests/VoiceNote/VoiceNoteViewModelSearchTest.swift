@@ -47,7 +47,8 @@ final class VoiceNoteViewModelSearchTest: XCTestCase {
             voiceNote: voiceNote,
             voiceNoteUseCase: FakeVoiceNoteUseCase(voiceNote: voiceNote),
             folderUseCase: FakeFolderUseCase(),
-            playbackRepository: playbackRepository
+            playbackRepository: playbackRepository,
+            availableSupportModelRepository: FakeAvailableModelSupportRepository()
         )
 
         return SUT(viewModel: viewModel, playbackRepository: playbackRepository)
@@ -411,4 +412,14 @@ private struct FakeFolderUseCase: FolderUseCase {
     func moveToTrash(folderID _: UUID) throws(FolderUseCaseError) {}
     func restore(folderID _: UUID) throws(FolderUseCaseError) {}
     func delete(folderID _: UUID) throws(FolderUseCaseError) {}
+}
+
+private struct FakeAvailableModelSupportRepository: AvailableModelSupportRepository {
+    func checkMLXSupportModel() async -> ChaGokModelSupport {
+        ChaGokModelSupport(ramSizeGB: 8, isProUser: false)
+    }
+
+    func fetchSupportModels() async -> [ChaGokModelState] {
+        []
+    }
 }

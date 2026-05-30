@@ -9,17 +9,14 @@ public actor WhisperKitProvider: WhisperDataSource {
 
     // MARK: - Configuration
 
+    private var recommendedModel: String?
     private var cachedWhisper: WhisperKit?
-    private static let modelDirectory = "WhisperModels"
+    private var modelDirectory: URL?
     private var decodingOptions: DecodingOptions {
         DecodingOptions(
             language: whisperLanguageCode(for: languageRepository.fetchLanguage()),
             skipSpecialTokens: true
         )
-    }
-
-    public var downloadedBaseURL: URL {
-        storageService.absoluteURL(for: Self.modelDirectory)
     }
 
     public init(
@@ -30,71 +27,160 @@ public actor WhisperKitProvider: WhisperDataSource {
         self.languageRepository = languageRepository
     }
 
-    public func isModelDownloaded() -> Bool {
+    public func download(progressHandler: @Sendable @escaping (Progress) -> Void) async throws {
         let recommendedModel = WhisperKit.recommendedModels().default
-        let modelPath = downloadedBaseURL
-            .appendingPathComponent("models")
-            .appendingPathComponent("argmaxinc")
-            .appendingPathComponent("whisperkit-coreml")
-            .appendingPathComponent(recommendedModel)
+        self.recommendedModel = recommendedModel
+        AppLogger.info("WhisperKit 추천 모델 : \(recommendedModel)")
+        AppLogger.info("WhisperKit 모델 다운로드 시작")
 
-        var isDirectory: ObjCBool = false
-        return FileManager.default.fileExists(atPath: modelPath.path, isDirectory: &isDirectory) && isDirectory
-            .boolValue
+        let path = try await WhisperKit.download(
+            variant: recommendedModel,
+            useBackgroundSession: false,
+            progressCallback: progressHandler
+        )
+
+        // 다운로드 복귀 직후 태스크 취소 상태 감지 (레이스 컨디션 봉쇄)
+        if Task.isCancelled {
+            AppLogger.info("WhisperKit 다운로드 완료 복귀 후 취소 상태 감지 - 즉각 강제 소거 및 에러 방출")
+            try? storageService.delete(fileURL: path)
+            throw CancellationError()
+        }
+
+        modelDirectory = path
+        AppLogger.info("WhisperKit 모델 위치 : \(modelDirectory?.path() ?? "없음")")
     }
 
-    private func getOrLoadWhisper() async throws -> WhisperKit {
+    private func getWhisper() async throws(WhisperDataSourceError) -> WhisperKit {
         if let cached = cachedWhisper {
             return cached
         }
 
-        let downloadBase = storageService.absoluteURL(for: Self.modelDirectory)
-        try FileManager.default.createDirectory(at: downloadBase, withIntermediateDirectories: true, attributes: nil)
-        let recommendedModel = WhisperKit.recommendedModels().default
-        let modelFolderPath = downloadBase
-            .appendingPathComponent("models")
-            .appendingPathComponent("argmaxinc")
-            .appendingPathComponent("whisperkit-coreml")
-            .appendingPathComponent(recommendedModel)
+        do {
+            let downloadBase = try await getDownloadPath()
+            AppLogger.info("WhisperKit 모델 로드 시작: \(downloadBase.path)")
+            let modelName = recommendedModel ?? WhisperKit.recommendedModels().default
 
-        AppLogger.info("WhisperKit 모델 로드 시작: \(modelFolderPath.path)")
+            let config = WhisperKitConfig(
+                model: modelName,
+                downloadBase: downloadBase,
+                modelFolder: downloadBase.path,
+                tokenizerFolder: downloadBase,
+                download: false
+            )
 
-        let config = WhisperKitConfig(
-            model: recommendedModel,
-            downloadBase: downloadBase,
-            modelFolder: modelFolderPath.path,
-            tokenizerFolder: downloadBase,
-            download: false
-        )
-        let whisper = try await WhisperKit(config)
+            let whisper = try await WhisperKit(config)
 
-        cachedWhisper = whisper
-        AppLogger.info("WhisperKit 모델 로드 완료")
-        return whisper
-    }
-
-    public func transcribe(audioFilePath: String) async throws -> [TranscriptionResult] {
-        let whisper = try await getOrLoadWhisper()
-        let audioURL = storageService.absoluteURL(for: audioFilePath)
-        AppLogger.info("오디오 전사 실행: \(audioURL.lastPathComponent)")
-        return try await whisper.transcribe(audioPath: audioURL.path, decodeOptions: decodingOptions)
+            cachedWhisper = whisper
+            AppLogger.info("WhisperKit 모델 로드 완료")
+            try await whisper.prewarmModels() // preload
+            return whisper
+        } catch is CancellationError {
+            throw .cancelled
+        } catch let error as WhisperDataSourceError {
+            AppLogger.error(error)
+            throw error
+        } catch {
+            AppLogger.error(error)
+            throw .unknown(error)
+        }
     }
 
     public func preload() async {
-        _ = try? await getOrLoadWhisper()
-    }
-
-    public func clearCache() {
-        cachedWhisper = nil
-    }
-
-    public func deleteModel() async throws {
-        let downloadBase = downloadedBaseURL
-        if FileManager.default.fileExists(atPath: downloadBase.path) {
-            try FileManager.default.removeItem(at: downloadBase)
-            AppLogger.info("Whisper 모델 폴더 삭제 완료: \(downloadBase.path)")
+        do {
+            _ = try await getDownloadPath()
+            _ = try await getWhisper()
+        } catch {
+            AppLogger.error(error)
         }
-        clearCache()
+    }
+
+    public func loadModel() async throws(WhisperDataSourceError) {
+        do {
+            let whisper = try await getWhisper()
+            try await whisper.loadModels()
+        } catch is CancellationError {
+            throw .cancelled
+        } catch let error as WhisperDataSourceError {
+            AppLogger.error(error)
+            throw error
+        } catch {
+            AppLogger.error(error)
+            throw .loadFailed
+        }
+    }
+
+    public func clearCache() async {
+        guard let cachedWhisper else { return }
+        await cachedWhisper.unloadModels()
+    }
+
+    /// 모델이 설치된 경로를  전달 하기 위한 함수
+    public func getDownloadPath() async throws(WhisperDataSourceError) -> URL {
+        if let path = modelDirectory {
+            AppLogger.info("whisper 저장 위치 (캐시) : \(path)")
+            return path
+        }
+
+        // 앱 재시작 시 메모리 초기화에 대응하기 위해 디스크의 물리적인 경로 체크
+        let recommendedModel = WhisperKit.recommendedModels().default
+        let relativePath = "huggingface/models/argmaxinc/whisperkit-coreml/\(recommendedModel)"
+        let defaultPath = storageService.absoluteURL(for: relativePath)
+
+        if storageService.exists(relativePath: relativePath) {
+            modelDirectory = defaultPath
+            self.recommendedModel = recommendedModel
+            AppLogger.info("whisper 저장 위치 (디스크 감지) : \(defaultPath)")
+            return defaultPath
+        }
+
+        throw .notFound
+    }
+
+    public func getDocodingOptions() -> DecodingOptions {
+        return decodingOptions
+    }
+
+    public func transcribe(audioPath: URL) async throws -> [TranscriptionResult] {
+        let whisper = try await getWhisper()
+
+        AppLogger.info("오디오 전사 실행: \(audioPath)")
+        return try await whisper.transcribe(
+            audioPath: audioPath.path,
+            decodeOptions: decodingOptions
+        )
+    }
+
+    public func delete() async throws {
+        defer {
+            modelDirectory = nil
+        }
+        do {
+            // 캐시된 경로가 있거나 디스크 감지가 되는 경우 해당 경로를 사용
+            let downloadURL: URL
+            if let path = try? await getDownloadPath() {
+                downloadURL = path
+            } else {
+                // 다운로드 중 취소된 경우 등의 대비를 위해 기본 임시/일부 다운로드 경로 계산
+                let model = recommendedModel ?? WhisperKit.recommendedModels().default
+                let relativePath = "huggingface/models/argmaxinc/whisperkit-coreml/\(model)"
+                downloadURL = storageService.absoluteURL(for: relativePath)
+            }
+
+            do {
+                try storageService.delete(fileURL: downloadURL)
+            } catch {
+                // error는 자동으로 StorageServiceError로 강하게 추론됩니다.
+                guard case .fileNotFound = error else {
+                    throw error
+                }
+            }
+            AppLogger.info("WhisperKit 모델/임시 폴더 삭제 완료: \(downloadURL.path)")
+
+            await clearCache()
+        } catch {
+            AppLogger.error(error)
+            throw error
+        }
     }
 }
 

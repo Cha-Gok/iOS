@@ -165,6 +165,7 @@ private extension VoiceNoteViewController {
             self?.viewModel.doneTitleEditing(title: title)
         }
         navigationBar.onDoneScript = { [weak self] in
+            self?.view.makeToast(type: .normal, "스크립트가 수정되었어요.")
             self?.viewModel.doneScriptEditing()
         }
 

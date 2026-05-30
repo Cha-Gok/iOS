@@ -109,7 +109,7 @@ final class ScriptContentView: UIView, UIContentView {
                 baseAttributes: baseTextAttributes,
                 highlightBackgroundColor: UIColor.point700,
                 focusedRange: config.currentMatchRange,
-                focusedHighlightBackgroundColor: .systemRed
+                focusedHighlightBackgroundColor: .warning2
             )
         }
     }

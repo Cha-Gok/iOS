@@ -28,6 +28,7 @@ final class SettingLanguageContent: UIView, UIContentView {
     }
 
     private var languageCheckmarks: [Language: UIImageView] = [:]
+    private var contentHeight: CGFloat = 0
 
     // MARK: - Component
 
@@ -68,6 +69,31 @@ final class SettingLanguageContent: UIView, UIContentView {
         nil
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        guard bounds.width > 0 else { return }
+
+        let measuredSize = systemLayoutSizeFitting(
+            CGSize(width: bounds.width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+
+        if abs(contentHeight - measuredSize.height) > 0.5 {
+            contentHeight = measuredSize.height
+            invalidateIntrinsicContentSize()
+        }
+    }
+
+    override var intrinsicContentSize: CGSize {
+        guard contentHeight > 0 else {
+            return CGSize(width: UIView.noIntrinsicMetric, height: UIView.noIntrinsicMetric)
+        }
+
+        return CGSize(width: UIView.noIntrinsicMetric, height: contentHeight)
+    }
+
     // MARK: - Setup
 
     private func setup() {
@@ -87,9 +113,12 @@ final class SettingLanguageContent: UIView, UIContentView {
             // Container
             mainStackView.topAnchor.constraint(equalTo: subTitleLabel.bottomAnchor, constant: 24),
             mainStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
-            mainStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
-            mainStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
+            mainStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20)
         ])
+
+        let bottomConstraint = mainStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
+        bottomConstraint.priority = UILayoutPriority(999)
+        bottomConstraint.isActive = true
 
         for lang in Language.allCases {
             let (rowStack, checkmark) = makeLanguageRow(language: lang)
@@ -150,5 +179,8 @@ final class SettingLanguageContent: UIView, UIContentView {
                 checkmark.image = UIImage(systemName: "circle.fill", withConfiguration: normalConfig)
             }
         }
+
+        setNeedsLayout()
+        invalidateIntrinsicContentSize()
     }
 }

@@ -21,10 +21,8 @@ public struct DefaultMLXSummaryRepository: SummaryRepository {
         if Task.isCancelled { throw .cancelled }
         do {
             // model load
-            let configuration = try matchModelConfiguration(model: ChaGokModelSupport.current.model)
-            try await provider.loadModel(configuration: configuration)
-            guard let container = await provider.container else { throw SummaryRepositoryError.summarizeFailed }
-
+            let context: ModelContext = try await provider.loadModel()
+            let container: ModelContainer = ModelContainer(context: context)
             // JSON 응답을 위한 스키마 강제 프롬프트 추가
             let jsonInstruction = """
             \(Policy.summaryPrompt(lang: language.rawValue))
@@ -85,18 +83,6 @@ public struct DefaultMLXSummaryRepository: SummaryRepository {
                 throw repoError
             }
             throw .summarizeFailed
-        }
-    }
-
-    /// Domain 객체를 통해  mlx-swift-lm의 LLMRegistry를 변환 합니다.
-    private func matchModelConfiguration(model: ChaGokModel) throws(AvailableModelSupportRepositoryError)
-        -> ModelConfiguration
-    {
-        switch model {
-        case .gemma4_e2b_4bit:
-            return LLMRegistry.gemma4_e2b_it_4bit
-        case .none, .whisper:
-            throw .notFoundModel
         }
     }
 }

@@ -106,7 +106,7 @@ final class KeyPointContentView: UIView, UIContentView {
                 baseAttributes: Typography.body1.textAttributes,
                 highlightBackgroundColor: UIColor.point700,
                 focusedRange: config.focusedRange,
-                focusedHighlightBackgroundColor: .systemRed
+                focusedHighlightBackgroundColor: .warning2
             )
         }
     }

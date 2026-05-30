@@ -213,9 +213,7 @@ extension MainCoordinator: DownloadOnDeviceCoordinatorDelegate {
     func dismissSheet(completion: Bool) {
         if completion { // 모델 다운로드 완료 후
             presenter.dismiss(animated: true) { [weak self] in
-                Task {
-                    await self?.dependencyContainer.preloadWhisperKit()
-                }
+                self?.dependencyContainer.preloadWhisperKit()
             }
         } else {
             presenter.dismiss(animated: true)

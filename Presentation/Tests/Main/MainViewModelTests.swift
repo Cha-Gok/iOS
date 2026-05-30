@@ -120,14 +120,14 @@ final class MainViewModelTests: XCTestCase {
         XCTAssertEqual(sut.viewModel.selectedCategoryIndex, 0) // 다시 0으로 복구되는지 확인
     }
 
-    func test_setSelectedCategoryIndex_개인폴더선택시_화면전환() {
+    func test_setSelectedCategoryIndex_폴더목록선택시_화면전환() {
         let sut = makeSUT()
 
         sut.viewModel.setSelectedCategoryIndex(indexPath: IndexPath(item: 2, section: 0))
 
         XCTAssertTrue(sut.mockCoordinator.pushMyFolderViewCalled)
         XCTAssertNotNil(sut.mockCoordinator.pushedCategory)
-        XCTAssertEqual(sut.mockCoordinator.pushedCategory?.title, "개인 폴더")
+        XCTAssertEqual(sut.mockCoordinator.pushedCategory?.title, "폴더 목록")
         XCTAssertEqual(sut.viewModel.selectedCategoryIndex, 0)
     }
 

@@ -26,7 +26,8 @@ final class OnBoardingViewModelTests: XCTestCase {
         let mockCheckFirstLaunchRepo: MockCheckFirstLaunchRepository
         let mockFolderRepo: MockFolderRepository
         let mockNavDelegate: MockNavigationDelegate
-        let mockMLXRepo: MockAvailableModelSupportRepository
+        let mockAvailableModelRepo: MockAvailableModelSupportRepository
+        let mockMLXRepo: MockOnDeviceRepository
     }
 
     private func makeSUT() -> SUT {
@@ -36,7 +37,8 @@ final class OnBoardingViewModelTests: XCTestCase {
         let mockCheckFirstLaunchRepo = MockCheckFirstLaunchRepository()
         let mockFolderRepo = MockFolderRepository()
         let mockNavDelegate = MockNavigationDelegate()
-        let mockMLXRepo = MockAvailableModelSupportRepository()
+        let mockAvailableModelRepo = MockAvailableModelSupportRepository()
+        let mockMLXRepo = MockOnDeviceRepository()
 
         let viewModel = OnBoardingViewModel(
             languageRepository: mockLanguageRepo,
@@ -44,6 +46,7 @@ final class OnBoardingViewModelTests: XCTestCase {
             sttRepository: mockSTTRepo,
             checkFirstLaunchRepository: mockCheckFirstLaunchRepo,
             folderUseCase: DefaultFolderUseCase(repository: mockFolderRepo),
+            availableSupportModelRepository: mockAvailableModelRepo,
             mlxRepository: mockMLXRepo
         )
         viewModel.onBoardingCoordinator = mockNavDelegate
@@ -56,6 +59,7 @@ final class OnBoardingViewModelTests: XCTestCase {
             mockCheckFirstLaunchRepo: mockCheckFirstLaunchRepo,
             mockFolderRepo: mockFolderRepo,
             mockNavDelegate: mockNavDelegate,
+            mockAvailableModelRepo: mockAvailableModelRepo,
             mockMLXRepo: mockMLXRepo
         )
     }
@@ -67,11 +71,9 @@ final class OnBoardingViewModelTests: XCTestCase {
 
         XCTAssertEqual(sut.viewModel.currentStep, .first)
         XCTAssertEqual(sut.viewModel.steps.count, 5)
-        XCTAssertEqual(sut.viewModel.getMaxIndex(), 5)
         XCTAssertEqual(sut.viewModel.primaryButtonTitle, "다음")
         XCTAssertEqual(sut.viewModel.secondButtonTitle, "건너뛰기")
         XCTAssertTrue(sut.viewModel.isSecondButtonEnabled)
-        XCTAssertFalse(sut.viewModel.isFinalStep)
         XCTAssertEqual(sut.viewModel.language, .ko)
     }
 
@@ -91,7 +93,6 @@ final class OnBoardingViewModelTests: XCTestCase {
         XCTAssertEqual(sut.viewModel.primaryButtonTitle, "시작하기")
         XCTAssertEqual(sut.viewModel.secondButtonTitle, "")
         XCTAssertFalse(sut.viewModel.isSecondButtonEnabled)
-        XCTAssertTrue(sut.viewModel.isFinalStep)
     }
 
     // MARK: - Action Tests
@@ -199,51 +200,46 @@ final class OnBoardingViewModelTests: XCTestCase {
         XCTAssertEqual(scrolledIndex, Step.second.rawValue)
     }
 
-    func test_syncPageState호출시_다운로드스텝이면_모델을_확인하고_상태를_업데이트한다() async {
+    func test_checkModelSupport호출시_지원하는기기이면_modelSupport가true가된다() async {
         let sut = makeSUT()
 
-        sut.mockMLXRepo.setCheckSupportModelResult(ChaGokModelSupport(ramSizeGB: 8, isProUser: false))
-        sut.mockMLXRepo.expectCheckSupportModel(callCount: 1)
+        sut.mockAvailableModelRepo.setCheckSupportModelResult(ChaGokModelSupport(ramSizeGB: 8, isProUser: false))
+        sut.mockAvailableModelRepo.expectCheckSupportModel(callCount: 1)
 
-        sut.viewModel.syncPageState(nextStep: Step.download.rawValue)
+        await sut.viewModel.checkModelSupport()
 
-        // Task 내부 비동기 호출 대기
-        try? await Task.sleep(nanoseconds: 300_000_000)
-
-        sut.mockMLXRepo.verify()
-        XCTAssertEqual(sut.viewModel.downloadStatus, .idle)
+        sut.mockAvailableModelRepo.verify()
+        XCTAssertTrue(sut.viewModel.modelSupport)
+        XCTAssertEqual(sut.viewModel.status.storage, .notDownloaded)
     }
 
-    func test_primaryButtonAction_다운로드스텝에서_성공적으로_다운로드하면_상태가_completed가된다() async {
+    func test_primaryButtonAction_다운로드스텝에서_성공적으로_다운로드하면_상태가_downloaded가된다() async {
         let sut = makeSUT()
 
-        sut.mockMLXRepo.setCheckSupportModelResult(ChaGokModelSupport(ramSizeGB: 8, isProUser: false))
-        sut.mockMLXRepo.setDownloadModelResult(.success(()))
-        sut.mockMLXRepo.expectCheckSupportModel(callCount: 1)
-        sut.mockMLXRepo.expectDownloadModel(callCount: 1)
+        sut.mockAvailableModelRepo.setCheckSupportModelResult(ChaGokModelSupport(ramSizeGB: 8, isProUser: false))
+        sut.mockAvailableModelRepo.expectCheckSupportModel(callCount: 1)
+        sut.mockMLXRepo.downloadResult = .success(())
 
+        await sut.viewModel.checkModelSupport()
         sut.viewModel.syncPageState(nextStep: Step.download.rawValue)
-        try? await Task.sleep(nanoseconds: 300_000_000) // syncPageState 비동기 대기 (idle 상태)
 
         sut.viewModel.primaryButtonAction { _ in }
         try? await Task.sleep(nanoseconds: 300_000_000) // 다운로드 완료 비동기 대기
 
-        sut.mockMLXRepo.verify()
-        XCTAssertEqual(sut.viewModel.downloadStatus, .completed)
+        sut.mockAvailableModelRepo.verify()
+        XCTAssertEqual(sut.mockMLXRepo.actualDownloadCallCount, 1)
+        XCTAssertEqual(sut.viewModel.status.storage, .downloaded)
     }
 
-    func test_syncPageState호출시_다운로드스텝인데_RAM이4GB이하로부족하면_notFoundModel상태가된다() async {
+    func test_checkModelSupport호출시_RAM이4GB이하로부족하면_modelSupport가false가된다() async {
         let sut = makeSUT()
 
-        sut.mockMLXRepo.setCheckSupportModelResult(ChaGokModelSupport(ramSizeGB: 4, isProUser: false))
-        sut.mockMLXRepo.expectCheckSupportModel(callCount: 1)
+        sut.mockAvailableModelRepo.setCheckSupportModelResult(ChaGokModelSupport(ramSizeGB: 4, isProUser: false))
+        sut.mockAvailableModelRepo.expectCheckSupportModel(callCount: 1)
 
-        sut.viewModel.syncPageState(nextStep: Step.download.rawValue)
+        await sut.viewModel.checkModelSupport()
 
-        // Task 내부 비동기 호출 대기
-        try? await Task.sleep(nanoseconds: 300_000_000)
-
-        sut.mockMLXRepo.verify()
-        XCTAssertEqual(sut.viewModel.downloadStatus, .notFoundModel)
+        sut.mockAvailableModelRepo.verify()
+        XCTAssertFalse(sut.viewModel.modelSupport)
     }
 }
