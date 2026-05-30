@@ -113,9 +113,12 @@ final class SettingLanguageContent: UIView, UIContentView {
             // Container
             mainStackView.topAnchor.constraint(equalTo: subTitleLabel.bottomAnchor, constant: 24),
             mainStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
-            mainStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
-            mainStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
+            mainStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20)
         ])
+
+        let bottomConstraint = mainStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
+        bottomConstraint.priority = UILayoutPriority(999)
+        bottomConstraint.isActive = true
 
         for lang in Language.allCases {
             let (rowStack, checkmark) = makeLanguageRow(language: lang)

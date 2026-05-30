@@ -57,9 +57,6 @@ final class SettingModelContent: UIView, UIContentView {
         return view
     }()
 
-    /// 각 카드 뷰를 한 번만 생성하여 참조를 보관합니다.
-    private var cardViews: [(data: ChaGokModelState, view: UIView)] = []
-
     // MARK: - Initialize
 
     init(configuration: any UIContentConfiguration) {
@@ -87,9 +84,12 @@ final class SettingModelContent: UIView, UIContentView {
 
             cardsStackView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
             cardsStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
-            cardsStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
-            cardsStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
+            cardsStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20)
         ])
+
+        let bottomConstraint = cardsStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16)
+        bottomConstraint.priority = UILayoutPriority(999)
+        bottomConstraint.isActive = true
 
         // 서브뷰 생성은 apply()에서 처리합니다.
     }
@@ -99,72 +99,112 @@ final class SettingModelContent: UIView, UIContentView {
     private func apply(configuration: UIContentConfiguration) {
         guard let config = configuration as? SettingModelContentConfiguration else { return }
 
-        // 기존 카드 뷰들을 제거하고 새롭게 추가 (dummySpacer는 제외)
-        for arrangedSubview in cardsStackView.arrangedSubviews {
-            if arrangedSubview !== dummySpacer {
-                arrangedSubview.removeFromSuperview()
+        let activeCardViews = cardsStackView.arrangedSubviews.compactMap { $0 as? SettingModelCardView }
+
+        if activeCardViews.count == config.models.count {
+            for (index, modelState) in config.models.enumerated() {
+                activeCardViews[index].update(modelState: modelState) { [weak self] targetModel, actionType in
+                    guard let self else { return }
+                    if let currentConfig = self.configuration as? SettingModelContentConfiguration {
+                        currentConfig.action?(targetModel, actionType)
+                    }
+                }
+            }
+        } else {
+            for arrangedSubview in cardsStackView.arrangedSubviews {
+                if arrangedSubview !== dummySpacer {
+                    arrangedSubview.removeFromSuperview()
+                }
+            }
+
+            for modelState in config.models {
+                let card = SettingModelCardView()
+                card.update(modelState: modelState) { [weak self] targetModel, actionType in
+                    guard let self else { return }
+                    if let currentConfig = self.configuration as? SettingModelContentConfiguration {
+                        currentConfig.action?(targetModel, actionType)
+                    }
+                }
+                cardsStackView.addArrangedSubview(card)
             }
         }
-        cardViews.removeAll()
+    }
+}
 
-        for model in config.models {
-            let card = makeModelCard(model: model)
-            cardsStackView.addArrangedSubview(card)
-            cardViews.append((data: model, view: card))
-        }
+// MARK: - SettingModelCardView
+
+final class SettingModelCardView: UIStackView {
+    private let iconImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        iv.image = UIImage(systemName: "externaldrive", withConfiguration: iconConfig)
+        iv.tintColor = .gray950
+        iv.contentMode = .scaleAspectFit
+        return iv
+    }()
+
+    private let titleLabel = UILabel()
+    private let descLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .gray750
+        label.numberOfLines = 0
+        return label
+    }()
+
+    private let actionButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    private let activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
+
+    private var currentModel: ChaGokModel = .none
+    private var currentActionType: SettingModelContentConfiguration.ActionType = .download
+    private var onAction: ((ChaGokModel, SettingModelContentConfiguration.ActionType) -> Void)?
+
+    init() {
+        super.init(frame: .zero)
+        setup()
     }
 
-    // MARK: - Card View Factory
+    required init(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
-    private func makeModelCard(model: ChaGokModelState) -> UIView {
+    private func setup() {
+        axis = .horizontal
+        spacing = 16
+        alignment = .center
+        layoutMargins = .init(top: 16, left: 16, bottom: 16, right: 16)
+        isLayoutMarginsRelativeArrangement = true
+
         let innerVerticalStack = UIStackView()
         innerVerticalStack.axis = .vertical
         innerVerticalStack.spacing = 8
         innerVerticalStack.alignment = .leading
 
-        // 3. Title Horizontal Stack (Icon + Title)
         let titleHorizontalStack = UIStackView()
         titleHorizontalStack.axis = .horizontal
         titleHorizontalStack.spacing = 8
         titleHorizontalStack.alignment = .center
 
-        // Left Icon (Storage drive next to the model title)
-        let iconImageView = UIImageView()
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
-        let iconConfig = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        iconImageView.image = UIImage(systemName: "externaldrive", withConfiguration: iconConfig)
-        iconImageView.tintColor = .gray950
-        iconImageView.contentMode = .scaleAspectFit
-
-        // Title Label
-        let titleLabel = UILabel()
-        titleLabel.setTypography(text: model.title, style: .subtitle2)
         titleLabel.textColor = .gray950
 
         titleHorizontalStack.addArrangedSubview(iconImageView)
         titleHorizontalStack.addArrangedSubview(titleLabel)
 
-        // Description Label (Under the icon + title stack)
-        let descLabel = UILabel()
-        descLabel.setTypography(text: model.subTitle, style: .caption)
-        descLabel.textColor = .gray750
-        descLabel.numberOfLines = 0
-
         innerVerticalStack.addArrangedSubview(titleHorizontalStack)
         innerVerticalStack.addArrangedSubview(descLabel)
 
-        // Right Control (Button or ActivityIndicator)
         let rightControlContainer = UIView()
         rightControlContainer.translatesAutoresizingMaskIntoConstraints = false
-
-        let actionButton = UIButton(type: .system)
-        actionButton.translatesAutoresizingMaskIntoConstraints = false
-        let actionConfig = UIImage.SymbolConfiguration(pointSize: 18, weight: .regular)
-
-        let activityIndicator = UIActivityIndicatorView(style: .medium)
-        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-        activityIndicator.hidesWhenStopped = true
-
         rightControlContainer.addSubview(actionButton)
         rightControlContainer.addSubview(activityIndicator)
 
@@ -178,52 +218,52 @@ final class SettingModelContent: UIView, UIContentView {
             activityIndicator.centerYAnchor.constraint(equalTo: rightControlContainer.centerYAnchor),
 
             rightControlContainer.widthAnchor.constraint(equalToConstant: 24),
-            rightControlContainer.heightAnchor.constraint(equalToConstant: 24)
+            rightControlContainer.heightAnchor.constraint(equalToConstant: 24),
+
+            iconImageView.widthAnchor.constraint(equalToConstant: 20),
+            iconImageView.heightAnchor.constraint(equalToConstant: 20)
         ])
 
-        // Configure State
-        let actionType: SettingModelContentConfiguration.ActionType
-        switch model.status.storage {
+        addArrangedSubview(innerVerticalStack)
+        addArrangedSubview(rightControlContainer)
+
+        actionButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            self.onAction?(self.currentModel, self.currentActionType)
+        }, for: .touchUpInside)
+
+        let tintColor: UIColor = .point200.withAlphaComponent(0.2)
+        applyGlassEffect(tintColor: tintColor)
+    }
+
+    func update(modelState: ChaGokModelState, onAction: @escaping (ChaGokModel, SettingModelContentConfiguration.ActionType) -> Void) {
+        self.currentModel = modelState.model
+        self.onAction = onAction
+
+        titleLabel.setTypography(text: modelState.title, style: .subtitle2)
+        descLabel.setTypography(text: modelState.subTitle, style: .caption)
+
+        let actionConfig = UIImage.SymbolConfiguration(pointSize: 18, weight: .regular)
+        switch modelState.status.storage {
         case .downloaded:
             actionButton.isHidden = false
+            activityIndicator.stopAnimating()
             actionButton.setImage(UIImage(systemName: "trash", withConfiguration: actionConfig), for: .normal)
             actionButton.tintColor = .danger
-            actionType = .delete
+            currentActionType = .delete
         case .downloading:
             actionButton.isHidden = true
             activityIndicator.startAnimating()
-            actionType = .download // Disabled anyway, but needed for compilation
+            currentActionType = .download
         default:
             actionButton.isHidden = false
+            activityIndicator.stopAnimating()
             actionButton.setImage(
                 UIImage(systemName: "square.and.arrow.down", withConfiguration: actionConfig),
                 for: .normal
             )
             actionButton.tintColor = .point800
-            actionType = .download
+            currentActionType = .download
         }
-
-        actionButton.addAction(UIAction { [weak self] _ in
-            guard let config = self?.configuration as? SettingModelContentConfiguration else { return }
-            config.action?(model.model, actionType)
-        }, for: .touchUpInside)
-
-        NSLayoutConstraint.activate([
-            iconImageView.widthAnchor.constraint(equalToConstant: 20),
-            iconImageView.heightAnchor.constraint(equalToConstant: 20)
-        ])
-
-        let containerStack = UIStackView(arrangedSubviews: [innerVerticalStack, rightControlContainer])
-        containerStack.axis = .horizontal
-        containerStack.spacing = 16
-        containerStack.alignment = .center
-        containerStack.layoutMargins = .init(top: 16, left: 16, bottom: 16, right: 16)
-        containerStack.isLayoutMarginsRelativeArrangement = true
-
-        // Apply Premium Glass Effect
-        let tintColor: UIColor = .point200.withAlphaComponent(0.2)
-        containerStack.applyGlassEffect(tintColor: tintColor)
-
-        return containerStack
     }
 }
