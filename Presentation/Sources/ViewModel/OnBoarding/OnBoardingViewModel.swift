@@ -205,7 +205,7 @@ extension OnBoardingViewModel {
 
     private func download() {
         scrollEnabled = false
-        self.errorMessage = nil
+        errorMessage = nil
         downloadTask?.cancel()
         downloadTask = Task {
             defer {

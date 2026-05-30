@@ -15,10 +15,23 @@ public final class MockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
     public var actualSubscribeCallCount = 0
     public var actualDownloadCallCount = 0
     public var actualDeleteCallCount = 0
+    public var actualCheckStatusCallCount = 0
 
     public var subscribedModel: ChaGokModel?
     public var downloadedModel: ChaGokModel?
     public var deletedModel: ChaGokModel?
+    public var checkedModel: ChaGokModel?
+
+    public var checkStatusResult: OnDeviceStatus = OnDeviceStatus(
+        storage: .notDownloaded,
+        runtime: .unloaded
+    )
+
+    public func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {
+        actualCheckStatusCallCount += 1
+        checkedModel = model
+        return checkStatusResult
+    }
 
     public func subscribe(model: ChaGokModel) async -> AsyncStream<OnDeviceStatus> {
         actualSubscribeCallCount += 1

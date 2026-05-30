@@ -40,6 +40,10 @@ final class DownloadMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked
         deleteCallCount += 1
         lastDeletedModel = model
     }
+
+    func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {
+        return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+    }
 }
 
 @MainActor

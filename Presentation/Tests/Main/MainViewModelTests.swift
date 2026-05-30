@@ -27,7 +27,7 @@ final class MockMainCoordinatorDelegate: MainCoordinatorDelegate {
         pushedCategory = category
     }
 
-    func pushVoiceNoteView(voiceNote: VoiceNote) {
+    func pushVoiceNoteView(voiceNote: VoiceNote, isTrashMode: Bool) {
         pushVoiceNoteViewCalled = true
         pushedVoiceNote = voiceNote
     }
