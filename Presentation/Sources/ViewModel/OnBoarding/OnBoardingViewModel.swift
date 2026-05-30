@@ -72,6 +72,8 @@ public final class OnBoardingViewModel {
                 return "다운로드 중입니다..."
             case .downloaded:
                 return "다음"
+            case .failed:
+                return "재시도"
             default:
                 return "다운로드"
             }
@@ -203,6 +205,7 @@ extension OnBoardingViewModel {
 
     private func download() {
         scrollEnabled = false
+        self.errorMessage = nil
         downloadTask?.cancel()
         downloadTask = Task {
             defer {
@@ -216,6 +219,7 @@ extension OnBoardingViewModel {
                 self.status = OnDeviceStatus(storage: .downloading(progress: 0), runtime: .unloaded)
                 try await mlxRepository.download { progress in
                     Task { @MainActor in
+                        guard case .downloading = self.status.storage else { return }
                         self.status = OnDeviceStatus(storage: .downloading(progress: progress), runtime: .unloaded)
                     }
                 }
@@ -225,12 +229,13 @@ extension OnBoardingViewModel {
                 if case .cancelled = repoError {
                     self.status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
                 } else {
-                    errorMessage = repoError.errorDescription
+                    self.errorMessage = repoError.errorDescription
+                    AppLogger.info(errorMessage ?? "nil")
                     self.status = OnDeviceStatus(storage: .failed, runtime: .unloaded)
                 }
             } catch {
                 AppLogger.error(error)
-                errorMessage = error.localizedDescription
+                self.errorMessage = error.localizedDescription
                 self.status = OnDeviceStatus(storage: .failed, runtime: .unloaded)
             }
         }
