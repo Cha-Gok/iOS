@@ -7,7 +7,10 @@ public final class MockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
 
     public var subscribeStream: AsyncStream<OnDeviceStatus>?
     public var downloadResult: Result<Void, OnDeviceStatusUseCaseError> = .success(())
-    public var deleteResult: Result<OnDeviceStatus, DeleteOnDeviceRepositoryError> = .success(OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+    public var deleteResult: Result<OnDeviceStatus, DeleteOnDeviceRepositoryError> = .success(OnDeviceStatus(
+        storage: .notDownloaded,
+        runtime: .unloaded
+    ))
 
     public var actualSubscribeCallCount = 0
     public var actualDownloadCallCount = 0

@@ -48,7 +48,7 @@ private extension VoiceNoteSummaryViewController {
     func makeLayout() -> UICollectionViewLayout {
         UICollectionViewCompositionalLayout { [weak self] sectionIndex, environment in
             guard let self else { return nil }
-            guard let sectionType = self.dataSource.sectionIdentifier(for: sectionIndex) else { return nil }
+            guard let sectionType = dataSource.sectionIdentifier(for: sectionIndex) else { return nil }
 
             var config = UICollectionLayoutListConfiguration(appearance: .plain)
             config.backgroundColor = .clear
@@ -152,38 +152,39 @@ private extension VoiceNoteSummaryViewController {
             cell.contentConfiguration = KeywordsSkeletonContentConfiguration(beginOffset: beginOffset)
         }
 
-        let warningCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-            guard case .failure = item, let self else { return }
-            
-            let title: String
-            let subTitle: String
-            let buttonTitle: String
-            let action: () -> Void
-            
-            if !self.viewModel.isMLXModelSupported {
-                title = "요약을 생성하지 못했어요"
-                subTitle = "AI 요약 기능이\n현재 기기에서는 지원되지 않습니다"
-                buttonTitle = "스크립트"
-                action = { [weak self] in
-                    self?.viewModel.updateCurrentPage(.script)
+        let warningCellReg = UICollectionView
+            .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
+                guard case .failure = item, let self else { return }
+
+                let title: String
+                let subTitle: String
+                let buttonTitle: String
+                let action: () -> Void
+
+                if !viewModel.isMLXModelSupported {
+                    title = "요약을 생성하지 못했어요"
+                    subTitle = "AI 요약 기능이\n현재 기기에서는 지원되지 않습니다"
+                    buttonTitle = "스크립트"
+                    action = { [weak self] in
+                        self?.viewModel.updateCurrentPage(.script)
+                    }
+                } else {
+                    title = "요약을 생성하지 못했어요"
+                    subTitle = "일시적인 오류가 발생했어요\n잠시 후 다시 시도해주세요"
+                    buttonTitle = "재 생성"
+                    action = { [weak self] in
+                        self?.viewModel.regenerateSummary()
+                    }
                 }
-            } else {
-                title = "요약을 생성하지 못했어요"
-                subTitle = "일시적인 오류가 발생했어요\n잠시 후 다시 시도해주세요"
-                buttonTitle = "재 생성"
-                action = { [weak self] in
-                    self?.viewModel.regenerateSummary()
-                }
+
+                cell.contentConfiguration = WarningContentConfiguration(
+                    title: title,
+                    subTitle: subTitle,
+                    buttonTitle: buttonTitle,
+                    symbolIconName: "exclamationmark.triangle.fill",
+                    action: action
+                )
             }
-            
-            cell.contentConfiguration = WarningContentConfiguration(
-                title: title,
-                subTitle: subTitle,
-                buttonTitle: buttonTitle,
-                symbolIconName: "exclamationmark.triangle.fill",
-                action: action
-            )
-        }
 
         let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
             collectionView: collectionView
@@ -223,7 +224,7 @@ private extension VoiceNoteSummaryViewController {
             elementKind: UICollectionView.elementKindSectionHeader
         ) { [weak self] header, _, indexPath in
             guard let self,
-                  let section = self.dataSource.sectionIdentifier(for: indexPath.section),
+                  let section = dataSource.sectionIdentifier(for: indexPath.section),
                   let title = section.headerTitle else { return }
 
             if section == .keyPoints, let state = regenerationChipState {

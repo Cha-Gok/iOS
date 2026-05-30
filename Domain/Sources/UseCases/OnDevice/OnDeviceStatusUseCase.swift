@@ -109,7 +109,7 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
         if case .downloading(let progress) = status.storage {
             let currentTime = Date().timeIntervalSince1970
             let lastTime = lastPublishedTime[model] ?? 0.0
-            if currentTime - lastTime < 0.05 && progress < 1.0 && progress > 0.0 {
+            if currentTime - lastTime < 0.05, progress < 1.0, progress > 0.0 {
                 return
             }
             lastPublishedTime[model] = currentTime

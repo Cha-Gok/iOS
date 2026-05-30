@@ -44,7 +44,7 @@ private extension VoiceNoteScriptViewController {
     func makeLayout() -> UICollectionViewLayout {
         UICollectionViewCompositionalLayout { [weak self] sectionIndex, environment in
             guard let self else { return nil }
-            guard let sectionType = self.dataSource.sectionIdentifier(for: sectionIndex) else { return nil }
+            guard let sectionType = dataSource.sectionIdentifier(for: sectionIndex) else { return nil }
 
             var config = UICollectionLayoutListConfiguration(appearance: .plain)
             config.backgroundColor = .clear
@@ -72,7 +72,7 @@ private extension VoiceNoteScriptViewController {
             section.contentInsets = NSDirectionalEdgeInsets(
                 top: 12, leading: 20, bottom: 0, trailing: 20
             )
-            section.interGroupSpacing = self.isShowingSkeleton ? Constant.scriptCellSpacing : 16
+            section.interGroupSpacing = isShowingSkeleton ? Constant.scriptCellSpacing : 16
 
             return section
         }

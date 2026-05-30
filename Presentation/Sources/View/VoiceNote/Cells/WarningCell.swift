@@ -113,7 +113,7 @@ public final class WarningContentView: UIView, UIContentView {
 
         let topConstraint = containerStack.topAnchor.constraint(equalTo: topAnchor)
         let bottomConstraint = containerStack.bottomAnchor.constraint(equalTo: bottomAnchor)
-        
+
         // UIKit 셀 초기화/디큐 시점의 임시 52pt 높이 제약조건과의 충돌을 방지하기 위해 세로 제약의 우선순위를 미세하게 낮춥니다.
         topConstraint.priority = .init(999)
         bottomConstraint.priority = .init(999)
@@ -130,14 +130,14 @@ public final class WarningContentView: UIView, UIContentView {
 
     private func apply(configuration: any UIContentConfiguration) {
         guard let config = configuration as? WarningContentConfiguration else { return }
-        
+
         titleLabel.text = config.title
         subTitle.text = config.subTitle
 
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: 48, weight: .semibold)
         warningIconView.image = UIImage(systemName: config.symbolIconName, withConfiguration: symbolConfig)
         warningIconView.tintColor = .systemOrange
-        
+
         if let buttonTitle = config.buttonTitle {
             actionButton.configure(
                 buttonTitle,

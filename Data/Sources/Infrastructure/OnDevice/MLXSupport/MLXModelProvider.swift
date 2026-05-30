@@ -86,10 +86,11 @@ public actor MLXModelProvider: MLXModelDataSource {
                     let configURL = firstSnapshot.appendingPathComponent("config.json")
                     let tokenizerURL = firstSnapshot.appendingPathComponent("tokenizer.json")
                     let tokenizerConfigURL = firstSnapshot.appendingPathComponent("tokenizer_config.json")
-                    
-                    if FileManager.default.fileExists(atPath: configURL.path) &&
-                       FileManager.default.fileExists(atPath: tokenizerURL.path) &&
-                       FileManager.default.fileExists(atPath: tokenizerConfigURL.path) {
+
+                    if FileManager.default.fileExists(atPath: configURL.path),
+                       FileManager.default.fileExists(atPath: tokenizerURL.path),
+                       FileManager.default.fileExists(atPath: tokenizerConfigURL.path)
+                    {
                         return firstSnapshot
                     }
                 }

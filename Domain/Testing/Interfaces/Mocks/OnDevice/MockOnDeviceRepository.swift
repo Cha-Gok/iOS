@@ -7,7 +7,10 @@ public final class MockOnDeviceRepository: OnDeviceRepository {
     public init() {}
 
     public var downloadResult: Result<Void, OnDeviceRepositoryError> = .success(())
-    public var deleteResult: Result<OnDeviceStatus, DeleteOnDeviceRepositoryError> = .success(OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+    public var deleteResult: Result<OnDeviceStatus, DeleteOnDeviceRepositoryError> = .success(OnDeviceStatus(
+        storage: .notDownloaded,
+        runtime: .unloaded
+    ))
     public var checkStatusResult: OnDeviceStatus = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
 
     public var downloadProgressValues: [Double] = []
