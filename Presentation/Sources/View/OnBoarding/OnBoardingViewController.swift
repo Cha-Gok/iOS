@@ -71,7 +71,9 @@ public final class OnBoardingViewController: ViewController {
         primaryButton.isUserInteractionEnabled = vm.isPrimaryButtonEnabled
         secondButton.configuration?.title = vm.secondButtonTitle
         secondButton.isUserInteractionEnabled = vm.isSecondButtonEnabled
-        primaryButton.configuration?.baseBackgroundColor = vm.isPrimaryButtonBgColor ? (vm.isPrimaryButtonEnabled ? UIColor.point600 : UIColor.gray600) : UIColor.point200
+        primaryButton.configuration?.baseBackgroundColor = vm
+            .isPrimaryButtonBgColor ? (vm.isPrimaryButtonEnabled ? UIColor.point600 : UIColor.gray600) : UIColor
+            .point200
             .withAlphaComponent(Constant.backgroundOpacity)
         primaryButton.configuration?.baseForegroundColor = UIColor.gray900
         // paginView

@@ -53,8 +53,10 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
                 throw .deleteMLXFailed
             case .unknown(let underlying):
                 if underlying is CancellationError ||
-                   (underlying as? URLError)?.code == .cancelled ||
-                   (underlying as NSError).domain == NSURLErrorDomain && (underlying as NSError).code == NSURLErrorCancelled {
+                    (underlying as? URLError)?.code == .cancelled ||
+                    (underlying as NSError).domain == NSURLErrorDomain && (underlying as NSError)
+                    .code == NSURLErrorCancelled
+                {
                     throw .cancelled
                 }
                 throw .unknown(underlying)

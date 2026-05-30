@@ -34,8 +34,9 @@ public actor MLXModelProvider: MLXModelDataSource {
             container = path
         } catch {
             if error is CancellationError ||
-               (error as? URLError)?.code == .cancelled ||
-               (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled {
+                (error as? URLError)?.code == .cancelled ||
+                (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled
+            {
                 throw .cancelled
             }
             AppLogger.error(error)
@@ -62,7 +63,7 @@ public actor MLXModelProvider: MLXModelDataSource {
         let model = ChaGokModelSupport.current.model
         do {
             let configuration = try matchModelConfiguration(model: model)
-            
+
             // 1. 디렉토리 모델 처리
             if case .directory(let url) = configuration.id {
                 let modelURL = url.scheme == nil ? storageService.absoluteURL(for: url.path) : url
@@ -70,18 +71,21 @@ public actor MLXModelProvider: MLXModelDataSource {
                     return modelURL
                 }
             }
-            
+
             // 2. 허브 모델(.id) 처리
             if case .id(let name, _) = configuration.id {
                 let cachesURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
                 let repoFolderName = "models--" + name.replacingOccurrences(of: "/", with: "--")
                 let snapshotsURL = cachesURL.appendingPathComponent("huggingface/hub/\(repoFolderName)/snapshots")
-                
-                if let firstSnapshot = try? FileManager.default.contentsOfDirectory(at: snapshotsURL, includingPropertiesForKeys: nil).first {
+
+                if let firstSnapshot = try? FileManager.default.contentsOfDirectory(
+                    at: snapshotsURL,
+                    includingPropertiesForKeys: nil
+                ).first {
                     return firstSnapshot
                 }
             }
-            
+
             throw MLXModelDataSourceError.notFound
         } catch {
             throw .notFound
@@ -101,8 +105,9 @@ public actor MLXModelProvider: MLXModelDataSource {
             throw error
         } catch {
             if error is CancellationError ||
-               (error as? URLError)?.code == .cancelled ||
-               (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled {
+                (error as? URLError)?.code == .cancelled ||
+                (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled
+            {
                 throw .cancelled
             }
             AppLogger.error(error)
@@ -117,17 +122,16 @@ public actor MLXModelProvider: MLXModelDataSource {
         do {
             let model = ChaGokModelSupport.current.model
             let configuration = try matchModelConfiguration(model: model)
-            
+
             // 1. container가 존재하는 경우 바로 지우기
             if let resolvedDirectory = container?.modelDirectory {
-                let deleteURL: URL
-                switch configuration.id {
+                let deleteURL: URL = switch configuration.id {
                 case .directory:
-                    deleteURL = resolvedDirectory
+                    resolvedDirectory
                 case .id:
-                    deleteURL = resolvedDirectory.deletingLastPathComponent().deletingLastPathComponent()
+                    resolvedDirectory.deletingLastPathComponent().deletingLastPathComponent()
                 }
-                
+
                 if FileManager.default.fileExists(atPath: deleteURL.path) {
                     do {
                         try storageService.delete(fileURL: deleteURL)
@@ -138,7 +142,7 @@ public actor MLXModelProvider: MLXModelDataSource {
                 AppLogger.info("MLX 모델 삭제 완료 (container 기반): \(deleteURL.path)")
                 return
             }
-            
+
             // 2. container가 없는 경우 디스크 물리 경로를 찾아서 지우기
             let deleteURL: URL
             switch configuration.id {
@@ -149,7 +153,7 @@ public actor MLXModelProvider: MLXModelDataSource {
                 let repoFolderName = "models--" + name.replacingOccurrences(of: "/", with: "--")
                 deleteURL = cachesURL.appendingPathComponent("huggingface/hub/\(repoFolderName)")
             }
-            
+
             if FileManager.default.fileExists(atPath: deleteURL.path) {
                 do {
                     try storageService.delete(fileURL: deleteURL)

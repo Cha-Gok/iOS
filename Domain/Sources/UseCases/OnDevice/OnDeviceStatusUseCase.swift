@@ -42,14 +42,14 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
 
     public func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {
         guard isDownloading[model] != true, let repo = repo(for: model) else { return }
-        
+
         isDownloading[model] = true
         defer { isDownloading[model] = false }
-        
+
         do {
             // 다운로드 시작 상태 알림
             await publish(model: model, status: OnDeviceStatus(storage: .downloading(progress: 0), runtime: .unloaded))
-            
+
             try await repo.download { progress in
                 Task { [model] in
                     await self.publish(
@@ -58,22 +58,21 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
                     )
                 }
             }
-            
+
             // 다운로드 완료 상태 알림
             await publish(model: model, status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
         } catch {
-            let mappedError: OnDeviceStatusUseCaseError
-            switch error {
+            let mappedError: OnDeviceStatusUseCaseError = switch error {
             case .cancelled:
-                mappedError = .cancelled
+                .cancelled
             case .networkFailed:
-                mappedError = .networkFailed
+                .networkFailed
             case .loadFailed:
-                mappedError = .loadFailed
+                .loadFailed
             case .unknown(let underlying):
-                mappedError = .unknown(underlying)
+                .unknown(underlying)
             }
-            
+
             AppLogger.error(mappedError)
             if case .cancelled = mappedError {
                 // 사용자 취소 시 상태를 .notDownloaded로 복구하여 구독 모델들에 알림

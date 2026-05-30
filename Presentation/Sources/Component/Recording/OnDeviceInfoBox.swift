@@ -6,17 +6,18 @@ final class OnDeviceInfoBox: UIStackView {
         super.init(frame: frame)
         setup()
     }
-    
+
+    @available(*, unavailable)
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     let data: [(symbolName: String, text: String)] = [
         (symbolName: "interfaceLockShield", text: "녹음한 목소리가 기기 밖으로 나가지 않아요"),
         (symbolName: "cloudOff", text: "인터넷 없이도 받아쓰기와 요약이 가능해요"),
         (symbolName: "entertainmentRecording", text: "길이 제한 없이 기록 할 수 있어요")
     ]
-    
+
     private func setup() {
         translatesAutoresizingMaskIntoConstraints = false
         spacing = 16
@@ -37,15 +38,15 @@ extension OnDeviceInfoBox {
     func createLabel(symbolName: String, text: String) -> UIStackView {
         let imageView = UIImageView()
         let label = UILabel()
-        
-        [imageView, label].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
+
+        for item in [imageView, label] {
+            item.translatesAutoresizingMaskIntoConstraints = false
         }
-        
+
         let sizeConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
         let colorConfig = UIImage.SymbolConfiguration(paletteColors: [.point600])
         let combinedConfig = sizeConfig.applying(colorConfig)
-        
+
         if let systemImage = UIImage(systemName: symbolName, withConfiguration: combinedConfig) {
             imageView.image = systemImage
         } else {
@@ -59,12 +60,12 @@ extension OnDeviceInfoBox {
             }
         }
         imageView.contentMode = .scaleAspectFit
-        
+
         NSLayoutConstraint.activate([
             imageView.widthAnchor.constraint(equalToConstant: 20),
             imageView.heightAnchor.constraint(equalToConstant: 20)
         ])
-        
+
         // label
         label.setTypography(text: text, style: .body1)
         label.textColor = .gray950
@@ -75,7 +76,7 @@ extension OnDeviceInfoBox {
         container.axis = .horizontal
         container.alignment = .center
         container.spacing = 8
-        
+
         return container
     }
 }

@@ -37,6 +37,8 @@ public final class SettingViewModel {
         language = languageRepository.fetchLanguage()
     }
 
+    private var observationTasks: [ChaGokModel: Task<Void, Never>] = [:]
+
     // MARK: - Setter / Getter
 
     func setLanguage(_ lang: Language) {
@@ -49,13 +51,30 @@ public final class SettingViewModel {
     func checkModels() {
         Task {
             self.models = await availableModelRepository.fetchSupportModels()
+            observeDownloadStatus()
         }
     }
 
-    func downloadModel(model: ChaGokModel) {}
+    func downloadModel(model: ChaGokModel) {
+        guard model != .none else { return }
+        Task {
+            do {
+                try await onDeviceStatusUseCase.download(model: model)
+            } catch {
+                AppLogger.error(error)
+            }
+        }
+    }
 
     func deleteModel(model: ChaGokModel) {
         guard model != .none else { return }
+        Task {
+            do {
+                try await onDeviceStatusUseCase.delete(model: model)
+            } catch {
+                AppLogger.error(error)
+            }
+        }
     }
 
     func pop() {
@@ -68,6 +87,34 @@ public final class SettingViewModel {
 
     func pushPrivacyPolicy() {
         coordinator?.pushPrivacyPolicyView()
+    }
+
+    // MARK: - Private Observation
+
+    private func observeDownloadStatus() {
+        for task in observationTasks.values {
+            task.cancel()
+        }
+        observationTasks.removeAll()
+
+        for modelState in models {
+            let model = modelState.model
+            guard model != .none else { continue }
+
+            observationTasks[model] = Task { [weak self] in
+                let stream = await self?.onDeviceStatusUseCase.subscribe(model: model)
+                guard let stream else { return }
+                for await newStatus in stream {
+                    self?.updateModelStatus(model: model, status: newStatus)
+                }
+            }
+        }
+    }
+
+    private func updateModelStatus(model: ChaGokModel, status: OnDeviceStatus) {
+        if let index = models.firstIndex(where: { $0.model == model }) {
+            models[index].status = status
+        }
     }
 }
 

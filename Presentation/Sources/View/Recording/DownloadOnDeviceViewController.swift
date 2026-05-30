@@ -59,7 +59,7 @@ public final class DownloadOnDeviceViewController: UIViewController, Alertable {
     }()
 
     private let infoBox: OnDeviceInfoBox = .init()
-    
+
     private lazy var downloadModelCard = DownloadModelCard(
         symbolName: "externaldrive",
         modelName: "Whisper",
@@ -115,22 +115,22 @@ public final class DownloadOnDeviceViewController: UIViewController, Alertable {
             subTitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
             subTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             subTitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
+
             // infoBox
             infoBox.topAnchor.constraint(equalTo: subTitleLabel.bottomAnchor, constant: 24),
             infoBox.leadingAnchor.constraint(equalTo: subTitleLabel.leadingAnchor),
             infoBox.trailingAnchor.constraint(equalTo: subTitleLabel.trailingAnchor),
-            
+
             // downloadModelCard
             downloadModelCard.topAnchor.constraint(equalTo: subTitleLabel.bottomAnchor, constant: 24),
             downloadModelCard.leadingAnchor.constraint(equalTo: subTitleLabel.leadingAnchor),
             downloadModelCard.trailingAnchor.constraint(equalTo: subTitleLabel.trailingAnchor),
-            
+
             // subTitleLabel2
             subTitle2Label.topAnchor.constraint(equalTo: infoBox.bottomAnchor, constant: 24),
             subTitle2Label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             subTitle2Label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
+
             // bottomArea
             bottomArea.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             bottomArea.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -145,7 +145,7 @@ public final class DownloadOnDeviceViewController: UIViewController, Alertable {
             cancelDownloadButton.topAnchor.constraint(equalTo: bottomArea.topAnchor),
             cancelDownloadButton.leadingAnchor.constraint(equalTo: bottomArea.leadingAnchor),
             cancelDownloadButton.trailingAnchor.constraint(equalTo: bottomArea.trailingAnchor),
-            cancelDownloadButton.bottomAnchor.constraint(equalTo: bottomArea.bottomAnchor),
+            cancelDownloadButton.bottomAnchor.constraint(equalTo: bottomArea.bottomAnchor)
         ])
     }
 }

@@ -174,6 +174,7 @@ final class SettingModelCardView: UIStackView {
         setup()
     }
 
+    @available(*, unavailable)
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -229,15 +230,18 @@ final class SettingModelCardView: UIStackView {
 
         actionButton.addAction(UIAction { [weak self] _ in
             guard let self else { return }
-            self.onAction?(self.currentModel, self.currentActionType)
+            onAction?(currentModel, currentActionType)
         }, for: .touchUpInside)
 
         let tintColor: UIColor = .point200.withAlphaComponent(0.2)
         applyGlassEffect(tintColor: tintColor)
     }
 
-    func update(modelState: ChaGokModelState, onAction: @escaping (ChaGokModel, SettingModelContentConfiguration.ActionType) -> Void) {
-        self.currentModel = modelState.model
+    func update(
+        modelState: ChaGokModelState,
+        onAction: @escaping (ChaGokModel, SettingModelContentConfiguration.ActionType) -> Void
+    ) {
+        currentModel = modelState.model
         self.onAction = onAction
 
         titleLabel.setTypography(text: modelState.title, style: .subtitle2)

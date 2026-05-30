@@ -15,14 +15,15 @@ public enum OnDeviceRepositoryError: LocalizedError, Sendable {
         case .cancelled: return "작업이 취소되었습니다"
         case .networkFailed: return "네트워크 연결이 유실되었습니다"
         case .loadFailed: return "모델을 메모리에 올리지 못했습니다"
-        case .unknown(_): return "다운로드에 실패했습니다"
+        case .unknown: return "다운로드에 실패했습니다"
         }
     }
 
     public static func mapDownloadError(_ error: Error) -> Self {
         if error is CancellationError ||
-           (error as? URLError)?.code == .cancelled ||
-           (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled {
+            (error as? URLError)?.code == .cancelled ||
+            (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled
+        {
             return .cancelled
         }
 

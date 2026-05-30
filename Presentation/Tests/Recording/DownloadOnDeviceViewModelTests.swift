@@ -14,23 +14,56 @@ final class MockDownloadOnDeviceCoordinator: DownloadOnDeviceCoordinatorDelegate
     }
 }
 
+final class MockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked Sendable {
+    private var continuation: AsyncStream<OnDeviceStatus>.Continuation?
+    private(set) var downloadCallCount = 0
+    private(set) var cancelCallCount = 0
+    private(set) var lastDownloadedModel: ChaGokModel?
+    private(set) var lastCancelledModel: ChaGokModel?
+
+    func subscribe(model: ChaGokModel) -> AsyncStream<OnDeviceStatus> {
+        AsyncStream { cont in
+            self.continuation = cont
+            cont.yield(OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+        }
+    }
+
+    func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {
+        downloadCallCount += 1
+        lastDownloadedModel = model
+    }
+
+    func cancelDownload(model: ChaGokModel) {
+        cancelCallCount += 1
+        lastCancelledModel = model
+    }
+
+    func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError) {
+        // Mock delete implementation
+    }
+
+    func emit(status: OnDeviceStatus) {
+        continuation?.yield(status)
+    }
+}
+
 @MainActor
 final class DownloadOnDeviceViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: DownloadOnDeviceViewModel
-        let repository: MockSTTRepository
+        let useCase: MockOnDeviceStatusUseCase
         let coordinator: MockDownloadOnDeviceCoordinator
     }
 
     private func makeSUT() -> SUT {
-        let repository = MockSTTRepository()
+        let useCase = MockOnDeviceStatusUseCase()
         let coordinator = MockDownloadOnDeviceCoordinator()
-        let viewModel = DownloadOnDeviceViewModel(repository: repository)
+        let viewModel = DownloadOnDeviceViewModel(onDeviceStatusUseCase: useCase)
         viewModel.coordinator = coordinator
 
         return SUT(
             viewModel: viewModel,
-            repository: repository,
+            useCase: useCase,
             coordinator: coordinator
         )
     }
@@ -54,55 +87,60 @@ extension DownloadOnDeviceViewModelTests {
 // MARK: - 다운로드
 
 extension DownloadOnDeviceViewModelTests {
-    func test_다운로드를_성공적으로_완료하면_isDownloading이_false가되고_coordinator를호출한다() async throws {
+    func test_다운로드중인상태가_전달되면_isDownloading이_true가되고_progressFraction이업데이트된다() async throws {
         // Given
         let sut = makeSUT()
-        let dummyURL = URL(fileURLWithPath: "/dummy/path")
-        await sut.repository.setDownloadResult(.success(dummyURL))
-        await sut.repository.expectDownload(callCount: 1)
 
         // When
-        sut.viewModel.download()
+        sut.useCase.emit(status: OnDeviceStatus(storage: .downloading(progress: 0.45), runtime: .unloaded))
 
-        // Wait for async task to complete
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // Then
+        XCTAssertTrue(sut.viewModel.isDownloading)
+        XCTAssertEqual(sut.viewModel.progressFraction, 0.45)
+        XCTAssertEqual(sut.viewModel.progressPercentText, "45%")
+    }
+
+    func test_다운로드를_성공적으로_완료하면_coordinator의dismiss를호출한다() async throws {
+        // Given
+        let sut = makeSUT()
+
+        // When
+        sut.useCase.emit(status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
+
+        try await Task.sleep(nanoseconds: 50_000_000)
 
         // Then
         XCTAssertFalse(sut.viewModel.isDownloading)
+        XCTAssertEqual(sut.viewModel.progressFraction, 1.0)
         XCTAssertEqual(sut.coordinator.dismissSheetCallCount, 1)
-        XCTAssertEqual(sut.coordinator.completionValue, false) // Note: 성공이더라도 progressFraction이 1이 아니면 false가 반환됩니다.
-        await sut.repository.verify()
+        XCTAssertTrue(sut.coordinator.completionValue ?? false)
     }
 
     func test_다운로드가_실패하면_errorMessage를_설정하고_isDownloading이_false가된다() async throws {
         // Given
         let sut = makeSUT()
-        await sut.repository.setDownloadResult(.failure(.downloadFailed))
-        await sut.repository.expectDownload(callCount: 1)
 
         // When
-        sut.viewModel.download()
+        sut.useCase.emit(status: OnDeviceStatus(storage: .failed, runtime: .unloaded))
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await Task.sleep(nanoseconds: 50_000_000)
 
         // Then
         XCTAssertFalse(sut.viewModel.isDownloading)
         XCTAssertNotNil(sut.viewModel.errorMessage)
-        XCTAssertEqual(sut.coordinator.dismissSheetCallCount, 1)
-        await sut.repository.verify()
+        XCTAssertNil(sut.viewModel.progressFraction)
     }
 }
 
 // MARK: - 다운로드 취소 및 기타
 
 extension DownloadOnDeviceViewModelTests {
-    func test_cancelDownload_호출시_다운로드를취소하고_상태가초기화된다() async {
+    func test_cancelDownload_호출시_다운로드를취소하고_상태가초기화된다() {
         // Given
         let sut = makeSUT()
-        let dummyURL = URL(fileURLWithPath: "/dummy/path")
-        await sut.repository.setDownloadResult(.success(dummyURL))
-
-        sut.viewModel.download() // Task 시작
+        sut.useCase.emit(status: OnDeviceStatus(storage: .downloading(progress: 0.5), runtime: .unloaded))
 
         // When
         sut.viewModel.cancelDownload()
@@ -116,9 +154,9 @@ extension DownloadOnDeviceViewModelTests {
         // Given
         let sut = makeSUT()
 
-        // 에러를 강제로 주입하기 위해 다운로드 실패 플로우를 한 번 태웁니다.
-        sut.viewModel.download()
-        sut.viewModel.dismissError() // 직접 지우기 시뮬레이션
+        // When
+        sut.useCase.emit(status: OnDeviceStatus(storage: .failed, runtime: .unloaded))
+        sut.viewModel.dismissError()
 
         // Then
         XCTAssertNil(sut.viewModel.errorMessage)

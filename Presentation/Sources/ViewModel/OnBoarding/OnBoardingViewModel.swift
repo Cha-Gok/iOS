@@ -58,7 +58,7 @@ public final class OnBoardingViewModel {
         runtime: .unloaded
     )
     private(set) var scrollEnabled: Bool = true
-    
+
     private var isPaging: Bool = false
     private(set) var steps: [Step] = Step.allCases
 
@@ -99,7 +99,7 @@ public final class OnBoardingViewModel {
     var isSecondButtonEnabled: Bool {
         currentStep != .finish
     }
-    
+
     var isPrimaryButtonEnabled: Bool {
         switch currentStep {
         case .download:
@@ -191,7 +191,6 @@ extension OnBoardingViewModel {
 // MARK: - Download Page State
 
 extension OnBoardingViewModel {
-    
     /// 온보딩 진입 시 Gemma4를 지원하는 기기인지 분기합니다.
     func checkModelSupport() async {
         let support = await availableSupportModelRepository.checkMLXSupportModel()
@@ -242,7 +241,7 @@ extension OnBoardingViewModel {
     public extension OnBoardingViewModel {
         /// SwiftUI Preview에서 사용할 수 있는 가상 뷰모델 인스턴스를 생성합니다.
         static func preview() -> OnBoardingViewModel {
-            let vm = OnBoardingViewModel(
+            return OnBoardingViewModel(
                 languageRepository: PreviewLanguageRepository(),
                 voiceRecordRepository: PreviewVoiceRecordRepository(),
                 sttRepository: PreviewSTTRepository(),
@@ -250,8 +249,7 @@ extension OnBoardingViewModel {
                 folderUseCase: PreviewFolderUseCase(),
                 availableSupportModelRepository: PreviewAvailableModelSupportRepository(),
                 mlxRepository: PreviewOnDeviceRepository()
-            )            
-            return vm
+            )
         }
     }
 
@@ -317,7 +315,7 @@ extension OnBoardingViewModel {
             func checkStatus() async -> Domain.OnDeviceStatus {
                 .init(storage: .downloaded, runtime: .unloaded)
             }
-            
+
             func download(progressHandler: @Sendable @escaping (Double) -> Void) async throws(OnDeviceRepositoryError) {
                 do {
                     // 0%에서 100%까지 0.5초 간격으로 진행률을 올려 취소를 테스트할 충분한 시간을 줍니다.

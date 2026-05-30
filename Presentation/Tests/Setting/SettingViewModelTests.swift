@@ -22,6 +22,51 @@ final class MockSettingCoordinatorDelegate: SettingCoordinatorDelegate {
     }
 }
 
+final class MockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked Sendable {
+    private var continuation: AsyncStream<OnDeviceStatus>.Continuation?
+    private(set) var downloadCallCount = 0
+    private(set) var deleteCallCount = 0
+    private(set) var lastDownloadedModel: ChaGokModel?
+    private(set) var lastDeletedModel: ChaGokModel?
+
+    var downloadResult: Result<Void, OnDeviceStatusUseCaseError> = .success(())
+    var deleteResult: Result<Void, DeleteOnDeviceRepositoryError> = .success(())
+
+    func subscribe(model: ChaGokModel) -> AsyncStream<OnDeviceStatus> {
+        AsyncStream { cont in
+            self.continuation = cont
+            cont.yield(OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+        }
+    }
+
+    func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {
+        downloadCallCount += 1
+        lastDownloadedModel = model
+        switch downloadResult {
+        case .success:
+            emit(status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
+        case .failure(let error):
+            emit(status: OnDeviceStatus(storage: .failed, runtime: .unloaded))
+            throw error
+        }
+    }
+
+    func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError) {
+        deleteCallCount += 1
+        lastDeletedModel = model
+        switch deleteResult {
+        case .success:
+            emit(status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+        case .failure(let error):
+            throw error
+        }
+    }
+
+    func emit(status: OnDeviceStatus) {
+        continuation?.yield(status)
+    }
+}
+
 @MainActor
 final class SettingViewModelTests: XCTestCase {
     // MARK: - SUT
@@ -29,33 +74,29 @@ final class SettingViewModelTests: XCTestCase {
     private struct SUT {
         let viewModel: SettingViewModel
         let mockLanguageRepo: MockLanguageRepository
-        let mockMLXRepo: MockAvailableModelSupportRepository
-        let mockSTTRepo: MockDefaultWhisperSTTRepository
-        let mockDeleteModelRepo: MockDeleteOnDeviceRepository
+        let mockAvailableModelRepo: MockAvailableModelSupportRepository
+        let mockOnDeviceStatusUseCase: MockOnDeviceStatusUseCase
         let mockCoordinator: MockSettingCoordinatorDelegate
     }
 
     private func makeSUT() -> SUT {
         let mockLanguageRepo = MockLanguageRepository()
-        let mockMLXRepo = MockAvailableModelSupportRepository()
-        let mockSTTRepo = MockDefaultWhisperSTTRepository()
-        let mockDeleteModelRepo = MockDeleteOnDeviceRepository()
+        let mockAvailableModelRepo = MockAvailableModelSupportRepository()
+        let mockOnDeviceStatusUseCase = MockOnDeviceStatusUseCase()
         let mockCoordinator = MockSettingCoordinatorDelegate()
 
         let viewModel = SettingViewModel(
             languageRepository: mockLanguageRepo,
-            mlxRepository: mockMLXRepo,
-            sttRepository: mockSTTRepo,
-            deleteModelRepository: mockDeleteModelRepo
+            availableModelRepository: mockAvailableModelRepo,
+            onDeviceStatusUseCase: mockOnDeviceStatusUseCase
         )
         viewModel.coordinator = mockCoordinator
 
         return SUT(
             viewModel: viewModel,
             mockLanguageRepo: mockLanguageRepo,
-            mockMLXRepo: mockMLXRepo,
-            mockSTTRepo: mockSTTRepo,
-            mockDeleteModelRepo: mockDeleteModelRepo,
+            mockAvailableModelRepo: mockAvailableModelRepo,
+            mockOnDeviceStatusUseCase: mockOnDeviceStatusUseCase,
             mockCoordinator: mockCoordinator
         )
     }
@@ -70,9 +111,8 @@ final class SettingViewModelTests: XCTestCase {
         // Act
         let viewModel = SettingViewModel(
             languageRepository: sut.mockLanguageRepo,
-            mlxRepository: sut.mockMLXRepo,
-            sttRepository: sut.mockSTTRepo,
-            deleteModelRepository: sut.mockDeleteModelRepo
+            availableModelRepository: sut.mockAvailableModelRepo,
+            onDeviceStatusUseCase: sut.mockOnDeviceStatusUseCase
         )
 
         // Assert
@@ -122,16 +162,16 @@ final class SettingViewModelTests: XCTestCase {
                 title: "whisper title",
                 subTitle: "whisper subTitle",
                 model: .whisper,
-                isDownloaded: .downloaded
+                status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
             ),
             ChaGokModelState(
                 title: "gemma4 title",
                 subTitle: "gemma4 subTitle",
                 model: .gemma4_e2b_4bit,
-                isDownloaded: .notDownloaded
+                status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
             )
         ]
-        sut.mockMLXRepo.setFetchSupportModelsResult(mockModels)
+        sut.mockAvailableModelRepo.setFetchSupportModelsResult(mockModels)
 
         // Act
         sut.viewModel.checkModels()
@@ -146,15 +186,15 @@ final class SettingViewModelTests: XCTestCase {
     func test_checkModels_fetchSupportModels_호출됨() async {
         // Arrange
         let sut = makeSUT()
-        sut.mockMLXRepo.setFetchSupportModelsResult([])
-        sut.mockMLXRepo.expectFetchSupportModels(callCount: 1)
+        sut.mockAvailableModelRepo.setFetchSupportModelsResult([])
+        sut.mockAvailableModelRepo.expectFetchSupportModels(callCount: 1)
 
         // Act
         sut.viewModel.checkModels()
         try? await Task.sleep(nanoseconds: 100_000_000)
 
         // Assert
-        sut.mockMLXRepo.verify()
+        sut.mockAvailableModelRepo.verify()
     }
 
     // MARK: - Download Model Tests
@@ -163,48 +203,46 @@ final class SettingViewModelTests: XCTestCase {
         // Arrange
         let sut = makeSUT()
         let model = ChaGokModel.whisper
-        sut.mockMLXRepo.setFetchSupportModelsResult([
+        sut.mockAvailableModelRepo.setFetchSupportModelsResult([
             ChaGokModelState(
                 title: "whisper title",
                 subTitle: "whisper subTitle",
                 model: .whisper,
-                isDownloaded: .notDownloaded
+                status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
             )
         ])
-        await sut.mockSTTRepo.setDownloadResult(.success((.applicationDirectory)))
 
         // Act
         sut.viewModel.checkModels()
         try? await Task.sleep(nanoseconds: 100_000_000)
         sut.viewModel.downloadModel(model: model)
-        try? await Task.sleep(nanoseconds: 2_500_000_000)
+        try? await Task.sleep(nanoseconds: 500_000_000)
 
         // Assert
-        XCTAssertEqual(sut.viewModel.models[0].isDownloaded, .downloaded)
+        XCTAssertEqual(sut.viewModel.models[0].status.storage, .downloaded)
     }
 
     func test_downloadModel_gemma_완료() async {
         // Arrange
         let sut = makeSUT()
         let model = ChaGokModel.gemma4_e2b_4bit
-        sut.mockMLXRepo.setFetchSupportModelsResult([
+        sut.mockAvailableModelRepo.setFetchSupportModelsResult([
             ChaGokModelState(
                 title: "gemma4 title",
                 subTitle: "gemma4 subTitle",
                 model: .gemma4_e2b_4bit,
-                isDownloaded: .notDownloaded
+                status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
             )
         ])
-        sut.mockMLXRepo.setDownloadModelResult(.success(()))
 
         // Act
         sut.viewModel.checkModels()
         try? await Task.sleep(nanoseconds: 100_000_000)
         sut.viewModel.downloadModel(model: model)
-        try? await Task.sleep(nanoseconds: 2_500_000_000)
+        try? await Task.sleep(nanoseconds: 500_000_000)
 
         // Assert
-        XCTAssertEqual(sut.viewModel.models[0].isDownloaded, .downloaded)
+        XCTAssertEqual(sut.viewModel.models[0].status.storage, .downloaded)
     }
 
     // MARK: - Delete Model Tests
@@ -213,15 +251,14 @@ final class SettingViewModelTests: XCTestCase {
         // Arrange
         let sut = makeSUT()
         let model = ChaGokModel.whisper
-        sut.mockMLXRepo.setFetchSupportModelsResult([
+        sut.mockAvailableModelRepo.setFetchSupportModelsResult([
             ChaGokModelState(
                 title: "whisper title",
                 subTitle: "whisper subTitle",
                 model: .whisper,
-                isDownloaded: .downloaded
+                status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
             )
         ])
-        sut.mockDeleteModelRepo.setWhisperModelResult(.success(()))
 
         // Act
         sut.viewModel.checkModels()
@@ -230,22 +267,21 @@ final class SettingViewModelTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 500_000_000)
 
         // Assert
-        XCTAssertEqual(sut.viewModel.models[0].isDownloaded, .notDownloaded)
+        XCTAssertEqual(sut.viewModel.models[0].status.storage, .notDownloaded)
     }
 
     func test_deleteModel_gemma_완료() async {
         // Arrange
         let sut = makeSUT()
         let model = ChaGokModel.gemma4_e2b_4bit
-        sut.mockMLXRepo.setFetchSupportModelsResult([
+        sut.mockAvailableModelRepo.setFetchSupportModelsResult([
             ChaGokModelState(
                 title: "gemma4 title",
                 subTitle: "gemma4 subTitle",
                 model: .gemma4_e2b_4bit,
-                isDownloaded: .downloaded
+                status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
             )
         ])
-        sut.mockDeleteModelRepo.setMlxModelResult(.success(()))
 
         // Act
         sut.viewModel.checkModels()
@@ -254,7 +290,7 @@ final class SettingViewModelTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 500_000_000)
 
         // Assert
-        XCTAssertEqual(sut.viewModel.models[0].isDownloaded, .notDownloaded)
+        XCTAssertEqual(sut.viewModel.models[0].status.storage, .notDownloaded)
     }
 
     // MARK: - Coordinator Tests

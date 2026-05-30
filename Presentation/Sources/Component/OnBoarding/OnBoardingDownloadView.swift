@@ -36,7 +36,7 @@ final class OnBoardingDownloadView: UIStackView {
         style: .immutable,
         storage: vm.status.storage
     )
-    
+
     /// 남는 수직 공간을 흡수하는 빈 뷰 (OnBoardingCardView의 imageContainer 역할)
     private let spacerView = UIView()
 
@@ -75,14 +75,14 @@ extension OnBoardingDownloadView {
         translatesAutoresizingMaskIntoConstraints = false
         axis = .vertical
         spacing = Constant.onBoardingContentSpacing
-        
+
         // headline·body는 intrinsic size만 차지하고,
         // 남는 수직 공간은 imageContainer가 흡수하도록 설정
         headlineLabel.setContentHuggingPriority(.required, for: .vertical)
         bodyLabel.setContentHuggingPriority(.required, for: .vertical)
         downloadModelCard.setContentHuggingPriority(.required, for: .vertical)
     }
-    
+
     private func setupHierarchy() {
         addArrangedSubview(headlineLabel)
         addArrangedSubview(bodyLabel)

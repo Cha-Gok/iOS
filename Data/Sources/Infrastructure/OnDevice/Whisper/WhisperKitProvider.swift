@@ -32,22 +32,22 @@ public actor WhisperKitProvider: WhisperDataSource {
         self.recommendedModel = recommendedModel
         AppLogger.info("WhisperKit 추천 모델 : \(recommendedModel)")
         AppLogger.info("WhisperKit 모델 다운로드 시작")
-        
+
         let path = try await WhisperKit.download(
             variant: recommendedModel,
             useBackgroundSession: false,
             progressCallback: progressHandler
         )
-        
+
         // 다운로드 복귀 직후 태스크 취소 상태 감지 (레이스 컨디션 봉쇄)
         if Task.isCancelled {
             AppLogger.info("WhisperKit 다운로드 완료 복귀 후 취소 상태 감지 - 즉각 강제 소거 및 에러 방출")
             try? storageService.delete(fileURL: path)
             throw CancellationError()
         }
-        
-        self.modelDirectory = path
-        AppLogger.info("WhisperKit 모델 위치 : \(modelDirectory?.absoluteString)")
+
+        modelDirectory = path
+        AppLogger.info("WhisperKit 모델 위치 : \(modelDirectory?.path() ?? "없음")")
     }
 
     private func getWhisper() async throws(WhisperDataSourceError) -> WhisperKit {
@@ -127,7 +127,7 @@ public actor WhisperKitProvider: WhisperDataSource {
         let defaultPath = storageService.absoluteURL(for: relativePath)
 
         if storageService.exists(relativePath: relativePath) {
-            self.modelDirectory = defaultPath
+            modelDirectory = defaultPath
             self.recommendedModel = recommendedModel
             AppLogger.info("whisper 저장 위치 (디스크 감지) : \(defaultPath)")
             return defaultPath
@@ -165,7 +165,7 @@ public actor WhisperKitProvider: WhisperDataSource {
                 let relativePath = "huggingface/models/argmaxinc/whisperkit-coreml/\(model)"
                 downloadURL = storageService.absoluteURL(for: relativePath)
             }
-            
+
             do {
                 try storageService.delete(fileURL: downloadURL)
             } catch {
@@ -175,7 +175,7 @@ public actor WhisperKitProvider: WhisperDataSource {
                 }
             }
             AppLogger.info("WhisperKit 모델/임시 폴더 삭제 완료: \(downloadURL.path)")
-            
+
             await clearCache()
         } catch {
             AppLogger.error(error)

@@ -20,13 +20,13 @@ public final class DownloadOnDeviceViewModel {
 
     public weak var coordinator: DownloadOnDeviceCoordinatorDelegate?
     private let onDeviceStatusUseCase: any OnDeviceStatusUseCase
-    
+
     @ObservationIgnored
     private var statusObservationTask: Task<Void, Never>?
     @ObservationIgnored
     private var downloadTask: Task<Void, Never>?
-    
-    // UI Binding을 위해 status로부터 파생된 연산 프로퍼티들
+
+    /// UI Binding을 위해 status로부터 파생된 연산 프로퍼티들
     var isDownloading: Bool {
         if case .downloading = status.storage { return true }
         return false
@@ -52,10 +52,10 @@ extension DownloadOnDeviceViewModel {
             guard let self else { return }
             let stream = await onDeviceStatusUseCase.subscribe(model: .whisper)
             for await newStatus in stream {
-                self.status = newStatus
+                status = newStatus
                 AppLogger.debug("OnDeviceStatus: \(newStatus)")
                 if newStatus.storage == .downloaded {
-                    self.dismiss() // 다운로드 완료 시 dismiss
+                    dismiss() // 다운로드 완료 시 dismiss
                 }
             }
         }
@@ -64,7 +64,7 @@ extension DownloadOnDeviceViewModel {
     /// 모델의 다운로드를 유즈케이스에 요청합니다.
     func download() {
         guard downloadTask == nil else { return }
-        
+
         downloadTask = Task {
             do {
                 try await onDeviceStatusUseCase.download(model: .whisper)
@@ -81,8 +81,8 @@ extension DownloadOnDeviceViewModel {
     func cancelDownload() {
         let task = downloadTask
         downloadTask = nil
-        self.status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
-        
+        status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+
         let useCase = onDeviceStatusUseCase
         Task {
             task?.cancel()
@@ -93,10 +93,10 @@ extension DownloadOnDeviceViewModel {
 
     func dismiss() {
         statusObservationTask?.cancel()
-        
+
         let task = downloadTask
         downloadTask = nil
-        
+
         // 다운로드가 완전히 완료되지 않은 상태(예: 취소 상태)에서 해제될 때만
         // 유즈케이스의 저장 캐시 및 디스크 상태를 완전히 초기화(notDownloaded)합니다.
         if status.storage != .downloaded {

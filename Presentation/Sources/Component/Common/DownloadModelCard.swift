@@ -1,17 +1,16 @@
-import UIKit
-import SwiftUI
 import Domain
+import SwiftUI
+import UIKit
 
 final class DownloadModelCard: UIStackView {
-    
     let modelName: String
     let symbolName: String
     let style: ProgressStyle
     var storage: OnDeviceStatus.StorageState
     var errorMessage: String?
-    
+
     // MARK: - Initialize
-    
+
     init(
         symbolName: String,
         modelName: String,
@@ -28,33 +27,35 @@ final class DownloadModelCard: UIStackView {
         super.init(frame: frame)
         setup()
     }
-    
+
+    @available(*, unavailable)
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     // MARK: - Component
-    
+
     private lazy var modelLabel: UIStackView = createLabel(modelName, symbolName: symbolName)
-    
+
     private lazy var immutableProgressView = ImmutableProgressView()
     private lazy var defaultProgressView = DefaultProgressView()
-    
+
     private let downloadMessageLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.setTypography(text: "다운로드 상태 표기", style: .body2)
         return label
     }()
-    
+
     // MARK: - LifeCycle
+
     override func updateProperties() {
         super.updateProperties()
         updateStatus()
     }
-    
+
     // MARK: - Setup
-    
+
     private func setup() {
         translatesAutoresizingMaskIntoConstraints = false
         axis = .vertical
@@ -62,7 +63,7 @@ final class DownloadModelCard: UIStackView {
         applyGlassEffect(tintColor: .point200.withAlphaComponent(0.2))
         layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         isLayoutMarginsRelativeArrangement = true
-        
+
         addArrangedSubview(modelLabel)
         switch style {
         case .default:
@@ -74,11 +75,11 @@ final class DownloadModelCard: UIStackView {
         }
         addArrangedSubview(downloadMessageLabel)
     }
-    
+
     /// 프로그래스의 스타일을 정의합니다.
     enum ProgressStyle: Equatable {
-        case `default`  // 기본 스타일
-        case immutable  // 불변 프로그래스 바
+        case `default` // 기본 스타일
+        case immutable // 불변 프로그래스 바
     }
 }
 
@@ -90,11 +91,11 @@ extension DownloadModelCard {
         let container = UIStackView()
         let imageView = UIImageView()
         let nameLabel = UILabel()
-        
-        [container, imageView, nameLabel].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
+
+        for item in [container, imageView, nameLabel] {
+            item.translatesAutoresizingMaskIntoConstraints = false
         }
-        
+
         // nameLabel
         nameLabel.setTypography(text: modelName, style: .body2)
         nameLabel.textColor = UIColor.gray950
@@ -108,10 +109,10 @@ extension DownloadModelCard {
         container.spacing = 8
         // spacer
         let spacer = UIView()
-        [imageView, nameLabel, spacer].forEach {
-            container.addArrangedSubview($0)
+        for item in [imageView, nameLabel, spacer] {
+            container.addArrangedSubview(item)
         }
-        
+
         return container
     }
 }
@@ -123,7 +124,7 @@ extension DownloadModelCard {
         self.storage = storage
         setNeedsUpdateProperties()
     }
-    
+
     private func updateStatus() {
         switch storage {
         case .notDownloaded:

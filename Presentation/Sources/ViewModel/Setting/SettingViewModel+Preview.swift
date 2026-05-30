@@ -52,6 +52,8 @@ import Foundation
         }
 
         actor PreviewOnDeviceStatusUseCase: OnDeviceStatusUseCase {
+            func cancelDownload(model: Domain.ChaGokModel) async {}
+
             func subscribe(model: ChaGokModel) async -> AsyncStream<OnDeviceStatus> {
                 AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
                     continuation.yield(OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
@@ -59,7 +61,9 @@ import Foundation
                 }
             }
 
-            func download(model: ChaGokModel) async {}
+            func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {}
+
+            func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError) {}
         }
     }
 #endif
