@@ -76,6 +76,11 @@ public final class AppDIContainer {
     // MARK: - Whisper 모델 ( preload , download ) Status
 
     public func isWhisperModelDownloaded() async -> Bool {
+        let status = await onDeviceStatusUseCase.checkStatus(model: .whisper)
+        if case .downloading = status.storage {
+            return false
+        }
+
         do {
             _ = try await whisperProvider.getDownloadPath()
             return true
@@ -122,13 +127,14 @@ public final class AppDIContainer {
         )
     }
 
-    public func makeVoiceNoteViewModel(voiceNote: VoiceNote) -> VoiceNoteViewModel {
+    public func makeVoiceNoteViewModel(voiceNote: VoiceNote, isTrashMode: Bool = false) -> VoiceNoteViewModel {
         VoiceNoteViewModel(
             voiceNote: voiceNote,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
             playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService),
-            availableSupportModelRepository: availableSupportModelRepository
+            availableSupportModelRepository: availableSupportModelRepository,
+            isTrashMode: isTrashMode
         )
     }
 

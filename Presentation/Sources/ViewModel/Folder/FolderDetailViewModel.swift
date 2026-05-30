@@ -7,7 +7,7 @@ public protocol FolderDetailCoordinatorDelegate: AnyObject {
     /// 뒤로 가기
     func pop()
     /// 음성 노트 가기
-    func pushVoiceNoteView(voiceNote: VoiceNote)
+    func pushVoiceNoteView(voiceNote: VoiceNote, isTrashMode: Bool)
     /// 폴더 이동 Sheet
     func presentFolderList(with voiceNotes: [VoiceNote], onComplete: ((String) -> Void)?)
     /// 검색 화면 Push함수
@@ -97,7 +97,7 @@ extension FolderDetailViewModel {
 
     /// 음성 노트 화면 전환
     func pushVoiceNote(voiceNote: VoiceNote) {
-        coordinator?.pushVoiceNoteView(voiceNote: voiceNote)
+        coordinator?.pushVoiceNoteView(voiceNote: voiceNote, isTrashMode: isTrashMode)
     }
 
     /// 폴더 이동 Present

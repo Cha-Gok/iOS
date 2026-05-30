@@ -194,7 +194,7 @@ private extension VoiceNoteViewController {
             self?.viewModel.exitSearchMode()
         }
 
-        navigationBar.apply(to: navigationItem, title: viewModel.title)
+        navigationBar.apply(to: navigationItem, title: viewModel.title, isTrashMode: viewModel.isTrashMode)
     }
 
     func setupTabBar() {
@@ -316,7 +316,8 @@ private extension VoiceNoteViewController {
             title: viewModel.title,
             editingMode: viewModel.editingMode,
             searchMode: viewModel.searchMode,
-            hasScriptEdits: viewModel.hasScriptEdits
+            hasScriptEdits: viewModel.hasScriptEdits,
+            isTrashMode: viewModel.isTrashMode
         )
     }
 
@@ -336,7 +337,8 @@ private extension VoiceNoteViewController {
             title: viewModel.title,
             editingMode: viewModel.editingMode,
             searchMode: isSearching,
-            hasScriptEdits: viewModel.hasScriptEdits
+            hasScriptEdits: viewModel.hasScriptEdits,
+            isTrashMode: viewModel.isTrashMode
         )
 
         if didToggle {

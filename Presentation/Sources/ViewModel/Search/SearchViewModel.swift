@@ -9,7 +9,7 @@ public protocol SearchCoordinatorDelegate: AnyObject {
     /// 폴더 Push
     func pushMyFolderDetailView(_ folder: Folder, isTrashMode: Bool)
     /// 음성 노트 Push
-    func pushVoiceNoteView(voiceNote: VoiceNote)
+    func pushVoiceNoteView(voiceNote: VoiceNote, isTrashMode: Bool)
 }
 
 @MainActor
@@ -116,7 +116,7 @@ public final class SearchViewModel {
     }
 
     func pushVoiceNote(_ voiceNote: VoiceNote) {
-        coordinator?.pushVoiceNoteView(voiceNote: voiceNote)
+        coordinator?.pushVoiceNoteView(voiceNote: voiceNote, isTrashMode: isTrashMode)
     }
 }
 

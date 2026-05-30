@@ -16,7 +16,7 @@ final class MockTrashCoordinatorDelegate: TrashCoordinatorDelegate {
         popCalled = true
     }
 
-    func pushVoiceNoteView(voiceNote: VoiceNote) {
+    func pushVoiceNoteView(voiceNote: VoiceNote, isTrashMode: Bool) {
         pushedVoiceNote = voiceNote
     }
 

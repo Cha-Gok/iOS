@@ -95,8 +95,11 @@ public final class VoiceNoteSearchBar: UIView {
             subview.translatesAutoresizingMaskIntoConstraints = false
         }
 
+        let heightConstraint = heightAnchor.constraint(equalToConstant: 46)
+        heightConstraint.priority = .init(999)
+
         NSLayoutConstraint.activate([
-            heightAnchor.constraint(equalToConstant: 46),
+            heightConstraint,
 
             searchContainer.topAnchor.constraint(equalTo: topAnchor),
             searchContainer.leadingAnchor.constraint(equalTo: leadingAnchor),

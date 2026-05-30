@@ -7,7 +7,7 @@ public enum DeleteOnDeviceRepositoryError: LocalizedError, Sendable {
     case deleteMLXFailed
     case unknown(Error)
 
-    public var errorDescription: String {
+    public var errorDescription: String? {
         switch self {
         case .cancelled:
             return "취소되었습니다"

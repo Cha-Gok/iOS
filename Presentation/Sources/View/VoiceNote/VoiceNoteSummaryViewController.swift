@@ -154,14 +154,14 @@ private extension VoiceNoteSummaryViewController {
 
         let warningCellReg = UICollectionView
             .CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
-                guard case .failure = item, let self else { return }
+                guard case .failure(let isSupported) = item, let self else { return }
 
                 let title: String
                 let subTitle: String
                 let buttonTitle: String
                 let action: () -> Void
 
-                if !viewModel.isMLXModelSupported {
+                if !isSupported {
                     title = "요약을 생성하지 못했어요"
                     subTitle = "AI 요약 기능이\n현재 기기에서는 지원되지 않습니다"
                     buttonTitle = "스크립트"
@@ -240,6 +240,7 @@ private extension VoiceNoteSummaryViewController {
     }
 
     var regenerationChipState: RegenerationChip.State? {
+        guard !viewModel.isTrashMode else { return nil }
         switch viewModel.voiceNote.analysisState {
         // 첫 분석 중에는 요약 섹션이 비어 있어 칩을 숨긴다.
         case .pending, .summarizing, .transcribed, .transcribing, .transcriptionFailed: return nil
@@ -265,7 +266,7 @@ private extension VoiceNoteSummaryViewController {
         if isFailed {
             snapshot.appendSections([.metadata, .failure])
             snapshot.appendItems([.metadata], toSection: .metadata)
-            snapshot.appendItems([.failure], toSection: .failure)
+            snapshot.appendItems([.failure(isMLXModelSupported: viewModel.isMLXModelSupported)], toSection: .failure)
 
             dataSource.apply(snapshot, animatingDifferences: true)
         } else {
@@ -377,6 +378,6 @@ extension VoiceNoteSummaryViewController {
         case keywords
         case keyPointSkeleton(number: Int, beginOffset: CFTimeInterval)
         case keywordsSkeleton(beginOffset: CFTimeInterval)
-        case failure
+        case failure(isMLXModelSupported: Bool)
     }
 }

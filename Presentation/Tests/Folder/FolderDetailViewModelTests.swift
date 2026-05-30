@@ -17,7 +17,7 @@ final class MockFolderDetailCoordinatorDelegate: FolderDetailCoordinatorDelegate
         popCalled = true
     }
 
-    func pushVoiceNoteView(voiceNote: Domain.VoiceNote) {
+    func pushVoiceNoteView(voiceNote: Domain.VoiceNote, isTrashMode: Bool) {
         pushedVoiceNote = voiceNote
     }
 

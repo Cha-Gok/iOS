@@ -65,6 +65,12 @@ final class SettingMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
     func emit(status: OnDeviceStatus) {
         continuation?.yield(status)
     }
+
+    var checkStatusResult: OnDeviceStatus = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+
+    func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {
+        return checkStatusResult
+    }
 }
 
 @MainActor

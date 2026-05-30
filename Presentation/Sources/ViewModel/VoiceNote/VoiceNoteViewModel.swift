@@ -22,7 +22,8 @@ public final class VoiceNoteViewModel {
     public private(set) var searchMode: Bool = false
     public private(set) var searchQuery: String = ""
     public private(set) var currentMatchIndex: Int = 0
-    public private(set) var isMLXModelSupported: Bool = true
+    public private(set) var isMLXModelSupported: Bool = (ChaGokModelSupport.current.model != .none)
+    public let isTrashMode: Bool
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
@@ -46,13 +47,15 @@ public final class VoiceNoteViewModel {
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
         playbackRepository: any VoiceRecordPlaybackRepository,
-        availableSupportModelRepository: any AvailableModelSupportRepository
+        availableSupportModelRepository: any AvailableModelSupportRepository,
+        isTrashMode: Bool = false
     ) {
         self.voiceNote = voiceNote
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.playbackRepository = playbackRepository
         self.availableSupportModelRepository = availableSupportModelRepository
+        self.isTrashMode = isTrashMode
     }
 
     // MARK: - View Actions
@@ -118,14 +121,17 @@ public final class VoiceNoteViewModel {
     }
 
     public func moveVoiceNote(onComplete: ((String) -> Void)? = nil) {
+        guard !isTrashMode else { return }
         coordinator?.presentMoveFolder(for: voiceNote, onComplete: onComplete)
     }
 
     public func enterTitleEditing() {
+        guard !isTrashMode else { return }
         editingMode = .title
     }
 
     public func enterScriptEditing() {
+        guard !isTrashMode else { return }
         if currentPlaybackState.status == .playing { pause() }
         editableScriptSections = scriptSections
         currentPage = .script
@@ -241,10 +247,12 @@ public final class VoiceNoteViewModel {
     }
 
     public func deleteVoiceNote() {
+        guard !isTrashMode else { return }
         moveToWasteBasket()
     }
 
     public func regenerateSummary() {
+        guard !isTrashMode else { return }
         if searchMode { exitSearchMode() }
         voiceNoteUseCase.regenerateSummary(id: voiceNote.id)
     }

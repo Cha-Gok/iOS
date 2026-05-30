@@ -7,7 +7,7 @@ public protocol TrashCoordinatorDelegate: AnyObject {
     /// 뒤로가기
     func pop()
     /// 음성 노트 Push
-    func pushVoiceNoteView(voiceNote: VoiceNote)
+    func pushVoiceNoteView(voiceNote: VoiceNote, isTrashMode: Bool)
     /// 상세 폴더 Push
     func pushMyFolderDetailView(_ folder: Folder, isHidden: Bool)
     /// 검색 화면 Push함수
@@ -89,7 +89,7 @@ extension TrashViewModel {
     }
 
     func pushVoiceNote(_ voiceNote: VoiceNote) {
-        coordinator?.pushVoiceNoteView(voiceNote: voiceNote)
+        coordinator?.pushVoiceNoteView(voiceNote: voiceNote, isTrashMode: true)
     }
 
     func pushDetailFolder(_ folder: Folder) {

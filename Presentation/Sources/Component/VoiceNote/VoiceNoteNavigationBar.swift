@@ -61,11 +61,14 @@ final class VoiceNoteNavigationBar {
         title: String,
         editingMode: EditingMode? = nil,
         searchMode: Bool = false,
-        hasScriptEdits: Bool = false
+        hasScriptEdits: Bool = false,
+        isTrashMode: Bool = false
     ) -> Bool {
         currentEditingMode = editingMode
         let didToggleSearch = searchMode != lastSearchMode
         lastSearchMode = searchMode
+
+        titleContainerView.isUserInteractionEnabled = !isTrashMode
 
         switch editingMode {
         case .title:
@@ -99,7 +102,11 @@ final class VoiceNoteNavigationBar {
                 navigationItem.rightBarButtonItems = [doneItem]
             case nil:
                 navigationItem.leftBarButtonItem = backItem
-                navigationItem.rightBarButtonItems = [moreItem, searchItem]
+                if isTrashMode {
+                    navigationItem.rightBarButtonItems = [searchItem]
+                } else {
+                    navigationItem.rightBarButtonItems = [moreItem, searchItem]
+                }
             }
         }
 

@@ -122,6 +122,7 @@ extension DownloadModelCard {
 extension DownloadModelCard {
     func updateStatus(_ storage: OnDeviceStatus.StorageState, errorMessage: String?) {
         self.storage = storage
+        self.errorMessage = errorMessage
         setNeedsUpdateProperties()
     }
 
@@ -161,7 +162,9 @@ extension DownloadModelCard {
             case .immutable:
                 immutableProgressView.isHidden = true
             }
-            downloadMessageLabel.setTypography(text: errorMessage, style: .body2)
+            downloadMessageLabel.isHidden = false
+            let msg = (errorMessage == nil || errorMessage?.isEmpty == true) ? "다운로드에 실패했습니다" : errorMessage
+            downloadMessageLabel.setTypography(text: msg, style: .body2)
             downloadMessageLabel.textColor = .danger
         }
     }

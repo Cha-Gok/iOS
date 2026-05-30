@@ -52,6 +52,10 @@ import Foundation
         }
 
         actor PreviewOnDeviceStatusUseCase: OnDeviceStatusUseCase {
+            func checkStatus(model: Domain.ChaGokModel) async -> Domain.OnDeviceStatus {
+                .init(storage: .downloaded, runtime: .unloaded)
+            }
+
             func cancelDownload(model: Domain.ChaGokModel) async {}
 
             func subscribe(model: ChaGokModel) async -> AsyncStream<OnDeviceStatus> {

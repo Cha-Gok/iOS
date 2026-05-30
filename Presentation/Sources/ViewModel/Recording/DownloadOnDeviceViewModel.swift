@@ -64,8 +64,10 @@ extension DownloadOnDeviceViewModel {
     /// 모델의 다운로드를 유즈케이스에 요청합니다.
     func download() {
         guard downloadTask == nil else { return }
+        errorMessage = nil
 
         downloadTask = Task {
+            defer { downloadTask = nil }
             do {
                 try await onDeviceStatusUseCase.download(model: .whisper)
             } catch {
@@ -86,7 +88,6 @@ extension DownloadOnDeviceViewModel {
         let useCase = onDeviceStatusUseCase
         Task {
             task?.cancel()
-            _ = await task?.value
             try? await useCase.delete(model: .whisper)
         }
     }
@@ -103,7 +104,6 @@ extension DownloadOnDeviceViewModel {
             let useCase = onDeviceStatusUseCase
             Task {
                 task?.cancel()
-                _ = await task?.value
                 try? await useCase.delete(model: .whisper)
             }
         } else {

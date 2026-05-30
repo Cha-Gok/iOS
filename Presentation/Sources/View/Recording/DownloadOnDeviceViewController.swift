@@ -170,13 +170,18 @@ private extension DownloadOnDeviceViewController {
     /// 다운로드 진행 상태값을 업데이트 합니다.
     func applyDownloadState() {
         let isDownloading = vm.isDownloading
+        let isFailed = vm.status.storage == .failed
+        let isShowingCard = isDownloading || isFailed
+
+        primaryButton.configuration?.title = isFailed ? "재시도" : "다운로드"
+
         cancelButton.isExclusiveTouch = isDownloading
         bottomContainer.isHidden = isDownloading
         cancelDownloadButton.isExclusiveTouch = !isDownloading
         cancelDownloadButton.isHidden = !isDownloading
-        infoBox.isHidden = isDownloading
-        downloadModelCard.isHidden = !isDownloading
-        if isDownloading {
+        infoBox.isHidden = isShowingCard
+        downloadModelCard.isHidden = !isShowingCard
+        if isShowingCard {
             downloadModelCard.updateStatus(
                 vm.status.storage,
                 errorMessage: vm.errorMessage

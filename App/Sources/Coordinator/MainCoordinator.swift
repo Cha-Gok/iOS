@@ -65,8 +65,8 @@ extension MainCoordinator: MainCoordinatorDelegate {
         presenter.pushViewController(myFolderVC, animated: true)
     }
 
-    func pushVoiceNoteView(voiceNote: VoiceNote) {
-        let voiceNoteVM = dependencyContainer.makeVoiceNoteViewModel(voiceNote: voiceNote)
+    func pushVoiceNoteView(voiceNote: VoiceNote, isTrashMode: Bool = false) {
+        let voiceNoteVM = dependencyContainer.makeVoiceNoteViewModel(voiceNote: voiceNote, isTrashMode: isTrashMode)
         voiceNoteVM.coordinator = self
         let voiceNoteVC = VoiceNoteViewController(viewModel: voiceNoteVM)
         presenter.pushViewController(voiceNoteVC, animated: true)

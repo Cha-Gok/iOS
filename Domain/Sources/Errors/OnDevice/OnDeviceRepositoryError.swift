@@ -10,7 +10,7 @@ public enum OnDeviceRepositoryError: LocalizedError, Sendable {
     /// unknown
     case unknown(Error)
 
-    public var errorDescription: String {
+    public var errorDescription: String? {
         switch self {
         case .cancelled: return "작업이 취소되었습니다"
         case .networkFailed: return "네트워크 연결이 유실되었습니다"
