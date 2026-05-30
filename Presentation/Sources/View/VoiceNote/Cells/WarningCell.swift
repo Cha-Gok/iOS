@@ -3,10 +3,24 @@ import UIKit
 // MARK: - WarningContentConfiguration
 
 public struct WarningContentConfiguration: UIContentConfiguration {
-    let regenerateAction: () -> Void
+    public let title: String
+    public let subTitle: String
+    public let buttonTitle: String?
+    public let symbolIconName: String
+    public let action: (() -> Void)?
 
-    public init(regenerateAction: @escaping () -> Void) {
-        self.regenerateAction = regenerateAction
+    public init(
+        title: String,
+        subTitle: String,
+        buttonTitle: String? = nil,
+        symbolIconName: String,
+        action: (() -> Void)? = nil
+    ) {
+        self.title = title
+        self.subTitle = subTitle
+        self.buttonTitle = buttonTitle
+        self.symbolIconName = symbolIconName
+        self.action = action
     }
 
     public func makeContentView() -> any UIView & UIContentView {
@@ -29,9 +43,6 @@ public final class WarningContentView: UIView, UIContentView {
 
     private let warningIconView: UIImageView = {
         let iv = UIImageView()
-        let config = UIImage.SymbolConfiguration(pointSize: 48, weight: .semibold)
-        iv.image = UIImage(systemName: "exclamationmark.triangle.fill", withConfiguration: config)
-        iv.tintColor = .systemOrange
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -39,7 +50,6 @@ public final class WarningContentView: UIView, UIContentView {
     private let titleLabel: TypographyLabel = {
         let label = TypographyLabel(typography: .title2, alignment: .center)
         label.textColor = UIColor.gray950
-        label.text = "요약을 생성하지 못했어요"
         label.numberOfLines = 0
         return label
     }()
@@ -47,13 +57,12 @@ public final class WarningContentView: UIView, UIContentView {
     private let subTitle: TypographyLabel = {
         let label = TypographyLabel(typography: .body2, alignment: .center)
         label.textColor = UIColor.gray950
-        label.text = "일시적인 오류가 발생했어요\n잠시 후 다시 시도해주세요"
         label.numberOfLines = 0
         return label
     }()
 
-    private let regenerateButton: GlassButton = {
-        let button: GlassButton = .default("재 생성")
+    private let actionButton: GlassButton = {
+        let button: GlassButton = .default("")
         button.setCapsuleCornerRadius()
         button.widthAnchor.constraint(equalToConstant: 200).isActive = true
         button.heightAnchor.constraint(equalToConstant: 54).isActive = true
@@ -97,7 +106,7 @@ public final class WarningContentView: UIView, UIContentView {
         containerStack.setCustomSpacing(16, after: titleLabel)
         containerStack.addArrangedSubview(subTitle)
         containerStack.setCustomSpacing(24, after: subTitle)
-        containerStack.addArrangedSubview(regenerateButton)
+        containerStack.addArrangedSubview(actionButton)
         addSubview(containerStack)
 
         containerStack.translatesAutoresizingMaskIntoConstraints = false
@@ -122,10 +131,29 @@ public final class WarningContentView: UIView, UIContentView {
     private func apply(configuration: any UIContentConfiguration) {
         guard let config = configuration as? WarningContentConfiguration else { return }
         
-        // 버튼 터치 액션 바인딩 및 중복 등록 방지 처리
-        regenerateButton.removeTarget(nil, action: nil, for: .allEvents)
-        regenerateButton.addAction(UIAction { _ in
-            config.regenerateAction()
-        }, for: .touchUpInside)
+        titleLabel.text = config.title
+        subTitle.text = config.subTitle
+
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 48, weight: .semibold)
+        warningIconView.image = UIImage(systemName: config.symbolIconName, withConfiguration: symbolConfig)
+        warningIconView.tintColor = .systemOrange
+        
+        if let buttonTitle = config.buttonTitle {
+            actionButton.configure(
+                config.buttonTitle,
+                typography: .subtitle1,
+                border: .init(color: .color(.gray600), width: Constant.borderWidth),
+                backgroundColor: .color(UIColor.point200.withAlphaComponent(Constant.backgroundOpacity)),
+                foregroundColor: UIColor.gray900
+            )
+
+            // 버튼 터치 액션 바인딩 및 중복 등록 방지 처리
+            actionButton.removeTarget(nil, action: nil, for: .allEvents)
+            actionButton.addAction(UIAction { _ in
+                config.action?()
+            }, for: .touchUpInside)
+        } else {
+            actionButton.isHidden = true
+        }
     }
 }

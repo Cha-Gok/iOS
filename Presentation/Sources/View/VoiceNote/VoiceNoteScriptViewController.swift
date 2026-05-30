@@ -8,7 +8,7 @@ final class VoiceNoteScriptViewController: UICollectionViewController {
 
     init(viewModel: VoiceNoteViewModel) {
         self.viewModel = viewModel
-        super.init(collectionViewLayout: Self.makeLayout(viewModel: viewModel))
+        super.init(collectionViewLayout: UICollectionViewFlowLayout())
     }
 
     @available(*, unavailable)
@@ -19,6 +19,7 @@ final class VoiceNoteScriptViewController: UICollectionViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.keyboardDismissMode = .interactive
+        collectionView.collectionViewLayout = makeLayout()
 
         applySnapshot()
         observeTranscriptSections()
@@ -40,12 +41,20 @@ final class VoiceNoteScriptViewController: UICollectionViewController {
 // MARK: - Layout
 
 private extension VoiceNoteScriptViewController {
-    static func makeLayout(viewModel: VoiceNoteViewModel) -> UICollectionViewLayout {
-        UICollectionViewCompositionalLayout { _, environment in
+    func makeLayout() -> UICollectionViewLayout {
+        UICollectionViewCompositionalLayout { [weak self] sectionIndex, environment in
+            guard let self else { return nil }
+            guard let sectionType = self.dataSource.sectionIdentifier(for: sectionIndex) else { return nil }
+
             var config = UICollectionLayoutListConfiguration(appearance: .plain)
             config.backgroundColor = .clear
             config.showsSeparators = false
-            config.headerMode = .supplementary
+
+            if sectionType == .failure {
+                config.headerMode = .none
+            } else {
+                config.headerMode = .supplementary
+            }
 
             let section = NSCollectionLayoutSection.list(using: config, layoutEnvironment: environment)
 
@@ -60,15 +69,10 @@ private extension VoiceNoteScriptViewController {
                 )
             }
 
-            let isShowingSkeleton: Bool = switch viewModel.voiceNote.analysisState {
-            case .pending, .transcribing: true
-            default: false
-            }
-
             section.contentInsets = NSDirectionalEdgeInsets(
                 top: 12, leading: 20, bottom: 0, trailing: 20
             )
-            section.interGroupSpacing = isShowingSkeleton ? Constant.scriptCellSpacing : 16
+            section.interGroupSpacing = self.isShowingSkeleton ? Constant.scriptCellSpacing : 16
 
             return section
         }
@@ -126,6 +130,15 @@ private extension VoiceNoteScriptViewController {
             cell.contentConfiguration = ScriptSkeletonContentConfiguration(beginOffset: beginOffset)
         }
 
+        let warningCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
+            guard case .failure = item else { return }
+            cell.contentConfiguration = WarningContentConfiguration(
+                title: "요약 할 수 있는 음성이 기록되지 않았어요",
+                subTitle: "인식된 음성이 없어서\n전사를 실행할 수 없어요",
+                symbolIconName: "progress.indicator"
+            )
+        }
+
         let dataSource = UICollectionViewDiffableDataSource<Section, Item>(
             collectionView: collectionView
         ) { collectionView, indexPath, item in
@@ -135,6 +148,10 @@ private extension VoiceNoteScriptViewController {
             case .scriptSkeleton:
                 return collectionView.dequeueConfiguredReusableCell(
                     using: scriptSkeletonCellReg, for: indexPath, item: item
+                )
+            case .failure:
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: warningCellReg, for: indexPath, item: item
                 )
             }
         }
@@ -157,23 +174,31 @@ private extension VoiceNoteScriptViewController {
 
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        snapshot.appendSections([.scripts])
+        let isFailed = viewModel.voiceNote.analysisState == .transcriptionFailed
 
-        let items: [Item] = if isShowingSkeleton {
-            (0 ..< 30).map { idx in
-                .scriptSkeleton(index: idx, beginOffset: Double(idx % 3) * 0.2)
-            }
+        if isFailed {
+            snapshot.appendSections([.failure])
+            snapshot.appendItems([.failure], toSection: .failure)
         } else {
-            viewModel.scriptSections.indices.map { Item.script(index: $0) }
-        }
+            snapshot.appendSections([.scripts])
 
-        snapshot.appendItems(items, toSection: .scripts)
-        snapshot.reconfigureItems(items)
+            let items: [Item] = if isShowingSkeleton {
+                (0 ..< 30).map { idx in
+                    .scriptSkeleton(index: idx, beginOffset: Double(idx % 3) * 0.2)
+                }
+            } else {
+                viewModel.scriptSections.indices.map { Item.script(index: $0) }
+            }
+
+            snapshot.appendItems(items, toSection: .scripts)
+            snapshot.reconfigureItems(items)
+        }
         dataSource.apply(snapshot, animatingDifferences: true)
     }
 
     func reconfigureScripts() {
         var snapshot = dataSource.snapshot()
+        guard snapshot.sectionIdentifiers.contains(.scripts) else { return }
         let scriptItems = snapshot.itemIdentifiers(inSection: .scripts)
         guard !scriptItems.isEmpty else { return }
         snapshot.reconfigureItems(scriptItems)
@@ -274,10 +299,12 @@ extension VoiceNoteScriptViewController {
 extension VoiceNoteScriptViewController {
     enum Section: Int, CaseIterable {
         case scripts
+        case failure
     }
 
     enum Item: Hashable {
         case script(index: Int)
         case scriptSkeleton(index: Int, beginOffset: CFTimeInterval)
+        case failure
     }
 }

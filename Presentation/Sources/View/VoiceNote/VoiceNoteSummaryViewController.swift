@@ -155,7 +155,11 @@ private extension VoiceNoteSummaryViewController {
         let warningCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
             guard case .failure = item else { return }
             cell.contentConfiguration = WarningContentConfiguration(
-                regenerateAction: { [weak self] in
+                title: "요약을 생성하지 못했어요",
+                subTitle: "일시적인 오류가 발생했어요\n잠시 후 다시 시도해주세요",
+                buttonTitle: "재 생성",
+                symbolIconName: "exclamationmark.triangle.fill",
+                action: { [weak self] in
                     self?.viewModel.regenerateSummary()
                 }
             )
