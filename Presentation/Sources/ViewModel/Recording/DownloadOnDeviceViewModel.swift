@@ -54,6 +54,9 @@ extension DownloadOnDeviceViewModel {
             for await newStatus in stream {
                 self.status = newStatus
                 AppLogger.debug("OnDeviceStatus: \(newStatus)")
+                if newStatus.storage == .downloaded {
+                    self.dismiss() // 다운로드 완료 시 dismiss
+                }
             }
         }
     }
@@ -76,27 +79,35 @@ extension DownloadOnDeviceViewModel {
     }
 
     func cancelDownload() {
-        downloadTask?.cancel()
+        let task = downloadTask
         downloadTask = nil
         self.status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
         
         let useCase = onDeviceStatusUseCase
         Task {
+            task?.cancel()
+            _ = await task?.value
             try? await useCase.delete(model: .whisper)
         }
     }
 
     func dismiss() {
         statusObservationTask?.cancel()
-        downloadTask?.cancel()
+        
+        let task = downloadTask
+        downloadTask = nil
         
         // 다운로드가 완전히 완료되지 않은 상태(예: 취소 상태)에서 해제될 때만
         // 유즈케이스의 저장 캐시 및 디스크 상태를 완전히 초기화(notDownloaded)합니다.
         if status.storage != .downloaded {
             let useCase = onDeviceStatusUseCase
             Task {
+                task?.cancel()
+                _ = await task?.value
                 try? await useCase.delete(model: .whisper)
             }
+        } else {
+            task?.cancel()
         }
         coordinator?.dismissSheet(completion: true)
     }

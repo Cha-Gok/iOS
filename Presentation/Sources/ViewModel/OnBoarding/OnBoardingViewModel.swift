@@ -214,16 +214,25 @@ extension OnBoardingViewModel {
                 }
             }
             do {
-                for try await status in mlxRepository.download() {
-                    self.status = status
+                self.status = OnDeviceStatus(storage: .downloading(progress: 0), runtime: .unloaded)
+                try await mlxRepository.download { progress in
+                    Task { @MainActor in
+                        self.status = OnDeviceStatus(storage: .downloading(progress: progress), runtime: .unloaded)
+                    }
                 }
+                self.status = OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
             } catch let repoError as OnDeviceRepositoryError {
-                // 사용자가 취소한 경우에는 에러 알림 없이 다운로드 상태를 초기화
                 AppLogger.error(repoError)
-                errorMessage = repoError.errorDescription
+                if case .cancelled = repoError {
+                    self.status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+                } else {
+                    errorMessage = repoError.errorDescription
+                    self.status = OnDeviceStatus(storage: .failed, runtime: .unloaded)
+                }
             } catch {
                 AppLogger.error(error)
                 errorMessage = error.localizedDescription
+                self.status = OnDeviceStatus(storage: .failed, runtime: .unloaded)
             }
         }
     }
@@ -305,32 +314,22 @@ extension OnBoardingViewModel {
         }
 
         struct PreviewOnDeviceRepository: OnDeviceRepository {
-            func download() -> AsyncThrowingStream<OnDeviceStatus, any Error> {
-                AsyncThrowingStream(OnDeviceStatus.self, bufferingPolicy: .unbounded) { continuation in
-                    let task = Task {
-                        do {
-                            // 0%에서 100%까지 0.5초 간격으로 진행률을 올려 취소를 테스트할 충분한 시간을 줍니다.
-                            for progress in stride(from: 0.0, through: 1.0, by: 0.1) {
-                                try await Task.sleep(nanoseconds: 500_000_000) // 0.5초 간격
-                                try Task.checkCancellation()
-                                
-                                if progress < 1.0 {
-                                    continuation.yield(OnDeviceStatus(storage: .downloading(progress: progress), runtime: .unloaded))
-                                } else {
-                                    continuation.yield(OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
-                                }
-                            }
-                            continuation.finish()
-                        } catch is CancellationError {
-                            continuation.finish(throwing: OnDeviceRepositoryError.cancelled)
-                        } catch {
-                            continuation.finish(throwing: error)
-                        }
+            func checkStatus() async -> Domain.OnDeviceStatus {
+                .init(storage: .downloaded, runtime: .unloaded)
+            }
+            
+            func download(progressHandler: @Sendable @escaping (Double) -> Void) async throws(OnDeviceRepositoryError) {
+                do {
+                    // 0%에서 100%까지 0.5초 간격으로 진행률을 올려 취소를 테스트할 충분한 시간을 줍니다.
+                    for progress in stride(from: 0.0, through: 1.0, by: 0.1) {
+                        try await Task.sleep(nanoseconds: 500_000_000) // 0.5초 간격
+                        try Task.checkCancellation()
+                        progressHandler(progress)
                     }
-                    
-                    continuation.onTermination = { _ in
-                        task.cancel()
-                    }
+                } catch is CancellationError {
+                    throw .cancelled
+                } catch {
+                    throw .unknown(error)
                 }
             }
 
