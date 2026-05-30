@@ -86,7 +86,6 @@ extension DownloadOnDeviceViewModel {
         let useCase = onDeviceStatusUseCase
         Task {
             task?.cancel()
-            _ = await task?.value
             try? await useCase.delete(model: .whisper)
         }
     }
@@ -103,7 +102,6 @@ extension DownloadOnDeviceViewModel {
             let useCase = onDeviceStatusUseCase
             Task {
                 task?.cancel()
-                _ = await task?.value
                 try? await useCase.delete(model: .whisper)
             }
         } else {

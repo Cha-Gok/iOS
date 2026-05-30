@@ -76,6 +76,11 @@ public final class AppDIContainer {
     // MARK: - Whisper 모델 ( preload , download ) Status
 
     public func isWhisperModelDownloaded() async -> Bool {
+        let status = await onDeviceStatusUseCase.checkStatus(model: .whisper)
+        if case .downloading = status.storage {
+            return false
+        }
+
         do {
             _ = try await whisperProvider.getDownloadPath()
             return true

@@ -8,6 +8,8 @@ public protocol OnDeviceStatusUseCase: Sendable {
     func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError)
     /// 모델 제거
     func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError)
+    /// 현재 상태 조회
+    func checkStatus(model: ChaGokModel) async -> OnDeviceStatus
 }
 
 public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
@@ -52,6 +54,7 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
 
             try await repo.download { progress in
                 Task { [model] in
+                    guard await self.shouldPublishProgress(model: model) else { return }
                     await self.publish(
                         model: model,
                         status: OnDeviceStatus(storage: .downloading(progress: progress), runtime: .unloaded)
@@ -85,6 +88,7 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     }
 
     public func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError) {
+        isDownloading[model] = false
         guard let repo = repo(for: model) else { return }
         do {
             let status = try await repo.delete()
@@ -95,12 +99,24 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
         }
     }
 
-    private func syncStatus(model: ChaGokModel) async {
-        guard isDownloading[model] != true else { return }
+    public func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {
+        if isDownloading[model] == true {
+            return latest[model] ?? OnDeviceStatus(storage: .downloading(progress: 0.0), runtime: .unloaded)
+        }
         if let repo = repo(for: model) {
             let status = await repo.checkStatus()
             latest[model] = status
+            return status
         }
+        return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+    }
+
+    private func shouldPublishProgress(model: ChaGokModel) -> Bool {
+        return isDownloading[model] == true
+    }
+
+    private func syncStatus(model: ChaGokModel) async {
+        _ = await checkStatus(model: model)
     }
 
     private var lastPublishedTime: [ChaGokModel: Double] = [:]

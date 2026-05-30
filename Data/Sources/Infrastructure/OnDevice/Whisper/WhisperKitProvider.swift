@@ -125,8 +125,14 @@ public actor WhisperKitProvider: WhisperDataSource {
         let recommendedModel = WhisperKit.recommendedModels().default
         let relativePath = "huggingface/models/argmaxinc/whisperkit-coreml/\(recommendedModel)"
         let defaultPath = storageService.absoluteURL(for: relativePath)
+        
+        let configPath = "\(relativePath)/config.json"
+        let vocabPath = "\(relativePath)/vocab.json"
 
-        if storageService.exists(relativePath: relativePath) {
+        // 디렉토리 존재뿐만 아니라 핵심 구성 파일(config.json, vocab.json)의 완결성 검사를 수행하여 부분 다운로드 및 비정상 종료된 찌꺼기를 필터링합니다.
+        if storageService.exists(relativePath: relativePath),
+           storageService.exists(relativePath: configPath),
+           storageService.exists(relativePath: vocabPath) {
             modelDirectory = defaultPath
             self.recommendedModel = recommendedModel
             AppLogger.info("whisper 저장 위치 (디스크 감지) : \(defaultPath)")

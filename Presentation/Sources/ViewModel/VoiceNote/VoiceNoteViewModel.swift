@@ -22,7 +22,7 @@ public final class VoiceNoteViewModel {
     public private(set) var searchMode: Bool = false
     public private(set) var searchQuery: String = ""
     public private(set) var currentMatchIndex: Int = 0
-    public private(set) var isMLXModelSupported: Bool = true
+    public private(set) var isMLXModelSupported: Bool = (ChaGokModelSupport.current.model != .none)
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
