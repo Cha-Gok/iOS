@@ -152,16 +152,36 @@ private extension VoiceNoteSummaryViewController {
             cell.contentConfiguration = KeywordsSkeletonContentConfiguration(beginOffset: beginOffset)
         }
 
-        let warningCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { cell, _, item in
-            guard case .failure = item else { return }
-            cell.contentConfiguration = WarningContentConfiguration(
-                title: "요약을 생성하지 못했어요",
-                subTitle: "일시적인 오류가 발생했어요\n잠시 후 다시 시도해주세요",
-                buttonTitle: "재 생성",
-                symbolIconName: "exclamationmark.triangle.fill",
-                action: { [weak self] in
+        let warningCellReg = UICollectionView.CellRegistration<UICollectionViewCell, Item> { [weak self] cell, _, item in
+            guard case .failure = item, let self else { return }
+            
+            let title: String
+            let subTitle: String
+            let buttonTitle: String
+            let action: () -> Void
+            
+            if !self.viewModel.isMLXModelSupported {
+                title = "요약을 생성하지 못했어요"
+                subTitle = "AI 요약 기능이\n현재 기기에서는 지원되지 않습니다"
+                buttonTitle = "스크립트"
+                action = { [weak self] in
+                    self?.viewModel.updateCurrentPage(.script)
+                }
+            } else {
+                title = "요약을 생성하지 못했어요"
+                subTitle = "일시적인 오류가 발생했어요\n잠시 후 다시 시도해주세요"
+                buttonTitle = "재 생성"
+                action = { [weak self] in
                     self?.viewModel.regenerateSummary()
                 }
+            }
+            
+            cell.contentConfiguration = WarningContentConfiguration(
+                title: title,
+                subTitle: subTitle,
+                buttonTitle: buttonTitle,
+                symbolIconName: "exclamationmark.triangle.fill",
+                action: action
             )
         }
 
@@ -239,7 +259,7 @@ private extension VoiceNoteSummaryViewController {
 
     func applySnapshot() {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
-        let isFailed = viewModel.voiceNote.analysisState == .summarizationFailed
+        let isFailed = viewModel.voiceNote.analysisState == .summarizationFailed || !viewModel.isMLXModelSupported
 
         if isFailed {
             snapshot.appendSections([.metadata, .failure])
@@ -284,6 +304,7 @@ private extension VoiceNoteSummaryViewController {
     func observeAnalysisState() {
         withObservationTracking {
             _ = viewModel.voiceNote.analysisState
+            _ = viewModel.isMLXModelSupported
         } onChange: { [weak self] in
             guard let self else { return }
             Task { @MainActor in

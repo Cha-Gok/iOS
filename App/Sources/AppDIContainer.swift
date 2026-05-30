@@ -127,7 +127,8 @@ public final class AppDIContainer {
             voiceNote: voiceNote,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
-            playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService)
+            playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService),
+            availableSupportModelRepository: availableSupportModelRepository
         )
     }
 

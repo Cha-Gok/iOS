@@ -22,6 +22,7 @@ public final class VoiceNoteViewModel {
     public private(set) var searchMode: Bool = false
     public private(set) var searchQuery: String = ""
     public private(set) var currentMatchIndex: Int = 0
+    public private(set) var isMLXModelSupported: Bool = true
 
     @ObservationIgnored
     private var playbackObservationTask: Task<Void, Never>?
@@ -36,6 +37,7 @@ public final class VoiceNoteViewModel {
     private let voiceNoteUseCase: any VoiceNoteUseCase
     private let folderUseCase: any FolderUseCase
     private let playbackRepository: any VoiceRecordPlaybackRepository
+    private let availableSupportModelRepository: any AvailableModelSupportRepository
 
     // MARK: - Init
 
@@ -43,12 +45,14 @@ public final class VoiceNoteViewModel {
         voiceNote: VoiceNote,
         voiceNoteUseCase: any VoiceNoteUseCase,
         folderUseCase: any FolderUseCase,
-        playbackRepository: any VoiceRecordPlaybackRepository
+        playbackRepository: any VoiceRecordPlaybackRepository,
+        availableSupportModelRepository: any AvailableModelSupportRepository
     ) {
         self.voiceNote = voiceNote
         self.voiceNoteUseCase = voiceNoteUseCase
         self.folderUseCase = folderUseCase
         self.playbackRepository = playbackRepository
+        self.availableSupportModelRepository = availableSupportModelRepository
     }
 
     // MARK: - View Actions
@@ -57,6 +61,14 @@ public final class VoiceNoteViewModel {
         setupPlayback()
         fetchFolderName()
         observeVoiceNote()
+        checkMLXSupport()
+    }
+
+    private func checkMLXSupport() {
+        Task {
+            let support = await availableSupportModelRepository.checkMLXSupportModel()
+            self.isMLXModelSupported = (support.model != .none)
+        }
     }
 
     public func onDisappear() {
