@@ -145,7 +145,7 @@ public actor WhisperKitProvider: WhisperDataSource {
 
         AppLogger.info("오디오 전사 실행: \(audioPath)")
         return try await whisper.transcribe(
-            audioPath: audioPath.absoluteString,
+            audioPath: audioPath.path,
             decodeOptions: decodingOptions
         )
     }

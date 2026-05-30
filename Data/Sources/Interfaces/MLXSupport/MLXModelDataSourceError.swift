@@ -8,6 +8,10 @@ public enum MLXModelDataSourceError: LocalizedError, Sendable {
     case networkFailed
     /// 설치 경로를 찾지 못함
     case notFound
+    /// 다운로드 실패
+    case downloadFailed
+    /// 삭제 실패
+    case deleteFailed
     /// unknown
     case unknown(Error)
 
@@ -16,6 +20,8 @@ public enum MLXModelDataSourceError: LocalizedError, Sendable {
         case .cancelled: return "작업이 취소되었습니다"
         case .networkFailed: return "네트워크 연결이 유실되었습니다"
         case .notFound: return "설치 경로를 찾지 못합니다"
+        case .downloadFailed: return "다운로드에 실패했습니다"
+        case .deleteFailed: return "모델 경로 삭제 실패"
         case .unknown(let error): return error.localizedDescription
         }
     }

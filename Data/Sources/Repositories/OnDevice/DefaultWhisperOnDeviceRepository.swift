@@ -12,57 +12,30 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
         self.provider = provider
     }
 
-    public func download() -> AsyncThrowingStream<OnDeviceStatus, any Error> {
-        let provider = self.provider
-        return AsyncThrowingStream(
-            OnDeviceStatus.self,
-            bufferingPolicy: .unbounded
-        ) { continuation in
-            let task = Task {
-                do {
-                    continuation.yield(OnDeviceStatus(storage: .downloading(progress: 0), runtime: .unloaded))
-                    try await provider.download { progress in
-                        continuation.yield(OnDeviceStatus(
-                            storage: .downloading(progress: progress.fractionCompleted),
-                            runtime: .unloaded
-                        ))
-                    }
-                    continuation.yield(OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
-                    continuation.finish()
-                } catch is CancellationError {
-                    AppLogger.info(OnDeviceRepositoryError.cancelled.errorDescription)
-                    _ = try? await provider.delete()
-                    continuation.finish(throwing: OnDeviceRepositoryError.cancelled)
-                } catch let error as WhisperDataSourceError {
-                    let repoError: OnDeviceRepositoryError
-                    switch error {
-                    case .cancelled:
-                        repoError = .cancelled
-                    case .networkFailed, .notRecommendedModel:
-                        repoError = .networkFailed
-                    case .notFound:
-                        repoError = .unknown(error)
-                    case .loadFailed:
-                        repoError = .loadFailed
-                    case .unknown(let underlying):
-                        repoError = .unknown(underlying)
-                    }
-                    AppLogger.info(repoError.errorDescription)
-                    _ = try? await provider.delete()
-                    continuation.finish(throwing: repoError)
-                } catch {
-                    AppLogger.error(error.localizedDescription)
-                    _ = try? await provider.delete()
-                    continuation.finish(throwing: OnDeviceRepositoryError.mapDownloadError(error))
-                }
+    public func download(progressHandler: @Sendable @escaping (Double) -> Void) async throws(OnDeviceRepositoryError) {
+        do {
+            try await provider.download { progress in
+                progressHandler(progress.fractionCompleted)
             }
-            continuation.onTermination = { termination in
-                if case .cancelled = termination {
-                    Task { try? await provider.delete() }
-                }
-                task.cancel()
+        } catch {
+            AppLogger.error(error.localizedDescription)
+            _ = try? await provider.delete()
+            throw mapError(error)
+        }
+    }
+
+    private func mapError(_ error: Error) -> OnDeviceRepositoryError {
+        if let whisperError = error as? WhisperDataSourceError {
+            switch whisperError {
+            case .cancelled:
+                return .cancelled
+            case .networkFailed, .notRecommendedModel:
+                return .networkFailed
+            default:
+                return .unknown(whisperError)
             }
         }
+        return OnDeviceRepositoryError.mapDownloadError(error)
     }
 
     public func delete() async throws(DeleteOnDeviceRepositoryError) -> OnDeviceStatus {
@@ -72,6 +45,15 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
         } catch {
             AppLogger.error(error)
             throw .deleteWhisperFailed
+        }
+    }
+
+    public func checkStatus() async -> OnDeviceStatus {
+        do {
+            _ = try await provider.getDownloadPath()
+            return OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+        } catch {
+            return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
         }
     }
 }

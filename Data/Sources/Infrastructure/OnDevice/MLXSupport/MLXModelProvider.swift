@@ -31,35 +31,24 @@ public actor MLXModelProvider: MLXModelDataSource {
                 useLatest: false,
                 progressHandler: progressHandler
             )
-            
-            // 다운로드 완료 복귀 직후 태스크 취소 상태 감지 (레이스 컨디션 봉쇄)
-            if Task.isCancelled {
-                AppLogger.info("MLX 다운로드 완료 복귀 후 취소 상태 감지 - 즉각 강제 소거 및 에러 방출")
-                try? storageService.delete(fileURL: path.modelDirectory)
-                throw CancellationError()
-            }
-            
             container = path
-        } catch is CancellationError {
-            throw .cancelled
-        } catch let error as MLXModelDataSourceError {
-            AppLogger.error(error)
-            throw error
         } catch {
             if error is CancellationError ||
                (error as? URLError)?.code == .cancelled ||
                (error as NSError).domain == NSURLErrorDomain && (error as NSError).code == NSURLErrorCancelled {
                 throw .cancelled
             }
-            AppLogger.error(error.localizedDescription)
-            throw .unknown(error)
+            AppLogger.error(error)
+            throw .downloadFailed
         }
     }
 
     /// 메모리에서 모델을 해제합니다.
     public func clear() {
-        MLX.Memory.cacheLimit = 0
-        container = nil
+        if container != nil {
+            MLX.Memory.cacheLimit = 0
+            container = nil
+        }
     }
 
     /// 모델이 설치된 경로를  전달 하기 위한 함수
@@ -70,22 +59,33 @@ public actor MLXModelProvider: MLXModelDataSource {
         }
 
         // 앱 재시작 시 메모리 초기화에 대응하기 위해 디스크의 물리적인 경로 체크
+        let model = ChaGokModelSupport.current.model
         do {
-            let model: ChaGokModel = ChaGokModelSupport.current.model
             let configuration = try matchModelConfiguration(model: model)
-            let repoID = configuration.id
-            let relativePath = "huggingface/models/\(repoID)"
-            let defaultPath = storageService.absoluteURL(for: relativePath)
-
-            if storageService.exists(relativePath: relativePath) {
-                AppLogger.info("MLX 저장 위치 (디스크 감지) : \(defaultPath)")
-                return defaultPath
+            
+            // 1. 디렉토리 모델 처리
+            if case .directory(let url) = configuration.id {
+                let modelURL = url.scheme == nil ? storageService.absoluteURL(for: url.path) : url
+                if FileManager.default.fileExists(atPath: modelURL.path) {
+                    return modelURL
+                }
             }
+            
+            // 2. 허브 모델(.id) 처리
+            if case .id(let name, _) = configuration.id {
+                let cachesURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+                let repoFolderName = "models--" + name.replacingOccurrences(of: "/", with: "--")
+                let snapshotsURL = cachesURL.appendingPathComponent("huggingface/hub/\(repoFolderName)/snapshots")
+                
+                if let firstSnapshot = try? FileManager.default.contentsOfDirectory(at: snapshotsURL, includingPropertiesForKeys: nil).first {
+                    return firstSnapshot
+                }
+            }
+            
+            throw MLXModelDataSourceError.notFound
         } catch {
             throw .notFound
         }
-
-        throw .notFound
     }
 
     public nonisolated func loadModel() async throws(MLXModelDataSourceError) -> ModelContext {
@@ -115,33 +115,52 @@ public actor MLXModelProvider: MLXModelDataSource {
             clear()
         }
         do {
-            // 캐시된 경로가 있거나 디스크 감지가 되는 경우 해당 경로를 사용
-            let downloadURL: URL
-            if let path = try? await getDownloadPath() {
-                downloadURL = path
-            } else {
-                // 다운로드 중 취소된 경우 등의 대비를 위해 기본 경로 계산
-                let model = ChaGokModelSupport.current.model
-                let configuration = try matchModelConfiguration(model: model)
-                let repoID = configuration.id
-                let relativePath = "huggingface/models/\(repoID)"
-                downloadURL = storageService.absoluteURL(for: relativePath)
+            let model = ChaGokModelSupport.current.model
+            let configuration = try matchModelConfiguration(model: model)
+            
+            // 1. container가 존재하는 경우 바로 지우기
+            if let resolvedDirectory = container?.modelDirectory {
+                let deleteURL: URL
+                switch configuration.id {
+                case .directory:
+                    deleteURL = resolvedDirectory
+                case .id:
+                    deleteURL = resolvedDirectory.deletingLastPathComponent().deletingLastPathComponent()
+                }
+                
+                if FileManager.default.fileExists(atPath: deleteURL.path) {
+                    do {
+                        try storageService.delete(fileURL: deleteURL)
+                    } catch {
+                        AppLogger.error("MLX 모델 삭제 경로 오류 : \(deleteURL)")
+                    }
+                }
+                AppLogger.info("MLX 모델 삭제 완료 (container 기반): \(deleteURL.path)")
+                return
             }
             
-            do {
-                try storageService.delete(fileURL: downloadURL)
-            } catch {
-                guard case .fileNotFound = error else {
-                    throw error
+            // 2. container가 없는 경우 디스크 물리 경로를 찾아서 지우기
+            let deleteURL: URL
+            switch configuration.id {
+            case .directory(let url):
+                deleteURL = url.scheme == nil ? storageService.absoluteURL(for: url.path) : url
+            case .id(let name, _):
+                let cachesURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+                let repoFolderName = "models--" + name.replacingOccurrences(of: "/", with: "--")
+                deleteURL = cachesURL.appendingPathComponent("huggingface/hub/\(repoFolderName)")
+            }
+            
+            if FileManager.default.fileExists(atPath: deleteURL.path) {
+                do {
+                    try storageService.delete(fileURL: deleteURL)
+                } catch {
+                    AppLogger.info("MLX 모델 삭제 실패 (물리 경로 기반): \(deleteURL.path)")
                 }
             }
-            AppLogger.info("MLX 모델/임시 폴더 삭제 완료: \(downloadURL.path)")
-        } catch is CancellationError {
-            throw .cancelled
-        } catch let error as MLXModelDataSourceError {
-            throw error
+            AppLogger.info("MLX 모델 삭제 완료 (물리 경로 기반): \(deleteURL.path)")
         } catch {
-            throw .unknown(error)
+            AppLogger.error(error)
+            throw MLXModelDataSourceError.deleteFailed
         }
     }
 }

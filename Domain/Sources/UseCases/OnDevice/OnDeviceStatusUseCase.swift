@@ -29,7 +29,10 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     public func subscribe(model: ChaGokModel) -> AsyncStream<OnDeviceStatus> {
         AsyncStream(bufferingPolicy: .bufferingNewest(1)) { cont in
             let id = UUID()
-            Task { await self.addSubscriber(id: id, model: model, continuation: cont) }
+            Task {
+                await self.syncStatus(model: model)
+                await self.addSubscriber(id: id, model: model, continuation: cont)
+            }
 
             cont.onTermination = { _ in
                 Task { await self.unsubscribe(id: id) }
@@ -44,27 +47,31 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
         defer { isDownloading[model] = false }
         
         do {
-            for try await status in repo.download() {
-                try Task.checkCancellation()
-                await publish(model: model, status: status)
+            // 다운로드 시작 상태 알림
+            await publish(model: model, status: OnDeviceStatus(storage: .downloading(progress: 0), runtime: .unloaded))
+            
+            try await repo.download { progress in
+                Task { [model] in
+                    await self.publish(
+                        model: model,
+                        status: OnDeviceStatus(storage: .downloading(progress: progress), runtime: .unloaded)
+                    )
+                }
             }
+            
+            // 다운로드 완료 상태 알림
+            await publish(model: model, status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
         } catch {
             let mappedError: OnDeviceStatusUseCaseError
-            if error is CancellationError {
+            switch error {
+            case .cancelled:
                 mappedError = .cancelled
-            } else if let repoError = error as? OnDeviceRepositoryError {
-                switch repoError {
-                case .cancelled:
-                    mappedError = .cancelled
-                case .networkFailed:
-                    mappedError = .networkFailed
-                case .loadFailed:
-                    mappedError = .loadFailed
-                case .unknown(let err):
-                    mappedError = .unknown(err)
-                }
-            } else {
-                mappedError = .unknown(error)
+            case .networkFailed:
+                mappedError = .networkFailed
+            case .loadFailed:
+                mappedError = .loadFailed
+            case .unknown(let underlying):
+                mappedError = .unknown(underlying)
             }
             
             AppLogger.error(mappedError)
@@ -86,6 +93,14 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
         } catch {
             AppLogger.error(error)
             throw error
+        }
+    }
+
+    private func syncStatus(model: ChaGokModel) async {
+        guard isDownloading[model] != true else { return }
+        if let repo = repo(for: model) {
+            let status = await repo.checkStatus()
+            latest[model] = status
         }
     }
 
