@@ -120,7 +120,7 @@ extension MainViewModel {
     }
 
     func pushVoiceNoteView(voiceNote: VoiceNote) {
-        mainCoordinator?.pushVoiceNoteView(voiceNote: voiceNote)
+        mainCoordinator?.pushVoiceNoteView(voiceNote: voiceNote, isTrashMode: false)
     }
 
     func presentRecodingView() {

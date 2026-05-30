@@ -127,13 +127,14 @@ public final class AppDIContainer {
         )
     }
 
-    public func makeVoiceNoteViewModel(voiceNote: VoiceNote) -> VoiceNoteViewModel {
+    public func makeVoiceNoteViewModel(voiceNote: VoiceNote, isTrashMode: Bool = false) -> VoiceNoteViewModel {
         VoiceNoteViewModel(
             voiceNote: voiceNote,
             voiceNoteUseCase: voiceNoteUseCase,
             folderUseCase: folderUseCase,
             playbackRepository: DefaultVoiceRecordPlaybackRepository(storageService: storageService),
-            availableSupportModelRepository: availableSupportModelRepository
+            availableSupportModelRepository: availableSupportModelRepository,
+            isTrashMode: isTrashMode
         )
     }
 

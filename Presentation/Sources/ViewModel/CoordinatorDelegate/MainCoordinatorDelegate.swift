@@ -10,7 +10,7 @@ public protocol MainCoordinatorDelegate: AnyObject {
     /// 개인 폴더로 push 하는 함수
     func pushMyFolderView(category: CategoryToggle)
     /// 음성 노트로 push 하는 함수
-    func pushVoiceNoteView(voiceNote: VoiceNote)
+    func pushVoiceNoteView(voiceNote: VoiceNote, isTrashMode: Bool)
     /// 녹음 시작 present 함수
     func presentRecodingView()
     /// 공용 Pop함수
