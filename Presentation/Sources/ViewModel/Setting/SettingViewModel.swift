@@ -113,6 +113,10 @@ public final class SettingViewModel {
 
     private func updateModelStatus(model: ChaGokModel, status: OnDeviceStatus) {
         if let index = models.firstIndex(where: { $0.model == model }) {
+            let currentStatus = models[index].status
+            if case .downloading = currentStatus.storage, case .downloading = status.storage {
+                return
+            }
             models[index].status = status
         }
     }
