@@ -1,0 +1,99 @@
+<svg width="1200" height="660" viewBox="0 0 1200 660" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="660" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D0D11"/>
+      <stop offset="0.56" stop-color="#15101D"/>
+      <stop offset="1" stop-color="#2B0A64"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#1C1726"/>
+      <stop offset="1" stop-color="#121018"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#B18CFF"/>
+      <stop offset="1" stop-color="#754ACF"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="132%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#000000" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="660" rx="32" fill="url(#bg)"/>
+  <circle cx="1020" cy="620" r="290" fill="#754ACF" opacity="0.34"/>
+  <circle cx="120" cy="600" r="210" fill="#754ACF" opacity="0.14"/>
+
+  <text x="64" y="74" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="34" font-weight="800">주요 기능</text>
+  <text x="64" y="110" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="18" font-weight="500">녹음부터 요약, 검색과 폴더 관리까지 이어지는 온디바이스 음성 기록 흐름</text>
+
+  <path d="M190 270h820" stroke="#754ACF" stroke-opacity="0.34" stroke-width="6" stroke-linecap="round"/>
+
+  <g transform="translate(64 154)" filter="url(#shadow)">
+    <rect width="238" height="230" rx="28" fill="url(#card)" stroke="#6C4BA6"/>
+    <rect x="30" y="30" width="66" height="66" rx="22" fill="url(#accent)"/>
+    <path d="M58 46c0-9 12-9 12 0v16c0 9-12 9-12 0V46Z" stroke="#F8F5FF" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M50 62c2 17 28 17 30 0M64 82v11M55 93h18" stroke="#F8F5FF" stroke-width="4.5" stroke-linecap="round"/>
+    <text x="30" y="136" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="26" font-weight="800">녹음</text>
+    <text x="30" y="172" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16">권한 확인과 파형 표시</text>
+    <text x="30" y="200" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16">일시정지·재개·저장</text>
+  </g>
+
+  <g transform="translate(346 154)" filter="url(#shadow)">
+    <rect width="238" height="230" rx="28" fill="url(#card)" stroke="#6C4BA6"/>
+    <rect x="30" y="30" width="66" height="66" rx="22" fill="url(#accent)"/>
+    <path d="M45 62c5-18 11 18 18 0s13 18 20 0" stroke="#F8F5FF" stroke-width="6" stroke-linecap="round"/>
+    <path d="M118 38h48c9 0 16 7 16 16v54h-50c-8 0-14-6-14-14V38Z" fill="#2A2140" stroke="#8E68E4" stroke-width="2"/>
+    <path d="M134 60h28M134 80h34M134 100h22" stroke="#B997FF" stroke-width="6" stroke-linecap="round"/>
+    <text x="30" y="136" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="26" font-weight="800">전사</text>
+    <text x="30" y="172" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16">WhisperKit 기반 STT</text>
+    <text x="30" y="200" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16">녹음을 스크립트로 변환</text>
+  </g>
+
+  <g transform="translate(628 154)" filter="url(#shadow)">
+    <rect width="238" height="230" rx="28" fill="url(#card)" stroke="#6C4BA6"/>
+    <rect x="30" y="30" width="66" height="66" rx="22" fill="url(#accent)"/>
+    <path d="M62 42l7 16 17 7-17 7-7 16-7-16-17-7 17-7 7-16Z" fill="#F8F5FF"/>
+    <path d="M116 44h70M116 69h48M116 94h62" stroke="#B997FF" stroke-width="7" stroke-linecap="round"/>
+    <rect x="116" y="108" width="78" height="22" rx="11" fill="#EEE7FF"/>
+    <text x="135" y="124" fill="#241B37" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="12" font-weight="800">keyword</text>
+    <text x="30" y="136" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="26" font-weight="800">요약</text>
+    <text x="30" y="172" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16">MLX 기반 핵심 요약</text>
+    <text x="30" y="200" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16">키워드와 포인트 생성</text>
+  </g>
+
+  <g transform="translate(910 154)" filter="url(#shadow)">
+    <rect width="238" height="230" rx="28" fill="url(#card)" stroke="#6C4BA6"/>
+    <rect x="30" y="30" width="66" height="66" rx="22" fill="url(#accent)"/>
+    <path d="M48 58h21l8 9h17v28H48V58Z" fill="#F8F5FF"/>
+    <circle cx="138" cy="74" r="17" stroke="#B997FF" stroke-width="7"/>
+    <path d="M151 87l21 21" stroke="#B997FF" stroke-width="7" stroke-linecap="round"/>
+    <text x="30" y="136" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="26" font-weight="800">정리</text>
+    <text x="30" y="172" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16">폴더·검색·휴지통</text>
+    <text x="30" y="200" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16">기록을 계속 관리</text>
+  </g>
+
+  <g transform="translate(64 442)">
+    <rect width="1072" height="130" rx="28" fill="#F4EEFF"/>
+    <text x="36" y="48" fill="#754ACF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="22" font-weight="900">세부 기능</text>
+
+    <g transform="translate(36 70)">
+      <rect width="190" height="38" rx="19" fill="#FFFFFF" stroke="#D7C7FF"/>
+      <text x="24" y="25" fill="#241B37" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="800">타임스탬프 재생</text>
+    </g>
+    <g transform="translate(250 70)">
+      <rect width="218" height="38" rx="19" fill="#FFFFFF" stroke="#D7C7FF"/>
+      <text x="24" y="25" fill="#241B37" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="800">스크립트 편집·재요약</text>
+    </g>
+    <g transform="translate(492 70)">
+      <rect width="202" height="38" rx="19" fill="#FFFFFF" stroke="#D7C7FF"/>
+      <text x="24" y="25" fill="#241B37" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="800">모델 다운로드 관리</text>
+    </g>
+    <g transform="translate(718 70)">
+      <rect width="154" height="38" rx="19" fill="#FFFFFF" stroke="#D7C7FF"/>
+      <text x="24" y="25" fill="#241B37" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="800">언어 설정</text>
+    </g>
+    <g transform="translate(896 70)">
+      <rect width="140" height="38" rx="19" fill="#FFFFFF" stroke="#D7C7FF"/>
+      <text x="24" y="25" fill="#241B37" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="800">앱 정책</text>
+    </g>
+  </g>
+</svg>

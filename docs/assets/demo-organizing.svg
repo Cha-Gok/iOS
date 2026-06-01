@@ -1,0 +1,25 @@
+<svg width="320" height="560" viewBox="0 0 320 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="560" rx="44" fill="#14111D"/>
+  <rect x="22" y="24" width="276" height="512" rx="34" fill="#1B1626"/>
+  <text x="46" y="78" fill="#F7F7F8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="22" font-weight="800">전체</text>
+  <rect x="46" y="110" width="228" height="42" rx="21" fill="#2A203D"/>
+  <text x="68" y="137" fill="#AEB4C0" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="14">검색어를 입력하세요</text>
+  <g transform="translate(46 184)">
+    <rect width="228" height="70" rx="18" fill="#2A203D"/>
+    <rect x="18" y="20" width="32" height="30" rx="8" fill="#754ACF"/>
+    <text x="66" y="34" fill="#F7F7F8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16" font-weight="800">최근 기록</text>
+    <text x="66" y="56" fill="#AEB4C0" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="12">5개 항목</text>
+  </g>
+  <g transform="translate(46 274)">
+    <rect width="228" height="70" rx="18" fill="#2A203D"/>
+    <rect x="18" y="20" width="32" height="30" rx="8" fill="#754ACF"/>
+    <text x="66" y="34" fill="#F7F7F8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16" font-weight="800">프로젝트 회의</text>
+    <text x="66" y="56" fill="#AEB4C0" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="12">12개 기록</text>
+  </g>
+  <g transform="translate(46 364)">
+    <rect width="228" height="70" rx="18" fill="#2A203D"/>
+    <rect x="18" y="20" width="32" height="30" rx="8" fill="#754ACF"/>
+    <text x="66" y="34" fill="#F7F7F8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16" font-weight="800">휴지통</text>
+    <text x="66" y="56" fill="#AEB4C0" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="12">복원 또는 영구 삭제</text>
+  </g>
+</svg>
