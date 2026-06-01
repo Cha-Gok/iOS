@@ -63,6 +63,7 @@ private let appTarget = Target.target(
         .project(target: "Data", path: "../Data")
     ],
     settings: .settings(
+        base: ["ASSETCATALOG_COMPILER_APPICON_NAME": "ChaGok"],
         configurations: [
             .debug(name: "Debug", settings: [
                 "CODE_SIGN_IDENTITY": "Apple Development",
