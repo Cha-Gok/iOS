@@ -20,6 +20,10 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     private var latest: [ChaGokModel: OnDeviceStatus] = [:]
     private var subscribers: [UUID: (model: ChaGokModel, cont: AsyncStream<OnDeviceStatus>.Continuation)] = [:]
 
+    /// 모델별 현재 활성 다운로드 Task 및 식별자
+    private var downloadTasks: [ChaGokModel: Task<Void, any Error>] = [:]
+    private var downloadIDs: [ChaGokModel: UUID] = [:]
+
     public init(
         whisperRepository: any OnDeviceRepository,
         mlxRepository: any OnDeviceRepository
@@ -45,31 +49,63 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     public func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {
         guard let repo = repo(for: model) else { return }
 
-        do {
-            // 다운로드 시작 상태 알림
-            await publish(model: model, status: OnDeviceStatus(storage: .downloading(progress: 0)))
+        // 기존 다운로드가 있으면 취소
+        downloadTasks[model]?.cancel()
+        downloadTasks[model] = nil
 
+        let downloadID = UUID()
+        downloadIDs[model] = downloadID
+        isDownloading[model] = true
+
+        await publish(model: model, status: OnDeviceStatus(storage: .downloading(progress: 0)))
+
+        // 취소 가능한 내부 Task로 감싸서 관리
+        let task = Task<Void, any Error> {
             try await repo.download { progress in
-                Task { [model] in
+                Task { [model, downloadID] in
+                    // 이 다운로드가 아직 활성 상태인 경우에만 progress 발행
+                    guard await self.downloadIDs[model] == downloadID else { return }
                     await self.publish(
                         model: model,
                         status: OnDeviceStatus(storage: .downloading(progress: progress))
                     )
                 }
             }
+        }
+        downloadTasks[model] = task
 
-            // 다운로드 완료 상태 알림
+        do {
+            try await task.value
+
+            // 이 다운로드가 아직 활성 상태인 경우에만 완료 처리
+            guard downloadIDs[model] == downloadID else { return }
+            downloadTasks[model] = nil
+            isDownloading[model] = false
             await publish(model: model, status: OnDeviceStatus(storage: .downloaded))
         } catch {
-            let mappedError: OnDeviceStatusUseCaseError = switch error {
-            case .cancelled:
-                .cancelled
-            case .networkFailed:
-                .networkFailed
-            case .loadFailed:
-                .loadFailed
-            case .unknown(let underlying):
-                .unknown(underlying)
+            // 이 다운로드가 이미 교체된 경우(새 다운로드가 시작됨) 조용히 종료
+            guard downloadIDs[model] == downloadID else {
+                throw .cancelled
+            }
+            downloadTasks[model] = nil
+            isDownloading[model] = false
+
+            let mappedError: OnDeviceStatusUseCaseError
+            if error is CancellationError {
+                mappedError = .cancelled
+            } else if let repoError = error as? OnDeviceRepositoryError {
+                mappedError = switch repoError {
+                case .cancelled:
+                    .cancelled
+                case .networkFailed:
+                    .networkFailed
+                case .loadFailed:
+                    .loadFailed
+                case .unknown(let underlying):
+                    .unknown(underlying)
+                }
+            } else {
+                mappedError = .unknown(error)
             }
 
             AppLogger.error(mappedError)
@@ -84,7 +120,12 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     }
 
     public func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError) {
+        // 진행 중인 다운로드 취소
+        downloadTasks[model]?.cancel()
+        downloadTasks[model] = nil
+        downloadIDs[model] = nil
         isDownloading[model] = false
+
         guard let repo = repo(for: model) else { return }
         do {
             let status = try await repo.delete()
@@ -114,6 +155,11 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     private var lastPublishedTime: [ChaGokModel: Double] = [:]
 
     private func publish(model: ChaGokModel, status: OnDeviceStatus) async {
+        // 취소/삭제 후 남아있는 progress 콜백이 .downloading을 다시 발행하는 것을 방지
+        if case .downloading = status.storage, isDownloading[model] != true {
+            return
+        }
+
         if case .downloading(let progress) = status.storage {
             let currentTime = Date().timeIntervalSince1970
             let lastTime = lastPublishedTime[model] ?? 0.0
@@ -159,3 +205,4 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
         }
     }
 }
+
