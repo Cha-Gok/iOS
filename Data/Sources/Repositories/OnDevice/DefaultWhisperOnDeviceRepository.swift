@@ -41,7 +41,7 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
     public func delete() async throws(DeleteOnDeviceRepositoryError) -> OnDeviceStatus {
         do {
             try await provider.delete()
-            return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+            return OnDeviceStatus(storage: .notDownloaded)
         } catch {
             AppLogger.error(error)
             throw .deleteWhisperFailed
@@ -51,9 +51,9 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
     public func checkStatus() async -> OnDeviceStatus {
         do {
             _ = try await provider.getDownloadPath()
-            return OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+            return OnDeviceStatus(storage: .downloaded)
         } catch {
-            return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+            return OnDeviceStatus(storage: .notDownloaded)
         }
     }
 }

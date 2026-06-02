@@ -27,19 +27,19 @@ public final class DefaultAvailableModelSupportRepository: AvailableModelSupport
     /// 현재 사용자의 On-Device LLM 모두  fetch 합니다.
     public func fetchSupportModels() async -> [ChaGokModelState] {
         let models: [ChaGokModel] = ChaGokModel.models
-        var whisperStatus = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
-        var mlxStatus = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+        var whisperStatus = OnDeviceStatus(storage: .notDownloaded)
+        var mlxStatus = OnDeviceStatus(storage: .notDownloaded)
 
         do {
             _ = try await whisperProvider.getDownloadPath()
-            whisperStatus = OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+            whisperStatus = OnDeviceStatus(storage: .downloaded)
         } catch {
             AppLogger.info("Whisper 모델 다운로드 경로 없음: \(error.localizedDescription)")
         }
 
         do {
             _ = try await mlxProvider.getDownloadPath()
-            mlxStatus = OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+            mlxStatus = OnDeviceStatus(storage: .downloaded)
         } catch {
             AppLogger.info("MLX 모델 다운로드 경로 없음: \(error.localizedDescription)")
         }

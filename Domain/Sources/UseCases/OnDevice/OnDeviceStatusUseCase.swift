@@ -43,27 +43,23 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
     }
 
     public func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {
-        guard isDownloading[model] != true, let repo = repo(for: model) else { return }
-
-        isDownloading[model] = true
-        defer { isDownloading[model] = false }
+        guard let repo = repo(for: model) else { return }
 
         do {
             // 다운로드 시작 상태 알림
-            await publish(model: model, status: OnDeviceStatus(storage: .downloading(progress: 0), runtime: .unloaded))
+            await publish(model: model, status: OnDeviceStatus(storage: .downloading(progress: 0)))
 
             try await repo.download { progress in
                 Task { [model] in
-                    guard await self.shouldPublishProgress(model: model) else { return }
                     await self.publish(
                         model: model,
-                        status: OnDeviceStatus(storage: .downloading(progress: progress), runtime: .unloaded)
+                        status: OnDeviceStatus(storage: .downloading(progress: progress))
                     )
                 }
             }
 
             // 다운로드 완료 상태 알림
-            await publish(model: model, status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
+            await publish(model: model, status: OnDeviceStatus(storage: .downloaded))
         } catch {
             let mappedError: OnDeviceStatusUseCaseError = switch error {
             case .cancelled:
@@ -79,9 +75,9 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
             AppLogger.error(mappedError)
             if case .cancelled = mappedError {
                 // 사용자 취소 시 상태를 .notDownloaded로 복구하여 구독 모델들에 알림
-                await publish(model: model, status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+                await publish(model: model, status: OnDeviceStatus(storage: .notDownloaded))
             } else {
-                await publish(model: model, status: OnDeviceStatus(storage: .failed, runtime: .unloaded))
+                await publish(model: model, status: OnDeviceStatus(storage: .failed))
             }
             throw mappedError
         }
@@ -101,18 +97,14 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
 
     public func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {
         if isDownloading[model] == true {
-            return latest[model] ?? OnDeviceStatus(storage: .downloading(progress: 0.0), runtime: .unloaded)
+            return latest[model] ?? OnDeviceStatus(storage: .downloading(progress: 0.0))
         }
         if let repo = repo(for: model) {
             let status = await repo.checkStatus()
             latest[model] = status
             return status
         }
-        return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
-    }
-
-    private func shouldPublishProgress(model: ChaGokModel) -> Bool {
-        return isDownloading[model] == true
+        return OnDeviceStatus(storage: .notDownloaded)
     }
 
     private func syncStatus(model: ChaGokModel) async {

@@ -6,15 +6,11 @@ import Foundation
 public struct OnDeviceStatus: Hashable, Sendable {
     /// 디스크 또는 캐시 상의 저장 상태입니다.
     public var storage: StorageState
-    /// 메모리 상에서 모델이 준비된 상태입니다.
-    public var runtime: RuntimeState
 
     public init(
-        storage: StorageState = .notDownloaded,
-        runtime: RuntimeState = .unloaded
+        storage: StorageState = .notDownloaded
     ) {
         self.storage = storage
-        self.runtime = runtime
     }
 
     /// 다운로드 및 삭제처럼, 모델 파일의 보관 상태를 나타냅니다.
@@ -27,15 +23,5 @@ public struct OnDeviceStatus: Hashable, Sendable {
         case downloaded
         /// 저장 단계에서 실패한 상태입니다.
         case failed
-    }
-
-    /// 로드처럼, 메모리 적재 여부를 나타냅니다.
-    public enum RuntimeState: Sendable, Hashable {
-        /// 메모리에 올려지지 않은 상태입니다.
-        case unloaded
-        /// 메모리 로드가 진행 중인 상태입니다.
-        case loading
-        /// 메모리에 적재된 상태입니다.
-        case loaded
     }
 }
