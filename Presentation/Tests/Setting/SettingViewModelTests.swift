@@ -35,7 +35,7 @@ final class SettingMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
     func subscribe(model: ChaGokModel) -> AsyncStream<OnDeviceStatus> {
         AsyncStream { cont in
             self.continuation = cont
-            cont.yield(OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+            cont.yield(OnDeviceStatus(storage: .notDownloaded))
         }
     }
 
@@ -44,9 +44,9 @@ final class SettingMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
         lastDownloadedModel = model
         switch downloadResult {
         case .success:
-            emit(status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded))
+            emit(status: OnDeviceStatus(storage: .downloaded))
         case .failure(let error):
-            emit(status: OnDeviceStatus(storage: .failed, runtime: .unloaded))
+            emit(status: OnDeviceStatus(storage: .failed))
             throw error
         }
     }
@@ -56,7 +56,7 @@ final class SettingMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
         lastDeletedModel = model
         switch deleteResult {
         case .success:
-            emit(status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+            emit(status: OnDeviceStatus(storage: .notDownloaded))
         case .failure(let error):
             throw error
         }
@@ -66,7 +66,7 @@ final class SettingMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
         continuation?.yield(status)
     }
 
-    var checkStatusResult: OnDeviceStatus = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+    var checkStatusResult: OnDeviceStatus = OnDeviceStatus(storage: .notDownloaded)
 
     func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {
         return checkStatusResult
@@ -168,13 +168,13 @@ final class SettingViewModelTests: XCTestCase {
                 title: "whisper title",
                 subTitle: "whisper subTitle",
                 model: .whisper,
-                status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+                status: OnDeviceStatus(storage: .downloaded)
             ),
             ChaGokModelState(
                 title: "gemma4 title",
                 subTitle: "gemma4 subTitle",
                 model: .gemma4_e2b_4bit,
-                status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+                status: OnDeviceStatus(storage: .notDownloaded)
             )
         ]
         sut.mockAvailableModelRepo.setFetchSupportModelsResult(mockModels)
@@ -214,7 +214,7 @@ final class SettingViewModelTests: XCTestCase {
                 title: "whisper title",
                 subTitle: "whisper subTitle",
                 model: .whisper,
-                status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+                status: OnDeviceStatus(storage: .notDownloaded)
             )
         ])
 
@@ -237,7 +237,7 @@ final class SettingViewModelTests: XCTestCase {
                 title: "gemma4 title",
                 subTitle: "gemma4 subTitle",
                 model: .gemma4_e2b_4bit,
-                status: OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+                status: OnDeviceStatus(storage: .notDownloaded)
             )
         ])
 
@@ -262,7 +262,7 @@ final class SettingViewModelTests: XCTestCase {
                 title: "whisper title",
                 subTitle: "whisper subTitle",
                 model: .whisper,
-                status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+                status: OnDeviceStatus(storage: .downloaded)
             )
         ])
 
@@ -285,7 +285,7 @@ final class SettingViewModelTests: XCTestCase {
                 title: "gemma4 title",
                 subTitle: "gemma4 subTitle",
                 model: .gemma4_e2b_4bit,
-                status: OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+                status: OnDeviceStatus(storage: .downloaded)
             )
         ])
 

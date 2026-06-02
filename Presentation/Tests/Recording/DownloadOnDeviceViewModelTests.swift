@@ -6,11 +6,9 @@ import XCTest
 @MainActor
 final class MockDownloadOnDeviceCoordinator: DownloadOnDeviceCoordinatorDelegate {
     private(set) var dismissSheetCallCount = 0
-    private(set) var completionValue: Bool?
 
-    func dismissSheet(completion: Bool) {
+    func dismissSheet() {
         dismissSheetCallCount += 1
-        completionValue = completion
     }
 }
 
@@ -22,7 +20,7 @@ final class DownloadMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked
 
     func subscribe(model: ChaGokModel) -> AsyncStream<OnDeviceStatus> {
         AsyncStream { cont in
-            cont.yield(OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded))
+            cont.yield(OnDeviceStatus(storage: .notDownloaded))
             cont.finish()
         }
     }
@@ -42,7 +40,7 @@ final class DownloadMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked
     }
 
     func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {
-        return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+        return OnDeviceStatus(storage: .notDownloaded)
     }
 }
 
@@ -137,6 +135,5 @@ extension DownloadOnDeviceViewModelTests {
 
         // Then
         XCTAssertEqual(sut.coordinator.dismissSheetCallCount, 1)
-        XCTAssertTrue(sut.coordinator.completionValue ?? false)
     }
 }

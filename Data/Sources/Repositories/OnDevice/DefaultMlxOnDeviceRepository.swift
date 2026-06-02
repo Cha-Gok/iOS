@@ -41,14 +41,14 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
     public func delete() async throws(DeleteOnDeviceRepositoryError) -> OnDeviceStatus {
         do {
             try await provider.delete()
-            return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+            return OnDeviceStatus(storage: .notDownloaded)
         } catch {
             AppLogger.error(error)
             switch error {
             case .cancelled:
                 throw .cancelled
             case .notFound, .downloadFailed, .deleteFailed:
-                return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+                return OnDeviceStatus(storage: .notDownloaded)
             case .networkFailed:
                 throw .deleteMLXFailed
             case .unknown(let underlying):
@@ -67,9 +67,9 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
     public func checkStatus() async -> OnDeviceStatus {
         do {
             _ = try await provider.getDownloadPath()
-            return OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+            return OnDeviceStatus(storage: .downloaded)
         } catch {
-            return OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+            return OnDeviceStatus(storage: .notDownloaded)
         }
     }
 }

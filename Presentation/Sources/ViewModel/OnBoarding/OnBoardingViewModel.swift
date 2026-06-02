@@ -54,8 +54,7 @@ public final class OnBoardingViewModel {
     private(set) var modelSupport: Bool = false
     private(set) var downloadTask: Task<Void, Never>?
     private(set) var status: OnDeviceStatus = .init(
-        storage: .notDownloaded,
-        runtime: .unloaded
+        storage: .notDownloaded
     )
     private(set) var scrollEnabled: Bool = true
 
@@ -212,31 +211,31 @@ extension OnBoardingViewModel {
                 scrollEnabled = true
                 if Task.isCancelled {
                     AppLogger.debug("Download Task Cancelled!!")
-                    status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+                    status = OnDeviceStatus(storage: .notDownloaded)
                 }
             }
             do {
-                self.status = OnDeviceStatus(storage: .downloading(progress: 0), runtime: .unloaded)
+                self.status = OnDeviceStatus(storage: .downloading(progress: 0))
                 try await mlxRepository.download { progress in
                     Task { @MainActor in
                         guard case .downloading = self.status.storage else { return }
-                        self.status = OnDeviceStatus(storage: .downloading(progress: progress), runtime: .unloaded)
+                        self.status = OnDeviceStatus(storage: .downloading(progress: progress))
                     }
                 }
-                self.status = OnDeviceStatus(storage: .downloaded, runtime: .unloaded)
+                self.status = OnDeviceStatus(storage: .downloaded)
             } catch let repoError as OnDeviceRepositoryError {
                 AppLogger.error(repoError)
                 if case .cancelled = repoError {
-                    self.status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+                    self.status = OnDeviceStatus(storage: .notDownloaded)
                 } else {
                     self.errorMessage = repoError.errorDescription
                     AppLogger.info(errorMessage ?? "nil")
-                    self.status = OnDeviceStatus(storage: .failed, runtime: .unloaded)
+                    self.status = OnDeviceStatus(storage: .failed)
                 }
             } catch {
                 AppLogger.error(error)
                 self.errorMessage = error.localizedDescription
-                self.status = OnDeviceStatus(storage: .failed, runtime: .unloaded)
+                self.status = OnDeviceStatus(storage: .failed)
             }
         }
     }
@@ -318,7 +317,7 @@ extension OnBoardingViewModel {
 
         struct PreviewOnDeviceRepository: OnDeviceRepository {
             func checkStatus() async -> Domain.OnDeviceStatus {
-                .init(storage: .downloaded, runtime: .unloaded)
+                .init(storage: .downloaded)
             }
 
             func download(progressHandler: @Sendable @escaping (Double) -> Void) async throws(OnDeviceRepositoryError) {
@@ -337,7 +336,7 @@ extension OnBoardingViewModel {
             }
 
             func delete() async throws(DeleteOnDeviceRepositoryError) -> OnDeviceStatus {
-                OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+                OnDeviceStatus(storage: .notDownloaded)
             }
         }
     }

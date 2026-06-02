@@ -49,7 +49,7 @@ public struct ChaGokModelState: Hashable, Sendable {
         title: String,
         subTitle: String,
         model: ChaGokModel,
-        status: OnDeviceStatus = .init(storage: .notDownloaded, runtime: .unloaded)
+        status: OnDeviceStatus = .init(storage: .notDownloaded)
     ) {
         self.title = title
         self.subTitle = subTitle

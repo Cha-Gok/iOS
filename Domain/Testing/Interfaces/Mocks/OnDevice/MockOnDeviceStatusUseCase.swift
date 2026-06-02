@@ -8,8 +8,7 @@ public final class MockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
     public var subscribeStream: AsyncStream<OnDeviceStatus>?
     public var downloadResult: Result<Void, OnDeviceStatusUseCaseError> = .success(())
     public var deleteResult: Result<OnDeviceStatus, DeleteOnDeviceRepositoryError> = .success(OnDeviceStatus(
-        storage: .notDownloaded,
-        runtime: .unloaded
+        storage: .notDownloaded
     ))
 
     public var actualSubscribeCallCount = 0
@@ -23,8 +22,7 @@ public final class MockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
     public var checkedModel: ChaGokModel?
 
     public var checkStatusResult: OnDeviceStatus = OnDeviceStatus(
-        storage: .notDownloaded,
-        runtime: .unloaded
+        storage: .notDownloaded
     )
 
     public func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {

@@ -43,7 +43,7 @@ public actor MLXModelProvider: MLXModelDataSource {
             let configuration = try matchModelConfiguration(model: model)
             let path = try await resolve(
                 configuration: configuration,
-                from: #hubDownloader(),
+                from: MLXHubDownloader(),
                 useLatest: false,
                 progressHandler: progressHandler
             )
@@ -121,7 +121,7 @@ public actor MLXModelProvider: MLXModelDataSource {
     public nonisolated func loadModel() async throws(MLXModelDataSourceError) -> ModelContext {
         do {
             let from: URL = try await getDownloadPath()
-            let context = try await LLMModelFactory.shared.load(from: from, using: #huggingFaceTokenizerLoader())
+            let context = try await LLMModelFactory.shared.load(from: from, using: MLXTokenizerLoader())
             AppLogger.info("MLX model loaded: \(context)")
             return context
         } catch is CancellationError {
