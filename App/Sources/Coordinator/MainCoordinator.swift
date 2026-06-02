@@ -95,6 +95,7 @@ extension MainCoordinator: MainCoordinatorDelegate {
         Task {
             let isModelDownloaded = await dependencyContainer.isWhisperModelDownloaded()
             if isModelDownloaded {
+                dependencyContainer.preloadWhisperKit()
                 let viewModel = dependencyContainer.makeRecordingViewModel()
                 viewModel.coordinator = self
                 viewModel.alertCoordinator = self
@@ -210,14 +211,8 @@ extension MainCoordinator: ChaGokAlertCoordinatorDelegate {
 // MARK: - DownloadWhisperCoordinatorDelegate
 
 extension MainCoordinator: DownloadOnDeviceCoordinatorDelegate {
-    func dismissSheet(completion: Bool) {
-        if completion { // 모델 다운로드 완료 후
-            presenter.dismiss(animated: true) { [weak self] in
-                self?.dependencyContainer.preloadWhisperKit()
-            }
-        } else {
-            presenter.dismiss(animated: true)
-        }
+    func dismissSheet() {
+        presenter.dismiss(animated: true)
     }
 }
 

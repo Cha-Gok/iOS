@@ -6,7 +6,7 @@ import Foundation
 public protocol DownloadOnDeviceCoordinatorDelegate: AnyObject {
     /// 시트를 닫습니다
     /// - Parameter completion: true: 다운로드 완료 / false: 취소 또는 나중에
-    func dismissSheet(completion: Bool)
+    func dismissSheet()
 }
 
 @MainActor
@@ -15,7 +15,7 @@ public final class DownloadOnDeviceViewModel {
     // MARK: - State
 
     /// 온디바이스 모델의 통합 상태값
-    private(set) var status: OnDeviceStatus = .init(storage: .notDownloaded, runtime: .unloaded)
+    private(set) var status: OnDeviceStatus = .init(storage: .notDownloaded)
     private(set) var errorMessage: String?
 
     public weak var coordinator: DownloadOnDeviceCoordinatorDelegate?
@@ -55,7 +55,7 @@ extension DownloadOnDeviceViewModel {
                 status = newStatus
                 AppLogger.debug("OnDeviceStatus: \(newStatus)")
                 if newStatus.storage == .downloaded {
-                    dismiss() // 다운로드 완료 시 dismiss
+                    dismiss()
                 }
             }
         }
@@ -83,7 +83,7 @@ extension DownloadOnDeviceViewModel {
     func cancelDownload() {
         let task = downloadTask
         downloadTask = nil
-        status = OnDeviceStatus(storage: .notDownloaded, runtime: .unloaded)
+        status = OnDeviceStatus(storage: .notDownloaded)
 
         let useCase = onDeviceStatusUseCase
         Task {
@@ -109,6 +109,6 @@ extension DownloadOnDeviceViewModel {
         } else {
             task?.cancel()
         }
-        coordinator?.dismissSheet(completion: true)
+        coordinator?.dismissSheet()
     }
 }
