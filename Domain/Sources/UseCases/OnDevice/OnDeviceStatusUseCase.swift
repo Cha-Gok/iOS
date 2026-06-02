@@ -90,11 +90,10 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
             downloadTasks[model] = nil
             isDownloading[model] = false
 
-            let mappedError: OnDeviceStatusUseCaseError
-            if error is CancellationError {
-                mappedError = .cancelled
+            let mappedError: OnDeviceStatusUseCaseError = if error is CancellationError {
+                .cancelled
             } else if let repoError = error as? OnDeviceRepositoryError {
-                mappedError = switch repoError {
+                switch repoError {
                 case .cancelled:
                     .cancelled
                 case .networkFailed:
@@ -105,7 +104,7 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
                     .unknown(underlying)
                 }
             } else {
-                mappedError = .unknown(error)
+                .unknown(error)
             }
 
             AppLogger.error(mappedError)
@@ -205,4 +204,3 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
         }
     }
 }
-
