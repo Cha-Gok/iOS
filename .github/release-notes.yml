@@ -1,0 +1,41 @@
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+      - internal
+    authors:
+      - github-actions[bot]
+      - dependabot[bot]
+
+  categories:
+    - title: "⚙️ Logic & Business"
+      labels:
+        - "⚙️ Logic"
+
+    - title: "🚀 Enhancements"
+      labels:
+        - "🚀 Enhancement"
+
+    - title: "🎨 UI & Layout"
+      labels:
+        - "🎨 UI"
+
+    - title: "🐛 Bug Fixes"
+      labels:
+        - "🐛 Bug"
+
+    - title: "♻️ Refactoring"
+      labels:
+        - "♻️ Refactor"
+
+    - title: "📝 Documentation"
+      labels:
+        - "📝 Documentation"
+
+    - title: "🧪 Testing"
+      labels:
+        - "🧪 Test"
+
+    - title: "❓ Others"
+      labels:
+        - "*"

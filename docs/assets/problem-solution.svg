@@ -1,0 +1,113 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D0D11"/>
+      <stop offset="0.56" stop-color="#15101D"/>
+      <stop offset="1" stop-color="#2B0A64"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#1C1726"/>
+      <stop offset="1" stop-color="#121018"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#B18CFF"/>
+      <stop offset="1" stop-color="#754ACF"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#000000" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="720" rx="32" fill="url(#bg)"/>
+  <circle cx="1020" cy="680" r="280" fill="#754ACF" opacity="0.33"/>
+  <circle cx="80" cy="650" r="230" fill="#754ACF" opacity="0.14"/>
+
+  <text x="64" y="74" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="34" font-weight="800">사용자가 겪는 문제와 해결 방식</text>
+  <text x="64" y="110" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="18" font-weight="500">녹음 파일을 다시 찾고 활용하기 쉬운 정보로 바꾸는 방식</text>
+
+  <g transform="translate(64 150)" filter="url(#shadow)">
+    <rect width="452" height="500" rx="28" fill="url(#panel)" stroke="#5A4385"/>
+    <text x="34" y="54" fill="#B997FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="24" font-weight="800">사용자 문제</text>
+
+    <g transform="translate(30 92)">
+      <rect width="392" height="82" rx="22" fill="#17131F" stroke="#3A2C56"/>
+      <circle cx="42" cy="41" r="22" fill="#2A2140"/>
+      <path d="M42 25v19l13 8" stroke="#B997FF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="82" y="36" fill="#F7F4FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="19" font-weight="800">다시 듣는 시간이 길어짐</text>
+      <text x="82" y="62" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15">긴 녹음에서 필요한 부분을 찾기 어렵습니다.</text>
+    </g>
+
+    <g transform="translate(30 190)">
+      <rect width="392" height="82" rx="22" fill="#17131F" stroke="#3A2C56"/>
+      <circle cx="42" cy="41" r="22" fill="#2A2140"/>
+      <path d="M42 22l18 8v16c0 18-12 28-18 32-7-4-18-14-18-32V30l18-8Z" stroke="#B997FF" stroke-width="5" stroke-linejoin="round"/>
+      <text x="82" y="36" fill="#F7F4FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="19" font-weight="800">음성 업로드가 부담됨</text>
+      <text x="82" y="62" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15">민감한 원본 음성을 서버에 맡기기 어렵습니다.</text>
+    </g>
+
+    <g transform="translate(30 288)">
+      <rect width="392" height="82" rx="22" fill="#17131F" stroke="#3A2C56"/>
+      <circle cx="42" cy="41" r="22" fill="#2A2140"/>
+      <path d="M25 33h17l7 8h10v21H25V33Z" stroke="#B997FF" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M60 58l14 14" stroke="#B997FF" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="56" cy="54" r="10" stroke="#B997FF" stroke-width="5"/>
+      <text x="82" y="36" fill="#F7F4FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="19" font-weight="800">기록이 늘수록 찾기 어려움</text>
+      <text x="82" y="62" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15">녹음이 쌓이면 정리와 검색 비용이 커집니다.</text>
+    </g>
+
+    <g transform="translate(30 386)">
+      <rect width="392" height="82" rx="22" fill="#17131F" stroke="#3A2C56"/>
+      <circle cx="42" cy="41" r="22" fill="#2A2140"/>
+      <path d="M29 58l6-18 25-25 12 12-25 25-18 6Z" stroke="#B997FF" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M57 18l12 12" stroke="#B997FF" stroke-width="5" stroke-linecap="round"/>
+      <text x="82" y="36" fill="#F7F4FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="19" font-weight="800">원문 수정 후 요약 신뢰 저하</text>
+      <text x="82" y="62" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15">스크립트가 바뀌면 요약도 다시 맞춰야 합니다.</text>
+    </g>
+  </g>
+
+  <g transform="translate(540 310)">
+    <path d="M8 50h96" stroke="url(#accent)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M68 16l38 34-38 34" stroke="url(#accent)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g transform="translate(684 150)" filter="url(#shadow)">
+    <rect width="452" height="500" rx="28" fill="#F4EEFF"/>
+    <text x="34" y="54" fill="#754ACF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="24" font-weight="800">해결 방식</text>
+
+    <g transform="translate(30 92)">
+      <rect width="392" height="82" rx="22" fill="#FFFFFF" stroke="#D7C7FF"/>
+      <circle cx="42" cy="41" r="22" fill="#EEE7FF"/>
+      <path d="M29 48c5-16 11 16 18 0s13 16 20 0" stroke="#754ACF" stroke-width="5" stroke-linecap="round"/>
+      <text x="82" y="36" fill="#211936" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="19" font-weight="900">전사와 요약 자동 생성</text>
+      <text x="82" y="62" fill="#655879" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15">스크립트, 키워드, 핵심 포인트를 함께 만듭니다.</text>
+    </g>
+
+    <g transform="translate(30 190)">
+      <rect width="392" height="82" rx="22" fill="#FFFFFF" stroke="#D7C7FF"/>
+      <circle cx="42" cy="41" r="22" fill="#EEE7FF"/>
+      <path d="M42 22l18 8v16c0 18-12 28-18 32-7-4-18-14-18-32V30l18-8Z" fill="#754ACF"/>
+      <path d="M33 44l7 7 14-17" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="82" y="36" fill="#211936" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="19" font-weight="900">온디바이스 로컬 처리</text>
+      <text x="82" y="62" fill="#655879" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15">WhisperKit과 MLX 모델을 기기 안에서 실행합니다.</text>
+    </g>
+
+    <g transform="translate(30 288)">
+      <rect width="392" height="82" rx="22" fill="#FFFFFF" stroke="#D7C7FF"/>
+      <circle cx="42" cy="41" r="22" fill="#EEE7FF"/>
+      <path d="M24 35h19l7 8h10v20H24V35Z" fill="#754ACF"/>
+      <circle cx="60" cy="56" r="9" stroke="#754ACF" stroke-width="5"/>
+      <path d="M67 63l10 10" stroke="#754ACF" stroke-width="5" stroke-linecap="round"/>
+      <text x="82" y="36" fill="#211936" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="19" font-weight="900">폴더와 검색 중심 관리</text>
+      <text x="82" y="62" fill="#655879" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15">최근 기록, 폴더, 휴지통, 검색으로 흐름을 나눕니다.</text>
+    </g>
+
+    <g transform="translate(30 386)">
+      <rect width="392" height="82" rx="22" fill="#FFFFFF" stroke="#D7C7FF"/>
+      <circle cx="42" cy="41" r="22" fill="#EEE7FF"/>
+      <path d="M31 29h24l10 10v24H31V29Z" stroke="#754ACF" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M54 29v12h11M37 51h18" stroke="#754ACF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="82" y="36" fill="#211936" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="19" font-weight="900">요약 재생성과 최신성 관리</text>
+      <text x="82" y="62" fill="#655879" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15">원문 편집 후 다시 요약해 결과를 맞춥니다.</text>
+    </g>
+  </g>
+</svg>

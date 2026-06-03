@@ -1,0 +1,5 @@
+app_identifier("com.yongms.ChaGokChaGok")
+team_id("78QTJM9AD7")
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

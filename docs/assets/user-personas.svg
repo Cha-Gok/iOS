@@ -1,0 +1,111 @@
+<svg width="1200" height="560" viewBox="0 0 1200 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D0D11"/>
+      <stop offset="0.55" stop-color="#16101F"/>
+      <stop offset="1" stop-color="#2A0B62"/>
+    </linearGradient>
+    <linearGradient id="cardA" x1="92" y1="146" x2="520" y2="486" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A1722"/>
+      <stop offset="1" stop-color="#110F17"/>
+    </linearGradient>
+    <linearGradient id="cardB" x1="680" y1="146" x2="1108" y2="486" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A1722"/>
+      <stop offset="1" stop-color="#110F17"/>
+    </linearGradient>
+    <linearGradient id="avatarBg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#3A2B58"/>
+      <stop offset="1" stop-color="#19131F"/>
+    </linearGradient>
+    <radialGradient id="faceA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(56 46) rotate(90) scale(56 46)">
+      <stop stop-color="#FFE1D1"/>
+      <stop offset="1" stop-color="#E9A88D"/>
+    </radialGradient>
+    <radialGradient id="faceB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(56 46) rotate(90) scale(56 46)">
+      <stop stop-color="#FFDCC5"/>
+      <stop offset="1" stop-color="#D99378"/>
+    </radialGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="130%">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#000000" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="560" rx="32" fill="url(#bg)"/>
+  <circle cx="1040" cy="500" r="260" fill="#754ACF" opacity="0.36"/>
+  <circle cx="120" cy="520" r="190" fill="#754ACF" opacity="0.16"/>
+
+  <text x="64" y="72" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="34" font-weight="800">핵심 사용자 페르소나</text>
+  <text x="64" y="108" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="18" font-weight="500">차곡이 우선 해결하는 두 가지 기록 상황</text>
+
+  <g transform="translate(92 146)" filter="url(#shadow)">
+    <rect width="428" height="340" rx="28" fill="url(#cardA)" stroke="#8F6BE7" stroke-opacity="0.82"/>
+    <g transform="translate(42 38)">
+      <rect width="112" height="112" rx="34" fill="url(#avatarBg)"/>
+      <path d="M20 112c5-25 22-40 36-40s31 15 36 40H20Z" fill="#754ACF"/>
+      <circle cx="28" cy="58" r="10" fill="#E2A28B"/>
+      <circle cx="84" cy="58" r="10" fill="#E2A28B"/>
+      <circle cx="56" cy="56" r="36" fill="url(#faceA)"/>
+      <path d="M25 50c2-26 18-42 40-42 20 0 33 12 36 33-15-8-30-9-45-4-12 4-22 8-31 13Z" fill="#241722"/>
+      <path d="M33 46c13 2 30-1 45-12 8 6 13 14 16 25 6-22-4-42-27-49-24-8-47 6-50 31 5-1 10 1 16 5Z" fill="#2D1D2B"/>
+      <circle cx="43" cy="60" r="3" fill="#2A1C2A"/>
+      <circle cx="69" cy="60" r="3" fill="#2A1C2A"/>
+      <rect x="31" y="52" width="21" height="17" rx="8" stroke="#3E2A52" stroke-width="4"/>
+      <rect x="60" y="52" width="21" height="17" rx="8" stroke="#3E2A52" stroke-width="4"/>
+      <path d="M52 60h8" stroke="#3E2A52" stroke-width="4" stroke-linecap="round"/>
+      <path d="M44 78c7 7 18 7 25 0" stroke="#7A3E5A" stroke-width="4" stroke-linecap="round"/>
+      <path d="M78 77l20 8v18c0 17-12 27-20 31-8-4-20-14-20-31V85l20-8Z" fill="#EEE7FF"/>
+      <path d="M69 103l7 7 16-20" stroke="#754ACF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <text x="178" y="70" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="27" font-weight="800">보안형 업무 기록자</text>
+    <text x="178" y="104" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="17">회의·인터뷰·내부 논의</text>
+
+    <g transform="translate(34 178)">
+      <rect width="360" height="48" rx="18" fill="#211A32" stroke="#5C4389"/>
+      <text x="22" y="31" fill="#EFE9FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="18" font-weight="700">외부 업로드 없이 안전하게 보관</text>
+    </g>
+    <g transform="translate(34 244)">
+      <rect width="170" height="46" rx="23" fill="#EEE7FF"/>
+      <text x="26" y="30" fill="#241B37" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="17" font-weight="800">온디바이스</text>
+    </g>
+    <g transform="translate(222 244)">
+      <rect width="172" height="46" rx="23" fill="#2A2140" stroke="#7556B4"/>
+      <text x="30" y="30" fill="#EFE9FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="17" font-weight="800">빠른 회고</text>
+    </g>
+  </g>
+
+  <g transform="translate(680 146)" filter="url(#shadow)">
+    <rect width="428" height="340" rx="28" fill="url(#cardB)" stroke="#8F6BE7" stroke-opacity="0.82"/>
+    <g transform="translate(42 38)">
+      <rect width="112" height="112" rx="34" fill="url(#avatarBg)"/>
+      <path d="M19 112c5-24 21-40 37-40s32 16 37 40H19Z" fill="#EEE7FF"/>
+      <circle cx="28" cy="58" r="10" fill="#D99175"/>
+      <circle cx="84" cy="58" r="10" fill="#D99175"/>
+      <circle cx="56" cy="56" r="36" fill="url(#faceB)"/>
+      <path d="M23 47c0-27 20-43 44-39 25 4 35 27 27 56-13-18-30-24-49-18-8 3-15 3-22 1Z" fill="#4B2445"/>
+      <path d="M27 44c14 5 36 1 51-13 8 7 14 16 18 29 3-24-13-45-39-47-25-1-42 15-44 36 5-3 10-4 14-5Z" fill="#6C3CC4"/>
+      <circle cx="43" cy="61" r="3" fill="#2A1C2A"/>
+      <circle cx="69" cy="61" r="3" fill="#2A1C2A"/>
+      <path d="M45 79c8 6 16 6 24 0" stroke="#7A3E5A" stroke-width="4" stroke-linecap="round"/>
+      <rect x="70" y="70" width="33" height="42" rx="12" fill="#754ACF"/>
+      <path d="M81 84h13M81 96h14" stroke="#F8F5FF" stroke-width="5" stroke-linecap="round"/>
+      <path d="M92 61l5 11 12 5-12 5-5 11-5-11-12-5 12-5 5-11Z" fill="#D7C7FF"/>
+    </g>
+
+    <text x="178" y="70" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="27" font-weight="800">학습형 기록 정리자</text>
+    <text x="178" y="104" fill="#BEB5D1" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="17">강의·스터디·아이디어 메모</text>
+
+    <g transform="translate(34 178)">
+      <rect width="360" height="48" rx="18" fill="#211A32" stroke="#5C4389"/>
+      <text x="22" y="31" fill="#EFE9FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="18" font-weight="700">긴 녹음에서 핵심만 빠르게 파악</text>
+    </g>
+    <g transform="translate(34 244)">
+      <rect width="170" height="46" rx="23" fill="#EEE7FF"/>
+      <text x="30" y="30" fill="#241B37" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="17" font-weight="800">AI 요약</text>
+    </g>
+    <g transform="translate(222 244)">
+      <rect width="172" height="46" rx="23" fill="#2A2140" stroke="#7556B4"/>
+      <text x="28" y="30" fill="#EFE9FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="17" font-weight="800">폴더·검색</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,63 @@
+# SwiftFormat configuration for ChaGok - Final Safe Version
+
+# [기본 스타일]
+--swift-version 6.0
+--indent 4
+--max-width 120
+--linebreaks lf
+--trim-whitespace always
+--trailing-commas never
+--allman false
+
+# [빈 줄 및 레이아웃 관리]
+--enable blankLinesAtStartOfScope
+--enable blankLinesAtEndOfScope
+--type-blank-lines remove
+--else-position same-line
+
+# [가독성 설정 - 안전 위주]
+--self remove
+--modifier-order public,private,static,final
+--pattern-let inline
+--semicolons never
+--indent-case false
+--blank-line-after-switch-case always
+
+# [추천 추가 규칙 - 가독성 향상]
+--acronyms ID,URL,UUID,JSON  # 약어 대소문자 일관성 (UserId -> userID)
+--decimal-grouping 3,6       # 숫자 가독성 (1000000 -> 1_000_000)
+--enable typeSugar           # 단축 문법 사용 (Array<Int> -> [Int])
+--enable redundantInit       # 불필요한 .init 제거 (MyClass.init() -> MyClass())
+--wrap-collections before-first # 긴 배열/딕셔너리 가로 길이 초과 시 줄바꿈
+--enable consistentSwitchCaseSpacing # switch case 간 간격 일관성
+
+# [어트리뷰트 배치]
+--func-attributes prev-line
+--type-attributes prev-line
+--stored-var-attributes prev-line
+--computed-var-attributes prev-line
+
+# [Import 정렬 - @testable 우선]
+--import-grouping testable-first
+--enable sortImports
+
+# [비활성화 (중요!) - 코드 변형 방지]
+--disable redundantReturn
+--disable redundantVoidReturnType
+--disable redundantType
+--disable redundantFileprivate
+--disable unusedArguments
+--disable redundantLet
+--disable wrapFunctionBodies
+
+# [줄바꿈 및 인자 관리]
+--wrap-arguments before-first
+--wrap-parameters before-first
+--hex-literal-case lowercase
+
+# ============================
+# Exclude
+# ============================
+
+# Tuist 매니페스트 파일 제외 (Tuist API는 bundleId 등 고유 네이밍을 사용)
+--exclude Tuist,**/Project.swift,Workspace.swift

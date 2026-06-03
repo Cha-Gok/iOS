@@ -1,0 +1,360 @@
+@testable import Presentation
+import Domain
+import DomainTesting
+import XCTest
+
+@MainActor
+final class MockRecordingCoordinator: RecordingCoordinating {
+    private(set) var cancelRecordingCallCount = 0
+    private(set) var finishRecordingCallCount = 0
+    private(set) var finishedVoiceNote: VoiceNote?
+
+    func cancelRecording() {
+        cancelRecordingCallCount += 1
+    }
+
+    func finishRecording(voiceNote: VoiceNote) {
+        finishRecordingCallCount += 1
+        finishedVoiceNote = voiceNote
+    }
+}
+
+@MainActor
+final class RecordingViewModelTests: XCTestCase {
+    private struct SUT {
+        let viewModel: RecordingViewModel
+        let repository: MockVoiceRecordRepository
+        let voiceNoteRepository: MockVoiceNoteRepository
+        let folderRepository: MockFolderRepository
+        let coordinator: MockRecordingCoordinator
+    }
+
+    private func makeSUT() -> SUT {
+        let repository = MockVoiceRecordRepository()
+        let voiceNoteRepository = MockVoiceNoteRepository()
+        let folderRepository = MockFolderRepository()
+        let coordinator = MockRecordingCoordinator()
+
+        let viewModel = RecordingViewModel(
+            repository: repository,
+            voiceNoteUseCase: DefaultVoiceNoteUseCase(
+                repository: voiceNoteRepository,
+                folderRepository: folderRepository,
+                analysisService: MockVoiceNoteAnalysisService()
+            )
+        )
+        viewModel.coordinator = coordinator
+
+        return SUT(
+            viewModel: viewModel,
+            repository: repository,
+            voiceNoteRepository: voiceNoteRepository,
+            folderRepository: folderRepository,
+            coordinator: coordinator
+        )
+    }
+}
+
+// MARK: - 초기 상태
+
+extension RecordingViewModelTests {
+    func test_뷰모델생성시_초기상태를확인한다() {
+        // Given & When
+        let sut = makeSUT()
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.recordingState, .idle)
+        XCTAssertEqual(sut.viewModel.state.amplitude, 0)
+        XCTAssertNil(sut.viewModel.state.errorMessage)
+        XCTAssertEqual(sut.viewModel.state.recordingDuration, 0)
+    }
+}
+
+// MARK: - 녹음 시작
+
+extension RecordingViewModelTests {
+    func test_idle상태_viewDidAppear_녹음을자동시작하고recording상태가된다() async {
+        // Given
+        let sut = makeSUT()
+        let stream = AsyncStream<Waveform> { $0.finish() }
+        await sut.repository.setStartResult(.success(stream))
+        await sut.repository.expectStartRecording(callCount: 1)
+
+        // When
+        sut.viewModel.send(.viewDidAppear)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.recordingState, .recording)
+        await sut.repository.verify()
+    }
+
+    func test_recording상태_viewDidAppear_추가녹음을시작하지않는다() async {
+        // Given
+        let sut = makeSUT()
+        let stream = AsyncStream<Waveform> { $0.finish() }
+        await sut.repository.setStartResult(.success(stream))
+        await sut.repository.expectStartRecording(callCount: 1)
+
+        // When
+        sut.viewModel.send(.viewDidAppear)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        sut.viewModel.send(.viewDidAppear)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.recordingState, .recording)
+        await sut.repository.verify()
+    }
+
+    func test_idle상태_recordButtonTapped_녹음을시작하고recording상태가된다() async {
+        // Given
+        let sut = makeSUT()
+        let stream = AsyncStream<Waveform> { $0.finish() }
+        await sut.repository.setStartResult(.success(stream))
+
+        // When
+        sut.viewModel.send(.recordButtonTapped)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.recordingState, .recording)
+        XCTAssertNil(sut.viewModel.state.errorMessage)
+    }
+
+    func test_idle상태_녹음시작실패시_idle상태를유지하고errorMessage를설정한다() async {
+        // Given
+        let sut = makeSUT()
+        await sut.repository.setStartResult(.failure(.startFailed))
+
+        // When
+        sut.viewModel.send(.recordButtonTapped)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.recordingState, .idle)
+        XCTAssertNotNil(sut.viewModel.state.errorMessage)
+    }
+}
+
+// MARK: - 녹음 일시정지
+
+extension RecordingViewModelTests {
+    func test_recording상태_recordButtonTapped_녹음을일시정지하고paused상태가된다() async {
+        // Given
+        let sut = makeSUT()
+        let stream = AsyncStream<Waveform> { $0.finish() }
+        await sut.repository.setStartResult(.success(stream))
+        await sut.repository.setPauseResult(.success(()))
+
+        sut.viewModel.send(.recordButtonTapped) // idle → recording
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // When
+        sut.viewModel.send(.recordButtonTapped) // recording → paused
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.recordingState, .paused)
+    }
+
+    func test_recording상태_일시정지실패시_errorMessage를설정한다() async {
+        // Given
+        let sut = makeSUT()
+        let stream = AsyncStream<Waveform> { $0.finish() }
+        await sut.repository.setStartResult(.success(stream))
+        await sut.repository.setPauseResult(.failure(.pauseFailed))
+
+        sut.viewModel.send(.recordButtonTapped) // idle → recording
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // When
+        sut.viewModel.send(.recordButtonTapped) // recording → pause 실패
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertNotNil(sut.viewModel.state.errorMessage)
+    }
+}
+
+// MARK: - 녹음 재개
+
+extension RecordingViewModelTests {
+    func test_paused상태_recordButtonTapped_녹음을재개하고recording상태가된다() async {
+        // Given
+        let sut = makeSUT()
+        let stream = AsyncStream<Waveform> { $0.finish() }
+        await sut.repository.setStartResult(.success(stream))
+        await sut.repository.setPauseResult(.success(()))
+        await sut.repository.setResumeResult(.success(()))
+
+        sut.viewModel.send(.recordButtonTapped) // idle → recording
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        sut.viewModel.send(.recordButtonTapped) // recording → paused
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // When
+        sut.viewModel.send(.recordButtonTapped) // paused → recording
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.recordingState, .recording)
+    }
+
+    func test_paused상태_녹음재개실패시_errorMessage를설정한다() async {
+        // Given
+        let sut = makeSUT()
+        let stream = AsyncStream<Waveform> { $0.finish() }
+        await sut.repository.setStartResult(.success(stream))
+        await sut.repository.setPauseResult(.success(()))
+        await sut.repository.setResumeResult(.failure(.resumeFailed))
+
+        sut.viewModel.send(.recordButtonTapped) // idle → recording
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        sut.viewModel.send(.recordButtonTapped) // recording → paused
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // When
+        sut.viewModel.send(.recordButtonTapped) // paused → resume 실패
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertNotNil(sut.viewModel.state.errorMessage)
+    }
+}
+
+// MARK: - 취소
+
+extension RecordingViewModelTests {
+    func test_cancelButtonTapped_녹음을중단하고coordinator의cancelRecording을호출한다() async {
+        // Given
+        let sut = makeSUT()
+        await sut.repository.setCancelResult(.success(()))
+        await sut.repository.expectCancelRecording(callCount: 1)
+
+        // When
+        sut.viewModel.send(.cancelButtonTapped)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.coordinator.cancelRecordingCallCount, 1)
+        await sut.repository.verify()
+    }
+
+    func test_openCancelAlertButtonTapped_duration이_3초이하면_cancelButtonTapped가_호출된다() async {
+        // Given
+        let sut = makeSUT()
+        sut.viewModel.state.recordingDuration = 3
+        await sut.repository.setCancelResult(.success(()))
+        await sut.repository.expectCancelRecording(callCount: 1)
+
+        // When
+        sut.viewModel.send(.openCancelAlertButtonTapped)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.coordinator.cancelRecordingCallCount, 1)
+        await sut.repository.verify()
+    }
+
+    func test_openCancelAlertButtonTapped_duration이_3초초과면_showCancelAlert가_호출된다() {
+        // Given
+        let sut = makeSUT()
+        sut.viewModel.state.recordingDuration = 4
+        var showCancelAlertCalled = false
+        sut.viewModel.showCancelAlert = {
+            showCancelAlertCalled = true
+        }
+
+        // When
+        sut.viewModel.send(.openCancelAlertButtonTapped)
+
+        // Then
+        XCTAssertTrue(showCancelAlertCalled)
+    }
+}
+
+// MARK: - 완료
+
+extension RecordingViewModelTests {
+    func test_openCompleteAlertButtonTapped_showCompleteAlert가_호출된다() {
+        // Given
+        let sut = makeSUT()
+        var showCompleteAlertCalled = false
+        sut.viewModel.showCompleteAlert = {
+            showCompleteAlertCalled = true
+        }
+
+        // When
+        sut.viewModel.send(.openCompleteAlertButtonTapped)
+
+        // Then
+        XCTAssertTrue(showCompleteAlertCalled)
+    }
+}
+
+// MARK: - 에러 처리
+
+extension RecordingViewModelTests {
+    func test_errorOccurred_errorMessage를설정한다() {
+        // Given
+        let sut = makeSUT()
+        let expectedError = VoiceRecordRepositoryError.startFailed
+
+        // When
+        sut.viewModel.send(.errorOccurred(expectedError))
+
+        // Then
+        XCTAssertEqual(sut.viewModel.state.errorMessage, expectedError.localizedDescription)
+    }
+
+    func test_finishButtonTapped_녹음완료후보이스노트를생성하고coordinator의finishRecording을호출한다() async {
+        // Given
+        let sut = makeSUT()
+        let voiceRecordStub = VoiceRecord.stub()
+        let voiceNoteStub = VoiceNote.stub(voiceRecord: voiceRecordStub)
+        let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
+        await sut.repository.setFinishResult(.success(voiceRecordStub))
+        sut.folderRepository.setFetchByKindResult(.default, result: .success([defaultFolder]))
+        sut.voiceNoteRepository.setCreateResult(.success(voiceNoteStub))
+
+        // When
+        sut.viewModel.send(.finishButtonTapped)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.coordinator.finishRecordingCallCount, 1)
+        XCTAssertEqual(sut.coordinator.finishedVoiceNote?.id, voiceNoteStub.id)
+    }
+
+    func test_finishButtonTapped_녹음완료실패시_coordinator를호출하지않고errorMessage를설정한다() async {
+        // Given
+        let sut = makeSUT()
+        await sut.repository.setFinishResult(.failure(.finishFailed))
+
+        // When
+        sut.viewModel.send(.finishButtonTapped)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.coordinator.finishRecordingCallCount, 0)
+        XCTAssertNotNil(sut.viewModel.state.errorMessage)
+    }
+
+    func test_finishButtonTapped_보이스노트생성실패시_coordinator를호출하지않고errorMessage를설정한다() async {
+        // Given
+        let sut = makeSUT()
+        let defaultFolder = Folder.stub(name: "기본 폴더", kind: .default)
+        await sut.repository.setFinishResult(.success(.stub()))
+        sut.folderRepository.setFetchByKindResult(.default, result: .success([defaultFolder]))
+        sut.voiceNoteRepository.setCreateResult(.failure(.createFailed))
+
+        // When
+        sut.viewModel.send(.finishButtonTapped)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then
+        XCTAssertEqual(sut.coordinator.finishRecordingCallCount, 0)
+        XCTAssertNotNil(sut.viewModel.state.errorMessage)
+    }
+}

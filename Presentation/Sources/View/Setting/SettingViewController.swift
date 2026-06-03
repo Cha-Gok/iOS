@@ -1,0 +1,190 @@
+import Domain
+import UIKit
+
+@MainActor
+public final class SettingViewController: CollectionViewController {
+    // MARK: - Type
+
+    typealias Section = SettingViewModel.Section
+    typealias Item = SettingViewModel.Item
+    typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
+    typealias SnapShot = NSDiffableDataSourceSnapshot<Section, Item>
+
+    // MARK: - Component
+
+    let backItem: NavigationItemButton = .init(
+        normalItem: .init(title: "설정", imageName: "chevron.left"),
+        selectedItem: .init(title: "설정", imageName: "chevron.left"),
+        attributedString: Typography.header2.textAttributes
+    )
+
+    private lazy var dataSource: DataSource = makeDataSource()
+    private let vm: SettingViewModel
+
+    // MARK: - Initialize
+
+    public init(vm: SettingViewModel) {
+        var listConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
+        listConfiguration.backgroundColor = .clear
+        listConfiguration.showsSeparators = false
+
+        let layout = UICollectionViewCompositionalLayout.list(using: listConfiguration)
+        self.vm = vm
+        super.init(collectionViewLayout: layout)
+    }
+
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    // MARK: - LifeCycle
+
+    override public func viewDidLoad() {
+        super.viewDidLoad()
+        setupNavigation()
+        applySnapShot(animate: false)
+    }
+
+    override public func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        vm.checkModels()
+    }
+
+    override public func updateProperties() {
+        super.updateProperties()
+        applySnapShot(animate: false)
+    }
+
+    // MARK: - Setup
+
+    private func setupNavigation() {
+        updateNavigationBarAppearance(isTransparent: false)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backItem)
+        navigationItem.leftBarButtonItem?.hidesSharedBackground = true
+        backItem.addAction(UIAction { [weak self] _ in
+            self?.vm.pop()
+        }, for: .touchUpInside)
+    }
+
+    // MARK: - DataSource
+
+    private func makeDataSource() -> DataSource {
+        let langCellRegistration = UICollectionView
+            .CellRegistration<UICollectionViewListCell, Item> { [weak self] cell, indexPath, itemIdentifier in
+                guard case .lang(let language) = itemIdentifier.data else { return }
+                var backgroundConfig = UIBackgroundConfiguration.listCell()
+                backgroundConfig.backgroundColor = .clear
+                cell.backgroundConfiguration = backgroundConfig
+                cell.contentConfiguration = SettingLanguageContentConfiguration(
+                    title: itemIdentifier.title,
+                    subtitle: itemIdentifier.subTitle,
+                    language: language,
+                    action: { selectedLanguage in
+                        self?.vm.setLanguage(selectedLanguage)
+                    }
+                )
+            }
+
+        let modelCellRegistration = UICollectionView
+            .CellRegistration<UICollectionViewListCell, Item> { [weak self] cell, indexPath, itemIdentifier in
+                guard case .model(let models) = itemIdentifier.data else { return }
+                var backgroundConfig = UIBackgroundConfiguration.listCell()
+                backgroundConfig.backgroundColor = .clear
+                cell.backgroundConfiguration = backgroundConfig
+                cell.contentConfiguration = SettingModelContentConfiguration(
+                    title: itemIdentifier.title,
+                    models: models,
+                    action: { [weak self] targetModel, actionType in
+                        switch actionType {
+                        case .download:
+                            self?.vm.downloadModel(model: targetModel)
+                        case .delete:
+                            self?.vm.deleteModel(model: targetModel)
+                        }
+                    }
+                )
+            }
+
+        let defaultCellRegistration = UICollectionView
+            .CellRegistration<UICollectionViewListCell, Item> { cell, indexPath, itemIdentifier in
+                guard case .none(let label) = itemIdentifier.data else { return }
+                var content = cell.defaultContentConfiguration()
+                content.text = itemIdentifier.title
+                content.secondaryText = itemIdentifier.subTitle
+                content.textProperties.font = Typography.title3.font
+                content.textProperties.color = .gray950
+                cell.contentConfiguration = content
+                cell.backgroundConfiguration = .clear()
+                cell.addTapGesture { [weak self] in
+                    switch label {
+                    case .privacyPolicy: self?.vm.pushPrivacyPolicy()
+                    case .termsOfUse: self?.vm.pushTermsOfUse()
+                    case .customerInquiry: self?.customerInquiryLink()
+                    }
+                }
+            }
+
+        return DataSource(collectionView: collectionView) { col, indexPath, itemIdentifier in
+            switch itemIdentifier.data {
+            case .lang:
+                return col.dequeueConfiguredReusableCell(
+                    using: langCellRegistration,
+                    for: indexPath,
+                    item: itemIdentifier
+                )
+            case .model:
+                return col.dequeueConfiguredReusableCell(
+                    using: modelCellRegistration,
+                    for: indexPath,
+                    item: itemIdentifier
+                )
+            case .none:
+                return col.dequeueConfiguredReusableCell(
+                    using: defaultCellRegistration,
+                    for: indexPath,
+                    item: itemIdentifier
+                )
+            }
+        }
+    }
+
+    private func applySnapShot(animate: Bool) {
+        var snapshot = SnapShot()
+        snapshot.appendSections([.lang, .model, .label])
+        let langData: [Item] = [
+            Item(title: "언어 선택", subTitle: "녹음 기록 언어를 바꿉니다", data: .lang(vm.language))
+        ]
+        snapshot.appendItems(langData, toSection: .lang)
+
+        let modelItems = [
+            Item(title: "음성 인식 모델 설정", subTitle: "기본 모델", data: .model(vm.models))
+        ]
+        snapshot.appendItems(modelItems, toSection: .model)
+
+        let labelItems = [
+            Item(title: "이용약관", subTitle: nil, data: .none(.termsOfUse)),
+            Item(title: "개인정보 처리 방침", subTitle: nil, data: .none(.privacyPolicy)),
+            Item(title: "고객 문의", subTitle: nil, data: .none(.customerInquiry))
+        ]
+        snapshot.appendItems(labelItems, toSection: .label)
+
+        dataSource.apply(snapshot, animatingDifferences: animate)
+    }
+
+    /// 고객 문의 링크 함수
+    private func customerInquiryLink() {
+        if let url = URL(string: Constant.customerInquiry) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
+}
+
+#if DEBUG
+    #Preview {
+        UINavigationController(
+            rootViewController: SettingViewController(
+                vm: .preview
+            )
+        )
+    }
+#endif

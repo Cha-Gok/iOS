@@ -1,0 +1,94 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D0D11"/>
+      <stop offset="0.58" stop-color="#15101F"/>
+      <stop offset="1" stop-color="#2B0A64"/>
+    </linearGradient>
+    <linearGradient id="surface" x1="56" y1="134" x2="1144" y2="608" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1B1725"/>
+      <stop offset="1" stop-color="#121018"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#B18CFF"/>
+      <stop offset="1" stop-color="#754ACF"/>
+    </linearGradient>
+    <linearGradient id="domainFill" x1="415" y1="275" x2="785" y2="485" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F2FF"/>
+      <stop offset="1" stop-color="#E8DBFF"/>
+    </linearGradient>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="126%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000000" flood-opacity="0.34"/>
+    </filter>
+    <marker id="arrowPurple" markerWidth="18" markerHeight="18" refX="15" refY="9" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M3 3L15 9L3 15" stroke="#9B75F1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="720" rx="32" fill="url(#bg)"/>
+
+  <text x="64" y="74" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="34" font-weight="800">아키텍처 다이어그램</text>
+  <text x="64" y="110" fill="#C9C0D8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="18" font-weight="500">도메인 규칙은 가운데에 두고, 화면과 데이터 구현은 인터페이스 경계를 통해 연결합니다.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="56" y="134" width="1088" height="474" rx="30" fill="url(#surface)" stroke="#6C4BA6"/>
+
+    <g transform="translate(340 162)">
+      <rect width="520" height="84" rx="24" fill="#F4EEFF"/>
+      <rect x="24" y="22" width="78" height="34" rx="17" fill="url(#accent)"/>
+      <text x="48" y="45" fill="#FFFFFF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16" font-weight="900">App</text>
+      <text x="126" y="34" fill="#211936" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="21" font-weight="900">앱 조립 지점</text>
+      <text x="126" y="60" fill="#655879" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="600">DI Container · Coordinator · App/Scene Lifecycle</text>
+    </g>
+
+    <path d="M600 246V275" stroke="#9B75F1" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10"/>
+    <path d="M458 246C458 272 234 272 234 295" stroke="#6F5B91" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 10"/>
+    <path d="M742 246C742 272 966 272 966 295" stroke="#6F5B91" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 10"/>
+
+    <g transform="translate(96 295)">
+      <rect width="276" height="174" rx="24" fill="#17131F" stroke="#514166"/>
+      <text x="24" y="48" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="23" font-weight="900">Presentation</text>
+      <text x="24" y="92" fill="#C9C0D8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="600">UIKit 화면</text>
+      <text x="24" y="120" fill="#C9C0D8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="600">ViewModel</text>
+      <text x="24" y="148" fill="#C9C0D8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="600">재사용 UI 컴포넌트</text>
+    </g>
+
+    <g transform="translate(415 275)">
+      <rect width="370" height="210" rx="30" fill="url(#domainFill)" stroke="#B18CFF" stroke-width="2"/>
+      <text x="36" y="48" fill="#3B236A" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="26" font-weight="900">Domain</text>
+      <text x="36" y="78" fill="#6B5A7D" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="700">앱의 규칙과 인터페이스 소유</text>
+
+      <rect x="32" y="104" width="142" height="34" rx="17" fill="#FFFFFF"/>
+      <text x="56" y="127" fill="#754ACF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="900">UseCase</text>
+      <rect x="196" y="104" width="142" height="34" rx="17" fill="#FFFFFF"/>
+      <text x="232" y="127" fill="#754ACF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="900">Entity</text>
+      <rect x="32" y="152" width="142" height="34" rx="17" fill="#FFFFFF"/>
+      <text x="54" y="175" fill="#754ACF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="900">Interface</text>
+      <rect x="196" y="152" width="142" height="34" rx="17" fill="#FFFFFF"/>
+      <text x="234" y="175" fill="#754ACF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="900">Policy</text>
+    </g>
+
+    <g transform="translate(828 295)">
+      <rect width="276" height="174" rx="24" fill="#17131F" stroke="#514166"/>
+      <text x="24" y="48" fill="#F8F5FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="23" font-weight="900">Data</text>
+      <text x="24" y="92" fill="#C9C0D8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="600">Repository 구현</text>
+      <text x="24" y="120" fill="#C9C0D8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="600">Core Data · FileManager</text>
+      <text x="24" y="148" fill="#C9C0D8" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="600">WhisperKit · MLX Provider</text>
+    </g>
+
+    <path d="M372 382H414" stroke="#9B75F1" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowPurple)"/>
+    <path d="M828 382H786" stroke="#9B75F1" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowPurple)"/>
+
+    <g transform="translate(170 520)">
+      <rect width="860" height="60" rx="22" fill="#2A2140" stroke="#5A4385"/>
+      <text x="34" y="38" fill="#B997FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="22" font-weight="900">Core</text>
+      <text x="122" y="38" fill="#EFE9FF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="16" font-weight="700">Logger · Date/Time · Extensions · Error Handling · Shared Utilities</text>
+    </g>
+  </g>
+
+  <g transform="translate(150 638)">
+    <rect width="900" height="48" rx="24" fill="#F4EEFF"/>
+    <text x="34" y="31" fill="#754ACF" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="900">녹음 완료</text>
+    <text x="116" y="31" fill="#655879" font-family="Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="15" font-weight="700">→ VoiceNoteUseCase → VoiceNoteAnalysisService → 전사/요약 Repository → 로컬 저장</text>
+  </g>
+</svg>
