@@ -28,7 +28,7 @@ private let appTestsScheme = Scheme.scheme(
 
 private let appTarget = Target.target(
     name: "App",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .app,
     bundleId: bundleId,
     deploymentTargets: deploymentTargets,
@@ -45,7 +45,6 @@ private let appTarget = Target.target(
             ),
             "UIUserInterfaceStyle": Plist.Value(stringLiteral: style),
             "NSMicrophoneUsageDescription": "음성 메모를 녹음하기 위해 마이크 권한이 필요합니다.",
-            "NSSpeechRecognitionUsageDescription": "음성을 텍스트로 변환하기 위해 음성 인식 권한이 필요합니다.",
             "ITSAppUsesNonExemptEncryption": false,
             "UIBackgroundModes": ["audio"]
         ]
@@ -80,7 +79,7 @@ private let appTarget = Target.target(
 
 private let appTestsTarget = Target.target(
     name: "AppTests",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .unitTests,
     bundleId: "\(bundleId).AppTests",
     deploymentTargets: deploymentTargets,
