@@ -27,7 +27,7 @@ private let presentationTestsScheme = Scheme.scheme(
 
 private let presentationTarget = Target.target(
     name: "Presentation",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .framework,
     bundleId: "\(bundleId).Presentation",
     deploymentTargets: deploymentTargets,
@@ -50,7 +50,7 @@ private let presentationTarget = Target.target(
 
 private let presentationTestsTarget = Target.target(
     name: "PresentationTests",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .unitTests,
     bundleId: "\(bundleId).PresentationTests",
     deploymentTargets: deploymentTargets,

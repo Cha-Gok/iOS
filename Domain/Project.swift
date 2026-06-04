@@ -27,7 +27,7 @@ private let domainTestsScheme = Scheme.scheme(
 
 private let domainTarget = Target.target(
     name: "Domain",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .framework,
     bundleId: "\(bundleId).Domain",
     deploymentTargets: deploymentTargets,
@@ -40,7 +40,7 @@ private let domainTarget = Target.target(
 
 private let domainTestingTarget = Target.target(
     name: "DomainTesting",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .framework,
     bundleId: "\(bundleId).DomainTesting",
     deploymentTargets: deploymentTargets,
@@ -57,7 +57,7 @@ private let domainTestingTarget = Target.target(
 
 private let domainTestsTarget = Target.target(
     name: "DomainTests",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .unitTests,
     bundleId: "\(bundleId).DomainTests",
     deploymentTargets: deploymentTargets,

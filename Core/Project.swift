@@ -27,7 +27,7 @@ private let coreTestsScheme = Scheme.scheme(
 
 private let coreTarget = Target.target(
     name: "Core",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .framework,
     bundleId: "\(bundleId).Core",
     deploymentTargets: deploymentTargets,
@@ -38,7 +38,7 @@ private let coreTarget = Target.target(
 
 private let coreTestsTarget = Target.target(
     name: "CoreTests",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .unitTests,
     bundleId: "\(bundleId).CoreTests",
     deploymentTargets: deploymentTargets,

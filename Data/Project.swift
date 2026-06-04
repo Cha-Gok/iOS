@@ -12,7 +12,7 @@ private let dataScheme = Scheme.scheme(
 
 private let dataTarget = Target.target(
     name: "Data",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .framework,
     bundleId: "\(bundleId).Data",
     deploymentTargets: deploymentTargets,

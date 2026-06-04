@@ -28,7 +28,7 @@ private let appTestsScheme = Scheme.scheme(
 
 private let appTarget = Target.target(
     name: "App",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .app,
     bundleId: bundleId,
     deploymentTargets: deploymentTargets,
@@ -80,7 +80,7 @@ private let appTarget = Target.target(
 
 private let appTestsTarget = Target.target(
     name: "AppTests",
-    destinations: .iOS,
+    destinations: [.iPhone],
     product: .unitTests,
     bundleId: "\(bundleId).AppTests",
     deploymentTargets: deploymentTargets,
