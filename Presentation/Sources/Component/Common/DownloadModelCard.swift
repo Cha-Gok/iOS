@@ -144,9 +144,7 @@ extension DownloadModelCard {
             case .immutable:
                 immutableProgressView.isHidden = false
             }
-            downloadMessageLabel.isHidden = false
-            downloadMessageLabel.setTypography(text: "다운로드 중...", style: .body2)
-            downloadMessageLabel.textColor = .gray950
+            downloadMessageLabel.isHidden = true
         case .downloaded:
             switch style {
             case .default:

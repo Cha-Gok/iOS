@@ -90,7 +90,8 @@ public final class OnBoardingViewModel {
         case .download:
             switch status.storage {
             case .downloading: return "취소"
-            default: return "이전"
+            case .downloaded: return "이전"
+            default: return "나중에"
             }
         default:
             return "이전"
@@ -174,11 +175,15 @@ extension OnBoardingViewModel {
                 // 다운로드 중일 때는 다운로드 취소
                 downloadTask?.cancel()
                 downloadTask = nil
-            default:
+            case .downloaded:
+                // 이미 다운로드 완료했을 때는 이전 단계로
                 let nextIndex = currentStepIndex - 1
                 guard nextIndex >= 0 else { return }
                 isPaging = true
                 scrollAction(nextIndex)
+            default:
+                // 다운로드 안 했거나 실패했을 때는 '나중에' (다음 단계로 이동)
+                nextPage(scrollAction: scrollAction)
             }
         default: // 뒤로가기
             let nextIndex = currentStepIndex - 1
