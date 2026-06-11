@@ -29,7 +29,7 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
             }
         }
     }
-    
+
     public func download(progressHandler: @Sendable @escaping (Double) -> Void) async throws(OnDeviceRepositoryError) {
         do {
             try await provider.download { progress in

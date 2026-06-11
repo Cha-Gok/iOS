@@ -5,7 +5,7 @@ import WhisperKit
 public protocol WhisperDataSource: Sendable {
     /// 추천 모델의 Variant 정보를 가져옵니다.
     func fetchModelVariant() async -> ModelVariant
-    
+
     /// 모델의 다운로드 경로를 전달합니다.
     func getDownloadPath() async throws(WhisperDataSourceError) -> URL
 

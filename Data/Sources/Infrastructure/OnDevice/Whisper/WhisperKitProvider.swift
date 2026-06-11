@@ -31,7 +31,7 @@ public actor WhisperKitProvider: WhisperDataSource {
         let recommended = WhisperKit.recommendedModels().default
         return ModelVariant.allCases.first { recommended.lowercased().contains($0.description.lowercased()) } ?? .tiny
     }
-    
+
     public func download(progressHandler: @Sendable @escaping (Progress) -> Void) async throws {
         let recommendedModel = WhisperKit.recommendedModels().default
         self.recommendedModel = recommendedModel

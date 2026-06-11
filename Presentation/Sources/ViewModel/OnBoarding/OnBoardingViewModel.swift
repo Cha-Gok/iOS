@@ -202,7 +202,7 @@ extension OnBoardingViewModel {
         let support = await availableSupportModelRepository.checkMLXSupportModel()
         modelSupport = support.model == .gemma4_e2b_4bit
         if modelSupport {
-            self.modelSize = await mlxRepository.modelSize
+            modelSize = await mlxRepository.modelSize
             steps = [.first, .second, .micPermission, .download, .finish]
         } else {
             steps = [.first, .second, .micPermission, .finish]

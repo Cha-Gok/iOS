@@ -18,7 +18,7 @@ public final class DownloadOnDeviceViewModel {
     private(set) var status: OnDeviceStatus = .init(storage: .notDownloaded)
     private(set) var errorMessage: String?
     private(set) var modelSize: String = ""
-    
+
     public weak var coordinator: DownloadOnDeviceCoordinatorDelegate?
     private let onDeviceStatusUseCase: any OnDeviceStatusUseCase
 
@@ -47,14 +47,13 @@ public final class DownloadOnDeviceViewModel {
 // MARK: - Actions
 
 extension DownloadOnDeviceViewModel {
-    
     /// 모델 다운로드 용량 크기를 가져옵니다.
     func onAppearSize() {
         Task {
             modelSize = await onDeviceStatusUseCase.fetchModelSize(model: .whisper)
         }
     }
-    
+
     /// 온디바이스 모델(Whisper)의 상태 스트림을 구독하여 상태를 관찰합니다.
     private func observeDownloadStatus() {
         statusObservationTask?.cancel()

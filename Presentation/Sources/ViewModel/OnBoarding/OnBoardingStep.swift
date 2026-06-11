@@ -43,7 +43,7 @@ enum Step: Equatable {
         case .download:
             OnBoardingItem(
                 headline: "기기에서 바로 작동하도록,\n몇 가지를 준비할게요.",
-                body: "녹음과 요약을 기기 안에서 처리하기 위해\n필요한 모델을 다운로드해요.\nWi-Fi 환경을 권장하며\n나중에 설정에서도 다운로드할 수 있어요.",
+                body: "녹음과 요약을 기기 안에서 처리하기 위해\n필요한 모델을 다운로드해요.\nWi-Fi 환경을 권장하며\n나중에 설정에서도 다운로드할 수 있어요."
             )
         case .finish:
             OnBoardingItem(

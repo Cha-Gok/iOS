@@ -112,7 +112,8 @@ extension MainCoordinator: MainCoordinatorDelegate {
                 navController.setViewControllers([downloadVC], animated: false)
 
                 if let sheet = navController.sheetPresentationController {
-                    let isPad = UIDevice.current.userInterfaceIdiom == .pad || UIDevice.current.model.lowercased().contains("ipad")
+                    let isPad = UIDevice.current.userInterfaceIdiom == .pad || UIDevice.current.model.lowercased()
+                        .contains("ipad")
                     sheet.detents = isPad ? [.large()] : [.medium()]
                     sheet.prefersGrabberVisible = true
                 }

@@ -6,6 +6,12 @@ import XCTest
 public final class MockOnDeviceRepository: OnDeviceRepository {
     public init() {}
 
+    public var modelSize: String {
+        get async {
+            "0 MB"
+        }
+    }
+
     public var downloadResult: Result<Void, OnDeviceRepositoryError> = .success(())
     public var deleteResult: Result<OnDeviceStatus, DeleteOnDeviceRepositoryError> = .success(OnDeviceStatus(
         storage: .notDownloaded

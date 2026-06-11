@@ -101,7 +101,7 @@ extension DownloadModelCard {
         let container = UIStackView()
         let imageView = UIImageView()
         let nameLabel = UILabel()
-        
+
         for item in [container, imageView, nameLabel, sizeLabel] {
             item.translatesAutoresizingMaskIntoConstraints = false
         }
