@@ -63,12 +63,16 @@ extension OnBoardingCardView {
         translatesAutoresizingMaskIntoConstraints = false
         axis = .vertical
         spacing = Constant.onBoardingContentSpacing
-
         // headline·body는 intrinsic size만 차지하고,
         // 남는 수직 공간은 imageContainer가 흡수하도록 설정
         headlineLabel.setContentHuggingPriority(.required, for: .vertical)
         bodyLabel.setContentHuggingPriority(.required, for: .vertical)
         imageContainer.setContentHuggingPriority(.defaultLow, for: .vertical)
+
+        // 텍스트가 어떤 상황에서도 잘리거나 찌그러지지 않도록 높은 압축 저항 우선순위 설정
+        headlineLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        bodyLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        imageContainer.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
     }
 
     private func setupHierarchy() {
