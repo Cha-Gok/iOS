@@ -64,7 +64,8 @@ public final class DownloadOnDeviceViewController: UIViewController, Alertable {
         symbolName: "externaldrive",
         modelName: "Whisper",
         style: .default,
-        storage: vm.status.storage
+        storage: vm.status.storage,
+        modelSize: vm.modelSize
     )
 
     // MARK: - Initialize
@@ -127,9 +128,11 @@ public final class DownloadOnDeviceViewController: UIViewController, Alertable {
             downloadModelCard.trailingAnchor.constraint(equalTo: subTitleLabel.trailingAnchor),
 
             // subTitleLabel2
-            subTitle2Label.topAnchor.constraint(equalTo: infoBox.bottomAnchor, constant: 24),
+            subTitle2Label.bottomAnchor.constraint(equalTo: bottomArea.topAnchor, constant: -12),
             subTitle2Label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             subTitle2Label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            subTitle2Label.topAnchor.constraint(greaterThanOrEqualTo: infoBox.bottomAnchor, constant: 12),
+            subTitle2Label.topAnchor.constraint(greaterThanOrEqualTo: downloadModelCard.bottomAnchor, constant: 12),
 
             // bottomArea
             bottomArea.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
@@ -184,7 +187,8 @@ private extension DownloadOnDeviceViewController {
         if isShowingCard {
             downloadModelCard.updateStatus(
                 vm.status.storage,
-                errorMessage: vm.errorMessage
+                errorMessage: vm.errorMessage,
+                modelSize: vm.modelSize
             )
         }
     }

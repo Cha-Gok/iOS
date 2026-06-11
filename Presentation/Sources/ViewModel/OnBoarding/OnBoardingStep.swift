@@ -13,30 +13,12 @@ struct OnBoardingItem: Equatable {
     }
 }
 
-enum Step: Int, CaseIterable, Equatable {
-    case first = 0
+enum Step: Equatable {
+    case first
     case second
     case micPermission
     case download
     case finish
-
-    static func matchingStep(_ val: Int) -> Step {
-        switch val {
-        case 0:
-            return .first
-        case 1:
-            return .second
-        case 2:
-            return .micPermission
-        case 3:
-            return .download
-        case 4:
-            return .finish
-        default:
-            AppLogger.warning("매칭되지 않는 Int값이 들어왔습니다, value: \(val)")
-            return .first
-        }
-    }
 
     var item: OnBoardingItem {
         switch self {
@@ -61,7 +43,7 @@ enum Step: Int, CaseIterable, Equatable {
         case .download:
             OnBoardingItem(
                 headline: "기기에서 바로 작동하도록,\n몇 가지를 준비할게요.",
-                body: "녹음과 요약을 기기 안에서 처리하기 위해\n필요한 모델을 다운로드 해요.\nWi-Fi연결을 권장하며 몇 분 정도 걸려요."
+                body: "녹음과 요약을 기기 안에서 처리하기 위해\n필요한 모델을 다운로드해요. Wi-Fi 환경을 권장하며 나중에 설정에서도 다운로드할 수 있어요."
             )
         case .finish:
             OnBoardingItem(
@@ -70,41 +52,17 @@ enum Step: Int, CaseIterable, Equatable {
             )
         }
     }
+}
 
-    func next() -> Self {
-        switch self {
-        case .first:
-            return .second
-        case .second:
-            return .micPermission
-        case .micPermission:
-            return .download
-        case .download:
-            return .finish
-        case .finish:
-            return .finish
-        }
+extension Step: CaseIterable {
+    static var allCases: [Step] {
+        [.first, .second, .micPermission, .download, .finish]
     }
+}
 
-    func prev() -> Self {
-        switch self {
-        case .first:
-            return .first
-        case .second:
-            return .first
-        case .micPermission:
-            return .second
-        case .download:
-            return .micPermission
-        case .finish:
-            return .download
-        }
-    }
-
-    func skip() -> Self {
-        if self == .first {
-            return .finish
-        }
-        return self
+extension Step {
+    var isDownload: Bool {
+        if case .download = self { return true }
+        return false
     }
 }

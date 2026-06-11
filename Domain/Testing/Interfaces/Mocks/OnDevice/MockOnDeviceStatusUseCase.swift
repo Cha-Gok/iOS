@@ -31,6 +31,10 @@ public final class MockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
         return checkStatusResult
     }
 
+    public func fetchModelSize(model: ChaGokModel) async -> String {
+        return "약 75 MB"
+    }
+
     public func subscribe(model: ChaGokModel) async -> AsyncStream<OnDeviceStatus> {
         actualSubscribeCallCount += 1
         subscribedModel = model

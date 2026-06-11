@@ -3,6 +3,9 @@ import WhisperKit
 
 /// Whisper STT 모델 엔진을 제어하고 음성 전사 데이터를 제공하는 데이터 소스 인터페이스.
 public protocol WhisperDataSource: Sendable {
+    /// 추천 모델의 Variant 정보를 가져옵니다.
+    func fetchModelVariant() async -> ModelVariant
+
     /// 모델의 다운로드 경로를 전달합니다.
     func getDownloadPath() async throws(WhisperDataSourceError) -> URL
 

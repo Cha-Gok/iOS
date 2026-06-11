@@ -42,6 +42,10 @@ final class DownloadMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked
     func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {
         return OnDeviceStatus(storage: .notDownloaded)
     }
+
+    func fetchModelSize(model: ChaGokModel) async -> String {
+        return "약 75 MB"
+    }
 }
 
 @MainActor
