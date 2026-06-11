@@ -11,6 +11,12 @@ public final class DefaultMlxOnDeviceRepository: OnDeviceRepository {
         self.provider = provider
     }
 
+    public var modelSize: String {
+        get async {
+            return "약 3.58 GB"
+        }
+    }
+
     public func download(progressHandler: @Sendable @escaping (Double) -> Void) async throws(OnDeviceRepositoryError) {
         do {
             try await provider.download { progress in

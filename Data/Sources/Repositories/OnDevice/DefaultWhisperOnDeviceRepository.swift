@@ -12,6 +12,24 @@ public struct DefaultWhisperOnDeviceRepository: OnDeviceRepository {
         self.provider = provider
     }
 
+    public var modelSize: String {
+        get async {
+            let variant = await provider.fetchModelVariant()
+            switch variant {
+            case .tiny, .tinyEn:
+                return "약 75 MB"
+            case .base, .baseEn:
+                return "약 142 MB"
+            case .small, .smallEn:
+                return "약 466 MB"
+            case .medium, .mediumEn:
+                return "약 1.5 GB"
+            case .large, .largev2, .largev3:
+                return "약 3.0 GB"
+            }
+        }
+    }
+    
     public func download(progressHandler: @Sendable @escaping (Double) -> Void) async throws(OnDeviceRepositoryError) {
         do {
             try await provider.download { progress in
