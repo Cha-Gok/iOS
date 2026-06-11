@@ -37,6 +37,8 @@ final class OnBoardingDownloadView: UIStackView {
         storage: vm.status.storage,
         modelSize: vm.modelSize
     )
+    
+    private lazy var timeLineGuideLabel: TimelineGuideLabel = .init(state: .notDownloaded)
 
     /// 남는 수직 공간을 흡수하는 빈 뷰 (OnBoardingCardView의 imageContainer 역할)
     private let spacerView = UIView()
@@ -66,6 +68,7 @@ final class OnBoardingDownloadView: UIStackView {
         super.updateProperties()
         let storage = vm.status.storage
         downloadModelCard.updateStatus(storage, errorMessage: vm.errorMessage)
+        timeLineGuideLabel.updateLabelState(storage)
     }
 }
 
@@ -76,18 +79,29 @@ extension OnBoardingDownloadView {
         translatesAutoresizingMaskIntoConstraints = false
         axis = .vertical
         spacing = Constant.onBoardingContentSpacing
-
         // headline·body는 intrinsic size만 차지하고,
         // 남는 수직 공간은 imageContainer가 흡수하도록 설정
         headlineLabel.setContentHuggingPriority(.required, for: .vertical)
         bodyLabel.setContentHuggingPriority(.required, for: .vertical)
         downloadModelCard.setContentHuggingPriority(.required, for: .vertical)
+        timeLineGuideLabel.setContentHuggingPriority(.required, for: .vertical)
+        spacerView.setContentHuggingPriority(.defaultLow, for: .vertical)
+
+        // 텍스트 및 카드 찌그러짐 방지 제약조건 추가
+        headlineLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        bodyLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        downloadModelCard.setContentCompressionResistancePriority(.required, for: .vertical)
+        timeLineGuideLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        spacerView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
     }
 
     private func setupHierarchy() {
         addArrangedSubview(headlineLabel)
         addArrangedSubview(bodyLabel)
         addArrangedSubview(downloadModelCard)
+        setCustomSpacing(0, after: downloadModelCard)
         addArrangedSubview(spacerView)
+        setCustomSpacing(0, after: spacerView)
+        addArrangedSubview(timeLineGuideLabel)
     }
 }

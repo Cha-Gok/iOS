@@ -100,6 +100,9 @@ public extension Constant {
 
     /// OnBoarding 페이지네이션과 페이징뷰 사이의 상단 여백 (105)
     static let onBoardingPagingViewTopMargin: CGFloat = 105
+    
+    /// OnBoarding IPad 용 페징 뷰 사이 상단 여백 ( 52 )
+    static let onBoardingPagingViewTopMarginForiPad: CGFloat = 52
 
     /// OnBoarding 페이징뷰와 버튼 사이의 하단 여백 (16)
     static let onBoardingPagingViewBottomMargin: CGFloat = 16

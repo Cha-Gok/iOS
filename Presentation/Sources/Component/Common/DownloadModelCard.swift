@@ -75,6 +75,9 @@ final class DownloadModelCard: UIStackView {
         isLayoutMarginsRelativeArrangement = true
 
         addArrangedSubview(modelLabel)
+        modelLabel.setContentHuggingPriority(.required, for: .vertical)
+        modelLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+
         switch style {
         case .default:
             addArrangedSubview(defaultProgressView)
@@ -109,6 +112,8 @@ extension DownloadModelCard {
         // nameLabel
         nameLabel.setTypography(text: modelName, style: .body2)
         nameLabel.textColor = UIColor.gray950
+        nameLabel.setContentHuggingPriority(.required, for: .vertical)
+        nameLabel.setContentCompressionResistancePriority(.required, for: .vertical)
         // imageView
         let config: UIImage.SymbolConfiguration = .init(pointSize: 20, weight: .medium)
         imageView.image = UIImage(systemName: symbolName, withConfiguration: config)
@@ -121,6 +126,8 @@ extension DownloadModelCard {
         let spacer = UIView()
         // model size
         sizeLabel.setTypography(text: modelSize, style: .label)
+        sizeLabel.setContentHuggingPriority(.required, for: .vertical)
+        sizeLabel.setContentCompressionResistancePriority(.required, for: .vertical)
         for item in [imageView, nameLabel, spacer, sizeLabel] {
             container.addArrangedSubview(item)
         }

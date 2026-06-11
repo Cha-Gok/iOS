@@ -38,22 +38,22 @@ public actor WhisperKitProvider: WhisperDataSource {
         AppLogger.info("WhisperKit 추천 모델 : \(recommendedModel)")
         AppLogger.info("WhisperKit 모델 다운로드 시작")
 
-//        #if DEBUG
-//            // ⚠️ 디버깅용 시뮬레이션: 에러 상황별 핸들링을 안전하게 테스트하기 위한 디버그 스위치입니다.
-//            try await Task.sleep(nanoseconds: 2 * 1_000_000_000)
-//
-//            // [옵션 1] 네트워크 오류 시뮬레이션 (networkFailed)
-//            // -> 활성화 시 "네트워크 연결이 유실되었습니다" 문구가 노출됩니다.
-//            // throw URLError(.notConnectedToInternet)
-//
-//            // [옵션 2] 알 수 없는 시스템 오류 시뮬레이션 (unknown)
-//            // -> 활성화 시 "다운로드에 실패했습니다" 문구와 상세 에러 문구가 노출됩니다.
-//            throw NSError(
-//                domain: "SimulatedErrorDomain",
-//                code: 999,
-//                userInfo: [NSLocalizedDescriptionKey: "알 수 없는 기기 내부 디스크 쓰기 오류가 발생했습니다. (Simulated)"]
-//            )
-//        #endif
+        #if DEBUG
+            // ⚠️ 디버깅용 시뮬레이션: 에러 상황별 핸들링을 안전하게 테스트하기 위한 디버그 스위치입니다.
+            try await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+
+            // [옵션 1] 네트워크 오류 시뮬레이션 (networkFailed)
+            // -> 활성화 시 "네트워크 연결이 유실되었습니다" 문구가 노출됩니다.
+            // throw URLError(.notConnectedToInternet)
+
+            // [옵션 2] 알 수 없는 시스템 오류 시뮬레이션 (unknown)
+            // -> 활성화 시 "다운로드에 실패했습니다" 문구와 상세 에러 문구가 노출됩니다.
+            throw NSError(
+                domain: "SimulatedErrorDomain",
+                code: 999,
+                userInfo: [NSLocalizedDescriptionKey: "알 수 없는 기기 내부 디스크 쓰기 오류가 발생했습니다. (Simulated)"]
+            )
+        #endif
 
         let path = try await WhisperKit.download(
             variant: recommendedModel,

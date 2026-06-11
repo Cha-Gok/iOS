@@ -124,6 +124,20 @@ public final class OnBoardingViewModel {
             return false
         }
     }
+    
+    var isSecondButtonBgColor: Bool {
+        switch currentStep {
+        case .download:
+            switch status.storage {
+            case .downloading:
+                return true
+            default:
+                return false
+            }
+        default:
+            return false
+        }
+    }
 
     // MARK: - Setters
 

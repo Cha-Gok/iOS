@@ -128,9 +128,11 @@ public final class DownloadOnDeviceViewController: UIViewController, Alertable {
             downloadModelCard.trailingAnchor.constraint(equalTo: subTitleLabel.trailingAnchor),
 
             // subTitleLabel2
-            subTitle2Label.topAnchor.constraint(equalTo: infoBox.bottomAnchor, constant: 24),
+            subTitle2Label.bottomAnchor.constraint(equalTo: bottomArea.topAnchor, constant: -12),
             subTitle2Label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             subTitle2Label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            subTitle2Label.topAnchor.constraint(greaterThanOrEqualTo: infoBox.bottomAnchor, constant: 12),
+            subTitle2Label.topAnchor.constraint(greaterThanOrEqualTo: downloadModelCard.bottomAnchor, constant: 12),
 
             // bottomArea
             bottomArea.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),

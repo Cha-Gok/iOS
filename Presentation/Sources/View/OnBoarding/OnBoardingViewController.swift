@@ -69,12 +69,14 @@ public final class OnBoardingViewController: ViewController {
         // 버튼 상태 업데이트
         primaryButton.configuration?.title = vm.primaryButtonTitle
         primaryButton.isHidden = !vm.isPrimaryButtonEnabled
-        secondButton.configuration?.title = vm.secondButtonTitle
-        secondButton.isUserInteractionEnabled = vm.isSecondButtonEnabled
         primaryButton.configuration?.baseBackgroundColor = vm
             .isPrimaryButtonBgColor ? UIColor.point600 : UIColor.point200
             .withAlphaComponent(Constant.backgroundOpacity)
-        primaryButton.configuration?.baseForegroundColor = UIColor.gray900
+        secondButton.configuration?.title = vm.secondButtonTitle
+        secondButton.isUserInteractionEnabled = vm.isSecondButtonEnabled
+        secondButton.configuration?.background.backgroundColor = vm
+            .isSecondButtonBgColor ? UIColor.point600 : .clear
+        secondButton.configuration?.baseForegroundColor = vm.isSecondButtonBgColor ? UIColor.gray950 : UIColor.gray750
         // paginView
         pagingView.isScrollEnabled = vm.scrollEnabled
         // pagenation 업데이트
@@ -129,11 +131,14 @@ public final class OnBoardingViewController: ViewController {
     // MARK: - Constraint
 
     private func setupCardConstraint() {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad || UIDevice.current.model.lowercased().contains("ipad")
+        let topConstant: CGFloat = isPad ? Constant.onBoardingPagingViewTopMarginForiPad : Constant.onBoardingPagingViewTopMargin
+
         NSLayoutConstraint.activate([
             // 페이징 뷰 위치 제약 (페이지네이션과 다음 버튼 사이)
             pagingView.topAnchor.constraint(
                 equalTo: pagenation.bottomAnchor,
-                constant: Constant.onBoardingPagingViewTopMargin
+                constant: topConstant
             ),
             pagingView.leadingAnchor.constraint(
                 equalTo: view.leadingAnchor,
