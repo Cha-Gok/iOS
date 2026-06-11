@@ -57,7 +57,7 @@ public final class OnBoardingViewModel {
         storage: .notDownloaded
     )
     private(set) var scrollEnabled: Bool = true
-
+    private(set) var modelSize: String = ""
     private var isPaging: Bool = false
     private(set) var steps: [Step] = Step.allCases
 
@@ -68,7 +68,7 @@ public final class OnBoardingViewModel {
         case .download:
             switch status.storage {
             case .downloading:
-                return "다운로드 중입니다..."
+                return ""
             case .downloaded:
                 return "다음"
             case .failed:
@@ -148,7 +148,7 @@ extension OnBoardingViewModel {
             isPaging = true
             finishOnBoarding()
         default: // 다음
-            guard currentStep != .download else {
+            guard !currentStep.isDownload else {
                 switch status.storage {
                 case .downloading:
                     return
@@ -201,7 +201,12 @@ extension OnBoardingViewModel {
     func checkModelSupport() async {
         let support = await availableSupportModelRepository.checkMLXSupportModel()
         modelSupport = support.model == .gemma4_e2b_4bit
-        steps = modelSupport ? Step.allCases : Step.allCases.filter { $0 != .download }
+        if modelSupport {
+            self.modelSize = await mlxRepository.modelSize
+            steps = [.first, .second, .micPermission, .download, .finish]
+        } else {
+            steps = [.first, .second, .micPermission, .finish]
+        }
         if !steps.contains(currentStep) {
             currentStep = .finish
         }
@@ -321,6 +326,12 @@ extension OnBoardingViewModel {
         }
 
         struct PreviewOnDeviceRepository: OnDeviceRepository {
+            var modelSize: String {
+                get async {
+                    "0 MB"
+                }
+            }
+
             func checkStatus() async -> Domain.OnDeviceStatus {
                 .init(storage: .downloaded)
             }

@@ -8,6 +8,14 @@ final class DownloadModelCard: UIStackView {
     let style: ProgressStyle
     var storage: OnDeviceStatus.StorageState
     var errorMessage: String?
+    var modelSize: String
+
+    private let sizeLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = UIColor.point800
+        return label
+    }()
 
     // MARK: - Initialize
 
@@ -17,6 +25,7 @@ final class DownloadModelCard: UIStackView {
         style: ProgressStyle,
         storage: OnDeviceStatus.StorageState,
         errorMessage: String? = nil,
+        modelSize: String = "",
         frame: CGRect = .zero
     ) {
         self.symbolName = symbolName
@@ -24,6 +33,7 @@ final class DownloadModelCard: UIStackView {
         self.style = style
         self.storage = storage
         self.errorMessage = errorMessage
+        self.modelSize = modelSize
         super.init(frame: frame)
         setup()
     }
@@ -91,8 +101,8 @@ extension DownloadModelCard {
         let container = UIStackView()
         let imageView = UIImageView()
         let nameLabel = UILabel()
-
-        for item in [container, imageView, nameLabel] {
+        
+        for item in [container, imageView, nameLabel, sizeLabel] {
             item.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -109,7 +119,9 @@ extension DownloadModelCard {
         container.spacing = 8
         // spacer
         let spacer = UIView()
-        for item in [imageView, nameLabel, spacer] {
+        // model size
+        sizeLabel.setTypography(text: modelSize, style: .label)
+        for item in [imageView, nameLabel, spacer, sizeLabel] {
             container.addArrangedSubview(item)
         }
 
@@ -120,9 +132,13 @@ extension DownloadModelCard {
 // MARK: - Update
 
 extension DownloadModelCard {
-    func updateStatus(_ storage: OnDeviceStatus.StorageState, errorMessage: String?) {
+    func updateStatus(_ storage: OnDeviceStatus.StorageState, errorMessage: String?, modelSize: String? = nil) {
         self.storage = storage
         self.errorMessage = errorMessage
+        if let modelSize {
+            self.modelSize = modelSize
+            sizeLabel.setTypography(text: modelSize, style: .label)
+        }
         setNeedsUpdateProperties()
     }
 

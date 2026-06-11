@@ -64,7 +64,8 @@ public final class DownloadOnDeviceViewController: UIViewController, Alertable {
         symbolName: "externaldrive",
         modelName: "Whisper",
         style: .default,
-        storage: vm.status.storage
+        storage: vm.status.storage,
+        modelSize: vm.modelSize
     )
 
     // MARK: - Initialize
@@ -184,7 +185,8 @@ private extension DownloadOnDeviceViewController {
         if isShowingCard {
             downloadModelCard.updateStatus(
                 vm.status.storage,
-                errorMessage: vm.errorMessage
+                errorMessage: vm.errorMessage,
+                modelSize: vm.modelSize
             )
         }
     }

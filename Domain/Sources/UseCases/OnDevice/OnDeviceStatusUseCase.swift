@@ -10,6 +10,8 @@ public protocol OnDeviceStatusUseCase: Sendable {
     func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError)
     /// 현재 상태 조회
     func checkStatus(model: ChaGokModel) async -> OnDeviceStatus
+    /// 모델의 용량 정보를 조회합니다
+    func fetchModelSize(model: ChaGokModel) async -> String
 }
 
 public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
@@ -145,6 +147,11 @@ public actor DefaultOnDeviceStatusUseCase: OnDeviceStatusUseCase {
             return status
         }
         return OnDeviceStatus(storage: .notDownloaded)
+    }
+
+    public func fetchModelSize(model: ChaGokModel) async -> String {
+        guard let repo = repo(for: model) else { return "" }
+        return await repo.modelSize
     }
 
     private func syncStatus(model: ChaGokModel) async {

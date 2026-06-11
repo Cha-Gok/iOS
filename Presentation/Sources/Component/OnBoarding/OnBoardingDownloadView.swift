@@ -34,7 +34,8 @@ final class OnBoardingDownloadView: UIStackView {
         symbolName: "externaldrive",
         modelName: "Gemma-4",
         style: .immutable,
-        storage: vm.status.storage
+        storage: vm.status.storage,
+        modelSize: vm.modelSize
     )
 
     /// 남는 수직 공간을 흡수하는 빈 뷰 (OnBoardingCardView의 imageContainer 역할)
