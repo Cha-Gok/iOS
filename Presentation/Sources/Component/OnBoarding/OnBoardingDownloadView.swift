@@ -37,7 +37,7 @@ final class OnBoardingDownloadView: UIStackView {
         storage: vm.status.storage,
         modelSize: vm.modelSize
     )
-    
+
     private lazy var timeLineGuideLabel: TimelineGuideLabel = .init(state: .notDownloaded)
 
     /// 남는 수직 공간을 흡수하는 빈 뷰 (OnBoardingCardView의 imageContainer 역할)

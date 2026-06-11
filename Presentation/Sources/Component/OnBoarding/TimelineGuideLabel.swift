@@ -1,11 +1,11 @@
-import UIKit
 import Domain
+import UIKit
 
 final class TimelineGuideLabel: UILabel {
     private var timer: Timer?
     private var state: OnDeviceStatus.StorageState = .notDownloaded
     private var index: Int = 0
-    
+
     init(
         state: OnDeviceStatus.StorageState,
         frame: CGRect = .zero
@@ -14,30 +14,30 @@ final class TimelineGuideLabel: UILabel {
         super.init(frame: frame)
         setup()
     }
-    
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         nil
     }
-    
+
     override func updateProperties() {
         super.updateProperties()
         updateState()
     }
-    
+
     private func setup() {
         translatesAutoresizingMaskIntoConstraints = false
         textColor = UIColor.gray950
         numberOfLines = 0
         clipsToBounds = true
     }
-    
+
     func updateLabelState(_ state: OnDeviceStatus.StorageState) {
         guard self.state != state else { return }
         self.state = state
         setNeedsUpdateProperties()
     }
-    
+
     private func updateState() {
         switch state {
         case .notDownloaded, .downloaded, .failed:
@@ -46,15 +46,15 @@ final class TimelineGuideLabel: UILabel {
             startTimer()
         }
     }
-    
+
     /// timeLine을 시작합니다.
     private func startTimer() {
         guard timer == nil else { return }
-        
+
         // 시작하자마자 첫 텍스트가 바로 보이도록 설정
         index = 0
         updateLabel(animated: false)
-        
+
         // 4초 주기로 텍스트 롤링 타이머 구동
         timer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -64,7 +64,7 @@ final class TimelineGuideLabel: UILabel {
             }
         }
     }
-    
+
     /// timeLine의 진행을 멈춥니다.
     private func stopTimer() {
         timer?.invalidate()
@@ -73,28 +73,28 @@ final class TimelineGuideLabel: UILabel {
         alpha = 1
         transform = .identity
     }
-    
+
     /// 텍스트 업데이트 및 아래에서 위로 올라오는 전환 효과 적용
     private func updateLabel(animated: Bool) {
         let nextText = toolTips[index % toolTips.count]
-        
+
         if animated {
             UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseIn, animations: {
                 self.alpha = 0
                 self.transform = CGAffineTransform(translationX: 0, y: -12)
             }) { [weak self] _ in
                 guard let self else { return }
-                self.text = nextText
-                self.setTypography(text: nextText, style: .body3, textAlignment: .center)
-                self.transform = CGAffineTransform(translationX: 0, y: 12)
-                
+                text = nextText
+                setTypography(text: nextText, style: .body3, textAlignment: .center)
+                transform = CGAffineTransform(translationX: 0, y: 12)
+
                 UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
                     self.alpha = 1
                     self.transform = .identity
                 })
             }
         } else {
-            self.text = nextText
+            text = nextText
             setTypography(text: text, style: .body3, textAlignment: .center)
         }
     }

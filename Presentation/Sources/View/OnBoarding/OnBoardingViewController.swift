@@ -132,7 +132,8 @@ public final class OnBoardingViewController: ViewController {
 
     private func setupCardConstraint() {
         let isPad = UIDevice.current.userInterfaceIdiom == .pad || UIDevice.current.model.lowercased().contains("ipad")
-        let topConstant: CGFloat = isPad ? Constant.onBoardingPagingViewTopMarginForiPad : Constant.onBoardingPagingViewTopMargin
+        let topConstant: CGFloat = isPad ? Constant.onBoardingPagingViewTopMarginForiPad : Constant
+            .onBoardingPagingViewTopMargin
 
         NSLayoutConstraint.activate([
             // 페이징 뷰 위치 제약 (페이지네이션과 다음 버튼 사이)

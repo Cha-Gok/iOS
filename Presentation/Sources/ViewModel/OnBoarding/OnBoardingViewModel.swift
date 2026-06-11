@@ -124,7 +124,7 @@ public final class OnBoardingViewModel {
             return false
         }
     }
-    
+
     var isSecondButtonBgColor: Bool {
         switch currentStep {
         case .download:
