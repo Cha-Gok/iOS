@@ -71,6 +71,17 @@ final class SettingMockOnDeviceStatusUseCase: OnDeviceStatusUseCase, @unchecked 
     func checkStatus(model: ChaGokModel) async -> OnDeviceStatus {
         return checkStatusResult
     }
+
+    func fetchModelSize(model: ChaGokModel) async -> String {
+        switch model {
+        case .whisper:
+            return "약 75 MB"
+        case .gemma4_e2b_4bit:
+            return "약 3.58 GB"
+        case .none:
+            return ""
+        }
+    }
 }
 
 @MainActor

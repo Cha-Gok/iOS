@@ -87,7 +87,8 @@ final class OnBoardingViewModelTests: XCTestCase {
     func test_마지막스텝인경우_버튼타이틀과_상태가_변경된다() {
         let sut = makeSUT()
 
-        sut.viewModel.syncPageState(nextStep: Step.finish.rawValue) // 4
+        let finishIndex = sut.viewModel.steps.firstIndex(of: .finish) ?? 4
+        sut.viewModel.syncPageState(nextStep: finishIndex)
 
         XCTAssertEqual(sut.viewModel.currentStep, .finish)
         XCTAssertEqual(sut.viewModel.primaryButtonTitle, "시작하기")
@@ -107,7 +108,8 @@ final class OnBoardingViewModelTests: XCTestCase {
         await sut.mockSTTRepo.setCheckResult(.notDetermined)
         await sut.mockSTTRepo.setRequestResult(.success(.authorized))
 
-        sut.viewModel.syncPageState(nextStep: Step.micPermission.rawValue)
+        let micPermissionIndex = sut.viewModel.steps.firstIndex(of: .micPermission) ?? 2
+        sut.viewModel.syncPageState(nextStep: micPermissionIndex)
 
         // Task 내부 비동기 호출 대기 (안전하게 0.3초 대기)
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -131,13 +133,14 @@ final class OnBoardingViewModelTests: XCTestCase {
             scrolledIndex = nextIndex
         }
 
-        XCTAssertEqual(scrolledIndex, Step.second.rawValue) // 1
+        XCTAssertEqual(scrolledIndex, 1)
     }
 
     func test_primaryButtonAction_마지막스텝에서_온보딩을_완료하고_화면을_전환한다() async {
         let sut = makeSUT()
 
-        sut.viewModel.syncPageState(nextStep: Step.finish.rawValue)
+        let finishIndex = sut.viewModel.steps.firstIndex(of: .finish) ?? 4
+        sut.viewModel.syncPageState(nextStep: finishIndex)
 
         sut.mockCheckFirstLaunchRepo.setReturnValue(true)
         sut.mockFolderRepo.setCreateResult(.success(Folder(name: Policy.defaultFolderName, kind: .default)))
@@ -173,7 +176,7 @@ final class OnBoardingViewModelTests: XCTestCase {
             scrolledIndex = nextIndex
         }
 
-        XCTAssertEqual(scrolledIndex, Step.micPermission.rawValue)
+        XCTAssertEqual(scrolledIndex, 2)
     }
 
     func test_secondButtonAction_중간스텝에서_이전버튼을_누르면_이전스텝으로_이동한다() async {
@@ -187,7 +190,8 @@ final class OnBoardingViewModelTests: XCTestCase {
         await sut.mockSTTRepo.setCheckResult(.notDetermined)
         await sut.mockSTTRepo.setRequestResult(.success(.authorized))
 
-        sut.viewModel.syncPageState(nextStep: Step.micPermission.rawValue)
+        let micPermissionIndex = sut.viewModel.steps.firstIndex(of: .micPermission) ?? 2
+        sut.viewModel.syncPageState(nextStep: micPermissionIndex)
 
         // 백그라운드 Task가 안전하게 완료될 수 있도록 약간의 딜레이 부여
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -197,7 +201,7 @@ final class OnBoardingViewModelTests: XCTestCase {
             scrolledIndex = nextIndex
         }
 
-        XCTAssertEqual(scrolledIndex, Step.second.rawValue)
+        XCTAssertEqual(scrolledIndex, 1)
     }
 
     func test_checkModelSupport호출시_지원하는기기이면_modelSupport가true가된다() async {
@@ -221,7 +225,10 @@ final class OnBoardingViewModelTests: XCTestCase {
         sut.mockMLXRepo.downloadResult = .success(())
 
         await sut.viewModel.checkModelSupport()
-        sut.viewModel.syncPageState(nextStep: Step.download.rawValue)
+        let downloadIndex = sut.viewModel.steps.firstIndex { if case .download = $0 { return true }
+            return false
+        } ?? 3
+        sut.viewModel.syncPageState(nextStep: downloadIndex)
 
         sut.viewModel.primaryButtonAction { _ in }
         try? await Task.sleep(nanoseconds: 300_000_000) // 다운로드 완료 비동기 대기

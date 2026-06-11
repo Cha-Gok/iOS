@@ -68,6 +68,10 @@ import Foundation
             func download(model: ChaGokModel) async throws(OnDeviceStatusUseCaseError) {}
 
             func delete(model: ChaGokModel) async throws(DeleteOnDeviceRepositoryError) {}
+
+            func fetchModelSize(model: ChaGokModel) async -> String {
+                return "약 75 MB"
+            }
         }
     }
 #endif
