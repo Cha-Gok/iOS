@@ -60,7 +60,7 @@ public final class MoveFolderListViewModel {
         do {
             guard let currentFolderID = voiceNotes.first?.folderID else { return }
             let folders = try folderUseCase.fetchAll()
-            let otherFolders = folders.filter { $0.id != currentFolderID }
+            let otherFolders = folders.filter { $0.id != currentFolderID && $0.kind != .trash }
             send(.internal(.foldersLoaded(otherFolders)))
         } catch {
             AppLogger.error(error)
