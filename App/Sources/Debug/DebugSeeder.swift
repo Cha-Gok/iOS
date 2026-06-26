@@ -12,23 +12,26 @@
         let voiceNoteRepository: any VoiceNoteRepository
 
         func seedIfNeeded() {
-            let defaults = UserDefaults.standard
-            guard !defaults.bool(forKey: Self.didSeedKey) else {
-                AppLogger.debug("시드 데이터가 이미 존재합니다. 스킵.")
-                return
-            }
-
             do {
                 let folders = try folderRepository.fetchAll()
                 guard folders.contains(where: { $0.kind == .default }) else {
                     AppLogger.debug("기본 폴더 미존재. 온보딩 이후 다시 시도합니다.")
                     return
                 }
+                
+                // 디버그 빌드 시 매번 실행하여 최신 시드 데이터를 갱신합니다.
+                // 중복 및 이전 시드를 방지하기 위해 기존 시드 폴더를 먼저 삭제합니다 (Core Data cascade 삭제됨).
+                let seedFolderNames = ["업무", "개인", "학습", "회의록"]
+                for folder in folders {
+                    if seedFolderNames.contains(folder.name) {
+                        try folderRepository.delete(id: folder.id)
+                    }
+                }
+                
                 try performSeed()
-                defaults.set(true, forKey: Self.didSeedKey)
-                AppLogger.info("시드 데이터 생성 완료")
+                AppLogger.info("시드 데이터 초기화 및 재설정 완료")
             } catch {
-                AppLogger.error("시드 데이터 생성 실패: \(error)")
+                AppLogger.error("시드 데이터 초기화 실패: \(error)")
             }
         }
 
@@ -236,6 +239,15 @@
                     summaryLines: [],
                     keywords: ["장애", "인시던트", "포스트모템"],
                     analysisState: .transcriptionFailed
+                ),
+                Spec(
+                    folderID: personalFolder.id,
+                    title: "일정 및 버그 관련 푸념 메모 (문법 교정 테스트용)",
+                    createdAt: now.addingTimeInterval(-h * 2),
+                    texts: SeedContent.grammarCheckTest,
+                    summaryLines: [],
+                    keywords: [],
+                    analysisState: .transcribed
                 )
             ]
 
@@ -290,7 +302,7 @@
             switch state {
             case .pending, .transcribing, .transcriptionFailed:
                 return false
-            case .transcribed, .summarizing, .regenerating, .completed, .summarizationFailed:
+            case .transcribed, .summarizing, .regenerating, .completed, .summarizationFailed, .grammarCheckFailed, .grammarChecked, .grammarChecking:
                 return true
             }
         }
