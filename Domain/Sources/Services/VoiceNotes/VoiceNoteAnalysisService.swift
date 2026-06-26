@@ -37,17 +37,20 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
     private let sttRepository: any STTRepository
     private let summaryRepository: any SummaryRepository
     private let languageRepository: any LanguageRepository
+    private let grammarRepository: any GrammarRepository
 
     public init(
         voiceNoteRepository: any VoiceNoteRepository,
         sttRepository: any STTRepository,
         summaryRepository: any SummaryRepository,
-        languageRepository: any LanguageRepository
+        languageRepository: any LanguageRepository,
+        grammarRepository: any GrammarRepository
     ) {
         self.voiceNoteRepository = voiceNoteRepository
         self.sttRepository = sttRepository
         self.summaryRepository = summaryRepository
         self.languageRepository = languageRepository
+        self.grammarRepository = grammarRepository
     }
 
     // MARK: - Public API
@@ -60,9 +63,10 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
         case .pending:
             startTranscription(for: voiceNote, previousState: .pending)
         case .transcribed:
-            startSummarization(for: voiceNote, previousState: .transcribed)
+            // 문법 교정과 요약을 동일 파이프라인으로 수행합니다.
+            startGrammarCheckAndSummarization(for: voiceNote, previousState: .transcribed)
         case .transcribing, .transcriptionFailed, .summarizing, .regenerating,
-             .completed, .summarizationFailed:
+             .completed, .summarizationFailed, .grammarChecked, .grammarChecking, .grammarCheckFailed:
             break
         }
     }
@@ -79,7 +83,7 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
                 transientState: .regenerating
             )
         case .pending, .transcribing, .transcriptionFailed, .transcribed,
-             .summarizing, .regenerating:
+             .summarizing, .regenerating, .grammarChecked, .grammarChecking, .grammarCheckFailed:
             break
         }
     }
@@ -118,7 +122,7 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
                 persist(voiceNote: withTranscript)
                 if Task.isCancelled { return }
                 entries.removeValue(forKey: voiceNote.id)
-                startSummarization(for: withTranscript, previousState: .transcribed)
+                startGrammarCheckAndSummarization(for: withTranscript, previousState: .transcribed)
             } catch {
                 AppLogger.error(error)
                 if !Task.isCancelled {
@@ -126,6 +130,51 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
                 }
                 entries.removeValue(forKey: voiceNote.id)
             }
+        }
+        entries[voiceNote.id] = Entry(task: task, previousState: previousState)
+    }
+
+    private func startGrammarCheckAndSummarization(for voiceNote: VoiceNote, previousState: AnalysisState) {
+        guard let transcript = voiceNote.transcript else { return }
+        persist(voiceNote: voiceNote, analysisState: .grammarChecking)
+
+        let task = Task { [weak self] in
+            guard let self else { return }
+            do {
+                // 1. 문법 교정 실행
+                let correctedTranscript = try await self.grammarRepository.correct(transcript: transcript)
+                if Task.isCancelled { return }
+
+                let withGrammar = self.makeUpdated(
+                    from: voiceNote,
+                    transcript: correctedTranscript,
+                    analysisState: .grammarChecked
+                )
+                persist(voiceNote: withGrammar)
+
+                // 2. 요약 실행
+                persist(voiceNote: withGrammar, analysisState: .summarizing)
+                let language = self.languageRepository.fetchLanguage()
+                let (keywords, summary) = try await self.summaryRepository.summarize(
+                    transcript: correctedTranscript,
+                    language: language
+                )
+                if Task.isCancelled { return }
+
+                let completed = self.makeUpdated(
+                    from: withGrammar,
+                    keywords: keywords,
+                    summary: summary,
+                    analysisState: .completed
+                )
+                persist(voiceNote: completed)
+            } catch {
+                AppLogger.error(error)
+                if !Task.isCancelled {
+                    persist(voiceNote: voiceNote, analysisState: .summarizationFailed)
+                }
+            }
+            entries.removeValue(forKey: voiceNote.id)
         }
         entries[voiceNote.id] = Entry(task: task, previousState: previousState)
     }
@@ -188,8 +237,6 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
         persist(voiceNote: updated)
     }
 
-    /// 진행 중 취소 시 DB를 이전 상태로 되돌린다.
-    /// 현재 상태가 전이 상태(`.transcribing` / `.summarizing` / `.regenerating`)일 때만 revert 한다.
     private func revertState(voiceNoteID: UUID, to previousState: AnalysisState) {
         guard let current = fetch(voiceNoteID) else { return }
         switch current.analysisState {
@@ -222,3 +269,5 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
         )
     }
 }
+
+
