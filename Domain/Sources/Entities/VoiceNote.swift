@@ -9,6 +9,9 @@ public enum AnalysisState: String, Sendable, Hashable {
     case regenerating
     case completed
     case summarizationFailed
+    case grammarChecking
+    case grammarCheckFailed
+    case grammarChecked
 
     public enum BindingKey {
         case progress
@@ -18,11 +21,11 @@ public enum AnalysisState: String, Sendable, Hashable {
 
     public var bindingValue: BindingKey {
         switch self {
-        case .pending, .transcribing, .transcribed, .regenerating, .summarizing:
+        case .pending, .transcribing, .transcribed, .regenerating, .summarizing, .grammarChecked, .grammarChecking:
             .progress
         case .completed:
             .success
-        case .transcriptionFailed, .summarizationFailed:
+        case .transcriptionFailed, .summarizationFailed, .grammarCheckFailed:
             .failed
         }
     }
