@@ -29,6 +29,9 @@ public final class AppDIContainer {
     private lazy var mlxSummaryRepository = DefaultMLXSummaryRepository(
         provider: mlxProvider
     )
+    private lazy var mlxGrammarRepository = DefaultMLXGrammarRepository(
+        provider: mlxProvider
+    )
     private lazy var whisperProvider = WhisperKitProvider(
         storageService: storageService,
         languageRepository: languageRepository
@@ -55,7 +58,8 @@ public final class AppDIContainer {
         voiceNoteRepository: voiceNoteRepository,
         sttRepository: sttWhisperRepository,
         summaryRepository: mlxSummaryRepository,
-        languageRepository: languageRepository
+        languageRepository: languageRepository,
+        grammarRepository: mlxGrammarRepository
     )
 
     /// UseCase
