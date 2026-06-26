@@ -28,6 +28,7 @@ public struct DefaultMLXGrammarRepository: GrammarRepository {
                 let response = try await session.respond(to: Policy.correctionPrompt(text: section.text))
                 let trimmed = response.trimmingCharacters(in: .whitespacesAndNewlines)
                 correctedSections.append(TranscriptSection(timestamp: section.timestamp, text: trimmed))
+                await provider.clearCache()
             }
 
             if Task.isCancelled {
