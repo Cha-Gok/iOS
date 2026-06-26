@@ -62,10 +62,16 @@ public actor MLXModelProvider: MLXModelDataSource {
 
     /// 메모리에서 모델을 해제합니다.
     public func clear() {
-        if container != nil {
-            MLX.Memory.cacheLimit = 0
-            container = nil
-        }
+        AppLogger.info("MLXModelProvider clear() 호출됨 - 전체 메모리 해제 시작")
+        MLX.Memory.cacheLimit = 0
+        container = nil
+        AppLogger.info("MLX model cleared fMemory.clearCache")
+    }
+    
+    /// 메모리의 캐시(KVCache 등)만 해제하고 모델 컨테이너는 유지합니다.
+    public func clearCache() {
+        AppLogger.info("MLXModelProvider clearCache 호출됨 - 전체 메모리 해제 시작")
+        MLX.Memory.cacheLimit = 0
     }
 
     /// 모델이 설치된 경로를  전달 하기 위한 함수
