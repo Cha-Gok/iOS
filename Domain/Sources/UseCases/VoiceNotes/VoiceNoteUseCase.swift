@@ -28,6 +28,9 @@ public protocol VoiceNoteUseCase: Sendable {
     /// 완료/실패 상태의 요약을 재생성합니다.
     func regenerateSummary(id: UUID)
 
+    /// 분석 파이프라인에 노트를 큐잉하여 분석을 시작하거나 재개합니다.
+    func enqueue(id: UUID)
+
     /// 노트를 휴지통으로 단독 이동합니다. 원본 폴더 정보는 `originalFolderID`에 보존됩니다.
     /// - Parameter noteID: 이동할 노트의 UUID
     func moveToTrash(noteID: UUID) throws(VoiceNoteUseCaseError)
@@ -199,6 +202,10 @@ public struct DefaultVoiceNoteUseCase: VoiceNoteUseCase {
 
     public func regenerateSummary(id: UUID) {
         analysisService.regenerate(voiceNoteID: id)
+    }
+
+    public func enqueue(id: UUID) {
+        analysisService.enqueue(voiceNoteID: id)
     }
 
     // MARK: - Trash
