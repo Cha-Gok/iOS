@@ -300,7 +300,7 @@
 
         private func shouldIncludeTranscript(for state: AnalysisState) -> Bool {
             switch state {
-            case .pending, .transcribing, .transcriptionFailed:
+            case .pending, .transcribing, .transcriptionFailed, .waiting:
                 return false
             case .transcribed, .summarizing, .regenerating, .completed, .summarizationFailed, .grammarCheckFailed, .grammarChecked, .grammarChecking:
                 return true

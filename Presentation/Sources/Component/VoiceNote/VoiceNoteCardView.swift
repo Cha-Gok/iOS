@@ -85,6 +85,8 @@ extension VoiceNoteCardView {
     func analysisText(binding: AnalysisState.BindingKey) -> some View {
         var currentText: String {
             switch binding {
+            case .waiting:
+                "대기 중"
             case .progress:
                 "요약 중"
             case .success:
@@ -95,7 +97,7 @@ extension VoiceNoteCardView {
         }
 
         switch binding {
-        case .progress, .failed:
+        case .progress, .failed, .waiting:
             Text(currentText)
                 .typography(.label)
                 .padding(.vertical, 4)

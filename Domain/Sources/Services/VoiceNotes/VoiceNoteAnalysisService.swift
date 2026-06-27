@@ -26,12 +26,19 @@ public protocol VoiceNoteAnalysisService: Sendable {
     func cancelAll()
 }
 
+@MainActor
 public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
     private struct Entry {
         let task: Task<Void, Never>
         let previousState: AnalysisState
     }
 
+    private enum QueueJob: Sendable {
+        case analyze(id: UUID, originalState: AnalysisState)
+        case regenerate(id: UUID, previousState: AnalysisState)
+    }
+
+    private var pendingQueue: [QueueJob] = []
     private var entries: [UUID: Entry] = [:]
     private let voiceNoteRepository: any VoiceNoteRepository
     private let sttRepository: any STTRepository
@@ -56,45 +63,76 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
     // MARK: - Public API
 
     public func enqueue(voiceNoteID: UUID) {
+        guard !pendingQueue.contains(where: {
+            switch $0 {
+            case .analyze(let id, _), .regenerate(let id, _):
+                return id == voiceNoteID
+            }
+        }) else { return }
         guard entries[voiceNoteID] == nil else { return }
         guard let voiceNote = fetch(voiceNoteID) else { return }
 
-        switch voiceNote.analysisState {
-        case .pending:
-            startTranscription(for: voiceNote, previousState: .pending)
-        case .transcribed:
-            // 문법 교정과 요약을 동일 파이프라인으로 수행합니다.
-            startGrammarCheckAndSummarization(for: voiceNote, previousState: .transcribed)
-        case .transcribing, .transcriptionFailed, .summarizing, .regenerating,
-             .completed, .summarizationFailed, .grammarChecked, .grammarChecking, .grammarCheckFailed:
-            break
+        guard entries.isEmpty else {
+            pendingQueue.append(.analyze(id: voiceNoteID, originalState: voiceNote.analysisState))
+            persist(voiceNote: voiceNote, analysisState: .waiting)
+            return
         }
+
+        startPipeline(for: voiceNoteID, originalState: voiceNote.analysisState)
     }
 
     public func regenerate(voiceNoteID: UUID) {
+        guard !pendingQueue.contains(where: {
+            switch $0 {
+            case .analyze(let id, _), .regenerate(let id, _):
+                return id == voiceNoteID
+            }
+        }) else { return }
         guard entries[voiceNoteID] == nil else { return }
         guard let voiceNote = fetch(voiceNoteID), voiceNote.transcript != nil else { return }
 
         switch voiceNote.analysisState {
         case .completed, .summarizationFailed:
-            startSummarization(
-                for: voiceNote,
-                previousState: voiceNote.analysisState,
-                transientState: .regenerating
-            )
-        case .pending, .transcribing, .transcriptionFailed, .transcribed,
-             .summarizing, .regenerating, .grammarChecked, .grammarChecking, .grammarCheckFailed:
+            guard entries.isEmpty else {
+                pendingQueue.append(.regenerate(id: voiceNoteID, previousState: voiceNote.analysisState))
+                persist(voiceNote: voiceNote, analysisState: .waiting)
+                return
+            }
+            startRegenerationPipeline(for: voiceNoteID, previousState: voiceNote.analysisState)
+        default:
             break
         }
     }
 
     public func cancel(voiceNoteID: UUID) {
-        guard let entry = entries.removeValue(forKey: voiceNoteID) else { return }
+        if let index = pendingQueue.firstIndex(where: {
+            switch $0 {
+            case .analyze(let id, _), .regenerate(let id, _):
+                return id == voiceNoteID
+            }
+        }) {
+            let job = pendingQueue.remove(at: index)
+            let revertTo: AnalysisState = {
+                switch job {
+                case .analyze(_, let originalState):
+                    return originalState
+                case .regenerate(_, let previousState):
+                    return previousState
+                }
+            }()
+            revertState(voiceNoteID: voiceNoteID, to: revertTo)
+            return
+        }
+        guard let entry = entries[voiceNoteID] else { return }
         entry.task.cancel()
         revertState(voiceNoteID: voiceNoteID, to: entry.previousState)
+        finalizeTask(for: voiceNoteID)
     }
 
     public func cancelAll() {
+        // 대기중인 Queue 전체 비우기
+        pendingQueue.removeAll()
+
         let snapshot = entries
         entries.removeAll()
         for (id, entry) in snapshot {
@@ -121,14 +159,14 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
                 )
                 persist(voiceNote: withTranscript)
                 if Task.isCancelled { return }
-                entries.removeValue(forKey: voiceNote.id)
+                finalizeTask(for: voiceNote.id)
                 startGrammarCheckAndSummarization(for: withTranscript, previousState: .transcribed)
             } catch {
                 AppLogger.error(error)
                 if !Task.isCancelled {
                     persist(voiceNote: voiceNote, analysisState: .transcriptionFailed)
                 }
-                entries.removeValue(forKey: voiceNote.id)
+                finalizeTask(for: voiceNote.id)
             }
         }
         entries[voiceNote.id] = Entry(task: task, previousState: previousState)
@@ -151,7 +189,6 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
                     analysisState: .grammarChecked
                 )
                 persist(voiceNote: withGrammar)
-
                 // 2. 요약 실행
                 persist(voiceNote: withGrammar, analysisState: .summarizing)
                 let language = self.languageRepository.fetchLanguage()
@@ -168,13 +205,14 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
                     analysisState: .completed
                 )
                 persist(voiceNote: completed)
+                finalizeTask(for: voiceNote.id)
             } catch {
                 AppLogger.error(error)
                 if !Task.isCancelled {
                     persist(voiceNote: voiceNote, analysisState: .summarizationFailed)
                 }
+                finalizeTask(for: voiceNote.id)
             }
-            entries.removeValue(forKey: voiceNote.id)
         }
         entries[voiceNote.id] = Entry(task: task, previousState: previousState)
     }
@@ -208,7 +246,7 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
                     persist(voiceNote: voiceNote, analysisState: .summarizationFailed)
                 }
             }
-            entries.removeValue(forKey: voiceNote.id)
+            finalizeTask(for: voiceNote.id)
         }
         entries[voiceNote.id] = Entry(task: task, previousState: previousState)
     }
@@ -240,11 +278,49 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
     private func revertState(voiceNoteID: UUID, to previousState: AnalysisState) {
         guard let current = fetch(voiceNoteID) else { return }
         switch current.analysisState {
-        case .transcribing, .summarizing, .regenerating:
+        case .transcribing, .summarizing, .regenerating, .waiting:
             persist(voiceNote: current, analysisState: previousState)
         default:
             break
         }
+    }
+
+    private func finalizeTask(for voiceNoteID: UUID) {
+        // 현재 끝난 작업 제거
+        entries.removeValue(forKey: voiceNoteID)
+
+        // 다음 대기 중인 작업 시작 및 종료
+        guard !pendingQueue.isEmpty else { return }
+
+        // FIFO 방식으로 대기열에서 다음 작업을 가져와 실행
+        let nextJob = pendingQueue.removeFirst()
+        switch nextJob {
+        case .analyze(let id, let originalState):
+            startPipeline(for: id, originalState: originalState)
+        case .regenerate(let id, let previousState):
+            startRegenerationPipeline(for: id, previousState: previousState)
+        }
+    }
+
+    private func startPipeline(for voiceNoteID: UUID, originalState: AnalysisState) {
+        guard let voiceNote = fetch(voiceNoteID) else { return }
+        switch originalState {
+        case .pending:
+            startTranscription(for: voiceNote, previousState: .pending)
+        case .transcribed:
+            startGrammarCheckAndSummarization(for: voiceNote, previousState: .transcribed)
+        default:
+            break
+        }
+    }
+
+    private func startRegenerationPipeline(for voiceNoteID: UUID, previousState: AnalysisState) {
+        guard let voiceNote = fetch(voiceNoteID) else { return }
+        startSummarization(
+            for: voiceNote,
+            previousState: previousState,
+            transientState: .regenerating
+        )
     }
 
     private func makeUpdated(
