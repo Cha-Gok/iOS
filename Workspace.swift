@@ -8,6 +8,7 @@ let workspace = Workspace(
         "Core",
         "Domain",
         "Data",
-        "Presentation"
+        "Presentation",
+        "Widget"
     ]
 )
