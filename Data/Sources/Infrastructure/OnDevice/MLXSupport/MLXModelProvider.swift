@@ -67,7 +67,7 @@ public actor MLXModelProvider: MLXModelDataSource {
         container = nil
         AppLogger.info("MLX model cleared fMemory.clearCache")
     }
-    
+
     /// 메모리의 캐시(KVCache 등)만 해제하고 모델 컨테이너는 유지합니다.
     public func clearCache() {
         AppLogger.info("MLXModelProvider clearCache 호출됨 - 전체 메모리 해제 시작")

@@ -65,7 +65,7 @@ public final class VoiceNoteViewModel {
         fetchFolderName()
         observeVoiceNote()
         checkMLXSupport()
-        
+
         // 분석이 미완료 상태(.pending, .transcribed)인 경우 상세 화면 진입 시 자동으로 분석(STT/문법교정/요약)을 재개하도록 큐잉합니다.
         if voiceNote.analysisState == .pending || voiceNote.analysisState == .transcribed {
             voiceNoteUseCase.enqueue(id: voiceNote.id)

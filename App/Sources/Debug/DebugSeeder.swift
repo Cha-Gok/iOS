@@ -18,7 +18,7 @@
                     AppLogger.debug("기본 폴더 미존재. 온보딩 이후 다시 시도합니다.")
                     return
                 }
-                
+
                 // 디버그 빌드 시 매번 실행하여 최신 시드 데이터를 갱신합니다.
                 // 중복 및 이전 시드를 방지하기 위해 기존 시드 폴더를 먼저 삭제합니다 (Core Data cascade 삭제됨).
                 let seedFolderNames = ["업무", "개인", "학습", "회의록"]
@@ -27,7 +27,7 @@
                         try folderRepository.delete(id: folder.id)
                     }
                 }
-                
+
                 try performSeed()
                 AppLogger.info("시드 데이터 초기화 및 재설정 완료")
             } catch {
@@ -302,7 +302,8 @@
             switch state {
             case .pending, .transcribing, .transcriptionFailed, .waiting:
                 return false
-            case .transcribed, .summarizing, .regenerating, .completed, .summarizationFailed, .grammarCheckFailed, .grammarChecked, .grammarChecking:
+            case .transcribed, .summarizing, .regenerating, .completed, .summarizationFailed, .grammarCheckFailed,
+                 .grammarChecked, .grammarChecking:
                 return true
             }
         }

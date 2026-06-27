@@ -33,7 +33,7 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
         let previousState: AnalysisState
     }
 
-    private enum QueueJob: Sendable {
+    private enum QueueJob {
         case analyze(id: UUID, originalState: AnalysisState)
         case regenerate(id: UUID, previousState: AnalysisState)
     }
@@ -180,10 +180,10 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
             guard let self else { return }
             do {
                 // 1. 문법 교정 실행
-                let correctedTranscript = try await self.grammarRepository.correct(transcript: transcript)
+                let correctedTranscript = try await grammarRepository.correct(transcript: transcript)
                 if Task.isCancelled { return }
 
-                let withGrammar = self.makeUpdated(
+                let withGrammar = makeUpdated(
                     from: voiceNote,
                     transcript: correctedTranscript,
                     analysisState: .grammarChecked
@@ -191,14 +191,14 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
                 persist(voiceNote: withGrammar)
                 // 2. 요약 실행
                 persist(voiceNote: withGrammar, analysisState: .summarizing)
-                let language = self.languageRepository.fetchLanguage()
-                let (keywords, summary) = try await self.summaryRepository.summarize(
+                let language = languageRepository.fetchLanguage()
+                let (keywords, summary) = try await summaryRepository.summarize(
                     transcript: correctedTranscript,
                     language: language
                 )
                 if Task.isCancelled { return }
 
-                let completed = self.makeUpdated(
+                let completed = makeUpdated(
                     from: withGrammar,
                     keywords: keywords,
                     summary: summary,
@@ -345,5 +345,3 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
         )
     }
 }
-
-

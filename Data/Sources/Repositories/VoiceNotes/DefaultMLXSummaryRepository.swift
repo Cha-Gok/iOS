@@ -55,8 +55,13 @@ public struct DefaultMLXSummaryRepository: SummaryRepository {
 
             // LLM이 반환한 JSON 데이터에서 불필요한 Trailing Comma(배열/객체의 마지막 쉼표)를 정규식으로 제거합니다.
             if let regex = try? NSRegularExpression(pattern: ",\\s*(?=[\\}\\]])", options: []) {
-                let range = NSRange(summaryResponse.startIndex..<summaryResponse.endIndex, in: summaryResponse)
-                summaryResponse = regex.stringByReplacingMatches(in: summaryResponse, options: [], range: range, withTemplate: "")
+                let range = NSRange(summaryResponse.startIndex ..< summaryResponse.endIndex, in: summaryResponse)
+                summaryResponse = regex.stringByReplacingMatches(
+                    in: summaryResponse,
+                    options: [],
+                    range: range,
+                    withTemplate: ""
+                )
             }
 
             guard let data = summaryResponse.data(using: .utf8) else {

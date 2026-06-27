@@ -87,7 +87,7 @@ private extension VoiceNoteScriptViewController {
         case .pending, .transcribing, .grammarChecked, .waiting:
             return true
         case .transcribed, .summarizing, .regenerating, .completed,
-                .transcriptionFailed, .summarizationFailed, .grammarChecking, .grammarCheckFailed:
+             .transcriptionFailed, .summarizationFailed, .grammarChecking, .grammarCheckFailed:
             return false
         }
     }
