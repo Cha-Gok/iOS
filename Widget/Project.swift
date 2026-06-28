@@ -31,6 +31,7 @@ private let widgetTarget = Target.target(
     infoPlist: .extendingDefault(
         with: [
             "CFBundleDisplayName": "ChaGokWidget",
+            "NSSupportsLiveActivities": true,
             "NSExtension": [
                 "NSExtensionPointIdentifier": "com.apple.widgetkit-extension"
             ]
@@ -38,6 +39,7 @@ private let widgetTarget = Target.target(
     ),
     sources: ["Sources/**/*.swift"],
     dependencies: [
+        .project(target: "Core", path: "../Core"),
         .project(target: "Domain", path: "../Domain"),
         .project(target: "Presentation", path: "../Presentation")
     ]
