@@ -1,4 +1,3 @@
-@testable import ChaGokWidget
 import Domain
 import XCTest
 
