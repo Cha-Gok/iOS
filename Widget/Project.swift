@@ -42,7 +42,24 @@ private let widgetTarget = Target.target(
         .project(target: "Core", path: "../Core"),
         .project(target: "Domain", path: "../Domain"),
         .project(target: "Presentation", path: "../Presentation")
-    ]
+    ],
+    settings: .settings(
+        base: [
+            "CODE_SIGN_IDENTITY": "Apple Development",
+            "PROVISIONING_PROFILE_SPECIFIER": "match Development com.yongms.ChaGokChaGok.widget"
+        ],
+        configurations: [
+            .debug(name: "Debug", settings: [
+                "CODE_SIGN_IDENTITY": "Apple Development",
+                "PROVISIONING_PROFILE_SPECIFIER": "match Development com.yongms.ChaGokChaGok.widget"
+            ]),
+            .release(name: "Release", settings: [
+                "CODE_SIGN_IDENTITY": "Apple Distribution",
+                "PROVISIONING_PROFILE_SPECIFIER": "match AppStore com.yongms.ChaGokChaGok.widget"
+            ])
+        ],
+        defaultSettings: .recommended
+    )
 )
 
 private let widgetTestsTarget = Target.target(
@@ -52,7 +69,11 @@ private let widgetTestsTarget = Target.target(
     bundleId: "\(bundleId).widgetTests",
     deploymentTargets: deploymentTargets,
     infoPlist: .default,
-    sources: ["Tests/**/*.swift", "Sources/RecordingActivityWidget.swift"], // @main이 선언된 WidgetBundle.swift는 컴파일에서 제외
+    sources: [
+        "Tests/**/*.swift",
+        "Sources/**/*.swift",
+        "!Sources/WidgetBundle.swift"
+    ],
     dependencies: [
         .project(target: "Domain", path: "../Domain"),
         .project(target: "Presentation", path: "../Presentation")
