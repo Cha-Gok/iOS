@@ -84,10 +84,10 @@ private extension VoiceNoteScriptViewController {
 private extension VoiceNoteScriptViewController {
     var isShowingSkeleton: Bool {
         switch viewModel.voiceNote.analysisState {
-        case .pending, .transcribing:
+        case .pending, .transcribing, .grammarChecked, .waiting:
             return true
         case .transcribed, .summarizing, .regenerating, .completed,
-             .transcriptionFailed, .summarizationFailed:
+             .transcriptionFailed, .summarizationFailed, .grammarChecking, .grammarCheckFailed:
             return false
         }
     }

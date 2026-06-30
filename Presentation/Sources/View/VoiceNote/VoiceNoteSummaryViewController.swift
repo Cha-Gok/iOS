@@ -243,7 +243,8 @@ private extension VoiceNoteSummaryViewController {
         guard !viewModel.isTrashMode else { return nil }
         switch viewModel.voiceNote.analysisState {
         // 첫 분석 중에는 요약 섹션이 비어 있어 칩을 숨긴다.
-        case .pending, .summarizing, .transcribed, .transcribing, .transcriptionFailed: return nil
+        case .pending, .waiting, .summarizing, .transcribed, .transcribing, .transcriptionFailed, .grammarChecked,
+             .grammarChecking, .grammarCheckFailed: return nil
         case .regenerating: return .loading
         case .completed: return viewModel.isSummaryOutdated ? .outdated : .idle
         case .summarizationFailed: return .idle
@@ -252,9 +253,10 @@ private extension VoiceNoteSummaryViewController {
 
     var isShowingSkeleton: Bool {
         switch viewModel.voiceNote.analysisState {
-        case .pending, .regenerating, .summarizing, .transcribed, .transcribing:
+        case .pending, .waiting, .regenerating, .summarizing, .transcribed, .transcribing, .grammarChecking,
+             .grammarChecked:
             return true
-        case .completed, .summarizationFailed, .transcriptionFailed:
+        case .completed, .summarizationFailed, .transcriptionFailed, .grammarCheckFailed:
             return false
         }
     }

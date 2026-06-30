@@ -21,7 +21,9 @@ public struct ChaGokModelSupport: Hashable, Sendable {
 
     /// 현재 기기 정보를 바로 가져오는 속성 (에러 수정됨)
     public static var current: ChaGokModelSupport {
-        let ram = Int(ProcessInfo.processInfo.physicalMemory / (1024 * 1024 * 1024))
+        let ramBytes = ProcessInfo.processInfo.physicalMemory
+        let ramGB = Double(ramBytes) / (1024.0 * 1024.0 * 1024.0)
+        let ram = Int(ramGB.rounded())
         return ChaGokModelSupport(ramSizeGB: ram)
     }
 }

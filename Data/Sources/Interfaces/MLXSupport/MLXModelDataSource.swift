@@ -15,6 +15,9 @@ public protocol MLXModelDataSource: Sendable {
     /// 메모리에서 모델을 해제하여 리소스를 반환합니다.
     func clear() async
 
+    /// 메모리의 캐시(KVCache 등)만 해제하고 모델 컨테이너는 유지합니다.
+    func clearCache() async
+
     /// 다운로드 경로를 전달합니다
     func getDownloadPath() async throws(MLXModelDataSourceError) -> URL
 

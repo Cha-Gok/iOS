@@ -18,7 +18,10 @@ default_platform(:ios)
 platform :ios do
   desc "코드 사이닝 인증서 및 프로비저닝 프로파일 동기화"
   lane :sync_certificates do |options|
-    match(type: options[:type] || "appstore")
+    match(
+      type: options[:type] || "appstore",
+      app_identifier: ["com.yongms.ChaGokChaGok", "com.yongms.ChaGokChaGok.widget"]
+    )
   end
 
   def marketing_version
@@ -70,7 +73,8 @@ platform :ios do
         teamID: "78QTJM9AD7",
         signingStyle: "manual",
         provisioningProfiles: {
-          "com.yongms.ChaGokChaGok" => "match AppStore com.yongms.ChaGokChaGok"
+          "com.yongms.ChaGokChaGok" => "match AppStore com.yongms.ChaGokChaGok",
+          "com.yongms.ChaGokChaGok.widget" => "match AppStore com.yongms.ChaGokChaGok.widget"
         }
       }
     )

@@ -2,6 +2,7 @@ import Foundation
 
 public enum AnalysisState: String, Sendable, Hashable {
     case pending
+    case waiting
     case transcribing
     case transcriptionFailed
     case transcribed
@@ -9,8 +10,12 @@ public enum AnalysisState: String, Sendable, Hashable {
     case regenerating
     case completed
     case summarizationFailed
+    case grammarChecking
+    case grammarCheckFailed
+    case grammarChecked
 
     public enum BindingKey {
+        case waiting
         case progress
         case success
         case failed
@@ -18,12 +23,24 @@ public enum AnalysisState: String, Sendable, Hashable {
 
     public var bindingValue: BindingKey {
         switch self {
-        case .pending, .transcribing, .transcribed, .regenerating, .summarizing:
+        case .waiting:
+            .waiting
+        case .pending, .transcribing, .transcribed, .regenerating, .summarizing, .grammarChecked, .grammarChecking:
             .progress
         case .completed:
             .success
-        case .transcriptionFailed, .summarizationFailed:
+        case .transcriptionFailed, .summarizationFailed, .grammarCheckFailed:
             .failed
+        }
+    }
+
+    public var isUnfinished: Bool {
+        switch self {
+        case .pending, .waiting, .transcribing, .transcribed, .summarizing, .regenerating, .grammarChecking,
+             .grammarChecked:
+            return true
+        case .completed, .transcriptionFailed, .summarizationFailed, .grammarCheckFailed:
+            return false
         }
     }
 }

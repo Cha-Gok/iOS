@@ -12,23 +12,26 @@
         let voiceNoteRepository: any VoiceNoteRepository
 
         func seedIfNeeded() {
-            let defaults = UserDefaults.standard
-            guard !defaults.bool(forKey: Self.didSeedKey) else {
-                AppLogger.debug("시드 데이터가 이미 존재합니다. 스킵.")
-                return
-            }
-
             do {
                 let folders = try folderRepository.fetchAll()
                 guard folders.contains(where: { $0.kind == .default }) else {
                     AppLogger.debug("기본 폴더 미존재. 온보딩 이후 다시 시도합니다.")
                     return
                 }
+
+                // 디버그 빌드 시 매번 실행하여 최신 시드 데이터를 갱신합니다.
+                // 중복 및 이전 시드를 방지하기 위해 기존 시드 폴더를 먼저 삭제합니다 (Core Data cascade 삭제됨).
+                let seedFolderNames = ["업무", "개인", "학습", "회의록"]
+                for folder in folders {
+                    if seedFolderNames.contains(folder.name) {
+                        try folderRepository.delete(id: folder.id)
+                    }
+                }
+
                 try performSeed()
-                defaults.set(true, forKey: Self.didSeedKey)
-                AppLogger.info("시드 데이터 생성 완료")
+                AppLogger.info("시드 데이터 초기화 및 재설정 완료")
             } catch {
-                AppLogger.error("시드 데이터 생성 실패: \(error)")
+                AppLogger.error("시드 데이터 초기화 실패: \(error)")
             }
         }
 
@@ -236,6 +239,15 @@
                     summaryLines: [],
                     keywords: ["장애", "인시던트", "포스트모템"],
                     analysisState: .transcriptionFailed
+                ),
+                Spec(
+                    folderID: personalFolder.id,
+                    title: "일정 및 버그 관련 푸념 메모 (문법 교정 테스트용)",
+                    createdAt: now.addingTimeInterval(-h * 2),
+                    texts: SeedContent.grammarCheckTest,
+                    summaryLines: [],
+                    keywords: [],
+                    analysisState: .transcribed
                 )
             ]
 
@@ -245,7 +257,9 @@
         }
 
         private func createSeededNote(spec: Spec) throws {
-            let sections = SeedContent.buildSections(texts: spec.texts)
+            let sections = spec.title.contains("문법")
+                ? SeedContent.buildLongSections(texts: spec.texts, totalDuration: 3600)
+                : SeedContent.buildSections(texts: spec.texts)
             let duration = (sections.last?.timestamp ?? 0) + 3.0
             let audioPath = try makeSilentAudioFile(duration: max(duration, 2.5))
             let record = VoiceRecord(
@@ -288,14 +302,18 @@
 
         private func shouldIncludeTranscript(for state: AnalysisState) -> Bool {
             switch state {
-            case .pending, .transcribing, .transcriptionFailed:
+            case .pending, .transcribing, .transcriptionFailed, .waiting:
                 return false
-            case .transcribed, .summarizing, .regenerating, .completed, .summarizationFailed:
+            case .transcribed, .summarizing, .regenerating, .completed, .summarizationFailed, .grammarCheckFailed,
+                 .grammarChecked, .grammarChecking:
                 return true
             }
         }
 
         private func makeSilentAudioFile(duration: Double) throws -> String {
+            // 디버그용 무음 파일이므로 실제 파일 길이는 최대 5초로 제한하여
+            // 메인 스레드 병목 및 과도한 메모리/디스크 사용을 방지합니다.
+            let physicalDuration = min(duration, 5.0)
             let directory = "VoiceRecords"
             let fileName = "seed-\(UUID().uuidString).m4a"
             let docURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -318,7 +336,7 @@
                 commonFormat: .pcmFormatFloat32,
                 interleaved: false
             )
-            let frameCount = AVAudioFrameCount(file.processingFormat.sampleRate * duration)
+            let frameCount = AVAudioFrameCount(file.processingFormat.sampleRate * physicalDuration)
             guard let buffer = AVAudioPCMBuffer(
                 pcmFormat: file.processingFormat,
                 frameCapacity: frameCount

@@ -9,7 +9,7 @@ public enum AppLogger: AppLoggerProtocol, Sendable {
         #if DEBUG
             return .debug
         #else
-            return .info
+            return .warning
         #endif
     }()
 
