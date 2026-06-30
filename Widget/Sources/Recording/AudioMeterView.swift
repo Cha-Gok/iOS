@@ -36,7 +36,9 @@ public struct AudioMeterView: View {
         }
     }
 
-    private var barWidth: CGFloat { 3.0 }
+    private var barWidth: CGFloat {
+        3.0
+    }
 
     private func barHeight(for index: Int) -> CGFloat {
         let dotHeight: CGFloat = barWidth // 양 끝의 dot은 정사각형(원)
@@ -68,7 +70,7 @@ public struct AudioMeterView: View {
         // 바마다 고유한 변동 패턴 (index 기반 의사 랜덤)
         let seed = Double(index * 13 + 5)
         let variation = sin(seed) * 0.5 + 0.5 // 0.0 ~ 1.0
-        let jitter = 0.6 + variation * 0.8      // 0.6 ~ 1.4
+        let jitter = 0.6 + variation * 0.8 // 0.6 ~ 1.4
 
         // 최종 높이: boostedAmplitude × centerWeight × jitter로 유기적 변화
         let targetHeight = dotHeight + (maxHeight - dotHeight) * boostedAmplitude * centerWeight * jitter
@@ -85,7 +87,8 @@ public struct LiveAudioMeter: View {
     private let maxHeight: CGFloat
     private let minHeight: CGFloat
 
-    @State private var heights: [CGFloat] = []
+    @State
+    private var heights: [CGFloat] = []
 
     public init(
         level: CGFloat,

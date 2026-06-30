@@ -1,11 +1,10 @@
+@testable import ChaGokWidget
 import Domain
 import XCTest
 
-@testable import ChaGokWidget
-
 final class RecordingActivityWidgetTests: XCTestCase {
     func test_라이브오디오미터는_설정된_높이_범위_내에서_높이를_반환한다() {
-        let heights = (0..<7).map {
+        let heights = (0 ..< 7).map {
             LiveAudioMeter.makeHeight(
                 for: $0,
                 barCount: 7,

@@ -78,7 +78,8 @@ extension ImmutableProgressView {
         )
     }
 
-    @objc private func handleWillEnterForeground() {
+    @objc
+    private func handleWillEnterForeground() {
         stopAnimation()
         startAnimation()
     }

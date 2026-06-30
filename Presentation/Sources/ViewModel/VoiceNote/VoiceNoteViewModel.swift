@@ -34,8 +34,9 @@ public final class VoiceNoteViewModel {
     @ObservationIgnored
     private var wasPlayingBeforeSeek = false
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
-    
+
     // MARK: - Grammar Progress
+
     public private(set) var grammarProgress: (current: Int, total: Int)?
     private var realTimeCorrectedSections: [TranscriptSection]?
 
@@ -310,10 +311,10 @@ public final class VoiceNoteViewModel {
                 for await note in stream {
                     let folderChanged = voiceNote.folderID != note.folderID
                     let stateChanged = voiceNote.analysisState != note.analysisState
-                    
+
                     self.voiceNote = note
                     if folderChanged { fetchFolderName() }
-                    
+
                     if stateChanged {
                         if note.analysisState == .grammarChecking {
                             self.grammarProgress = nil
@@ -329,25 +330,26 @@ public final class VoiceNoteViewModel {
             }
         }
     }
-    
+
     private func setupGrammarProgressObservation() {
         grammarProgressTask?.cancel()
         grammarProgressTask = Task {
-            let sequence = NotificationCenter.default.notifications(named: NSNotification.Name("GrammarCorrectionProgress"))
+            let sequence = NotificationCenter.default
+                .notifications(named: NSNotification.Name("GrammarCorrectionProgress"))
             for await notification in sequence {
                 guard let userInfo = notification.userInfo,
                       let transcriptID = userInfo["transcriptID"] as? UUID,
                       let originalTranscriptID = voiceNote.transcript?.id,
                       transcriptID == originalTranscriptID else { continue }
-                
+
                 let current = userInfo["current"] as? Int ?? 0
                 let total = userInfo["total"] as? Int ?? 0
                 let sectionIndex = userInfo["sectionIndex"] as? Int ?? 0
                 let correctedText = userInfo["correctedText"] as? String ?? ""
-                
+
                 await MainActor.run {
                     self.grammarProgress = (current, total)
-                    
+
                     if self.realTimeCorrectedSections == nil {
                         self.realTimeCorrectedSections = self.voiceNote.transcript?.sections
                     }

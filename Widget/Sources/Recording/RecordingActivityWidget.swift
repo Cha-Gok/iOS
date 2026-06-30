@@ -1,7 +1,7 @@
 import ActivityKit
 import AppIntents
-import Domain
 import Core
+import Domain
 import Presentation
 import SwiftUI
 import WidgetKit
@@ -19,8 +19,8 @@ struct RecordingActivityWidget: Widget {
                             Circle()
                                 .fill(LinearGradient(
                                     colors: [
-                                        Color(red: 111/255, green: 83/255, blue: 253/255),
-                                        Color(red: 94/255, green: 92/255, blue: 230/255)
+                                        Color(red: 111 / 255, green: 83 / 255, blue: 253 / 255),
+                                        Color(red: 94 / 255, green: 92 / 255, blue: 230 / 255)
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -33,12 +33,12 @@ struct RecordingActivityWidget: Widget {
                                 )
                         }
                         .buttonStyle(.plain)
-                        
+
                         VStack(alignment: .leading, spacing: 4) {
                             Text(context.attributes.title)
                                 .font(.subheadline)
                                 .foregroundColor(.white)
-                            
+
                             TimerView(
                                 duration: context.state.duration,
                                 isPaused: context.state.isPaused,
@@ -49,12 +49,16 @@ struct RecordingActivityWidget: Widget {
                         }
                     }
                 }
-                
+
                 // 다이내믹 아일랜드 확장형 (오른쪽)
                 DynamicIslandExpandedRegion(.trailing) {
-                    AudioMeterView(barCount: 17, amplitude: Double(context.state.amplitude), isPaused: context.state.isPaused)
-                        .padding(.trailing, 8)
-                        .frame(maxHeight: .infinity)
+                    AudioMeterView(
+                        barCount: 17,
+                        amplitude: Double(context.state.amplitude),
+                        isPaused: context.state.isPaused
+                    )
+                    .padding(.trailing, 8)
+                    .frame(maxHeight: .infinity)
                 }
             } compactLeading: {
                 // 다이내믹 아일랜드 최소형 (왼쪽 버튼)
@@ -64,8 +68,8 @@ struct RecordingActivityWidget: Widget {
                     .frame(width: 24, height: 24)
                     .foregroundStyle(LinearGradient(
                         colors: [
-                            Color(red: 111/255, green: 83/255, blue: 253/255),
-                            Color(red: 94/255, green: 92/255, blue: 230/255)
+                            Color(red: 111 / 255, green: 83 / 255, blue: 253 / 255),
+                            Color(red: 94 / 255, green: 92 / 255, blue: 230 / 255)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -88,8 +92,8 @@ struct RecordingActivityWidget: Widget {
                     Circle()
                         .fill(LinearGradient(
                             colors: [
-                                Color(red: 111/255, green: 83/255, blue: 253/255),
-                                Color(red: 94/255, green: 92/255, blue: 230/255)
+                                Color(red: 111 / 255, green: 83 / 255, blue: 253 / 255),
+                                Color(red: 94 / 255, green: 92 / 255, blue: 230 / 255)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -116,8 +120,8 @@ struct LockScreenView: View {
                 Circle()
                     .fill(LinearGradient(
                         colors: [
-                            Color(red: 111/255, green: 83/255, blue: 253/255),
-                            Color(red: 94/255, green: 92/255, blue: 230/255)
+                            Color(red: 111 / 255, green: 83 / 255, blue: 253 / 255),
+                            Color(red: 94 / 255, green: 92 / 255, blue: 230 / 255)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -153,12 +157,16 @@ struct LockScreenView: View {
                 .multilineTextAlignment(.trailing)
                 .font(.title.bold())
                 Spacer()
-                AudioMeterView(barCount: 15, amplitude: Double(context.state.amplitude), isPaused: context.state.isPaused)
+                AudioMeterView(
+                    barCount: 15,
+                    amplitude: Double(context.state.amplitude),
+                    isPaused: context.state.isPaused
+                )
             }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .activityBackgroundTint(Color(red: 22/255, green: 21/255, blue: 27/255).opacity(0.95))
+        .activityBackgroundTint(Color(red: 22 / 255, green: 21 / 255, blue: 27 / 255).opacity(0.95))
     }
 }
 

@@ -73,7 +73,7 @@ struct LockScreenView: View {
 
 private extension RecordingActivityAttributes.ContentState {
     var displayDuration: String {
-        let duration = Int(self.duration)
+        let duration = Int(duration)
         let hours = duration / 3600
         let minutes = (duration % 3600) / 60
         let seconds = duration % 60

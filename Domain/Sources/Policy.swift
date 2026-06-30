@@ -86,12 +86,12 @@ public extension Policy {
     /// 교정할 문장을 주입하는 사용자 프롬프트 텍스트 입니다.
     static func correctionPrompt(text: String) -> String {
         """
-         Correct the grammar of the following text and polish it to sound natural.
-         Do not include any explanations, introduction, or additional text. Return ONLY the corrected text.
+        Correct the grammar of the following text and polish it to sound natural.
+        Do not include any explanations, introduction, or additional text. Return ONLY the corrected text.
 
-         Text:
-         \(text)
-         """
+        Text:
+        \(text)
+        """
     }
 
     /// STT를 통해 전사된 여러 문장을 한 번에 교정하는 배치 프롬프트입니다.

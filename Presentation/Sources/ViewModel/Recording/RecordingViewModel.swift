@@ -1,13 +1,14 @@
-import Domain
 import ActivityKit
-import Foundation
 import Core
+import Domain
+import Foundation
 
 @MainActor
 public protocol RecordingCoordinating: AnyObject {
     func cancelRecording()
     func finishRecording(voiceNote: VoiceNote)
 }
+
 extension Activity: @unchecked @retroactive Sendable {}
 
 @MainActor
@@ -81,7 +82,7 @@ public final class RecordingViewModel {
         self.repository = repository
         self.voiceNoteUseCase = voiceNoteUseCase
         // 앱이 백그라운드에서 재시작되거나 뷰모델이 다시 생성되었을 때 기존 활성화된 Live Activity 인스턴스 참조를 복원합니다.
-        self.activeActivity = Activity<RecordingActivityAttributes>.activities.first
+        activeActivity = Activity<RecordingActivityAttributes>.activities.first
         subscribeToWidgetNotifications()
     }
 
@@ -320,4 +321,3 @@ public final class RecordingViewModel {
         resumeRecording()
     }
 }
-

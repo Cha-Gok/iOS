@@ -5,7 +5,6 @@ import Foundation
 /// NotificationCenter.default는 동일 프로세스 내에서만 작동하므로,
 /// 별도 프로세스인 Widget Extension과는 Darwin Notification을 사용해야 합니다.
 public enum DarwinNotificationCenter {
-
     /// Darwin Notification 이름 정의
     public enum Name: String {
         case pauseRecording = "com.chagok.recording.pause"
