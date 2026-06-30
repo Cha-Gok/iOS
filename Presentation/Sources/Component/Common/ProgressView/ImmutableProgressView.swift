@@ -31,6 +31,7 @@ public final class ImmutableProgressView: UIView {
         setup()
         setupHierarchy()
         setupLayout()
+        registerNotifications()
     }
 
     required init?(coder: NSCoder) {
@@ -38,6 +39,11 @@ public final class ImmutableProgressView: UIView {
         setup()
         setupHierarchy()
         setupLayout()
+        registerNotifications()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     override public func layoutSubviews() {
@@ -61,6 +67,20 @@ public final class ImmutableProgressView: UIView {
 extension ImmutableProgressView {
     private func setup() {
         translatesAutoresizingMaskIntoConstraints = false
+    }
+
+    private func registerNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleWillEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleWillEnterForeground() {
+        stopAnimation()
+        startAnimation()
     }
 
     private func setupHierarchy() {
