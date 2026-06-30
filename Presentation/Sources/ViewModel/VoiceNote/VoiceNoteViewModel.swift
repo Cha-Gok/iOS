@@ -30,8 +30,14 @@ public final class VoiceNoteViewModel {
     @ObservationIgnored
     private var voiceNoteObservationTask: Task<Void, Never>?
     @ObservationIgnored
+    private var grammarProgressTask: Task<Void, Never>?
+    @ObservationIgnored
     private var wasPlayingBeforeSeek = false
     public weak var coordinator: VoiceNoteCoordinatorDelegate?
+    
+    // MARK: - Grammar Progress
+    public private(set) var grammarProgress: (current: Int, total: Int)?
+    private var realTimeCorrectedSections: [TranscriptSection]?
 
     // MARK: - UseCases
 
@@ -66,8 +72,8 @@ public final class VoiceNoteViewModel {
         observeVoiceNote()
         checkMLXSupport()
 
-        // 분석이 미완료 상태(.pending, .transcribed)인 경우 상세 화면 진입 시 자동으로 분석(STT/문법교정/요약)을 재개하도록 큐잉합니다.
-        if voiceNote.analysisState == .pending || voiceNote.analysisState == .transcribed {
+        // 분석이 미완료 상태인 경우 상세 화면 진입 시 자동으로 분석(STT/문법교정/요약)을 재개하도록 큐잉합니다.
+        if voiceNote.analysisState.isUnfinished {
             voiceNoteUseCase.enqueue(id: voiceNote.id)
         }
     }
@@ -84,6 +90,8 @@ public final class VoiceNoteViewModel {
         playbackObservationTask = nil
         voiceNoteObservationTask?.cancel()
         voiceNoteObservationTask = nil
+        grammarProgressTask?.cancel()
+        grammarProgressTask = nil
         stop()
     }
 
@@ -301,11 +309,56 @@ public final class VoiceNoteViewModel {
                 let stream = try voiceNoteUseCase.observe(id: voiceNote.id)
                 for await note in stream {
                     let folderChanged = voiceNote.folderID != note.folderID
-                    voiceNote = note
+                    let stateChanged = voiceNote.analysisState != note.analysisState
+                    
+                    self.voiceNote = note
                     if folderChanged { fetchFolderName() }
+                    
+                    if stateChanged {
+                        if note.analysisState == .grammarChecking {
+                            self.grammarProgress = nil
+                            self.realTimeCorrectedSections = nil
+                        } else if note.analysisState != .grammarChecking {
+                            self.grammarProgress = nil
+                            self.realTimeCorrectedSections = nil
+                        }
+                    }
                 }
             } catch {
                 errorMessage = error.localizedDescription
+            }
+        }
+    }
+    
+    private func setupGrammarProgressObservation() {
+        grammarProgressTask?.cancel()
+        grammarProgressTask = Task {
+            let sequence = NotificationCenter.default.notifications(named: NSNotification.Name("GrammarCorrectionProgress"))
+            for await notification in sequence {
+                guard let userInfo = notification.userInfo,
+                      let transcriptID = userInfo["transcriptID"] as? UUID,
+                      let originalTranscriptID = voiceNote.transcript?.id,
+                      transcriptID == originalTranscriptID else { continue }
+                
+                let current = userInfo["current"] as? Int ?? 0
+                let total = userInfo["total"] as? Int ?? 0
+                let sectionIndex = userInfo["sectionIndex"] as? Int ?? 0
+                let correctedText = userInfo["correctedText"] as? String ?? ""
+                
+                await MainActor.run {
+                    self.grammarProgress = (current, total)
+                    
+                    if self.realTimeCorrectedSections == nil {
+                        self.realTimeCorrectedSections = self.voiceNote.transcript?.sections
+                    }
+                    if var sections = self.realTimeCorrectedSections, sectionIndex < sections.count {
+                        sections[sectionIndex] = TranscriptSection(
+                            timestamp: sections[sectionIndex].timestamp,
+                            text: correctedText
+                        )
+                        self.realTimeCorrectedSections = sections
+                    }
+                }
             }
         }
     }
@@ -405,6 +458,9 @@ public extension VoiceNoteViewModel {
 
     var scriptSections: [TranscriptSection] {
         if editingMode == .script { return editableScriptSections }
+        if voiceNote.analysisState == .grammarChecking, let realTime = realTimeCorrectedSections {
+            return realTime
+        }
         return voiceNote.transcript?.sections ?? []
     }
 

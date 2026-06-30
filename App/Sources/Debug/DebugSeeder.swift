@@ -257,7 +257,9 @@
         }
 
         private func createSeededNote(spec: Spec) throws {
-            let sections = SeedContent.buildSections(texts: spec.texts)
+            let sections = spec.title.contains("문법")
+                ? SeedContent.buildLongSections(texts: spec.texts, totalDuration: 3600)
+                : SeedContent.buildSections(texts: spec.texts)
             let duration = (sections.last?.timestamp ?? 0) + 3.0
             let audioPath = try makeSilentAudioFile(duration: max(duration, 2.5))
             let record = VoiceRecord(
@@ -309,6 +311,9 @@
         }
 
         private func makeSilentAudioFile(duration: Double) throws -> String {
+            // 디버그용 무음 파일이므로 실제 파일 길이는 최대 5초로 제한하여
+            // 메인 스레드 병목 및 과도한 메모리/디스크 사용을 방지합니다.
+            let physicalDuration = min(duration, 5.0)
             let directory = "VoiceRecords"
             let fileName = "seed-\(UUID().uuidString).m4a"
             let docURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -331,7 +336,7 @@
                 commonFormat: .pcmFormatFloat32,
                 interleaved: false
             )
-            let frameCount = AVAudioFrameCount(file.processingFormat.sampleRate * duration)
+            let frameCount = AVAudioFrameCount(file.processingFormat.sampleRate * physicalDuration)
             guard let buffer = AVAudioPCMBuffer(
                 pcmFormat: file.processingFormat,
                 frameCapacity: frameCount

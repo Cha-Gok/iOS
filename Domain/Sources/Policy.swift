@@ -86,11 +86,31 @@ public extension Policy {
     /// 교정할 문장을 주입하는 사용자 프롬프트 텍스트 입니다.
     static func correctionPrompt(text: String) -> String {
         """
-        Correct the grammar of the following text and polish it to sound natural.
-        Do not include any explanations, introduction, or additional text. Return ONLY the corrected text.
+         Correct the grammar of the following text and polish it to sound natural.
+         Do not include any explanations, introduction, or additional text. Return ONLY the corrected text.
 
-        Text:
-        \(text)
-        """
+         Text:
+         \(text)
+         """
+    }
+
+    /// STT를 통해 전사된 여러 문장을 한 번에 교정하는 배치 프롬프트입니다.
+    static let sttBatchCorrectionPrompt: String = """
+       You are a grammar correction assistant.
+       Your task is to correct the grammar, spelling, and punctuation of the provided numbered list of sentences.
+       Preserve the meaning and tone of each sentence.
+       Keep the original language of the input text.
+       Return the corrected sentences in the exact same numbered format (e.g., [1] Corrected sentence).
+       Do not include any explanations, introduction, or additional text. Return ONLY the numbered list of corrected sentences.
+    """
+
+    /// 교정할 문장 목록을 주입하는 사용자 배치 프롬프트 텍스트입니다.
+    static func batchCorrectionPrompt(texts: [String]) -> String {
+        var prompt = "Correct the grammar of the following sentences and polish them to sound natural.\n"
+        prompt += "You must return them in the exact same format: [number] Corrected sentence.\n\n"
+        for (index, text) in texts.enumerated() {
+            prompt += "[\(index + 1)] \(text)\n"
+        }
+        return prompt
     }
 }
