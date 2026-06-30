@@ -17,12 +17,25 @@ public struct ToggleRecordingIntent: LiveActivityIntent {
             return .result()
         }
         
-        let isPaused = activity.content.state.isPaused
-        AppLogger.info("isPaused : \(isPaused)")
-        if isPaused {
-            DarwinNotificationCenter.post(.resumeRecording)
-        } else {
+        let currentIsPaused = activity.content.state.isPaused
+        let newIsPaused = !currentIsPaused
+        
+        AppLogger.info("Widget Toggle - currentIsPaused: \(currentIsPaused) -> newIsPaused: \(newIsPaused)")
+        
+        // 1. Widget Extension에서 직접 Live Activity 상태를 먼저 업데이트하여 즉각적인 UI 반응을 확보합니다.
+        let updatedState = RecordingActivityAttributes.ContentState(
+            duration: activity.content.state.duration,
+            isPaused: newIsPaused,
+            amplitude: activity.content.state.amplitude
+        )
+        let content = ActivityContent(state: updatedState, staleDate: nil)
+        await activity.update(content)
+        
+        // 2. 메인 앱에 상태 변경을 알려 실제 녹음 동작을 동기화합니다.
+        if newIsPaused {
             DarwinNotificationCenter.post(.pauseRecording)
+        } else {
+            DarwinNotificationCenter.post(.resumeRecording)
         }
         
         return .result()

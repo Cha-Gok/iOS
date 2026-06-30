@@ -305,10 +305,18 @@ public final class DefaultVoiceNoteAnalysisService: VoiceNoteAnalysisService {
     private func startPipeline(for voiceNoteID: UUID, originalState: AnalysisState) {
         guard let voiceNote = fetch(voiceNoteID) else { return }
         switch originalState {
-        case .pending:
+        case .pending, .transcribing:
             startTranscription(for: voiceNote, previousState: .pending)
-        case .transcribed:
+        case .transcribed, .grammarChecking:
             startGrammarCheckAndSummarization(for: voiceNote, previousState: .transcribed)
+        case .grammarChecked, .summarizing:
+            startSummarization(for: voiceNote, previousState: .grammarChecked)
+        case .waiting:
+            if voiceNote.transcript == nil {
+                startTranscription(for: voiceNote, previousState: .pending)
+            } else {
+                startGrammarCheckAndSummarization(for: voiceNote, previousState: .transcribed)
+            }
         default:
             break
         }

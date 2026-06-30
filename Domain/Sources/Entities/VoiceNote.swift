@@ -33,6 +33,15 @@ public enum AnalysisState: String, Sendable, Hashable {
             .failed
         }
     }
+
+    public var isUnfinished: Bool {
+        switch self {
+        case .pending, .waiting, .transcribing, .transcribed, .summarizing, .regenerating, .grammarChecking, .grammarChecked:
+            return true
+        case .completed, .transcriptionFailed, .summarizationFailed, .grammarCheckFailed:
+            return false
+        }
+    }
 }
 
 public struct VoiceNote: Sendable, Identifiable, Hashable {
